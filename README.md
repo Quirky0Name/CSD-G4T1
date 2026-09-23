@@ -6,17 +6,17 @@ action → the researcher decides.**
 
 Five services sit behind one React frontend and talk to each other over
 REST, trusting a single JWT issued at login. See
-[ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
 
 ## Where to look
 
 | Doc | What's in it |
 |---|---|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Services, ownership, data flow, and the week-7 vs week-13 scope split |
-| [CONTRACTS.md](CONTRACTS.md) | Cross-service API contracts: endpoints, request/response shapes, auth |
-| [DECISIONS.md](DECISIONS.md) | Dated log of design decisions and why they were made |
-| [SETUP.md](SETUP.md) | Accounts, API keys, software, and how to run the stack locally |
-| [DEMO.md](DEMO.md) | The week-7 demo runbook |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Services, ownership, data flow, and the week-7 vs week-13 scope split |
+| [docs/CONTRACTS.md](docs/CONTRACTS.md) | Cross-service API contracts: endpoints, request/response shapes, auth |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | Dated log of design decisions and why they were made |
+| [docs/SETUP.md](docs/SETUP.md) | Accounts, API keys, software, and how to run the stack locally |
+| [docs/DEMO.md](docs/DEMO.md) | The week-7 demo runbook |
 
 ## Services
 
@@ -32,5 +32,5 @@ Research Evaluation and Updating share one Python project in `backend/`
 
 ## Status
 
-Week 7 (midterm) scope is in progress. See ARCHITECTURE.md for what's in
+Week 7 (midterm) scope is in progress. See docs/ARCHITECTURE.md for what's in
 and out of scope for this milestone.
