@@ -19,6 +19,27 @@ This is the single source of truth for every interface between services.
   Storage Management must accept these on its internal endpoints without
   owner-scoping them to a real user.
 
+## Frontend ↔ Storage Management
+
+Owned by: Storage Management. Consumed by: the frontend.
+
+### `POST /papers` (PDF upload)
+
+User JWT required; the caller becomes the paper's owner. Multipart form
+with `file` (a PDF, 25 MB max) and an optional `folder_id` (uuid).
+Storage pulls the DOI out of the PDF with GROBID and fills in the rest
+from CrossRef/OpenAlex. If GROBID finds no DOI the paper is still saved,
+just without metadata.
+
+**Response `201`:**
+```json
+{"id": "uuid", "folder_id": "uuid", "doi": "10.xxxx/...", "openalex_id": "W...", "title": "...", "journal": "...", "issn": "0000-0000", "publication_year": 2020, "file_available": true, "created_at": "2026-09-24T08:00:00Z"}
+```
+
+Errors come back as problem details, with the reason in `detail`:
+`400` not a PDF, `401` missing or bad token, `403` service token,
+`409` you already track a paper with that DOI, `413` over 25 MB.
+
 ## Storage Management ↔ Research Evaluation / Updating
 
 Owned by: Storage Management. Consumed by: Research Evaluation (reads
@@ -33,7 +54,7 @@ into its own `tracked_papers` table.
 [{"id": "uuid", "owner_id": "uuid", "doi": "10.xxxx/...", "issn": "0000-0000", "file_available": true}]
 ```
 
-### `POST /papers/{id}/background-info?include_llm=true|false`
+### `POST /internal/papers/{id}/background-info?include_llm=true|false`
 
 Triggers a fetch: Storage Management calls Research Evaluation's
 `/evaluate/background-info`, persists the result as a new
@@ -44,7 +65,7 @@ overwrite), and returns the persisted snapshot including its id.
 {"snapshot_id": 42, "fetched_at": "2026-09-18T12:00:00Z", "...": "full BackgroundInfoDTO, see below"}
 ```
 
-### `GET /papers/{id}/background-info/history?after_id=&limit=`
+### `GET /internal/papers/{id}/background-info/history?after_id=&limit=`
 
 Ascending order by snapshot id. Used by Updating to diff each
 consecutive pair since its last watermark.
