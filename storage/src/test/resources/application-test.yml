@@ -4,3 +4,7 @@
 spring:
   datasource:
     url: jdbc:h2:mem:storage;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+
+storage:
+  # test-only key, base64 like the real JWT_SECRET
+  jwt-secret: c3RvcmFnZS10ZXN0LXNlY3JldC1ub3QtZm9yLXByb2Qh
