@@ -6,12 +6,24 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+  mvc:
+    problemdetails:
+      enabled: true
+  servlet:
+    multipart:
+      # hard backstop; the readable 25MB check is storage.max-pdf-size
+      max-file-size: 30MB
+      max-request-size: 30MB
 
 storage:
   jwt-secret: ${JWT_SECRET}
   grobid-url: ${GROBID_URL:http://localhost:8070}
   crossref-mailto: ${CROSSREF_MAILTO:}
   openalex-api-key: ${OPENALEX_API_KEY:}
+  upload-dir: ${UPLOAD_DIR:uploads}
+  max-pdf-size: 25MB
 
 server:
   port: ${PORT:8081}
