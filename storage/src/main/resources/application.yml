@@ -1,6 +1,11 @@
 spring:
   application:
     name: storage
+  # datasource comes from SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
 
 server:
   port: ${PORT:8081}

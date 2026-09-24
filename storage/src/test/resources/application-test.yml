@@ -1,0 +1,6 @@
+# Layered on top of main application.yml. Tests run the real Flyway migrations on
+# in-memory H2 in Postgres mode, so a migration that drifts from the entities fails
+# the build without needing Docker.
+spring:
+  datasource:
+    url: jdbc:h2:mem:storage;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
