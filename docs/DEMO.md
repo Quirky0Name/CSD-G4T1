@@ -27,19 +27,22 @@ depends on the publisher during the demo.
 
 ## Live sequence
 
-1. **Research Evaluation, Swagger UI** (`/docs`): call
-   `/evaluate/background-info` with the tracked DOI — show the full
-   response (retraction status, Crossref updates, citation metrics).
+1. **Updating, Swagger UI:** run the poll once for the tracked paper and
+   show the snapshot it stores (retraction status, Crossref updates,
+   DOAJ/journal, authors).
 2. **Research Evaluation:** call `/evaluate/stance` for tracked vs.
    contradicts (expect `contradicts`) and tracked vs. supports (expect
    `supports`).
 3. **Updating, Swagger UI:** `POST /admin/run-poll?paper_id=<tracked>` —
-   show a new `is_retracted` change event and a `crossref_update:
-   retraction` event appear, each with its canned impact text and
-   recommendation.
+   show the new snapshot (now `is_retracted=true` with a `retraction`
+   entry in `crossref_updates`) and that the run summary lists the paper
+   as nudged, then show that Research Evaluation read the two snapshots
+   from Storage Management, worked out the differences and evaluated them
+   (severity, impact text and recommendation).
 4. **Frontend:** show the changes panel on the paper detail page, then
-   acknowledge one event.
-5. Run the poll again live to show no duplicate events are created.
+   acknowledge one change.
+5. Run the poll again live to show it stores another snapshot but doesn't
+   nudge again.
 
 ## Fallback if a live call fails
 

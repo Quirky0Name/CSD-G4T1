@@ -5,6 +5,115 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-24 — Updating owns fetching and snapshots; Research Evaluation evaluates
+
+### Team decisions
+
+- **Ownership split.** Updating fetches Crossref/OpenAlex status, journal and
+  author data, stores snapshots (via Storage Management) and tells Research
+  Evaluation when a snapshot changed. It records snapshots only, never
+  changes. Research Evaluation works out the differences between snapshots,
+  classifies them, evaluates what they mean (severity, impact statement,
+  recommendation) and owns the alert list and actions. This replaces the
+  2026-09-18 design where Research Evaluation built the background-info
+  snapshot and Updating diffed it, kept `change_events` and attached canned
+  impact text from a lookup table.
+- **The handoff is a nudge with paper ids, not a payload.** Updating and
+  Research Evaluation share data only through Storage Management. Per poll:
+  fetch from the APIs → store the snapshot in Storage Management → compare
+  it with the previous snapshot (read back from Storage Management) → if it
+  differs in a field the alerts depend on, `POST /evaluate/changes` with just
+  the changed `paper_ids`. Research Evaluation then reads the snapshots (the
+  updatable data) and the paper, notes and extracted text (the non-updatable
+  data) from Storage Management itself and works out the differences.
+  Reasons: Research Evaluation would otherwise need Updating to hand it data
+  it can already read, each side only has to talk to one other service, and
+  Updating needs no change table of its own. A poll with no changes sends
+  nothing, so Research Evaluation isn't woken on every check. Considered and
+  rejected:
+  - Pushing each change with its data and storing Research Evaluation's
+    answer on Updating's row (the first version of this decision). It
+    couples the two services' data shapes and needs Research Evaluation to
+    reply.
+  - A bare nudge with no ids. Research Evaluation would have to scan Storage
+    Management for papers whose latest snapshot differs from the previous
+    one and keep its own watermark.
+  - Sending change ids and having Research Evaluation read change rows from
+    Updating. It would need to call two services, and Updating would need to
+    keep change rows.
+
+  Updating's comparison is a plain field comparison to decide whether to
+  nudge, not a classification. Because it keeps no change rows, it keeps a
+  `nudge_pending` flag per paper in its own `tracked_papers` table, cleared
+  once Research Evaluation accepted the nudge (`202`). This is needed
+  because after a failed nudge the next snapshot would look unchanged. The
+  endpoint must therefore tolerate receiving the same ids twice. Updating no
+  longer serves a change list or `PATCH /changes/{id}`; how Research
+  Evaluation stores and serves evaluations, changes and researcher actions is
+  left to it.
+- **Auth is a placeholder in sprint 1.** There's no User Management yet, so
+  `JWT_SECRET` is any shared value and services run locally. Updating still
+  mints service tokens; Storage Management only accepts those on
+  `/internal/**`, which is why the background-info endpoints moved there.
+  Nothing is hosted, so Supabase and the session-pooler note wait until
+  deployment.
+- **Snapshots stay per paper, insert-only, full history.** Considered
+  keying them by DOI (one snapshot per DOI per run, fanned out to every
+  user tracking it) and rejected it: it saves a few near-identical rows but
+  needs fan-out logic, and per-paper history gives each user their own
+  baseline, so nobody gets alerted about changes from before they started
+  tracking. Keeping full history over only the latest snapshot: since
+  snapshots are the only record, Research Evaluation can work out the
+  differences after the fact, a missed or false alert can be replayed from
+  the stored pair, and new rules can be back-tested. The cost is small (a
+  few KB per row; 100 papers polled daily is about 36k rows a year). If
+  size ever matters, prune unchanged snapshots that no change references.
+- **Snapshots are stored even when nothing changed**, so the poll's
+  "new snapshot each run" is checkable. Storage Management's POST is now a
+  plain store of the snapshot in the body; it no longer triggers a fetch.
+- **Citation counts are stored but not alerted on this sprint.** The
+  2026-09-18 week-7 scope listed "did citation count jump"; the sprint's
+  alert stories are retraction, correction/erratum/expression of concern,
+  and DOAJ delisting only.
+
+### Facts found while checking live Crossref/OpenAlex responses
+
+- **`updated-by` lists duplicates.** The same notice DOI appears once from
+  `publisher` and once from `retraction-watch`, sometimes with different
+  types (`10.1016/s0140-6736(20)31324-6` is both a Retraction Watch
+  "retraction" and a publisher "erratum"). Entries are identified by
+  (`notice_doi`, `type`); a new source for a known pair is not a new
+  event.
+- **DOAJ status belongs to the journal, not the paper.** OpenAlex's
+  `is_in_doaj` is per source, and repository locations (PubMed) are always
+  false. If OpenAlex switched a paper's `primary_location` from the journal
+  to a repository, `in_doaj` would flip to false without any delisting. So a
+  delisting needs `in_doaj` true → false with the same `journal_source_id`
+  and a `journal` source type.
+- **Citation counts disagree between sources** (OpenAlex 1252 vs Crossref
+  416 for the same retracted Lancet paper). Only OpenAlex's is stored.
+- **OpenAlex's batched `/authors` lookup returns authors in its own
+  order.** Re-order by the work's `authorships`, and take `institution`
+  from the authorship (the affiliation on that paper), not
+  `last_known_institutions`.
+- **Crossref uses more update types than we alert on** (`withdrawal`,
+  `removal`, `partial_retraction`, ...). They're stored, not alerted on.
+- **A paper's stored title goes stale.** Crossref later prefixes
+  "RETRACTED:" to a title, but `papers.title` is set once at ingest, so
+  the UI should show the latest snapshot's title.
+- **DataCite DOIs (Zenodo, arXiv) and wrongly extracted DOIs aren't in
+  Crossref.** They're recorded as `not_found`, not treated as a change.
+
+### Consequences
+
+- Research Evaluation's `POST /evaluate/background-info` no longer serves the
+  retraction, Crossref update, DOAJ, journal and author fields; its owner
+  decides what it keeps serving (see CONTRACTS.md).
+- The derived `crossref_retracted` field is dropped: a retraction is an
+  entry of type `retraction` in `crossref_updates`.
+
+---
+
 ## 2026-09-18 — Research Evaluation + Updating scope and design
 
 ### Team decisions (via Q&A)

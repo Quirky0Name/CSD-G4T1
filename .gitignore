@@ -1,0 +1,44 @@
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+*.sqlite
+*.sqlite3
+
+# Java / Maven
+target/
+!.mvn/wrapper/maven-wrapper.properties
+*.class
+*.jar
+*.log
+HELP.md
+
+# Node / React 
+node_modules/
+frontend/dist/
+.vite/
+*.tsbuildinfo
+
+# Uploaded files / local data
+uploads/
+data/
+
+# IDEs / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Claude Code local state
+.claude/settings.local.json
