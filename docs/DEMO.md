@@ -34,12 +34,15 @@ depends on the publisher during the demo.
    contradicts (expect `contradicts`) and tracked vs. supports (expect
    `supports`).
 3. **Updating, Swagger UI:** `POST /admin/run-poll?paper_id=<tracked>` —
-   show a new `is_retracted` change event and a `crossref_update:
-   retraction` event appear, each with the severity, impact text and
-   recommendation returned by Research Evaluation.
+   show the new snapshot (now `is_retracted=true` with a `retraction`
+   entry in `crossref_updates`) and that the run summary lists the paper
+   as nudged, then show that Research Evaluation read the two snapshots
+   from Storage Management, worked out the differences and evaluated them
+   (severity, impact text and recommendation).
 4. **Frontend:** show the changes panel on the paper detail page, then
-   acknowledge one event.
-5. Run the poll again live to show no duplicate events are created.
+   acknowledge one change.
+5. Run the poll again live to show it stores another snapshot but doesn't
+   nudge again.
 
 ## Fallback if a live call fails
 

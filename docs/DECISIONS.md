@@ -10,18 +10,47 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 ### Team decisions
 
 - **Ownership split.** Updating fetches Crossref/OpenAlex status, journal and
-  author data, stores snapshots (via Storage Management), diffs them and
-  records raw changes. Research Evaluation evaluates what a change means
-  (severity, impact statement, recommendation) and owns the alert list and
-  actions. This replaces the 2026-09-18 design where Research Evaluation
-  built the background-info snapshot and Updating attached canned impact
-  text from a lookup table.
-- **Push, not pull, for the handoff.** Updating writes each change as
-  `pending`, calls `POST /evaluate/change`, and stores the answer. The UI
-  then reads one complete record from Updating. If Research Evaluation is
-  down the row stays `pending` and is re-sent on the next poll. Rejected:
-  Research Evaluation pulling `GET /changes?since=`, which needs its own
-  watermark and storage and makes the UI join two sources.
+  author data, stores snapshots (via Storage Management) and tells Research
+  Evaluation when a snapshot changed. It records snapshots only, never
+  changes. Research Evaluation works out the differences between snapshots,
+  classifies them, evaluates what they mean (severity, impact statement,
+  recommendation) and owns the alert list and actions. This replaces the
+  2026-09-18 design where Research Evaluation built the background-info
+  snapshot and Updating diffed it, kept `change_events` and attached canned
+  impact text from a lookup table.
+- **The handoff is a nudge with paper ids, not a payload.** Updating and
+  Research Evaluation share data only through Storage Management. Per poll:
+  fetch from the APIs → store the snapshot in Storage Management → compare
+  it with the previous snapshot (read back from Storage Management) → if it
+  differs in a field the alerts depend on, `POST /evaluate/changes` with just
+  the changed `paper_ids`. Research Evaluation then reads the snapshots (the
+  updatable data) and the paper, notes and extracted text (the non-updatable
+  data) from Storage Management itself and works out the differences.
+  Reasons: Research Evaluation would otherwise need Updating to hand it data
+  it can already read, each side only has to talk to one other service, and
+  Updating needs no change table of its own. A poll with no changes sends
+  nothing, so Research Evaluation isn't woken on every check. Considered and
+  rejected:
+  - Pushing each change with its data and storing Research Evaluation's
+    answer on Updating's row (the first version of this decision). It
+    couples the two services' data shapes and needs Research Evaluation to
+    reply.
+  - A bare nudge with no ids. Research Evaluation would have to scan Storage
+    Management for papers whose latest snapshot differs from the previous
+    one and keep its own watermark.
+  - Sending change ids and having Research Evaluation read change rows from
+    Updating. It would need to call two services, and Updating would need to
+    keep change rows.
+
+  Updating's comparison is a plain field comparison to decide whether to
+  nudge, not a classification. Because it keeps no change rows, it keeps a
+  `nudge_pending` flag per paper in its own `tracked_papers` table, cleared
+  once Research Evaluation accepted the nudge (`202`). This is needed
+  because after a failed nudge the next snapshot would look unchanged. The
+  endpoint must therefore tolerate receiving the same ids twice. Updating no
+  longer serves a change list or `PATCH /changes/{id}`; how Research
+  Evaluation stores and serves evaluations, changes and researcher actions is
+  left to it.
 - **Auth is a placeholder in sprint 1.** There's no User Management yet, so
   `JWT_SECRET` is any shared value and services run locally. Updating still
   mints service tokens; Storage Management only accepts those on
@@ -33,8 +62,9 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
   user tracking it) and rejected it: it saves a few near-identical rows but
   needs fan-out logic, and per-paper history gives each user their own
   baseline, so nobody gets alerted about changes from before they started
-  tracking. Keeping full history over only the latest snapshot: each change
-  cites the two snapshots it came from, false alerts can be replayed from
+  tracking. Keeping full history over only the latest snapshot: since
+  snapshots are the only record, Research Evaluation can work out the
+  differences after the fact, a missed or false alert can be replayed from
   the stored pair, and new rules can be back-tested. The cost is small (a
   few KB per row; 100 papers polled daily is about 36k rows a year). If
   size ever matters, prune unchanged snapshots that no change references.

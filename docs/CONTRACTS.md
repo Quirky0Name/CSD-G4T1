@@ -14,10 +14,11 @@ This is the single source of truth for every interface between services.
 - Every downstream service (Storage Management, Research Evaluation,
   Updating) validates the JWT signature itself. No service calls back to
   User Management per request.
-- **Service tokens:** Updating mints its own short-lived JWTs to call
-  Storage Management, with `sub=svc:updating` and `role=service`.
-  Storage Management must accept these on its internal endpoints without
-  owner-scoping them to a real user.
+- **Service tokens:** Updating and Research Evaluation each mint their own
+  short-lived JWTs to call Storage Management, with `sub=svc:updating` /
+  `sub=svc:research-evaluation` and `role=service`. Storage Management must
+  accept these on its internal endpoints without owner-scoping them to a
+  real user.
 - **Sprint 1:** there is no User Management yet, and everything runs
   locally. `JWT_SECRET` is a shared placeholder (any value, the same one in
   every service's local config), and Updating still mints service tokens
@@ -27,7 +28,8 @@ This is the single source of truth for every interface between services.
 ## Storage Management ↔ Research Evaluation / Updating
 
 Owned by: Storage Management. Consumed by: Research Evaluation (reads
-files), Updating (calls these on every poll).
+files, and reads the snapshots and paper data of the papers Updating
+tells it about), Updating (calls these on every poll).
 
 ### `GET /internal/papers`
 
@@ -70,8 +72,9 @@ per poll, including polls where nothing changed.
 
 ### `GET /internal/papers/{id}/background-info/history?after_id=&limit=`
 
-Ascending order by snapshot id. Used by Updating to diff each
-consecutive pair since its last watermark.
+Ascending order by snapshot id. Used by Updating (to read a paper's
+previous snapshot before deciding whether to nudge) and by Research
+Evaluation (to read the snapshots it works out differences from).
 
 ```json
 {"snapshots": [{"snapshot_id": 41, "fetched_at": "...", "...": "snapshot"}, {"snapshot_id": 42, "...": "..."}]}
@@ -81,11 +84,12 @@ consecutive pair since its last watermark.
 
 Kept in full and per paper (insert-only). Every nullable field is
 **null, never false**, when its source failed or didn't know the DOI
-(see `source_status`); Updating never diffs a null.
+(see `source_status`); nothing that compares snapshots may treat a null,
+or a field whose source wasn't `ok`, as a change.
 
 | Field | Type | Source | Used for |
 |---|---|---|---|
-| `snapshot_id` | bigint, ascending | Storage Management | diff order, watermark |
+| `snapshot_id` | bigint, ascending | Storage Management | ordering, watermark |
 | `paper_id` | uuid | Storage Management | key |
 | `doi` | text, normalised | Updating | fetch key |
 | `fetched_at` | timestamptz | Updating | audit |
@@ -104,13 +108,15 @@ Rules:
 - **`crossref_updates` entries are identified by (`notice_doi`, `type`).**
   Crossref lists the same notice once per source (`publisher`,
   `retraction-watch`), sometimes under different types. Keep every entry;
-  a new source for a known pair is not a new event. Types we don't alert
+  a new source for a known pair is not a new entry. Types we don't alert
   on yet (`withdrawal`, `removal`, `partial_retraction`, ...) are stored
   anyway.
 - **`in_doaj` belongs to the journal, not the paper.** Repository
-  locations (e.g. PubMed) are always false. A delisting is only
-  `in_doaj` true → false with the same `journal_source_id` and a
-  `journal_source_type` of `journal`.
+  locations (e.g. PubMed) are always false, so an OpenAlex switch of
+  `primary_location` from the journal to a repository flips `in_doaj` with
+  no delisting. Whoever classifies a difference must only call
+  `in_doaj` true → false a delisting when `journal_source_id` is unchanged
+  and `journal_source_type` is `journal`.
 - **`authors`:** `institution` is the author's affiliation on this paper
   (from the work's `authorships`), not `last_known_institutions`. The
   batched `/authors` response is unordered; re-order it by `authorships`.
@@ -132,41 +138,52 @@ Research Evaluation as `pdf_url`.
 
 ## Research Evaluation
 
-Called by Updating (change evaluation, and stance checks if ever needed
-for a manual comparison) and Storage Management (COI text / claims).
+Called by Updating (a nudge when papers changed, and stance checks if ever
+needed for a manual comparison) and Storage Management (COI text / claims).
 Not called directly by the frontend.
 
-### `POST /evaluate/change`
+### `POST /evaluate/changes`
 
-Called by Updating once per detected change. Research Evaluation says
-what the change means; it fetches nothing and has no side effects, so the
-same `change_id` always gives the same answer and re-sending is safe.
+Called by Updating at the end of a poll in which a paper's new snapshot
+differed from its previous one (see "When Updating nudges" below). It is a
+nudge, not a payload: it carries only the ids of the changed papers, never
+snapshot or change data. Updating records no changes, so **Research
+Evaluation works out the differences itself**: it reads the papers'
+snapshots from Storage Management
+(`GET /internal/papers/{id}/background-info/history`) plus their
+non-updatable data (notes, extracted text), compares the snapshots,
+classifies each difference and evaluates it (severity, impact statement,
+recommendation). Nothing is returned to Updating, and Updating never calls
+this on a poll with no changes.
+
+Classification, from the sprint's alert stories:
+
+| Change | Rule on the snapshots |
+|---|---|
+| Retraction | `is_retracted` false → true, or a new `crossref_updates` entry of type `retraction` |
+| Correction / erratum / expression of concern | a new `crossref_updates` entry of that type |
+| DOAJ delisting | `in_doaj` true → false, with the same `journal_source_id` and a `journal_source_type` of `journal` |
+
+Entries are identified by (`notice_doi`, `type`), and nulls are never
+compared (see "Snapshot fields"). A paper's first snapshot is only a
+baseline.
 
 **Request:**
 
 ```json
-{
-  "change_id": 7, "paper_id": "uuid", "doi": "10.xxxx/...",
-  "change_type": "retraction",
-  "source": "openalex",
-  "field": "is_retracted", "old_value": "false", "new_value": "true",
-  "details": {"notice_doi": "10.xxxx/...", "label": "Retraction", "source": "publisher", "date": "2020-05-22"},
-  "detected_at": "2026-09-24T12:00:00Z"
-}
+{"paper_ids": ["uuid", "uuid"]}
 ```
 
-`change_type` is one of `retraction`, `correction`, `erratum`,
-`expression_of_concern`, `doaj_delisted`. `source` is `openalex` or
-`crossref`. An unknown `change_type` still gets a generic answer, so a
-change is never stuck unevaluated.
+**Response `202`:** accepted; Research Evaluation does the reading and
+evaluating after responding, so Updating doesn't wait on it. Any other
+status (or no response) means the nudge wasn't accepted and Updating will
+re-send the same paper ids on its next poll, so this call must be safe to
+receive more than once for the same paper.
 
-**Response `200`:**
-
-```json
-{"severity": "high", "impact_text": "OpenAlex now marks this paper as retracted.", "recommendation": "Read the retraction notice before citing it; review any notes that rely on this paper."}
-```
-
-`severity` is `low`, `medium` or `high`.
+How Research Evaluation stores the evaluation and how the frontend reads
+it, and the change list and researcher actions (acknowledge, dismiss)
+the frontend uses, are Research Evaluation's design and aren't specified
+here yet.
 
 ### `POST /evaluate/background-info`
 
@@ -262,68 +279,54 @@ the UI, don't present it as a probability.
 
 ## Updating
 
-Called by the frontend directly. Updating calls Storage Management
-(`/internal/**`) and Research Evaluation (`/evaluate/change`).
+Not called by the frontend. Updating records snapshots only, never
+changes: it has no change list or researcher actions (those are Research
+Evaluation's). It calls Storage Management (`/internal/**`) and Research
+Evaluation (`/evaluate/changes`).
 
-### Poll job and diff rules
+### Poll job
 
 Each poll (every `POLL_INTERVAL_HOURS`, or `POST /admin/run-poll`):
-lists tracked papers from Storage Management, skips and logs papers with
-no DOI, fetches each DOI once from Crossref and OpenAlex, and stores one
-snapshot per tracked paper. It then diffs each paper's snapshots after its
-watermark, writes a change row per change, and pushes each to
-`POST /evaluate/change`. Rows whose evaluation failed stay `pending` and
-are re-sent first on the next poll.
 
-| `change_type` | `source` | Rule |
-|---|---|---|
-| `retraction` | `openalex` | `is_retracted` false → true |
-| `retraction` | `crossref` | new (`notice_doi`, `retraction`) entry in `crossref_updates` |
-| `correction`, `erratum`, `expression_of_concern` | `crossref` | new (`notice_doi`, type) entry in `crossref_updates` |
-| `doaj_delisted` | `openalex` | `in_doaj` true → false, same `journal_source_id`, type `journal` |
+1. lists tracked papers from Storage Management, skipping and logging
+   papers with no DOI;
+2. fetches each DOI once from Crossref and OpenAlex;
+3. stores one snapshot per tracked paper in Storage Management, even when
+   nothing changed (its `fetched_at` is when the paper was last checked);
+4. compares each new snapshot with the paper's previous one, read back from
+   Storage Management (see below), and sets `nudge_pending` on the paper
+   in its own `tracked_papers` table if they differ;
+5. sends the ids of all papers with `nudge_pending` to
+   `POST /evaluate/changes`. On a `202` it clears the flag. A poll with no
+   changes sends nothing; after a failed nudge the flag stays set and the
+   next poll re-sends those ids (the next snapshot would otherwise look
+   unchanged, so Research Evaluation would never hear about the change).
 
-- No change produces no row, and re-running a poll creates no duplicates.
-- A paper's first snapshot is its baseline and is never diffed.
-- A null field, or a source whose `source_status` isn't `ok`, is never
-  diffed.
+### When Updating nudges
 
-### `GET /papers/{id}/changes`
+Updating does a plain comparison and doesn't classify what changed; it
+records no change, only the flag above. It nudges when the new snapshot
+differs from the previous one in any of these fields (nulls, and fields
+whose source wasn't `ok`, are never compared):
 
-`sub` must equal the paper's `owner_id` (not enforced in sprint 1, see
-Auth). Returns newest first.
+| Field | Nudge when |
+|---|---|
+| `is_retracted` | false → true |
+| `crossref_updates` | a new (`notice_doi`, `type`) entry of type `retraction`, `correction`, `erratum` or `expression_of_concern` |
+| `in_doaj` | true → false |
 
-```json
-[{
-  "id": 7, "paper_id": "uuid", "doi": "10.xxxx/...",
-  "change_type": "retraction", "source": "openalex",
-  "changed_field": "is_retracted",
-  "old_value": "false", "new_value": "true",
-  "detected_at": "2026-09-18T12:00:00Z",
-  "snapshot_ids": [41, 42],
-  "evaluation_status": "done",
-  "severity": "high",
-  "impact_text": "OpenAlex now marks this paper as retracted.",
-  "recommendation": "Read the retraction notice before citing it; review any notes that rely on this paper.",
-  "details": {"...": "raw diff context, e.g. the crossref_updates entry"},
-  "status": "new"
-}]
-```
-
-`evaluation_status` is `pending` or `done`. While `pending`, `severity`,
-`impact_text` and `recommendation` are null. `status` is the researcher's
-decision (`new`, `acknowledged`, `dismissed`).
-
-### `PATCH /changes/{event_id}`
-
-**Request:** `{"status": "acknowledged" | "dismissed"}`
-The "researcher decides" step of the core loop.
+- A paper's first snapshot is its baseline and never nudges.
+- Re-running a poll doesn't nudge again for the same difference: the next
+  comparison is against the snapshot the previous run stored.
+- Citation counts, authors, titles and other stored fields don't nudge.
 
 ### `POST /admin/run-poll?paper_id=`
 
 Requires header `X-Admin-Key`; a missing or wrong key is rejected.
 Runs the poll job synchronously (used for the demo, since a real change
-won't reliably land inside a 10-minute slot). Returns the run summary plus
-the events it created.
+won't reliably land inside a 10-minute slot). Returns the run summary,
+including which papers it stored snapshots for and which it nudged
+Research Evaluation about.
 
 ## Env vars every service needs to agree on
 
@@ -331,7 +334,7 @@ the events it created.
 |---|---|---|
 | `JWT_SECRET` | all | base64-encoded, 32+ bytes; every service decodes before use. Sprint 1: any shared placeholder value |
 | `SM_BASE_URL` | Research Evaluation, Updating | Storage Management's base URL (`http://localhost:8081` locally) |
-| `RE_BASE_URL` | Storage Management, Updating | Research Evaluation's base URL |
+| `RE_BASE_URL` | Storage Management, Updating | Research Evaluation's base URL (Updating's nudge goes here) |
 | `ADMIN_API_KEY` | Updating | for `/admin/run-poll` |
 
 See [SETUP.md](SETUP.md) for the full env var list including the

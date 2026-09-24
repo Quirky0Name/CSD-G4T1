@@ -28,8 +28,11 @@ scope for week 7 too, not deferred to week 13.
   COI text + citation-neighbourhood metrics (self-citation ratio,
   retraction cascade, citation diversity, citations/year) from Research
   Evaluation
-- Change detection: Updating diffs two snapshots of the same paper and
-  records the raw change; Research Evaluation evaluates it (severity,
+- Change detection: Updating stores a snapshot of each paper on every
+  poll and, when a snapshot differs from the previous one in the fields we
+  alert on, tells Research Evaluation which papers changed. It records no
+  changes itself. Research Evaluation reads the snapshots from Storage
+  Management, works out the differences and evaluates them (severity,
   impact statement, recommendation)
 - Stance detection and methodology/claims validation (LLM), scoped to
   Research Evaluation only — see below
@@ -64,9 +67,16 @@ flowchart LR
    RE[Research Evaluation - LLM] --> SM
    RE --> EXT[CrossRef / OpenAlex]
    UPD[Updating - Scheduler] --> EXT
-   UPD -- /evaluate/change --> RE
+   UPD -- "changed paper ids" --> RE
    UPD --> SM
 ```
+
+Updating and Research Evaluation share data only through Storage
+Management. Updating writes snapshots there and, when a poll finds a
+change, sends Research Evaluation just the ids of the changed papers.
+Research Evaluation reads everything it needs from Storage Management:
+the snapshots (the updatable data) and the paper, notes and extracted
+text (the non-updatable data).
 
 Sprint 1 runs everything locally with a shared placeholder `JWT_SECRET`;
 User Management doesn't exist yet, so the JWT paths above are wired up
@@ -76,8 +86,8 @@ but not backed by real logins.
 |---|---|---|---|
 | User Management | Spring Boot (backend) + React (Vite, frontend) | `users`, `folders`; auth | `frontend/` |
 | Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `authors_background`; Postgres + S3/disk | `storage/` |
-| Research Evaluation | Python | Change evaluation (severity, impact, recommendation), COI text, citation-neighbourhood metrics, LLM reasoning (claims + stance, week 7) | `backend/` |
-| Updating | Python (shares the `backend/` project with Research Evaluation) | Crossref/OpenAlex status, journal and author fetching; snapshots (sent to Storage Management); `change_events`; the polling scheduler | `backend/` |
+| Research Evaluation | Python | Change evaluation (severity, impact, recommendation), read from Storage Management when nudged by Updating; COI text, citation-neighbourhood metrics, LLM reasoning (claims + stance, week 7) | `backend/` |
+| Updating | Python (shares the `backend/` project with Research Evaluation) | Crossref/OpenAlex status, journal and author fetching; sending snapshots to Storage Management; nudging Research Evaluation when a snapshot changed; the polling scheduler and its small polling state (`tracked_papers`) | `backend/` |
 | Deployment | Docker + a public cloud target | Containerisation, environment config, CI | (cross-cutting) |
 
 Rubric note: Java + Spring Boot for at least one component is satisfied by
@@ -113,8 +123,8 @@ Owns all Postgres and file persistence.
   file).
 - **Schema:** `papers`, `notes` (separate table/endpoint from `papers`),
   `background_metadata` (insert-only history, kept in full and per paper —
-  never overwrite, that's what Updating diffs; one row per tracked paper
-  per poll, even when nothing changed), `background_text` (raw text for
+  never overwrite, that's what Updating and Research Evaluation compare;
+  one row per tracked paper per poll, even when nothing changed), `background_text` (raw text for
   week-13 LLM input; nothing here is diffed in week 7),
   `authors_background`.
 - **File storage:** PDF bytes never in Postgres — S3/local disk holds
@@ -126,14 +136,21 @@ Owns all Postgres and file persistence.
 ## Section 3 — Research Evaluation
 
 See [CONTRACTS.md](CONTRACTS.md) for the full endpoint/DTO contract.
-Owns evaluating what a detected change means, and the paper-evaluation/
-comparison logic behind it, including LLM reasoning — live in week 7, not
-deferred. Fetching the retraction, correction, DOAJ, journal and author
-fields moved to Updating (Section 4).
+Owns working out what changed in a paper and what that means, and the
+paper-evaluation/comparison logic behind it, including LLM reasoning —
+live in week 7, not deferred. Fetching the retraction, correction, DOAJ,
+journal and author fields moved to Updating (Section 4).
 
-- **Change evaluation:** given a raw change from Updating, returns a
-  severity, an impact statement and a recommendation (`POST
-  /evaluate/change`).
+- **Change evaluation:** Updating calls `POST /evaluate/changes` with the
+  ids of the papers that changed and nothing else. Research Evaluation
+  reads those papers' snapshots and their non-updatable data from Storage
+  Management, **works out the differences between the snapshots itself**,
+  classifies them (retraction, correction, erratum, expression of concern,
+  DOAJ delisting) and produces a severity, an impact statement and a
+  recommendation. Nothing goes back to Updating. How the evaluation is
+  stored, and the change list and researcher actions (acknowledge,
+  dismiss) the frontend uses, are Research Evaluation's design and aren't
+  specified here yet.
 - **Structured signal layer** (no reasoning, cheap): citation-neighbourhood
   metrics computed from OpenAlex reference/citation data, GROBID (COI/
   funding text, verbatim, never judged).
@@ -145,15 +162,17 @@ fields moved to Updating (Section 4).
   validation, both live in the demo. Provider: DeepSeek (see
   [DECISIONS.md](DECISIONS.md)). Results are cached and pre-warmed for
   the demo so a slow/failed call can't stall it.
-- **Endpoints (internal):** `POST /evaluate/change`,
+- **Endpoints (internal):** `POST /evaluate/changes`,
   `POST /evaluate/background-info`, `POST /evaluate/citation-neighbourhood`,
   `POST /evaluate/stance`.
 
 ## Section 4 — Updating
 
 Owns the scheduled job that re-checks tracked papers: it fetches their
-current status from Crossref and OpenAlex, snapshots it, and records what
-changed. Research Evaluation then says what each change means.
+current status from Crossref and OpenAlex and snapshots it. It records
+snapshots only, never changes: when a new snapshot differs from the
+previous one it tells Research Evaluation which papers changed, and
+Research Evaluation works out the differences and what they mean.
 
 - **Why polling:** none of CrossRef/OpenAlex offer webhooks, and
   OpenAlex's `from_updated_date` filter is Premium-only. Polling is the
@@ -162,41 +181,45 @@ changed. Research Evaluation then says what each change means.
   papers from Storage Management, fetch each DOI once from Crossref
   (`updated-by`) and OpenAlex (retraction, DOAJ, journal, authors), and
   send one snapshot per tracked paper to Storage Management (insert-only,
-  even when nothing changed). Then diff each paper's two most recent
-  snapshots after its watermark and write a `change_events` row per change.
-  Papers with no DOI are skipped and logged.
-- **Diff rules:**
-  - `is_retracted` false → true (OpenAlex), or a new Crossref
-    `updated-by` entry of type `retraction`.
-  - A new `updated-by` entry of type `correction`, `erratum` or
-    `expression_of_concern`. An entry is identified by (notice DOI, type);
-    Crossref lists the same notice once per source (publisher,
-    Retraction Watch), and a new source for a known pair is not a new
-    change.
-  - `in_doaj` true → false, only when it's the same journal source
-    (`journal` type). `in_doaj` belongs to the journal, so an OpenAlex
-    switch of primary location to a repository must not read as
-    delisting.
-  - A source that failed or didn't know the DOI is stored as null and
-    never diffed (a failure must not look like a status change). A
-    paper's first snapshot is only a baseline.
-- **Week 7 scope:** status diff only, for the changes above. Citation
-  counts are stored but not alerted on. Detecting newly-appearing related
-  papers is explicitly **out of scope** for week 7 (team decision — see
-  DECISIONS.md).
-- **Handoff to Research Evaluation:** each change is written as a
-  `change_events` row with `evaluation_status=pending`, then pushed to
-  `POST /evaluate/change`; the returned severity, impact statement and
-  recommendation are stored and the row becomes `done`. If Research
-  Evaluation is down, the row stays `pending` and the next poll re-sends
-  it. Zero LLM calls in Updating.
-- **`change_events` schema:** `id, paper_id, doi, change_type, source,
-  changed_field, old_value, new_value, details, snapshot_ids, detected_at,
-  evaluation_status` (+ severity, impact_text, recommendation, status —
-  see CONTRACTS.md). Severity, impact and recommendation are null until
-  evaluated.
-- **Endpoints:** `GET /papers/{id}/changes`, `PATCH /changes/{id}`,
-  `POST /admin/run-poll`.
+  even when nothing changed). Then compare each paper's new snapshot with
+  its previous one, which Updating reads back from Storage Management, to
+  decide whether to nudge Research Evaluation. Each snapshot's
+  `fetched_at` records when the paper was last checked. Papers with no DOI
+  are skipped and logged.
+- **When to nudge:** Updating does a plain comparison of the fields the
+  alerts depend on and doesn't classify what changed. It nudges when the
+  new snapshot differs from the previous one in any of:
+  - `is_retracted` false → true;
+  - a new `crossref_updates` entry of type `retraction`, `correction`,
+    `erratum` or `expression_of_concern`, where an entry is identified by
+    (notice DOI, type): Crossref lists the same notice once per source
+    (publisher, Retraction Watch), and a new source for a known pair is
+    not a new entry;
+  - `in_doaj` true → false.
+
+  A field that is null in either snapshot, or whose source wasn't `ok`, is
+  never compared (a failure must not look like a status change). A paper's
+  first snapshot is only a baseline. Classifying the difference (including
+  the DOAJ rule that a delisting needs the same journal source) is
+  Research Evaluation's job; see CONTRACTS.md.
+- **Week 7 scope:** the changes above. Citation counts are stored but not
+  alerted on. Detecting newly-appearing related papers is explicitly **out
+  of scope** for week 7 (team decision — see DECISIONS.md).
+- **Handoff to Research Evaluation (a nudge, not a payload):** the flow
+  for one poll is: fetch from the APIs → store the snapshot in Storage
+  Management → compare with the previous snapshot → if it differs,
+  `POST /evaluate/changes` to Research Evaluation with the changed
+  `paper_ids`. A poll with no changes sends nothing. No snapshot data is
+  passed; Research Evaluation reads it, and works out the differences,
+  from Storage Management. Updating keeps a `nudge_pending` flag per paper
+  in `tracked_papers`, cleared once Research Evaluation accepted the nudge,
+  so if it was down the next poll re-sends those paper ids (the next
+  snapshot would otherwise look unchanged). Zero LLM calls in Updating.
+- **Updating's own data:** `tracked_papers` (`paper_id`, `doi`,
+  `last_snapshot_id`, `nudge_pending`) and `poll_runs` (a summary per
+  run). There are no change records; the snapshots in Storage Management
+  are the only history.
+- **Endpoints:** `POST /admin/run-poll`.
 
 ## Section 5 — Deployment
 
