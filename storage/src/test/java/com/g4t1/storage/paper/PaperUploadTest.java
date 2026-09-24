@@ -84,6 +84,19 @@ class PaperUploadTest {
     }
 
     @Test
+    void uploadKeepsTheFolderItWasAddedTo() throws Exception {
+        when(grobid.extractHeader(any())).thenReturn(Optional.empty());
+        UUID folder = UUID.randomUUID();
+
+        mvc.perform(multipart("/papers").file(pdf(PDF)).param("folder_id", folder.toString())
+                        .header(HttpHeaders.AUTHORIZATION, TestTokens.user(user)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.folder_id").value(folder.toString()));
+
+        assertThat(papers.findAll().getFirst().getFolderId()).isEqualTo(folder);
+    }
+
+    @Test
     void nonPdfIsRejectedWithMessage() throws Exception {
         var text = new MockMultipartFile("file", "notes.txt", "text/plain", "hello".getBytes());
 
