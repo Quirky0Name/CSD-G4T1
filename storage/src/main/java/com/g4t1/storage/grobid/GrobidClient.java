@@ -41,6 +41,7 @@ public class GrobidClient {
         });
 
         try {
+            // POST pdf to grobid and get back Bibitex with DOI and title
             String bibtex = rest.post()
                     .uri("/api/processHeaderDocument")
                     .contentType(MediaType.MULTIPART_FORM_DATA)

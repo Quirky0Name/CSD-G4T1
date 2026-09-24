@@ -14,6 +14,10 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 
+ * looksup doi and returns metadata for the paper
+ */
 @Component
 public class MetadataClient {
 
@@ -59,7 +63,7 @@ public class MetadataClient {
                 m.year()));
     }
 
-    // OpenAlex only adds the id Research Evaluation looks papers up by, so a
+    // OpenAlex only adds the openalexId Research Evaluation looks papers up by, so a
     // failure here shouldn't lose the CrossRef metadata
     private String openalexId(String doi) {
         try {
@@ -99,10 +103,20 @@ public class MetadataClient {
         return uri.build().encode().toUri();
     }
 
+    /**
+     * 
+     * helper function (currently used only for CrossRef API) 
+     * CrossRef returns JSON where the fields are in a lists
+     *  whether it's one elem or not
+     * this helper just takes the first elem
+     */
     private static String first(List<String> values) {
         return values == null || values.isEmpty() ? null : values.getFirst();
     }
 
+    /**
+     * used to store/format CrossRef's API response
+     */
     record CrossrefWork(Message message) {
 
         record Message(List<String> title,
