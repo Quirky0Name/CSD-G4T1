@@ -54,7 +54,7 @@ into its own `tracked_papers` table.
 [{"id": "uuid", "owner_id": "uuid", "doi": "10.xxxx/...", "issn": "0000-0000", "file_available": true}]
 ```
 
-### `POST /papers/{id}/background-info?include_llm=true|false`
+### `POST /internal/papers/{id}/background-info?include_llm=true|false`
 
 Triggers a fetch: Storage Management calls Research Evaluation's
 `/evaluate/background-info`, persists the result as a new
@@ -65,7 +65,7 @@ overwrite), and returns the persisted snapshot including its id.
 {"snapshot_id": 42, "fetched_at": "2026-09-18T12:00:00Z", "...": "full BackgroundInfoDTO, see below"}
 ```
 
-### `GET /papers/{id}/background-info/history?after_id=&limit=`
+### `GET /internal/papers/{id}/background-info/history?after_id=&limit=`
 
 Ascending order by snapshot id. Used by Updating to diff each
 consecutive pair since its last watermark.
