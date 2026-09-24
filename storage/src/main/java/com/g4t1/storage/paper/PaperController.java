@@ -26,7 +26,8 @@ public class PaperController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public PaperResponse upload(@AuthenticationPrincipal UUID userId,
-                                @RequestParam("file") MultipartFile file) throws IOException {
-        return papers.uploadPdf(userId, file);
+                                @RequestParam("file") MultipartFile file,
+                                @RequestParam(name = "folder_id", required = false) UUID folderId) throws IOException {
+        return papers.uploadPdf(userId, folderId, file);
     }
 }

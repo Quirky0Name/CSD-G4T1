@@ -1,6 +1,8 @@
 create table papers (
     id               uuid primary key,
     owner_id         uuid         not null,
+    -- User Management's folder; a bare reference, no FK across services
+    folder_id        uuid,
     doi              varchar(255),
     openalex_id      varchar(64),
     title            text,

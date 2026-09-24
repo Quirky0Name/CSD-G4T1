@@ -45,7 +45,7 @@ public class PaperService {
     }
 
     @Transactional
-    public PaperResponse uploadPdf(UUID ownerId, MultipartFile file) throws IOException {
+    public PaperResponse uploadPdf(UUID ownerId, UUID folderId, MultipartFile file) throws IOException {
         if (file.getSize() > maxPdfSize.toBytes()) {
             throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE,
                     "PDF is too large, the limit is " + maxPdfSize.toMegabytes() + " MB");
@@ -60,6 +60,7 @@ public class PaperService {
         rejectDuplicate(ownerId, doi);
 
         Paper paper = new Paper(ownerId);
+        paper.setFolderId(folderId);
         paper.setDoi(doi);
         paper.setTitle(header.title() != null ? header.title() : file.getOriginalFilename());
         if (doi != null) {

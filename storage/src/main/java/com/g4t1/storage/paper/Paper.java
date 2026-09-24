@@ -22,6 +22,8 @@ public class Paper {
     @Column(nullable = false)
     private UUID ownerId;
 
+    private UUID folderId;
+
     private String doi;
     private String openalexId;
     private String title;
@@ -57,6 +59,14 @@ public class Paper {
 
     public UUID getOwnerId() {
         return ownerId;
+    }
+
+    public UUID getFolderId() {
+        return folderId;
+    }
+
+    public void setFolderId(UUID folderId) {
+        this.folderId = folderId;
     }
 
     public String getDoi() {
