@@ -1,15 +1,13 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
 import httpx
 import pytest
 from support import load_fixture
-from updating_support import DOIS, author_batch, poll_runs, tracked_rows
+from updating_support import DOIS, fixture_snapshot, poll_runs, tracked_rows
 
 from updating import poll as poll_module
 from updating.models import PollTrigger, RunStatus
 from updating.poll import PollFailed, run_poll
-from updating.snapshot import build_snapshot
-from updating.sources import CrossrefWork, OpenAlexWork
 
 
 async def poll(deps):
@@ -27,13 +25,7 @@ async def test_stores_one_snapshot_per_paper_and_records_it(deps, sm, sources):
     assert [s.paper_id for s in summary.stored] == [lancet, jbc]
     for paper_id, name in [(lancet, "lancet"), (jbc, "jbc")]:
         [row] = await sm.history(paper_id)
-        expected = build_snapshot(
-            DOIS[name],
-            datetime.now(UTC),
-            CrossrefWork.model_validate(load_fixture("crossref", name)["message"]),
-            OpenAlexWork.model_validate(load_fixture("openalex", name)),
-            author_batch(name),
-        ).model_dump(mode="json")
+        expected = fixture_snapshot(name).model_dump(mode="json")
         stored = {k: v for k, v in row.items() if k not in {"snapshot_id", "paper_id"}}
         assert stored | {"fetched_at": None} == expected | {"fetched_at": None}
         assert datetime.fromisoformat(row["fetched_at"]).microsecond == 0

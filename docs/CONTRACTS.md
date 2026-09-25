@@ -90,7 +90,8 @@ row (insert-only, never overwrite) and returns it with its id. Storage
 Management doesn't fetch anything or call Research Evaluation here;
 Updating fetched the data. Updating sends one snapshot per tracked paper
 per poll, including polls where nothing changed, except for a paper whose
-Crossref or OpenAlex lookup errored that poll (see "Poll job").
+Crossref or OpenAlex lookup, or whose previous-snapshot read, failed that
+poll (see "Poll job").
 
 **Request — snapshot (fields below):**
 
@@ -367,8 +368,11 @@ Each poll (every `POLL_INTERVAL_HOURS`, or `POST /admin/run-poll`):
    snapshot for that paper, lists it under `source_errors` in the run summary
    and retries on the next poll; `not_found` is stored;
 4. compares each new snapshot with the paper's previous one, read back from
-   Storage Management (see below), and sets `nudge_pending` on the paper
-   in its own `tracked_papers` table if they differ;
+   Storage Management before the new one is stored (see below), and sets
+   `nudge_pending` on the paper in its own `tracked_papers` table if they
+   differ. If that read fails, it stores no snapshot for the paper, lists it
+   under `store_errors` and retries on the next poll: storing anyway would
+   make the next poll compare against this snapshot and miss the change;
 5. sends the ids of all papers with `nudge_pending` to
    `POST /evaluate/changes`. On a `202` it clears the flag. A poll with no
    changes sends nothing; after a failed nudge the flag stays set and the

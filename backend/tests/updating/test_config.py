@@ -20,6 +20,7 @@ def test_defaults_and_decoded_secret():
 
     assert settings.jwt_secret.get_secret_value() == TEST_JWT_KEY
     assert settings.sm_base_url == "http://localhost:8081"
+    assert settings.re_base_url == "http://localhost:8000"
     assert settings.crossref_mailto == ""
     assert settings.openalex_api_key.get_secret_value() == ""
     assert settings.poll_interval_hours == 24

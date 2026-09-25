@@ -69,7 +69,7 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
 | `JWT_SECRET` | `openssl rand -base64 32`; the same value in every service (base64, 32+ bytes) |
 | `DATABASE_URL` | local Postgres in sprint 1 (`postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` for the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres; Supabase session-pooler connection string once hosted |
 | `SM_BASE_URL` | Storage Management's running URL (`http://localhost:8081`); the stub in `backend/dev/` listens on the same port |
-| `RE_BASE_URL` | Research Evaluation's running URL |
+| `RE_BASE_URL` | Research Evaluation's running URL (`http://localhost:8000`); the stub in `backend/dev/` listens on the same port |
 | `GROBID_URL` | `http://grobid:8070` in Docker Compose |
 | `ADMIN_API_KEY` | any value you pick and share with the team, for `/admin/run-poll` |
 | `POLL_INTERVAL_HOURS` | `24` (default) |
@@ -91,11 +91,15 @@ Updating reaches Storage Management on the host at
 `host.docker.internal:8081`. See `ARCHITECTURE.md` and the plan for the full
 build order.
 
-## Running Updating locally (stub Storage Management)
+## Running Updating locally (stub Storage Management and Research Evaluation)
 
 Storage Management's `/internal/**` endpoints don't exist yet (CG-68), so
 `backend/dev/stub_storage.py` stands in for them: in memory, checking the
-service token the way the real service does. Run Updating as **one process**
+service token the way the real service does. Research Evaluation's
+`POST /evaluate/changes` doesn't exist yet either, so
+`backend/dev/stub_research_evaluation.py` accepts Updating's nudges and records
+them. Without it, every change logs a failed nudge (the paper stays pending
+and is re-sent next poll). Run Updating as **one process**
 (one uvicorn worker); the scheduler doesn't coordinate across processes.
 
 ```
@@ -113,10 +117,13 @@ reset the timer).
 # terminal 1: the stub on 8081 (it reads JWT_SECRET from the environment)
 uv run --env-file .env uvicorn dev.stub_storage:create_app --factory --port 8081
 
-# terminal 2: Updating on 8001
+# terminal 2: the Research Evaluation stub on 8000
+uv run uvicorn dev.stub_research_evaluation:create_app --factory --port 8000
+
+# terminal 3: Updating on 8001
 uv run uvicorn updating.main:app --port 8001
 
-# terminal 3: seed papers (stub-only endpoints, no token needed)
+# terminal 4: seed papers (stub-only endpoints, no token needed)
 curl -X POST localhost:8081/dev/papers -H 'content-type: application/json' \
   -d '{"doi": "10.1016/j.ijantimicag.2020.105949"}'
 curl -X POST localhost:8081/dev/papers -H 'content-type: application/json' -d '{}'   # no DOI: skipped
@@ -125,7 +132,9 @@ curl -X POST localhost:8081/dev/reset                                           
 
 Each poll stores a snapshot per paper in the stub; read them back with a
 service token from `GET /internal/papers/{id}/background-info/history`. The poll
-summary is in Updating's `poll_runs` table.
+summary is in Updating's `poll_runs` table. Nudges show up at
+`GET localhost:8000/dev/received`; `POST localhost:8000/dev/fail` makes the stub
+refuse them (`?on=false` to stop), to see a failed nudge re-sent next poll.
 
 Tests need no keys, Docker or Postgres (they use SQLite and the stub):
 
