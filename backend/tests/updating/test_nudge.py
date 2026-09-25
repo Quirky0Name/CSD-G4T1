@@ -184,3 +184,30 @@ async def test_a_failed_history_read_stores_nothing_and_the_change_is_caught_nex
     summary = await poll(deps)
 
     assert summary.nudged == [paper]
+
+
+def jbc_body_leaving_doaj():
+    body = load_fixture("openalex", "jbc")
+    body["primary_location"]["source"]["is_in_doaj"] = False
+    return body
+
+
+def jbc_body_now_in_a_repository():
+    """OpenAlex switched the work's primary location from the journal to a repository."""
+    body = load_fixture("openalex", "jbc")
+    body["primary_location"] = load_fixture("openalex", "arxiv")["primary_location"]
+    return body
+
+
+@pytest.mark.parametrize(
+    "body", [jbc_body_leaving_doaj, jbc_body_now_in_a_repository], ids=["delisted", "repository switch"]
+)
+async def test_a_journal_leaving_doaj_nudges_once(deps, sm, re, sources, body):
+    sources.serve("jbc", openalex=body())
+    paper = await add_seeded(sm, "jbc")  # JBC's fixture: in DOAJ, nothing retracted or noticed
+
+    first = await poll(deps)
+    second = await poll(deps)
+
+    assert first.nudged == [paper] and second.nudged == []
+    assert await re.received() == [[paper]]

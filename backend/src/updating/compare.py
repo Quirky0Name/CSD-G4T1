@@ -23,13 +23,16 @@ def _update_key(update: CrossrefUpdate) -> tuple[str | None, str | None]:
 
 def nudge_reasons(previous: Snapshot, new: Snapshot) -> list[str]:
     reasons: list[str] = []
+    openalex_ok = _both_ok(previous.source_status.openalex, new.source_status.openalex)
 
-    if (
-        _both_ok(previous.source_status.openalex, new.source_status.openalex)
-        and previous.is_retracted is False
-        and new.is_retracted is True
-    ):
+    if openalex_ok and previous.is_retracted is False and new.is_retracted is True:
         reasons.append("is_retracted false -> true")
+
+    # No journal check on purpose: OpenAlex switching the work's primary location from the
+    # journal to a repository also flips this. Telling that from a delisting is Research
+    # Evaluation's job (docs/CONTRACTS.md, "Snapshot fields").
+    if openalex_ok and previous.in_doaj is True and new.in_doaj is False:
+        reasons.append("in_doaj true -> false")
 
     if (
         _both_ok(previous.source_status.crossref, new.source_status.crossref)

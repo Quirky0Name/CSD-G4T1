@@ -10,8 +10,9 @@ ALERT_TYPES = ["retraction", "correction", "erratum", "expression_of_concern"]
 
 
 def snap(**changes):
-    """A paper with nothing to report: not retracted, no Crossref notices."""
-    return fixture_snapshot("jbc", **{"is_retracted": False, "crossref_updates": [], **changes})
+    """A paper with nothing to report: not retracted, no Crossref notices, in DOAJ."""
+    defaults = {"is_retracted": False, "crossref_updates": [], "in_doaj": True}
+    return fixture_snapshot("jbc", **{**defaults, **changes})
 
 
 def statuses(crossref=OK, openalex=OK):
@@ -103,9 +104,10 @@ def test_a_null_notice_list_is_never_compared(side):
     ("source", "before", "after"),
     [
         ("openalex", {"is_retracted": False}, {"is_retracted": True}),
+        ("openalex", {"in_doaj": True}, {"in_doaj": False}),
         ("crossref", {"crossref_updates": []}, {"crossref_updates": [notice("10.1/n")]}),
     ],
-    ids=["is_retracted", "crossref_updates"],
+    ids=["is_retracted", "in_doaj", "crossref_updates"],
 )
 def test_a_field_whose_source_was_not_ok_is_never_compared(side, source, before, after):
     previous, new = snap(**before), snap(**after)
@@ -118,3 +120,28 @@ def test_a_field_whose_source_was_not_ok_is_never_compared(side, source, before,
         new = new.model_copy(update=not_ok)
 
     assert nudge_reasons(previous, new) == []
+
+
+def test_leaving_doaj_nudges():
+    assert nudge_reasons(snap(in_doaj=True), snap(in_doaj=False)) == ["in_doaj true -> false"]
+
+
+@pytest.mark.parametrize(
+    ("previous", "new"),
+    [(False, True), (True, True), (False, False), (None, False), (True, None)],
+)
+def test_any_other_in_doaj_change_does_not_nudge(previous, new):
+    assert nudge_reasons(snap(in_doaj=previous), snap(in_doaj=new)) == []
+
+
+def test_a_switch_from_the_journal_to_a_repository_still_nudges():
+    """Updating doesn't classify: telling this apart from a delisting is Research Evaluation's
+    job (CONTRACTS, "Snapshot fields")."""
+    repository = {
+        "in_doaj": False,
+        "journal_source_id": "S4306401300",
+        "journal_source_type": "repository",
+        "journal": "ORBi (University of Liège)",
+    }
+
+    assert nudge_reasons(snap(), snap(**repository)) == ["in_doaj true -> false"]
