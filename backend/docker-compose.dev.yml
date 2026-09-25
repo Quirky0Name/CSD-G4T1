@@ -1,6 +1,6 @@
 # Local dev stack for Research Evaluation + Updating.
-# Round 1: brings up GROBID + Postgres (real dependencies) and both
-# FastAPI apps as empty stubs, to confirm everything builds and boots.
+# Brings up GROBID + Postgres (real dependencies) and both FastAPI apps.
+# Research Evaluation is still an empty stub; Updating polls on a schedule.
 # See ../ARCHITECTURE.md and ../SETUP.md.
 
 services:
@@ -20,6 +20,11 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "dev", "-d", "research_assistant"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
 
   research-evaluation:
     build: .
@@ -39,13 +44,22 @@ services:
     command: ["uvicorn", "updating.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
     env_file:
       - .env
+    # inside the container, localhost is the container itself
+    environment:
+      SM_BASE_URL: http://host.docker.internal:8081
+      DATABASE_URL: postgresql+asyncpg://dev:dev@postgres:5432/research_assistant
+    # Linux needs this for host.docker.internal (Storage Management runs on the host)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./src:/app/src
     ports:
-      - "8001:8000"
+      - "8001:8001"
     depends_on:
-      - postgres
-      - research-evaluation
+      postgres:
+        condition: service_healthy
+      research-evaluation:
+        condition: service_started
 
 volumes:
   pg_data:
