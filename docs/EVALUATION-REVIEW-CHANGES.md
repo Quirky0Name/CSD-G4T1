@@ -1,9 +1,9 @@
 # Seeing and reviewing paper changes (plan)
 
-**Status: plan, awaiting approval.** Work happens on
-`feat/eval-reviewing-changes`. Nothing here is built yet. Once each part
-is built, the parts of this plan that change a contract or a decision
-move into CONTRACTS.md, ARCHITECTURE.md and DECISIONS.md.
+**Status: built** (S1–S6 done and verified). Work happens on
+`feat/eval-reviewing-changes`. As each subtask is built and verified, the
+parts of it that change a contract or a decision move into CONTRACTS.md,
+ARCHITECTURE.md and DECISIONS.md, and the subtask is marked done below.
 
 ## The story
 
@@ -94,7 +94,7 @@ In Storage Management's Postgres, created by a Flyway migration (S1).
 | Column | Type | In the API? | Why it exists |
 |---|---|---|---|
 | `id` | bigint, primary key | yes | identifies the alert for `PATCH /alerts/{id}` |
-| `paper_id` | uuid, FK → `papers` | yes | which paper; ownership comes from `papers.owner_id` |
+| `paper_id` | uuid, FK → `papers`, `on delete cascade` | yes | which paper; ownership comes from `papers.owner_id`; an alert is deleted with its paper |
 | `change_type` | varchar (enum) | yes | the kind of change, including `other` from the start, so the later LLM story needs no migration to handle it |
 | `severity` | varchar (enum) | yes | `high` / `medium` / `low` |
 | `description` | text | yes | what changed and how it affects the researcher |
@@ -126,9 +126,10 @@ Research Evaluation (`backend/src/research_evaluation/`, Python).
 Out of scope:
 - **The frontend panel.** There is no `frontend/` yet, and it belongs to
   User Management's owner.
-- **A list of alerts across all of a user's papers.** The story is about
-  one paper. `GET /alerts` can be added later with the same query minus
-  the paper filter.
+- **A list of alerts across all of a user's papers, or one folder.** The
+  story is about one paper. Until it's added, a frontend overview would
+  need one `GET /papers/{id}/alerts` per paper. See "Later stories",
+  "Alerts across papers and folders".
 - **Updating's nudge.** Updating's owner builds it. It will need to send a
   service token (see S5).
 - **Judging whether a change is meaningful and how it matters to the
@@ -182,12 +183,12 @@ follows the `paper/` package:
 | `InternalAlertController` | The HTTP layer for `POST /internal/papers/{id}/alerts`: takes the paper id from the path and the body, calls the service, answers `201` or `200`. No business logic. | `PaperController` |
 | `AlertController` | The same for the frontend's `GET /papers/{id}/alerts` and `PATCH /alerts/{id}` (S2, S3). | `PaperController` |
 | `NewAlertRequest` | A Java `record` that holds the JSON **body** of the POST, and nothing else. It also carries the shape rules as annotations (`@NotBlank`, `@NotNull`, enum types), which Spring checks before the service runs because the controller's parameter is marked `@Valid`. | — |
-| `AlertService` | The business rules, which need the database: does the paper exist, is this `change_key` already stored, does this user own the alert's paper. It builds and saves alerts, in one transaction. | `PaperService` |
+| `AlertService` | The business rules, which need the database: does the paper exist, is this `change_key` already stored, does this user own the alert's paper. It builds and saves alerts. Storing is deliberately not one transaction: if two requests race, the unique constraint rejects the second insert and the service re-reads the first alert in a fresh transaction (on Postgres, a failed insert aborts the transaction around it). | `PaperService` |
 | `AlertRepository` | Database access. It's a Spring Data JPA interface: methods such as `findByPaperIdAndChangeKey(...)` are declared, and Hibernate generates the SQL. No SQL is written by hand. | `PaperRepository` |
 | `Alert` | The entity: one Java object per row of `alerts`, with fields mapped to columns. | `Paper` |
 | `AlertResponse` | The outgoing JSON shape, built from an `Alert`, leaving out the internal columns. | `PaperResponse` |
 | `ChangeType`, `Severity`, `AlertStatus` | The allowed values, as Java enums. | — |
-| `V<n>__create_alerts.sql` | Creates the table. Flyway runs it at startup, and Hibernate only checks that `Alert` matches it (`ddl-auto: validate`). | `V1__create_papers.sql` |
+| `V3__create_alerts.sql` | Creates the table. Flyway runs it at startup, and Hibernate only checks that `Alert` matches it (`ddl-auto: validate`). | `V1__create_papers.sql` |
 
 Each part of the HTTP request is handled in a different place:
 
@@ -235,10 +236,13 @@ python -m uv run ruff check
 
 ### S1: Storage Management stores alerts (internal write)
 
+**Status: done, verified (PASS).**
+
 - **Goal:**
   - A Flyway migration creates the `alerts` table above, with its unique
-    key and index. Its version number is agreed with Amir, since the
-    `papers` file key is also due back in a new migration.
+    key and index. Built as `V3__create_alerts.sql`; the number still has
+    to be agreed with Amir, since the `papers` file key is also due back
+    in a new migration.
   - `POST /internal/papers/{id}/alerts` (service JWT only) stores one
     alert:
     - `201` with the stored alert when it's new;
@@ -250,13 +254,16 @@ python -m uv run ruff check
       `new`);
     - `401` for a missing or bad token, `403` for a user token.
 - **Files:**
-  - `storage/src/main/resources/db/migration/V<n>__create_alerts.sql`
+  - `storage/src/main/resources/db/migration/V3__create_alerts.sql`
   - `storage/src/main/java/com/g4t1/storage/alert/`: `Alert.java`,
     `AlertRepository.java`, `AlertService.java`,
     `InternalAlertController.java`, `NewAlertRequest.java`,
     `AlertResponse.java`, `ChangeType.java`, `Severity.java`,
-    `AlertStatus.java`
-  - `storage/src/test/java/com/g4t1/storage/alert/InternalAlertTest.java`
+    `AlertStatus.java`, `LowercaseEnumConverter.java` (stores the enums
+    as the same lowercase values the API uses)
+  - `storage/src/test/java/com/g4t1/storage/alert/InternalAlertTest.java`,
+    `AlertServiceRaceTest.java` (the race path, with a scripted
+    repository)
 - **Verification:** tests against H2, like the existing ones:
   - the stored row matches the request
   - a repeat returns `200`, keeps the first alert and its status, and
@@ -276,6 +283,8 @@ python -m uv run ruff check
 
 ### S2: Owner-scoped list
 
+**Status: done, verified (PASS).**
+
 - **Goal:**
   - `GET /papers/{id}/alerts` (user JWT) returns the paper's alerts in
     the order and shape above.
@@ -283,7 +292,8 @@ python -m uv run ruff check
   - Dismissed alerts are hidden unless `include_dismissed=true`.
   - A paper that doesn't exist or belongs to another user gets `404`. A
     service token gets `403`, and a missing or bad token gets `401`.
-- **Files:** `alert/AlertController.java`, `AlertService.java`,
+- **Files:** `alert/AlertController.java`, `AlertListResponse.java`
+  (the `{"alerts": [...]}` wrapper), `AlertService.java`,
   `AlertRepository.java`, `storage/src/test/java/com/g4t1/storage/alert/AlertListTest.java`
 - **Verification:**
   - order, including ties on `detected_at`
@@ -299,6 +309,8 @@ python -m uv run ruff check
 
 ### S3: Acknowledge or dismiss
 
+**Status: done, verified (PASS).**
+
 - **Goal:**
   - `PATCH /alerts/{id}` (user JWT) sets `status` and `status_changed_at`
     and returns the alert.
@@ -307,6 +319,7 @@ python -m uv run ruff check
   - A missing alert, or an alert on another user's paper, gets `404`. A
     bad status gets `400`.
 - **Files:** `alert/AlertController.java`, `AlertService.java`,
+  `StatusChangeRequest.java` (the request body),
   `storage/src/test/java/com/g4t1/storage/alert/AlertActionTest.java`
 - **Verification:** tests cover each transition, the `404` and `400`
   cases, repeating a status, auth outcomes, and a dismissed alert
@@ -317,6 +330,14 @@ python -m uv run ruff check
     default (the user's call, 2026-09-25).
 
 ### S4: Stage 1 (detection) and stage 2 (rule-based assessment) (Research Evaluation, pure functions)
+
+**Status: done, verified (PASS).** Two changes from the plan below, both in
+DECISIONS.md: the `change_key` is set by stage 1, not stage 2, and a
+Crossref entry whose notice DOI is also listed as a `retraction` gives no
+alert of its own (it's part of the retraction). On 2026-09-26 that was
+widened, and verified: a notice listed under several types gives one alert,
+of the most severe type. That's temporary (see "Later stories", "LLM
+evaluation of all flagged changes together").
 
 The evaluation runs in three stages. This story builds stages 1 and 2 and
 leaves a placeholder for stage 3:
@@ -398,6 +419,12 @@ in order, for every change, and stores the results; see S5.
     §3 says the evaluation reads the PDF and notes.
 
 ### S5: `POST /evaluate/changes`, end to end (Research Evaluation)
+
+**Status: done, verified (PASS).** Built differently from the plan below
+in a few details, all in DECISIONS.md: the paper-not-found `404` is
+recognised by its `detail` (`No paper <id>`); a failing paper doesn't stop
+the others; the replies carry a summary; the stub answers `422` for a bad
+alert body.
 
 - **Goal:**
   - Service JWT only: a user token gets `403`, a missing or bad token
@@ -483,6 +510,10 @@ in order, for every change, and stores the results; see S5.
 
 ### S6: Running it locally
 
+**Status: done, verified (PASS).** The compose file was checked with
+`docker compose config` only (Docker's daemon wasn't running), and the
+smoke run used the stub.
+
 - **Goal:**
   - Research Evaluation starts from `backend/.env` and in compose, with
     the same `SM_BASE_URL` override that `updating` already has.
@@ -555,6 +586,44 @@ that story. What's settled so far:
 Both would revise the stage-2 assessment in the same way as stage 3, and
 also run after the `202`.
 
+### LLM evaluation of all flagged changes together
+
+Replaces a temporary rule. For now, detection gives one alert per Crossref
+notice by fixed rules: when a notice is listed under several types, the
+most severe type wins (DECISIONS.md, "2026-09-26 — One alert per Crossref
+notice, for now"). The intended design: detection produces a list of
+flagged changes for the paper, and an LLM stage evaluates them together,
+working out which are duplicates, how they relate (a correction later
+followed by a retraction, say) and what they mean for the researcher as a
+whole. That also fixes the rule's known losses: a notice relabelled as more
+severe (other than as a retraction) raises nothing new, and when one
+notice has two unclassified types, the first one listed names the alert.
+
+### Alerts across papers and folders
+
+A future feature, in Storage Management: one endpoint for an overview
+(a dashboard, a "3 new alerts" badge, a folder view) instead of one
+request per paper.
+
+- `GET /alerts` (user JWT): all of the caller's alerts across every paper
+  they track, newest first, in the same shape as the per-paper list (each
+  alert carries its `paper_id`). Optional filters that combine:
+  `folder_id=<uuid>`, `status=new|acknowledged|dismissed`,
+  `include_dismissed=true`.
+- The query joins `alerts` to `papers`, always on `papers.owner_id` = the
+  caller, and on `papers.folder_id` when a folder is given. No call to User
+  Management is needed: Storage Management already holds each paper's
+  `folder_id`. The existing index on `papers.owner_id` covers it, so no
+  migration is needed.
+- An unknown or another user's `folder_id` gives an empty list, not
+  `404`: Storage Management doesn't own folders, so it can't tell whether
+  one exists, and the owner condition means no one else's alerts can
+  appear.
+- `GET /papers/{id}/alerts` stays for the paper detail page, with its
+  `404` for a paper that isn't the caller's.
+- Size: one repository query, one service method and one controller
+  mapping in the `alert/` package, plus a test class.
+
 ### Failure handling
 
 In this story, any failure while evaluating gives `503`, and Updating
@@ -570,9 +639,11 @@ idempotently. Left for later:
   after repeated failures.
 - **One failing paper holds back the whole batch.** Updating sends every
   changed paper in one request, and a single failure makes the whole
-  reply `503`. Research Evaluation could store the other papers' alerts
-  anyway and reply with the ids that failed, so Updating only keeps the
-  flag on those. That changes the contract with Updating.
+  reply `503`, so Updating re-sends every id. Research Evaluation already
+  stores the other papers' alerts anyway and lists the failed ids in the
+  reply (`failed_paper_ids`), so re-sending the others is harmless. Left
+  for later: Updating keeping the flag only on the failed ids, which
+  changes the contract with Updating.
 - **The retry waits for the next poll** (24 hours by default). A faster
   retry would be Updating's code.
 
@@ -583,8 +654,27 @@ idempotently. Left for later:
    since the `papers` file key is also coming back in a new migration.
 2. **`POST /evaluate/changes` requires a service token, and replies after
    evaluating** (Zhuo En, Updating). Updating's nudge, when it's built,
-   has to send a `svc:updating` token and allow for the evaluation time
-   within its HTTP timeout.
+   has to send its service token (any `role=service` token is accepted;
+   Updating's is `svc:updating`) and allow for the evaluation time within
+   its HTTP timeout: each Storage Management call has a 10-second timeout
+   on Research Evaluation's side, and papers are evaluated one after
+   another. A timed-out nudge is re-sent, which is safe.
+
+## TODO for other owners
+
+- [ ] **Zhuo En (Updating): send a service token with the nudge.** The
+  nudge on `main` (cg-43) calls `POST /evaluate/changes` with no token:
+  the `re` client in `updating/main.py` has no `auth`, unlike the `sm`
+  client. Research Evaluation now requires a service token, so every
+  nudge gets `401` and no alert is ever created. Fix: give the `re` client
+  `auth=ServiceTokenAuth(...)`, the same as the `sm` client.
+- [ ] **Zhuo En (Updating): use the shared `ServiceTokenAuth` and delete
+  Updating's copy.** `common/service_token.py` now has
+  `ServiceTokenAuth(key, subject)`, the same logic as the class in
+  `updating/storage.py` but with the subject as a parameter.
+  `ServiceTokenAuth(key, "svc:updating")` from `common` behaves exactly
+  like Updating's, so Updating can import it and delete its own class.
+  This can be done together with the item above.
 
 ## Open questions
 

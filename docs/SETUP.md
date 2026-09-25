@@ -127,6 +127,53 @@ Each poll stores a snapshot per paper in the stub; read them back with a
 service token from `GET /internal/papers/{id}/background-info/history`. The poll
 summary is in Updating's `poll_runs` table.
 
+## Running Research Evaluation locally (stub Storage Management)
+
+Research Evaluation needs only `JWT_SECRET` (the same value as the stub and
+Updating) and `SM_BASE_URL` (default `http://localhost:8081`). It keeps no
+database. It reads `.env` from the directory it's started in, so start it
+from `backend/`. It refuses to start without a valid `JWT_SECRET`.
+
+```
+# terminal 1: the stub on 8081, as above
+uv run --env-file .env uvicorn dev.stub_storage:create_app --factory --port 8081
+
+# terminal 2: Research Evaluation on 8000
+uv run uvicorn research_evaluation.main:app --port 8000
+```
+
+To see a change become an alert without running Updating, store two
+snapshots of a paper in the stub and nudge Research Evaluation the way
+Updating does. Both calls need a service token:
+
+```
+TOKEN=$(uv run --env-file .env python -c "import os; from common.service_token import decode_jwt_secret, mint_service_token; print(mint_service_token(decode_jwt_secret(os.environ['JWT_SECRET']), 'svc:updating'))")
+PAPER=$(curl -s -X POST localhost:8081/dev/papers -H 'content-type: application/json' \
+  -d '{"doi": "10.1016/j.ijantimicag.2020.105949"}' | python -c "import sys, json; print(json.load(sys.stdin)['id'])")
+
+# a baseline, then a snapshot where the paper is retracted
+# (snapshot bodies: see "POST /internal/papers/{id}/background-info" in CONTRACTS.md)
+curl -X POST localhost:8081/internal/papers/$PAPER/background-info -H "Authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' -d @baseline.json
+curl -X POST localhost:8081/internal/papers/$PAPER/background-info -H "Authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' -d @retracted.json
+
+# the nudge: 202 {"alerts_created": 1, ...}; sending it again creates nothing new
+curl -X POST localhost:8000/evaluate/changes -H "Authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' -d "{\"paper_ids\": [\"$PAPER\"]}"
+
+# the stored alert (stub-only, no token)
+curl localhost:8081/dev/papers/$PAPER/alerts
+```
+
+Stop the stub and nudge again to see the failure path: `503`, and Research
+Evaluation logs `evaluating paper <id> failed: could not reach Storage
+Management (ConnectError)`.
+
+In Docker Compose, the `research-evaluation` container reads the same
+`backend/.env` and, like `updating`, has `SM_BASE_URL` overridden to
+`http://host.docker.internal:8081`.
+
 Tests need no keys, Docker or Postgres (they use SQLite and the stub):
 
 ```

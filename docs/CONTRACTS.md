@@ -20,7 +20,10 @@ This is the single source of truth for every interface between services.
   short-lived JWTs to call Storage Management, with `sub=svc:updating` /
   `sub=svc:research-evaluation` and `role=service`. Storage Management must
   accept these on its internal endpoints without owner-scoping them to a
-  real user.
+  real user. Updating also sends its service token to Research
+  Evaluation's `POST /evaluate/changes`, which accepts any service token
+  (`role=service`) and rejects user tokens, the same way Storage
+  Management treats `/internal/**`.
 - **Sprint 1:** there is no User Management yet, and everything runs
   locally. `JWT_SECRET` is a shared throwaway value (base64 of 32+ bytes like
   the real one, the same in every service's local config), and Updating still
@@ -50,11 +53,82 @@ Errors come back as problem details, with the reason in `detail`:
 `400` not a PDF, `401` missing or bad token, `403` service token,
 `409` you already track a paper with that DOI, `413` over 25 MB.
 
+### `GET /papers/{id}/alerts?include_dismissed=false`
+
+User JWT required, and only the paper's owner sees its alerts. Returns
+the changes Research Evaluation detected on the paper, each with its
+assessment, **newest first**: by `detected_at` descending, with ties
+(changes found in the same pair of snapshots) broken by `id` descending.
+
+Dismissed alerts are left out unless `include_dismissed=true`.
+Acknowledged alerts are always listed, with their status.
+
+**Response `200`:**
+
+```json
+{"alerts": [
+  {
+    "id": 7, "paper_id": "uuid",
+    "change_type": "retraction", "severity": "high",
+    "description": "...", "recommendation": "...",
+    "notice_doi": "10.xxxx/...", "detected_at": "2026-09-24T12:00:00Z",
+    "status": "new", "status_changed_at": null
+  }
+]}
+```
+
+A paper with no alerts gives `{"alerts": []}`.
+
+| Field | Meaning |
+|---|---|
+| `change_type` | `retraction`, `correction`, `erratum`, `expression_of_concern`, `doaj_delisting` or `other` |
+| `severity` | `high`, `medium` or `low` |
+| `description` | what changed and how it affects the researcher |
+| `recommendation` | what to do about it |
+| `notice_doi` | the Crossref notice, or null when there isn't one |
+| `detected_at` | the `fetched_at` of the first snapshot the change shows up in, i.e. when a poll first saw it |
+| `status` | `new`, `acknowledged` or `dismissed` |
+| `status_changed_at` | when the researcher last changed the status, or null |
+
+Errors, as problem details: `400` an `include_dismissed` that isn't
+`true`/`false`, or an id that isn't a UUID; `401` missing or bad token;
+`403` a service token; `404` no paper with that id **or** a paper that
+belongs to another user (both give the same `detail`, so the response
+never reveals whether someone else's paper exists).
+
+### `PATCH /alerts/{id}`
+
+User JWT required, and only the owner of the alert's paper can change
+it. Records the researcher's response to an alert.
+
+**Request:**
+
+```json
+{"status": "acknowledged"}
+```
+
+`status` is `acknowledged` or `dismissed`:
+- Either can replace any other status, including each other. Acknowledging
+  a dismissed alert brings it back into the default list.
+- Setting the status the alert already has changes nothing, and
+  `status_changed_at` keeps the time of the real change.
+- An alert can't be set back to `new`.
+
+**Response `200`:** the alert, in the same shape as in the list, with the
+new `status` and `status_changed_at`.
+
+Errors, as problem details: `400` a `status` of `new` ("status must be
+acknowledged or dismissed"), a missing or unknown status, a body that
+isn't JSON, or an id that isn't a number; `401` missing or bad token;
+`403` a service token; `404` no alert with that id **or** an alert on
+another user's paper (the same `detail` for both).
+
 ## Storage Management ↔ Research Evaluation / Updating
 
 Owned by: Storage Management. Consumed by: Research Evaluation (reads
 the snapshots, paper data and stored PDFs of the papers Updating tells
-it about), Updating (calls these on every poll).
+it about, and stores the alerts it evaluates), Updating (calls these on
+every poll).
 
 ### `GET /internal/papers`
 
@@ -106,6 +180,13 @@ Evaluation (to read the snapshots it works out differences from).
 {"snapshots": [{"snapshot_id": 41, "fetched_at": "...", "...": "snapshot"}, {"snapshot_id": 42, "...": "..."}]}
 ```
 
+With no `limit`, it returns the whole history: Research Evaluation reads
+every snapshot of a paper on each nudge, so a default page size would
+silently hide changes. A paper Storage Management doesn't know gets `404`
+with `detail` exactly `No paper <id>`, the same as
+`POST /internal/papers/{id}/alerts`. Research Evaluation relies on that
+text to tell a missing paper (skipped) from a missing route (a failure).
+
 ### `GET /internal/papers/{id}/pdf`
 
 Service-JWT only. Returns the paper's stored PDF as `application/pdf`.
@@ -119,6 +200,62 @@ with that id, or the paper has no stored PDF. Where a DOI-only paper's
 PDF comes from is still pending (see DECISIONS.md, "2026-09-25 — Storage
 keeps every tracked paper's PDF"), so until that's settled a paper may
 have none.
+
+### `POST /internal/papers/{id}/alerts`
+
+Service-JWT only. Stores one alert: a change Research Evaluation detected
+on the paper, with its assessment. Storage Management doesn't evaluate
+anything here. Storing is idempotent on (`paper_id`, `change_key`), so a
+re-sent nudge can't store the same change twice.
+
+**Request:**
+
+```json
+{
+  "change_type": "retraction", "change_key": "retraction",
+  "severity": "high",
+  "description": "...", "recommendation": "...",
+  "notice_doi": "10.xxxx/...",
+  "detected_at": "2026-09-24T12:00:00Z",
+  "snapshot_id": 42, "previous_snapshot_id": 41
+}
+```
+
+| Field | Rules |
+|---|---|
+| `change_type` | required: `retraction`, `correction`, `erratum`, `expression_of_concern`, `doaj_delisting` or `other` (a Crossref notice type Research Evaluation doesn't classify yet), exact lowercase |
+| `change_key` | required, at most 512 characters. Identifies the change within the paper (e.g. `retraction`, `correction:<notice_doi>`) |
+| `severity` | required: `high`, `medium` or `low`, exact lowercase |
+| `description`, `recommendation` | required, not blank |
+| `notice_doi` | optional, at most 255 characters |
+| `detected_at` | required: the `fetched_at` of the first snapshot the change shows up in |
+| `snapshot_id`, `previous_snapshot_id` | required: the snapshot the change first appeared in, and the one it was compared against |
+
+There's no `status` field: a new alert always starts as `new`, and a
+`status` sent here is ignored.
+
+**Response `201`** for a new alert, or **`200`** with the alert already
+stored under that `change_key`, **unchanged**: the first description is
+kept, and so is the researcher's status. The body is the alert as the API
+shows it:
+
+```json
+{
+  "id": 7, "paper_id": "uuid",
+  "change_type": "retraction", "severity": "high",
+  "description": "...", "recommendation": "...",
+  "notice_doi": "10.xxxx/...", "detected_at": "2026-09-24T12:00:00Z",
+  "status": "new", "status_changed_at": null
+}
+```
+
+`change_key`, the snapshot ids and the row's `created_at` are stored but
+never returned.
+
+Errors, as problem details: `400` a missing or blank required field, an
+unknown `change_type` or `severity`, or a `detected_at` that isn't a
+timestamp; `401` missing or bad token; `403` a user token; `404` no paper
+with that id.
 
 ### Snapshot fields
 
@@ -179,7 +316,8 @@ Rules:
 
 Called by Updating (a nudge when papers changed, and stance checks if ever
 needed for a manual comparison) and Storage Management (COI text / claims).
-Not called directly by the frontend.
+Not called directly by the frontend: alerts reach it through Storage
+Management.
 
 ### `POST /evaluate/changes`
 
@@ -189,24 +327,51 @@ nudge, not a payload: it carries only the ids of the changed papers, never
 snapshot or change data. Updating records no changes, so **Research
 Evaluation works out the differences itself**: it reads the papers'
 snapshots from Storage Management
-(`GET /internal/papers/{id}/background-info/history`) plus their
-non-updatable data (notes, extracted text, and the stored PDF from
-`GET /internal/papers/{id}/pdf`), compares the snapshots,
-classifies each difference and evaluates it (severity, impact statement,
-recommendation). Nothing is returned to Updating, and Updating never calls
-this on a poll with no changes.
+(`GET /internal/papers/{id}/background-info/history`), compares every
+consecutive pair, classifies each difference and evaluates it (severity,
+description, recommendation), then stores each result as an alert in
+Storage Management. Reading the paper's non-updatable data (notes,
+extracted text, and the stored PDF from `GET /internal/papers/{id}/pdf`)
+is for later stories. Updating never calls this on a poll with no changes.
+
+Service JWT only: `401` for a missing, bad or expired token, `403` for a
+user token. A body that isn't `{"paper_ids": [uuid, ...]}` gets `422`.
 
 Classification, from the sprint's alert stories:
 
 | Change | Rule on the snapshots |
 |---|---|
-| Retraction | `is_retracted` false → true, or a new `crossref_updates` entry of type `retraction` |
-| Correction / erratum / expression of concern | a new `crossref_updates` entry of that type |
-| DOAJ delisting | `in_doaj` true → false, with the same `journal_source_id` and a `journal_source_type` of `journal` |
+| Change | Rule on the snapshots | Severity | `change_key` |
+|---|---|---|---|
+| Retraction | `is_retracted` false → true, or a new `crossref_updates` entry of type `retraction` | `high` | `retraction` |
+| Expression of concern | a new `crossref_updates` entry of type `expression_of_concern` | `medium` | `expression_of_concern:<notice_doi>` |
+| Correction | a new `crossref_updates` entry of type `correction` | `medium` | `correction:<notice_doi>` |
+| Erratum | a new `crossref_updates` entry of type `erratum` | `low` | `erratum:<notice_doi>` |
+| DOAJ delisting | `in_doaj` true → false, with the same `journal_source_id` and a `journal_source_type` of `journal` | `low` | `doaj_delisting:<snapshot_id>` |
+| Other | a new `crossref_updates` entry of any other type (`withdrawal`, `removal`, `partial_retraction`, ...) | `medium` | `other:<type>:<notice_doi>` |
 
 Entries are identified by (`notice_doi`, `type`), and nulls are never
 compared (see "Snapshot fields"). A paper's first snapshot is only a
-baseline.
+baseline. Also:
+- **One retraction per paper.** The flag and a `retraction` entry are the
+  same event, so they share the change key `retraction`; if they arrive on
+  different polls, Storage Management keeps the first alert.
+- **One alert per notice (temporary).** A notice Crossref lists under
+  several types gives one alert, of the most severe type: `retraction`,
+  `expression_of_concern`, `correction`, any unclassified type, `erratum`
+  (IJAA's retraction notice is also a publisher `erratum`; a Lancet
+  correction notice is also an `erratum`). A notice already seen on an
+  earlier poll gives no new alert under a new type, unless it's now a
+  `retraction`. Notices without a DOI can't be matched up and count per
+  type. See DECISIONS.md, "2026-09-26 — One alert per Crossref notice,
+  for now".
+- An entry with no `type` is skipped. A missing `notice_doi` leaves the
+  key's DOI part empty (`correction:`).
+- The change key identifies the change within the paper, so a re-sent
+  nudge stores nothing new (see `POST /internal/papers/{id}/alerts`).
+
+The severity, description and recommendation are rule-based templates per
+change type for now (see ARCHITECTURE.md, Section 3).
 
 **Request:**
 
@@ -214,16 +379,37 @@ baseline.
 {"paper_ids": ["uuid", "uuid"]}
 ```
 
-**Response `202`:** accepted; Research Evaluation does the reading and
-evaluating after responding, so Updating doesn't wait on it. Any other
-status (or no response) means the nudge wasn't accepted and Updating will
-re-send the same paper ids on its next poll, so this call must be safe to
-receive more than once for the same paper.
+Research Evaluation evaluates **before** it answers, so the reply says
+whether the alerts were stored:
 
-How Research Evaluation stores the evaluation and how the frontend reads
-it, and the change list and researcher actions (acknowledge, dismiss)
-the frontend uses, are Research Evaluation's design and aren't specified
-here yet.
+**Response `202`:** every paper was evaluated and its alerts are stored.
+A paper Storage Management doesn't know is skipped, not a failure.
+
+```json
+{"alerts_created": 2, "skipped_paper_ids": [], "failed_paper_ids": []}
+```
+
+**Response `503`:** at least one paper failed, whatever the cause
+(Storage Management unreachable, slow or answering an error, a
+`JWT_SECRET` mismatch, a snapshot Research Evaluation can't read, a bug).
+The body is the same summary plus `detail`; each failure is logged by
+Research Evaluation with the paper id and the cause. The other papers are
+still evaluated and their alerts stored.
+
+Any status but `202` (or no response) means the nudge wasn't accepted,
+and Updating re-sends the same paper ids on its next poll. That's safe:
+Research Evaluation re-reads the full history each time, and Storage
+Management stores each change once. Updating waits for the evaluation, so
+its HTTP timeout must allow for it: each Storage Management call has a
+10-second timeout on Research Evaluation's side, and papers are evaluated
+one after another. A timed-out nudge is simply re-sent.
+
+Research Evaluation stores each change it evaluates as an alert in
+Storage Management (`POST /internal/papers/{id}/alerts`, above), not in a
+database of its own. The frontend reads alerts and acknowledges or
+dismisses them through Storage Management, never by calling Research
+Evaluation (see DECISIONS.md, "2026-09-25 — Alerts: stored in Storage
+Management, evaluated in stages").
 
 ### `POST /evaluate/background-info`
 

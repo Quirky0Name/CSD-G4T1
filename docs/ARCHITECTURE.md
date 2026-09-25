@@ -85,7 +85,7 @@ JWT paths above are wired up but not backed by real logins.
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
 | User Management | Spring Boot (backend) + React (Vite, frontend) | `users`, `folders`; auth | `frontend/` |
-| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `authors_background`; Postgres + every tracked paper's PDF on local disk | `storage/` |
+| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `authors_background`, `alerts`; Postgres + every tracked paper's PDF on local disk | `storage/` |
 | Research Evaluation | Python | Change evaluation (severity, impact, recommendation), read from Storage Management when nudged by Updating; COI text, citation-neighbourhood metrics, LLM reasoning (claims + stance, week 7) | `backend/` |
 | Updating | Python (shares the `backend/` project with Research Evaluation) | Crossref/OpenAlex status, journal and author fetching; sending snapshots to Storage Management; nudging Research Evaluation when a snapshot changed; the polling scheduler and its small polling state (`tracked_papers`) | `backend/` |
 | Deployment | Docker + a public cloud target | Containerisation, environment config, CI | (cross-cutting) |
@@ -130,15 +130,19 @@ Owns all Postgres and file persistence.
   that Updating stores none for a paper on a poll where Crossref or
   OpenAlex failed for its DOI, see Section 4), `background_text` (raw text for
   week-13 LLM input; nothing here is diffed in week 7),
-  `authors_background`.
+  `authors_background`, `alerts` (one row per change Research Evaluation
+  detects on a paper, with its severity, description, recommendation,
+  detection time and the researcher's status; unique per paper and
+  `change_key`, so a re-sent nudge can't store a change twice; deleted
+  with its paper).
 - **File storage:** every tracked paper's PDF is kept, so Research
   Evaluation has the paper itself to read when it evaluates a change.
   PDF bytes never go in Postgres: they're on local disk for now, and
   Postgres holds only the file's key. Research Evaluation reads a PDF
   through `GET /internal/papers/{id}/pdf`, never from the disk directly.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
-  `PUT /papers/{id}/notes`, `POST/GET /internal/papers/{id}/background-info`,
-  `GET /internal/papers/{id}/pdf`.
+  `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /internal/papers/{id}/background-info`,
+  `GET /internal/papers/{id}/pdf`, `POST /internal/papers/{id}/alerts`.
 - **DB hosting:** Supabase free tier.
 
 ## Section 3 — Research Evaluation
@@ -156,10 +160,32 @@ journal and author fields moved to Updating (Section 4).
   **works out the differences between the snapshots itself**,
   classifies them (retraction, correction, erratum, expression of concern,
   DOAJ delisting) and produces a severity, an impact statement and a
-  recommendation. Nothing goes back to Updating. How the evaluation is
-  stored, and the change list and researcher actions (acknowledge,
-  dismiss) the frontend uses, are Research Evaluation's design and aren't
-  specified here yet.
+  recommendation. Each evaluated change is stored as an alert in Storage
+  Management (`POST /internal/papers/{id}/alerts`); Research Evaluation
+  keeps no database of its own for this, and the frontend reads and acts
+  on alerts through Storage Management.
+- **The nudge is answered after the evaluation.** Research Evaluation
+  replies `202` once every paper's alerts are stored, and `503` if any
+  paper failed, so Updating's `nudge_pending` flag (Section 4) is the
+  retry: Research Evaluation keeps no pending list or watermark. It reads
+  each paper's full snapshot history on every nudge, which is safe because
+  Storage Management stores each change once (by its change key).
+- **Change evaluation runs in three stages** (the plan is in
+  [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md)):
+  1. **Detection** (`changes.py`): compare two consecutive snapshots and
+     list the changes, by the classification table in CONTRACTS.md.
+     Deterministic, so whether a paper was retracted never depends on an
+     LLM.
+  2. **Rule-based assessment** (`rules.py`): every change gets a severity,
+     description and recommendation from fixed templates, so every alert
+     is complete.
+  3. **LLM investigation** of the changes stage 1 can't classify (`other`):
+     a placeholder for now. Later stories (LLM meaningfulness, stance
+     checks) also revise the stage-2 assessment rather than replacing
+     detection.
+
+  So far the evaluation doesn't read the paper's PDF, notes or extracted
+  text; the templates only use the snapshots.
 - **Structured signal layer** (no reasoning, cheap): citation-neighbourhood
   metrics computed from OpenAlex reference/citation data, GROBID on the
   PDF stored in Storage Management (COI/funding text, verbatim, never
