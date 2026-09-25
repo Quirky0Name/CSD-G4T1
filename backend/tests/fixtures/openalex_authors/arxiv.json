@@ -1,0 +1,67 @@
+{
+  "results": [
+    {
+      "id": "https://openalex.org/A5026762833",
+      "works_count": 449,
+      "summary_stats": {
+        "2yr_mean_citedness": 5.191489361702128,
+        "h_index": 55,
+        "i10_index": 158
+      }
+    },
+    {
+      "id": "https://openalex.org/A5074733625",
+      "works_count": 439,
+      "summary_stats": {
+        "2yr_mean_citedness": 15.720588235294118,
+        "h_index": 61,
+        "i10_index": 178
+      }
+    },
+    {
+      "id": "https://openalex.org/A5018256474",
+      "works_count": 384,
+      "summary_stats": {
+        "2yr_mean_citedness": 4.823529411764706,
+        "h_index": 56,
+        "i10_index": 121
+      }
+    },
+    {
+      "id": "https://openalex.org/A5027430303",
+      "works_count": 108,
+      "summary_stats": {
+        "2yr_mean_citedness": 21.53846153846154,
+        "h_index": 39,
+        "i10_index": 59
+      }
+    },
+    {
+      "id": "https://openalex.org/A5049123454",
+      "works_count": 97,
+      "summary_stats": {
+        "2yr_mean_citedness": 1.0,
+        "h_index": 25,
+        "i10_index": 34
+      }
+    },
+    {
+      "id": "https://openalex.org/A5105141183",
+      "works_count": 75,
+      "summary_stats": {
+        "2yr_mean_citedness": 2.5555555555555554,
+        "h_index": 13,
+        "i10_index": 15
+      }
+    },
+    {
+      "id": "https://openalex.org/A5112700874",
+      "works_count": 51,
+      "summary_stats": {
+        "2yr_mean_citedness": 1.6,
+        "h_index": 19,
+        "i10_index": 23
+      }
+    }
+  ]
+}
