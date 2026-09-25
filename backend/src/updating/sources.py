@@ -17,6 +17,9 @@ from common.doi import Doi
 
 CROSSREF_WORKS_URL = "https://api.crossref.org/works/"
 OPENALEX_WORKS_URL = "https://api.openalex.org/works/doi:"
+OPENALEX_AUTHORS_URL = "https://api.openalex.org/authors"
+# the only author fields we keep; keeps the batch response small
+OPENALEX_AUTHOR_FIELDS = "id,works_count,summary_stats"
 
 log = logging.getLogger(__name__)
 
@@ -73,6 +76,22 @@ class OpenAlexLocation(_Payload):
     source: OpenAlexSource | None = None
 
 
+class OpenAlexAuthorRef(_Payload):
+    id: str | None = None
+    display_name: str | None = None
+
+
+class OpenAlexInstitution(_Payload):
+    display_name: str | None = None
+
+
+class OpenAlexAuthorship(_Payload):
+    author_position: str | None = None
+    author: OpenAlexAuthorRef = Field(default_factory=OpenAlexAuthorRef)
+    # the affiliation on this paper, not the author's `last_known_institutions`
+    institutions: list[OpenAlexInstitution] = Field(default_factory=list)
+
+
 class OpenAlexWork(_Payload):
     id: str
     title: str | None = None
@@ -81,13 +100,30 @@ class OpenAlexWork(_Payload):
     is_retracted: bool | None = None
     cited_by_count: int | None = None
     primary_location: OpenAlexLocation | None = None
+    authorships: list[OpenAlexAuthorship] = Field(default_factory=list)
+
+
+class OpenAlexSummaryStats(_Payload):
+    h_index: int | None = None
+
+
+class OpenAlexAuthor(_Payload):
+    # required, so a row that isn't an author makes the whole batch an error
+    id: str
+    works_count: int | None = None
+    summary_stats: OpenAlexSummaryStats | None = None
+
+
+class _OpenAlexAuthorPage(_Payload):
+    results: list[OpenAlexAuthor]
 
 
 CrossrefResult = CrossrefWork | FetchFailure
 OpenAlexResult = OpenAlexWork | FetchFailure
+OpenAlexAuthorsResult = list[OpenAlexAuthor] | FetchFailure
 
 
-def status_of(result: CrossrefResult | OpenAlexResult) -> SourceStatus:
+def status_of(result: CrossrefResult | OpenAlexResult | OpenAlexAuthorsResult) -> SourceStatus:
     return result if isinstance(result, SourceStatus) else SourceStatus.OK
 
 
@@ -122,4 +158,29 @@ async def fetch_openalex(http: httpx.AsyncClient, doi: Doi, api_key: SecretStr) 
         return OpenAlexWork.model_validate(response.json())
     except (httpx.HTTPError, ValueError, TypeError) as exc:
         log.warning("openalex fetch failed for %s: %s", doi, type(exc).__name__)
+        return SourceStatus.ERROR
+
+
+async def fetch_openalex_authors(
+    http: httpx.AsyncClient, doi: Doi, author_ids: list[str], api_key: SecretStr
+) -> OpenAlexAuthorsResult:
+    """One batched lookup for a work's authors. The rows come back in OpenAlex's own
+    order, not the order of `author_ids`. `doi` is only for the log lines."""
+    if not author_ids:
+        return []
+    params = {
+        "filter": "openalex:" + "|".join(author_ids),
+        "select": OPENALEX_AUTHOR_FIELDS,
+    }
+    key = api_key.get_secret_value()
+    if key:
+        params["api_key"] = key
+    try:
+        response = await http.get(OPENALEX_AUTHORS_URL, params=params)
+        if response.status_code != httpx.codes.OK:
+            log.warning("openalex authors returned %s for %s", response.status_code, doi)
+            return SourceStatus.ERROR
+        return _OpenAlexAuthorPage.model_validate(response.json()).results
+    except (httpx.HTTPError, ValueError, TypeError) as exc:
+        log.warning("openalex authors fetch failed for %s: %s", doi, type(exc).__name__)
         return SourceStatus.ERROR

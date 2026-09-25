@@ -11,26 +11,32 @@ from updating_support import DOIS
 from dev.stub_storage import create_app as create_stub_app
 from updating.db import init_db, make_engine, make_sessions
 from updating.poll import PollDeps
+from updating.snapshot import author_ids
+from updating.sources import OPENALEX_AUTHORS_URL, OpenAlexWork
 from updating.storage import ServiceTokenAuth
 
 
 class FakeSources:
-    """Crossref and OpenAlex, answering from the recorded fixtures."""
+    """Crossref, OpenAlex and OpenAlex's author batch, answering from the recorded fixtures."""
 
     def __init__(self, router: respx.MockRouter) -> None:
         self._router = router
         self.routes: dict[tuple[str, str], respx.Route] = {}
 
     def serve(self, name: str, **behaviour: int | Exception) -> None:
-        """Serve a fixture DOI. Per source: omit for its fixture (404 if it has none), or pass
-        a status code or an exception to inject."""
+        """Serve a fixture DOI. Per source (`crossref`, `openalex`, `openalex_authors`): omit
+        for its fixture (404 if it has none), or pass a status code or an exception to inject."""
         doi = quote(DOIS[name], safe="/")
-        urls = {
-            "crossref": f"https://api.crossref.org/works/{doi}",
-            "openalex": f"https://api.openalex.org/works/doi:{doi}",
+        work = OpenAlexWork.model_validate(load_fixture("openalex", name))
+        author_filter = "openalex:" + "|".join(author_ids(work))
+        matchers = {
+            "crossref": (f"https://api.crossref.org/works/{doi}", {}),
+            "openalex": (f"https://api.openalex.org/works/doi:{doi}", {}),
+            # a batch for any other ids matches no route, and respx fails the test
+            "openalex_authors": (OPENALEX_AUTHORS_URL, {"params__contains": {"filter": author_filter}}),
         }
-        for source, url in urls.items():
-            route = self.routes.get((name, source)) or self._router.get(url)
+        for source, (url, match) in matchers.items():
+            route = self.routes.get((name, source)) or self._router.get(url, **match)
             self.routes[(name, source)] = route
             self.set(name, source, behaviour.get(source))
 

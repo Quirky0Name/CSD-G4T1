@@ -1,0 +1,40 @@
+{
+  "results": [
+    {
+      "id": "https://openalex.org/A5056960938",
+      "works_count": 1071,
+      "summary_stats": {
+        "2yr_mean_citedness": 6.217391304347826,
+        "h_index": 98,
+        "i10_index": 434
+      }
+    },
+    {
+      "id": "https://openalex.org/A5013727186",
+      "works_count": 846,
+      "summary_stats": {
+        "2yr_mean_citedness": 11.25,
+        "h_index": 122,
+        "i10_index": 431
+      }
+    },
+    {
+      "id": "https://openalex.org/A5076233641",
+      "works_count": 171,
+      "summary_stats": {
+        "2yr_mean_citedness": 7.0,
+        "h_index": 30,
+        "i10_index": 61
+      }
+    },
+    {
+      "id": "https://openalex.org/A5020874464",
+      "works_count": 148,
+      "summary_stats": {
+        "2yr_mean_citedness": 13.5,
+        "h_index": 29,
+        "i10_index": 54
+      }
+    }
+  ]
+}

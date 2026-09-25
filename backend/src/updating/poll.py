@@ -3,7 +3,8 @@
 The outage gate (docs/DECISIONS.md, 2026-09-25): if Crossref or OpenAlex returned
 `error` for a DOI, none of that DOI's papers gets a snapshot this poll. They're listed
 under `source_errors` and retried next poll, so every stored snapshot is comparable
-with the one before it. `not_found` is a stable answer and is stored."""
+with the one before it. `not_found` is a stable answer and is stored. A failed author batch
+doesn't gate: authors aren't compared, so the snapshot is stored with `error` and null stats."""
 
 import logging
 from dataclasses import dataclass
@@ -17,8 +18,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from common.doi import Doi
 from updating.models import PollRun, PollTrigger, RunStatus, TrackedPaper
-from updating.snapshot import Snapshot, build_snapshot
-from updating.sources import SourceStatus, fetch_crossref, fetch_openalex, status_of
+from updating.snapshot import Snapshot, author_ids, build_snapshot
+from updating.sources import (
+    OpenAlexWork,
+    SourceStatus,
+    fetch_crossref,
+    fetch_openalex,
+    fetch_openalex_authors,
+    status_of,
+)
 from updating.storage import PaperId, SnapshotId, list_papers, post_snapshot
 
 log = logging.getLogger(__name__)
@@ -124,7 +132,16 @@ async def _poll(deps: PollDeps, run_id: int, trigger: PollTrigger, started_at: d
             ]
             continue
 
-        snapshot = build_snapshot(doi, datetime.now(UTC).replace(microsecond=0), crossref, openalex)
+        authors = (
+            await fetch_openalex_authors(
+                deps.sources, doi, author_ids(openalex), deps.openalex_api_key
+            )
+            if isinstance(openalex, OpenAlexWork)
+            else openalex  # OpenAlex doesn't know the DOI: no authors to look up
+        )
+        snapshot = build_snapshot(
+            doi, datetime.now(UTC).replace(microsecond=0), crossref, openalex, authors
+        )
         for paper_id in paper_ids:
             match await _store_snapshot(deps, paper_id, snapshot):
                 case Stored() as done:
