@@ -50,6 +50,24 @@ Errors come back as problem details, with the reason in `detail`:
 `400` not a PDF, `401` missing or bad token, `403` service token,
 `409` you already track a paper with that DOI, `413` over 25 MB.
 
+### `POST /papers` (track by DOI)
+
+Same endpoint, sent as JSON instead of multipart, for a paper you don't
+have a PDF for. User JWT required; the caller becomes the paper's owner.
+The DOI is normalised (a `https://doi.org/` or `doi:` prefix is fine,
+case doesn't matter) and looked up on CrossRef/OpenAlex before saving.
+
+**Request:** `{"doi": "10.xxxx/...", "folder_id": "uuid"}`. `folder_id` is
+optional; leaving it out or sending `""` means no folder.
+
+**Response `201`:** same shape as the upload.
+
+Errors come back as problem details, with the reason in `detail`:
+`400` no DOI or not a DOI, `401` missing or bad token, `403` service
+token, `409` you already track a paper with that DOI, `422` CrossRef has
+no paper with that DOI, `503` CrossRef couldn't be reached (nothing is
+saved, try again).
+
 ## Storage Management ↔ Research Evaluation / Updating
 
 Owned by: Storage Management. Consumed by: Research Evaluation (reads
