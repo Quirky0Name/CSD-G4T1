@@ -22,7 +22,6 @@ storage:
   grobid-url: ${GROBID_URL:http://localhost:8070}
   crossref-mailto: ${CROSSREF_MAILTO:}
   openalex-api-key: ${OPENALEX_API_KEY:}
-  upload-dir: ${UPLOAD_DIR:uploads}
   max-pdf-size: 25MB
 
 server:

@@ -31,9 +31,6 @@ public class Paper {
     private String issn;
     private Integer publicationYear;
 
-    // key into the file store; null for a DOI-only paper
-    private String fileKey;
-
     @Column(nullable = false)
     private Instant createdAt;
 
@@ -47,10 +44,6 @@ public class Paper {
     @PrePersist
     void onCreate() {
         createdAt = Instant.now();
-    }
-
-    public boolean hasFile() {
-        return fileKey != null;
     }
 
     public UUID getId() {
@@ -115,14 +108,6 @@ public class Paper {
 
     public void setPublicationYear(Integer publicationYear) {
         this.publicationYear = publicationYear;
-    }
-
-    public String getFileKey() {
-        return fileKey;
-    }
-
-    public void setFileKey(String fileKey) {
-        this.fileKey = fileKey;
     }
 
     public Instant getCreatedAt() {

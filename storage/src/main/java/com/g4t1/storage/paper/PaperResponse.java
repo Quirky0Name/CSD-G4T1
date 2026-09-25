@@ -12,7 +12,6 @@ public record PaperResponse(
         String journal,
         String issn,
         Integer publicationYear,
-        boolean fileAvailable,
         Instant createdAt) {
 
     static PaperResponse from(Paper paper) {
@@ -25,7 +24,6 @@ public record PaperResponse(
                 paper.getJournal(),
                 paper.getIssn(),
                 paper.getPublicationYear(),
-                paper.hasFile(),
                 paper.getCreatedAt());
     }
 }
