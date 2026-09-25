@@ -9,3 +9,4 @@ target/
 .classpath
 
 .env
+uploads/

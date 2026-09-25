@@ -8,4 +8,5 @@ spring:
 storage:
   # test-only key, base64 like the real JWT_SECRET
   jwt-secret: c3RvcmFnZS10ZXN0LXNlY3JldC1ub3QtZm9yLXByb2Qh
+  upload-dir: target/test-uploads
   max-pdf-size: 1KB

@@ -1,5 +1,6 @@
 package com.g4t1.storage.paper;
 
+import com.g4t1.storage.file.LocalFileStore;
 import com.g4t1.storage.grobid.GrobidClient;
 import com.g4t1.storage.grobid.GrobidClient.PdfHeader;
 import com.g4t1.storage.metadata.MetadataClient;
@@ -29,13 +30,15 @@ public class PaperService {
     private static final byte[] PDF_MAGIC = "%PDF-".getBytes(StandardCharsets.US_ASCII);
 
     private final PaperRepository papers;
+    private final LocalFileStore files;
     private final GrobidClient grobid;
     private final MetadataClient metadata;
     private final DataSize maxPdfSize;
 
-    public PaperService(PaperRepository papers, GrobidClient grobid, MetadataClient metadata,
+    public PaperService(PaperRepository papers, LocalFileStore files, GrobidClient grobid, MetadataClient metadata,
                         @Value("${storage.max-pdf-size}") DataSize maxPdfSize) {
         this.papers = papers;
+        this.files = files;
         this.grobid = grobid;
         this.metadata = metadata;
         this.maxPdfSize = maxPdfSize;
@@ -63,6 +66,7 @@ public class PaperService {
         if (doi != null) {
             lookupQuietly(doi).ifPresent(found -> applyMetadata(paper, found));
         }
+        paper.setFileKey(files.save(bytes));
         return PaperResponse.from(papers.save(paper));
     }
 
@@ -72,7 +76,7 @@ public class PaperService {
         }
     }
 
-    // GROBID already found the DOI, so a CrossRef outage shouldn't block saving the paper
+    // the PDF is already in hand, so a CrossRef outage shouldn't block saving it
     private Optional<PaperMetadata> lookupQuietly(String doi) {
         try {
             return metadata.lookup(doi);
