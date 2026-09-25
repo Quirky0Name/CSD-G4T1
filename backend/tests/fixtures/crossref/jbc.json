@@ -1,0 +1,507 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2026,
+          9,
+          24
+        ]
+      ],
+      "date-time": "2026-09-24T14:33:09Z",
+      "timestamp": 1790260389684,
+      "version": "4.1.0"
+    },
+    "reference-count": 25,
+    "publisher": "Elsevier BV",
+    "issue": "1",
+    "license": [
+      {
+        "start": {
+          "date-parts": [
+            [
+              1951,
+              11,
+              1
+            ]
+          ],
+          "date-time": "1951-11-01T00:00:00Z",
+          "timestamp": -573350400000
+        },
+        "content-version": "tdm",
+        "delay-in-days": 0,
+        "URL": "https://www.elsevier.com/tdm/userlicense/1.0/"
+      },
+      {
+        "start": {
+          "date-parts": [
+            [
+              1951,
+              11,
+              1
+            ]
+          ],
+          "date-time": "1951-11-01T00:00:00Z",
+          "timestamp": -573350400000
+        },
+        "content-version": "tdm",
+        "delay-in-days": 0,
+        "URL": "https://www.elsevier.com/legal/tdmrep-license"
+      },
+      {
+        "start": {
+          "date-parts": [
+            [
+              2020,
+              10,
+              7
+            ]
+          ],
+          "date-time": "2020-10-07T00:00:00Z",
+          "timestamp": 1602028800000
+        },
+        "content-version": "vor",
+        "delay-in-days": 25178,
+        "URL": "http://creativecommons.org/licenses/by/4.0/"
+      }
+    ],
+    "content-domain": {
+      "domain": [
+        "jbc.org",
+        "elsevier.com",
+        "sciencedirect.com"
+      ],
+      "crossmark-restriction": true
+    },
+    "short-container-title": [
+      "Journal of Biological Chemistry"
+    ],
+    "published-print": {
+      "date-parts": [
+        [
+          1951,
+          11
+        ]
+      ]
+    },
+    "DOI": "10.1016/s0021-9258(19)52451-6",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [
+        [
+          2021,
+          1,
+          6
+        ]
+      ],
+      "date-time": "2021-01-06T11:45:28Z",
+      "timestamp": 1609933528000
+    },
+    "page": "265-275",
+    "update-policy": "https://doi.org/10.1016/elsevier_cm_policy",
+    "source": "Crossref",
+    "is-referenced-by-count": 249712,
+    "title": [
+      "PROTEIN MEASUREMENT WITH THE FOLIN PHENOL REAGENT"
+    ],
+    "prefix": "10.1016",
+    "volume": "193",
+    "author": [
+      {
+        "given": "OliverH.",
+        "family": "Lowry",
+        "sequence": "first",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "NiraJ.",
+        "family": "Rosebrough",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "A. Lewis",
+        "family": "Farr",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "RoseJ.",
+        "family": "Randall",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "member": "78",
+    "reference": [
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib1",
+        "doi-asserted-by": "crossref",
+        "first-page": "33",
+        "DOI": "10.1016/S0021-9258(18)85898-7",
+        "volume": "51",
+        "author": "Wu",
+        "year": "1922",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib2",
+        "first-page": "161",
+        "volume": "1",
+        "author": "Wu",
+        "year": "1927",
+        "journal-title": "Chinese J. Physiol"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib3",
+        "doi-asserted-by": "crossref",
+        "first-page": "545",
+        "DOI": "10.1016/S0021-9258(20)78300-6",
+        "volume": "82",
+        "author": "Greenberg",
+        "year": "1929",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib4",
+        "first-page": "816",
+        "volume": "18",
+        "author": "Andersch",
+        "year": "1933",
+        "journal-title": "J. Lab. and Clin. Med"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib5",
+        "first-page": "431",
+        "volume": "21",
+        "author": "Greenberg",
+        "year": "1936",
+        "journal-title": "J. Lab. and Clin. Med"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib6",
+        "first-page": "743",
+        "volume": "21",
+        "author": "Minot",
+        "year": "1936",
+        "journal-title": "J. Lab. and Clin. Med"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib7",
+        "doi-asserted-by": "crossref",
+        "first-page": "357",
+        "DOI": "10.1021/i560117a023",
+        "volume": "15",
+        "author": "Pressman",
+        "year": "1943",
+        "journal-title": "Ind. and Eng. Chem., Anal. Ed"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib8",
+        "doi-asserted-by": "crossref",
+        "first-page": "405",
+        "DOI": "10.1126/science.97.2522.405",
+        "volume": "97",
+        "author": "Heidelberger",
+        "year": "1943",
+        "journal-title": "Science"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib9",
+        "unstructured": "Kabat, E. A., and Mayer, M. M., Experimental immunochemistry, Springfield, 321 (1948)."
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib10",
+        "doi-asserted-by": "crossref",
+        "first-page": "825",
+        "DOI": "10.1016/S0021-9258(18)56702-8",
+        "volume": "180",
+        "author": "Sutherland",
+        "year": "1949",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib11",
+        "doi-asserted-by": "crossref",
+        "first-page": "627",
+        "DOI": "10.1016/S0021-9258(18)84277-6",
+        "volume": "73",
+        "author": "Folin",
+        "year": "1927",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib12",
+        "doi-asserted-by": "crossref",
+        "first-page": "633",
+        "DOI": "10.1016/S0021-9258(17)41291-9",
+        "volume": "163",
+        "author": "Lowry",
+        "year": "1946",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib13",
+        "first-page": "101",
+        "volume": "21",
+        "author": "Levy",
+        "year": "1945",
+        "journal-title": "Compt.-rend. trav. Lab. Carlsberg, Série chim"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib14",
+        "doi-asserted-by": "crossref",
+        "first-page": "321",
+        "DOI": "10.1016/S0021-9258(18)43072-4",
+        "volume": "164",
+        "author": "Bessey",
+        "year": "1946",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib15",
+        "doi-asserted-by": "crossref",
+        "first-page": "177",
+        "DOI": "10.1016/S0021-9258(17)34996-7",
+        "volume": "166",
+        "author": "Bessey",
+        "year": "1946",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib16",
+        "doi-asserted-by": "crossref",
+        "first-page": "239",
+        "DOI": "10.1016/S0021-9258(18)88697-5",
+        "volume": "12",
+        "author": "Folin",
+        "year": "1912",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib17",
+        "doi-asserted-by": "crossref",
+        "first-page": "283",
+        "DOI": "10.1085/jgp.19.2.283",
+        "volume": "19",
+        "author": "Herriott",
+        "year": "1935",
+        "journal-title": "J. Gen. Physiol"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib18",
+        "doi-asserted-by": "crossref",
+        "first-page": "642",
+        "DOI": "10.3181/00379727-46-12091",
+        "volume": "46",
+        "author": "Herriott",
+        "year": "1941",
+        "journal-title": "Proc. Soc. Exp. Biol. and Med"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib19",
+        "doi-asserted-by": "crossref",
+        "first-page": "13",
+        "DOI": "10.1016/S0021-9258(18)57051-4",
+        "volume": "177",
+        "author": "Mehl",
+        "year": "1949",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib20",
+        "doi-asserted-by": "crossref",
+        "first-page": "755",
+        "DOI": "10.1016/S0021-9258(18)76024-9",
+        "volume": "99",
+        "author": "Rising",
+        "year": "1932",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib21",
+        "doi-asserted-by": "crossref",
+        "first-page": "843",
+        "DOI": "10.1016/S0021-9258(18)72955-4",
+        "volume": "139",
+        "author": "Hitchings",
+        "year": "1941",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib22",
+        "doi-asserted-by": "crossref",
+        "first-page": "356",
+        "DOI": "10.1042/bj0070356",
+        "volume": "7",
+        "author": "Funk",
+        "year": "1913",
+        "journal-title": "Biochem. J"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib23",
+        "doi-asserted-by": "crossref",
+        "first-page": "597",
+        "DOI": "10.1016/S0021-9258(18)56494-2",
+        "volume": "182",
+        "author": "Kunkel",
+        "year": "1950",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib24",
+        "doi-asserted-by": "crossref",
+        "first-page": "373",
+        "DOI": "10.1016/S0021-9258(19)52798-3",
+        "volume": "159",
+        "author": "Miller",
+        "year": "1945",
+        "journal-title": "J. Biol. Chem"
+      },
+      {
+        "key": "10.1016/S0021-9258(19)52451-6_bib25",
+        "unstructured": "Weichselbaum, T. E., Am. J. Clin. Path., 16, Tech. Sect., 10, 40 (1946)"
+      }
+    ],
+    "container-title": [
+      "Journal of Biological Chemistry"
+    ],
+    "original-title": [],
+    "language": "en",
+    "link": [
+      {
+        "URL": "https://api.elsevier.com/content/article/PII:S0021925819524516?httpAccept=text/xml",
+        "content-type": "text/xml",
+        "content-version": "vor",
+        "intended-application": "text-mining"
+      },
+      {
+        "URL": "https://api.elsevier.com/content/article/PII:S0021925819524516?httpAccept=text/plain",
+        "content-type": "text/plain",
+        "content-version": "vor",
+        "intended-application": "text-mining"
+      }
+    ],
+    "deposited": {
+      "date-parts": [
+        [
+          2025,
+          9,
+          18
+        ]
+      ],
+      "date-time": "2025-09-18T16:02:56Z",
+      "timestamp": 1758211376000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://linkinghub.elsevier.com/retrieve/pii/S0021925819524516"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          1951,
+          11
+        ]
+      ]
+    },
+    "references-count": 25,
+    "journal-issue": {
+      "issue": "1",
+      "published-print": {
+        "date-parts": [
+          [
+            1951,
+            11
+          ]
+        ]
+      }
+    },
+    "alternative-id": [
+      "S0021925819524516"
+    ],
+    "URL": "https://doi.org/10.1016/s0021-9258(19)52451-6",
+    "relation": {},
+    "ISSN": [
+      "0021-9258"
+    ],
+    "issn-type": [
+      {
+        "value": "0021-9258",
+        "type": "print"
+      }
+    ],
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          1951,
+          11
+        ]
+      ]
+    },
+    "assertion": [
+      {
+        "value": "Elsevier",
+        "name": "publisher",
+        "label": "This article is maintained by"
+      },
+      {
+        "value": "PROTEIN MEASUREMENT WITH THE FOLIN PHENOL REAGENT",
+        "name": "articletitle",
+        "label": "Article Title"
+      },
+      {
+        "value": "Journal of Biological Chemistry",
+        "name": "journaltitle",
+        "label": "Journal Title"
+      },
+      {
+        "value": "https://doi.org/10.1016/S0021-9258(19)52451-6",
+        "name": "articlelink",
+        "label": "CrossRef DOI link to publisher maintained version"
+      },
+      {
+        "value": "article",
+        "name": "content_type",
+        "label": "Content Type"
+      },
+      {
+        "value": "© 1951 ASBMB. Currently published by Elsevier Inc; originally published by American Society for Biochemistry and Molecular Biology.",
+        "name": "copyright",
+        "label": "Copyright"
+      }
+    ]
+  }
+}
