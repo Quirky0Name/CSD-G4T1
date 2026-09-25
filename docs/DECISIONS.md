@@ -5,6 +5,51 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-25 — Updating stores no snapshot when Crossref or OpenAlex errors
+
+### Decision
+
+- If Crossref or OpenAlex returns `error` (timeout, 429, 5xx, an unreadable
+  body) for a paper's DOI, Updating stores **no snapshot** for that paper on
+  that poll. It lists the paper under `source_errors` in the run summary and
+  retries on the next poll.
+- Only `error` gates. `not_found` (e.g. DataCite DOIs) is a stable answer and
+  is stored. A failed author batch (`openalex_authors`) is stored too, since
+  authors aren't compared.
+
+### Why
+
+The docs never compare a field whose source wasn't `ok`, so a change
+published during an outage would be lost for good. Mon ok; Tue Crossref down;
+a correction is published; Wed ok. Tue's snapshot has null `crossref_updates`,
+so Wed vs Tue is skipped, and Thu matches Wed: the correction is never
+nudged. With the gate, Tue stores nothing, so Wed is compared with Mon and
+nudges. Every stored snapshot is then comparable with the one before it, so
+"compare with the previous snapshot" works unchanged for Updating and for
+Research Evaluation.
+
+### Rejected
+
+Per-source "last ok" baselines (compare each source's fields against the last
+snapshot where that source was `ok`). They need extra state per paper and
+source, and Research Evaluation, which reads the snapshots itself, would have
+to copy the same logic.
+
+### Also settled while building it
+
+- **`JWT_SECRET` must be base64 of 32+ bytes even in sprint 1.** The
+  2026-09-24 entry below says "any shared value"; Storage Management
+  base64-decodes the secret and its JWT library rejects keys under 32 bytes, so
+  Updating checks the format at startup.
+- **The first scheduled poll counts from the last scheduled poll**, not from
+  startup, so redeploys and restarts can't keep pushing a 24-hour poll back.
+- Live check: the publisher's `retraction` entry in Crossref's `updated-by` for
+  `10.1016/j.ijantimicag.2020.105949` points at that paper's own DOI, and
+  publisher entries have no `record-id` at all (Retraction Watch entries do).
+  Both are stored as they come.
+
+---
+
 ## 2026-09-24 — Updating owns fetching and snapshots; Research Evaluation evaluates
 
 ### Team decisions

@@ -39,14 +39,15 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
   get a Supabase connection string and use the **session pooler** string
   (port 5432) — the transaction pooler breaks asyncpg's prepared
   statements.
-- `JWT_SECRET` is any shared placeholder in sprint 1, since there's no User
-  Management yet. Use the same value in Storage Management's local run and
-  in `backend/.env`. When real logins arrive, agree the format (see
-  [CONTRACTS.md](CONTRACTS.md) — base64 of 32+ random bytes, every
-  service decodes it the same way).
+- `JWT_SECRET` must be **base64 of 32+ random bytes**, even in sprint 1 while
+  there's no User Management: generate one with `openssl rand -base64 32`.
+  Storage Management base64-decodes it and its JWT library rejects keys under
+  32 bytes, so a made-up placeholder string can't work. Use the same value in Storage Management's local run and in
+  `backend/.env`; Updating checks the format at startup. Every service decodes
+  it the same way (see [CONTRACTS.md](CONTRACTS.md)).
 - Storage Management runs on `localhost:8081` by default (`PORT` overrides
-  it). A containerised Updating reaches it at `http://host.docker.internal:8081`; on Linux that also
-  needs `extra_hosts: ["host.docker.internal:host-gateway"]`. Storage
+  it). A containerised Updating reaches it at `http://host.docker.internal:8081`
+  (the compose file sets `SM_BASE_URL` and the Linux `extra_hosts` for it). Storage
   Management's local Postgres and the compose Postgres both bind host port
   5432, so run one or remap the other.
 - Confirm the Storage Management snapshot endpoint and fields in
@@ -64,9 +65,9 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
 | `LLM_MODEL` | `deepseek-flash` (default) |
 | `LLM_BASE_URL` | `https://api.deepseek.com` |
 | `CROSSREF_MAILTO` | any team contact email |
-| `JWT_SECRET` | any shared placeholder in sprint 1 (base64-encoded once User Management exists) |
-| `DATABASE_URL` | local Postgres in sprint 1; Supabase session-pooler connection string once hosted |
-| `SM_BASE_URL` | Storage Management's running URL |
+| `JWT_SECRET` | `openssl rand -base64 32`; the same value in every service (base64, 32+ bytes) |
+| `DATABASE_URL` | local Postgres in sprint 1 (`postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` for the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres; Supabase session-pooler connection string once hosted |
+| `SM_BASE_URL` | Storage Management's running URL (`http://localhost:8081`); the stub in `backend/dev/` listens on the same port |
 | `RE_BASE_URL` | Research Evaluation's running URL |
 | `GROBID_URL` | `http://grobid:8070` in Docker Compose |
 | `ADMIN_API_KEY` | any value you pick and share with the team, for `/admin/run-poll` |
@@ -75,13 +76,60 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
 
 ## Scaffolding only (no keys needed)
 
-To just bring up the empty skeleton and confirm it boots:
+To just bring up the skeleton and confirm it boots (Updating needs `JWT_SECRET`
+and `DATABASE_URL` in `backend/.env` to start; Research Evaluation is still an
+empty stub):
 
 ```
 cd backend
 docker compose -f docker-compose.dev.yml up
 ```
 
-This starts GROBID, Postgres, and both FastAPI apps with no routes wired
-up yet — enough to confirm the containers build and start. See
-`ARCHITECTURE.md` and the plan for the full build order.
+This starts GROBID, Postgres, and both FastAPI apps. The containerised
+Updating reaches Storage Management on the host at
+`host.docker.internal:8081`. See `ARCHITECTURE.md` and the plan for the full
+build order.
+
+## Running Updating locally (stub Storage Management)
+
+Storage Management's `/internal/**` endpoints don't exist yet (CG-68), so
+`backend/dev/stub_storage.py` stands in for them: in memory, checking the
+service token the way the real service does. Run Updating as **one process**
+(one uvicorn worker); the scheduler doesn't coordinate across processes.
+
+```
+cd backend
+uv sync
+cp .env.example .env    # then fill in the values below
+```
+
+In `.env`: `JWT_SECRET` from `openssl rand -base64 32`, `DATABASE_URL` as in the
+table above, and `POLL_INTERVAL_HOURS=0.01` for a quick loop (the first poll
+runs at startup if none has run yet, then every interval; a restart doesn't
+reset the timer).
+
+```
+# terminal 1: the stub on 8081 (it reads JWT_SECRET from the environment)
+uv run --env-file .env uvicorn dev.stub_storage:create_app --factory --port 8081
+
+# terminal 2: Updating on 8001
+uv run uvicorn updating.main:app --port 8001
+
+# terminal 3: seed papers (stub-only endpoints, no token needed)
+curl -X POST localhost:8081/dev/papers -H 'content-type: application/json' \
+  -d '{"doi": "10.1016/j.ijantimicag.2020.105949"}'
+curl -X POST localhost:8081/dev/papers -H 'content-type: application/json' -d '{}'   # no DOI: skipped
+curl -X POST localhost:8081/dev/reset                                                # forget everything
+```
+
+Each poll stores a snapshot per paper in the stub; read them back with a
+service token from `GET /internal/papers/{id}/background-info/history`. The poll
+summary is in Updating's `poll_runs` table.
+
+Tests need no keys, Docker or Postgres (they use SQLite and the stub):
+
+```
+uv run pytest             # everything except live
+uv run pytest -m live     # also hits the real Crossref/OpenAlex APIs, to catch drift
+uv run ruff check
+```
