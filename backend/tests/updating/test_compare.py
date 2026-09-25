@@ -6,6 +6,7 @@ from updating.snapshot import CrossrefUpdate, SourceStatuses
 from updating.sources import SourceStatus
 
 OK, NOT_FOUND = SourceStatus.OK, SourceStatus.NOT_FOUND
+ALERT_TYPES = ["retraction", "correction", "erratum", "expression_of_concern"]
 
 
 def snap(**changes):
@@ -39,25 +40,42 @@ def test_any_other_is_retracted_change_does_not_nudge(previous, new):
     assert nudge_reasons(snap(is_retracted=previous), snap(is_retracted=new)) == []
 
 
-def test_a_new_retraction_notice_nudges():
-    reasons = nudge_reasons(snap(), snap(crossref_updates=[notice("10.1/n")]))
+@pytest.mark.parametrize("type_", ALERT_TYPES)
+def test_a_new_notice_of_an_alerting_type_nudges(type_):
+    reasons = nudge_reasons(snap(), snap(crossref_updates=[notice("10.1/n", type_)]))
 
-    assert reasons == ["new retraction notice 10.1/n"]
-
-
-def test_the_same_notice_from_two_sources_is_one_nudge_reason():
-    both = [notice("10.1/n", source="publisher"), notice("10.1/n", source="retraction-watch")]
-
-    assert nudge_reasons(snap(), snap(crossref_updates=both)) == ["new retraction notice 10.1/n"]
+    assert reasons == [f"new {type_} notice 10.1/n"]
 
 
-def test_a_known_pair_from_a_new_source_does_not_nudge():
-    known = snap(crossref_updates=[notice("10.1/n", source="publisher")])
+@pytest.mark.parametrize("type_", ALERT_TYPES)
+def test_the_same_notice_from_two_sources_is_one_nudge_reason(type_):
+    both = [
+        notice("10.1/n", type_, source="publisher"),
+        notice("10.1/n", type_, source="retraction-watch"),
+    ]
+
+    assert nudge_reasons(snap(), snap(crossref_updates=both)) == [f"new {type_} notice 10.1/n"]
+
+
+@pytest.mark.parametrize("type_", ALERT_TYPES)
+def test_a_known_pair_from_a_new_source_does_not_nudge(type_):
+    known = snap(crossref_updates=[notice("10.1/n", type_, source="publisher")])
     another_source = snap(
-        crossref_updates=[notice("10.1/n", source="publisher"), notice("10.1/n", source="retraction-watch")]
+        crossref_updates=[
+            notice("10.1/n", type_, source="publisher"),
+            notice("10.1/n", type_, source="retraction-watch"),
+        ]
     )
 
     assert nudge_reasons(known, another_source) == []
+
+
+def test_the_same_notice_under_another_type_is_a_new_entry():
+    """Lancet's notice 10.1016/s0140-6736(20)31324-6 is listed as a retraction and as an erratum."""
+    retraction_only = snap(crossref_updates=[notice("10.1/n", "retraction")])
+    also_erratum = snap(crossref_updates=[notice("10.1/n", "retraction"), notice("10.1/n", "erratum")])
+
+    assert nudge_reasons(retraction_only, also_erratum) == ["new erratum notice 10.1/n"]
 
 
 def test_an_identical_pair_does_not_nudge():
@@ -66,8 +84,9 @@ def test_an_identical_pair_does_not_nudge():
     assert nudge_reasons(snap(crossref_updates=same), snap(crossref_updates=same)) == []
 
 
-def test_types_we_do_not_alert_on_do_not_nudge():
-    assert nudge_reasons(snap(), snap(crossref_updates=[notice("10.1/n", "withdrawal")])) == []
+@pytest.mark.parametrize("type_", ["withdrawal", "removal", "partial_retraction"])
+def test_types_we_do_not_alert_on_do_not_nudge(type_):
+    assert nudge_reasons(snap(), snap(crossref_updates=[notice("10.1/n", type_)])) == []
 
 
 @pytest.mark.parametrize("side", ["previous", "new"])

@@ -49,6 +49,37 @@ async def test_a_retraction_since_the_seeded_baseline_nudges_once(deps, sm, re, 
     assert run.summary["nudged"] == [str(paper)]
 
 
+def lancet_updates():
+    """The Crossref notices Lancet's fixture lists: retractions, errata, a correction and an
+    expression of concern."""
+    return fixture_snapshot("lancet").crossref_updates
+
+
+@pytest.mark.parametrize("type_", ["correction", "erratum", "expression_of_concern"])
+async def test_a_new_notice_of_an_alerting_type_nudges_once(deps, sm, re, sources, type_):
+    sources.serve("lancet")
+    # already retracted, and every notice but the ones of this type: only the type can fire
+    known = [u for u in lancet_updates() if u.type != type_]
+    assert len(known) < len(lancet_updates())
+    paper = await add_seeded(sm, "lancet", is_retracted=True, crossref_updates=known)
+
+    first = await poll(deps)
+    second = await poll(deps)
+
+    assert first.nudged == [paper] and second.nudged == []
+    assert await re.received() == [[paper]]
+
+
+async def test_notices_already_known_from_another_source_do_not_nudge(deps, sm, re, sources):
+    sources.serve("lancet")
+    same_pairs = [u.model_copy(update={"source": "another-source"}) for u in lancet_updates()]
+    await add_seeded(sm, "lancet", is_retracted=True, crossref_updates=same_pairs)
+
+    summary = await poll(deps)
+
+    assert summary.nudged == [] and await re.received() == []
+
+
 async def test_a_rerun_does_not_nudge_again_for_the_same_difference(deps, sm, re, sources):
     sources.serve("lancet")
     paper = await add_seeded(sm, "lancet")

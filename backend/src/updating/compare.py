@@ -9,7 +9,7 @@ OpenAlex, so in practice that only skips `not_found`.)"""
 from updating.snapshot import CrossrefUpdate, Snapshot
 from updating.sources import SourceStatus
 
-NUDGE_UPDATE_TYPES = frozenset({"retraction"})
+NUDGE_UPDATE_TYPES = frozenset({"retraction", "correction", "erratum", "expression_of_concern"})
 
 
 def _both_ok(previous: SourceStatus, new: SourceStatus) -> bool:
