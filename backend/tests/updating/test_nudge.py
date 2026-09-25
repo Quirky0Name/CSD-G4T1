@@ -211,3 +211,19 @@ async def test_a_journal_leaving_doaj_nudges_once(deps, sm, re, sources, body):
 
     assert first.nudged == [paper] and second.nudged == []
     assert await re.received() == [[paper]]
+
+
+async def test_a_single_paper_run_still_sends_every_pending_paper(deps, sm, re, sources):
+    sources.serve("lancet")
+    sources.serve("ijaa")
+    lancet = await add_seeded(sm, "lancet")
+    ijaa = await add_seeded(sm, "ijaa")
+    await re.fail()
+    failed = await poll(deps)  # both changed, the nudge failed: both stay pending
+    assert set(failed.nudge_error.paper_ids) == {lancet, ijaa}
+    await re.fail(on=False)
+
+    summary = await run_poll(deps, PollTrigger.MANUAL, lancet)
+
+    assert set(summary.nudged) == {lancet, ijaa}
+    assert [set(call) for call in await re.received()] == [{lancet, ijaa}]

@@ -33,7 +33,7 @@ depends on the publisher during the demo.
 2. **Research Evaluation:** call `/evaluate/stance` for tracked vs.
    contradicts (expect `contradicts`) and tracked vs. supports (expect
    `supports`).
-3. **Updating, Swagger UI:** `POST /admin/run-poll?paper_id=<tracked>` —
+3. **Updating, Swagger UI:** `POST /run-poll?paper_id=<tracked>` —
    show the new snapshot (now `is_retracted=true` with a `retraction`
    entry in `crossref_updates`) and that the run summary lists the paper
    as nudged, then show that Research Evaluation read the two snapshots

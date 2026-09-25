@@ -24,8 +24,9 @@ This is the single source of truth for every interface between services.
 - **Sprint 1:** there is no User Management yet, and everything runs
   locally. `JWT_SECRET` is a shared throwaway value (base64 of 32+ bytes like
   the real one, the same in every service's local config), and Updating still
-  mints service tokens with it. Updating's own endpoints take no token; `POST /admin/run-poll`
-  is gated by `X-Admin-Key` only.
+  mints service tokens with it. Updating's own endpoints take no token or key;
+  `POST /run-poll` will take the user's JWT once User Management exists
+  (CG-99).
 
 ## Frontend ↔ Storage Management
 
@@ -316,7 +317,7 @@ Evaluation (`/evaluate/changes`).
 
 ### Poll job
 
-Each poll (every `POLL_INTERVAL_HOURS`, or `POST /admin/run-poll`):
+Each poll (every `POLL_INTERVAL_HOURS`, or `POST /run-poll`):
 
 1. lists tracked papers from Storage Management, skipping and logging
    papers with no DOI;
@@ -356,13 +357,53 @@ whose source wasn't `ok`, are never compared):
   comparison is against the snapshot the previous run stored.
 - Citation counts, authors, titles and other stored fields don't nudge.
 
-### `POST /admin/run-poll?paper_id=`
+### `POST /run-poll?paper_id=`
 
-Requires header `X-Admin-Key`; a missing or wrong key is rejected.
-Runs the poll job synchronously (used for the demo, since a real change
-won't reliably land inside a 10-minute slot). Returns the run summary,
-including which papers it stored snapshots for and which it nudged
-Research Evaluation about.
+No auth in sprint 1 (see "Auth"). Runs the poll job synchronously (used for
+the demo and for testing, since a real change won't reliably land inside a
+10-minute slot) and returns the run summary. It is recorded in `poll_runs`
+with trigger `manual`, so it never moves the schedule of the automatic polls.
+
+`paper_id` (optional) limits fetching and storing to that paper. Everything
+else in "Poll job" is unchanged: the other papers stay tracked, and step 5
+still sends every paper with `nudge_pending`, not just this one. Other papers
+that share its DOI aren't stored until the next full poll. A paper Storage
+Management knows but that has no DOI comes back in `skipped_no_doi`, not as an
+error.
+
+| Status | When |
+|---|---|
+| `200` | the run summary, below |
+| `404` | `paper_id` isn't a paper Storage Management lists |
+| `409` | a poll is already running. Only one runs at a time: a scheduled poll that comes due meanwhile waits for it, and a manual call that arrives at the very moment it is handed the lock waits too |
+| `422` | `paper_id` isn't a uuid |
+| `502` | Storage Management's paper list was unavailable |
+
+```json
+{
+  "run_id": 7, "trigger": "manual", "paper_id": "uuid",
+  "started_at": "2026-09-25T08:00:00Z", "finished_at": "2026-09-25T08:00:03Z",
+  "stored": [{"paper_id": "uuid", "doi": "10.xxxx/...", "snapshot_id": 42}],
+  "skipped_no_doi": [],
+  "source_errors": [{"paper_id": "uuid", "doi": "10.xxxx/...", "crossref": "ok", "openalex": "error"}],
+  "store_errors": [{"paper_id": "uuid", "doi": "10.xxxx/...", "reason": "reading history: HTTP 503"}],
+  "nudged": ["uuid"],
+  "nudge_error": null
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `paper_id` | the paper the run was limited to; null for a full run |
+| `stored` | papers a snapshot was stored for, with its `snapshot_id` |
+| `skipped_no_doi` | papers with no DOI, which aren't polled |
+| `source_errors` | papers with no snapshot this run because Crossref or OpenAlex returned `error` for their DOI (the outage gate); retried next poll |
+| `store_errors` | papers with no snapshot this run because Storage Management failed: the previous-snapshot read (`reading history: …`) or the store itself; retried next poll |
+| `nudged` | every paper id sent to `POST /evaluate/changes` and accepted with `202`, including ones left over from an earlier failed nudge |
+| `nudge_error` | `{paper_ids, reason}` when the nudge wasn't accepted; those papers stay pending and are re-sent next poll, otherwise null |
+
+The summary lists ids only. Why a paper was nudged (which field changed) is
+logged by Updating, not returned.
 
 ## Env vars every service needs to agree on
 
@@ -371,7 +412,6 @@ Research Evaluation about.
 | `JWT_SECRET` | all | base64-encoded, 32+ bytes (`openssl rand -base64 32`); every service decodes before use. Sprint 1: a shared throwaway value in that format |
 | `SM_BASE_URL` | Research Evaluation, Updating | Storage Management's base URL (`http://localhost:8081` locally) |
 | `RE_BASE_URL` | Storage Management, Updating | Research Evaluation's base URL (Updating's nudge goes here) |
-| `ADMIN_API_KEY` | Updating | for `/admin/run-poll` |
 
 See [SETUP.md](SETUP.md) for the full env var list including the
 third-party API keys.

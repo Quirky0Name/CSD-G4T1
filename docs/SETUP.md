@@ -70,7 +70,6 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
 | `SM_BASE_URL` | Storage Management's running URL (`http://localhost:8081`); the stub in `backend/dev/` listens on the same port |
 | `RE_BASE_URL` | Research Evaluation's running URL (`http://localhost:8000`); the stub in `backend/dev/` listens on the same port |
 | `GROBID_URL` | `http://grobid:8070` in Docker Compose |
-| `ADMIN_API_KEY` | any value you pick and share with the team, for `/admin/run-poll` |
 | `POLL_INTERVAL_HOURS` | `24` (default) |
 | `CACHE_MAX_ENTRIES` | `5000` (default) |
 
