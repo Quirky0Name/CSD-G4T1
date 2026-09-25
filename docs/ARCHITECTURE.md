@@ -78,9 +78,9 @@ Research Evaluation reads everything it needs from Storage Management:
 the snapshots (the updatable data) and the paper, notes and extracted
 text (the non-updatable data).
 
-Sprint 1 runs everything locally with a shared placeholder `JWT_SECRET`;
-User Management doesn't exist yet, so the JWT paths above are wired up
-but not backed by real logins.
+Sprint 1 runs everything locally with a shared throwaway `JWT_SECRET`
+(still base64 of 32+ bytes); User Management doesn't exist yet, so the
+JWT paths above are wired up but not backed by real logins.
 
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
@@ -124,7 +124,9 @@ Owns all Postgres and file persistence.
 - **Schema:** `papers`, `notes` (separate table/endpoint from `papers`),
   `background_metadata` (insert-only history, kept in full and per paper —
   never overwrite, that's what Updating and Research Evaluation compare;
-  one row per tracked paper per poll, even when nothing changed), `background_text` (raw text for
+  one row per tracked paper per poll, even when nothing changed, except
+  that Updating stores none for a paper on a poll where Crossref or
+  OpenAlex failed for its DOI, see Section 4), `background_text` (raw text for
   week-13 LLM input; nothing here is diffed in week 7),
   `authors_background`.
 - **File storage:** PDF bytes never in Postgres — S3/local disk holds
@@ -186,6 +188,17 @@ Research Evaluation works out the differences and what they mean.
   decide whether to nudge Research Evaluation. Each snapshot's
   `fetched_at` records when the paper was last checked. Papers with no DOI
   are skipped and logged.
+- **Outage gate:** if Crossref or OpenAlex returns `error` for a paper's
+  DOI, Updating stores no snapshot for that paper this poll, lists it under
+  `source_errors` in the run summary and retries on the next poll. Only
+  `error` gates: `not_found` (e.g. DataCite DOIs) is a stable answer and is
+  stored. Without the gate, a change published during an outage would be
+  lost, because a field whose source wasn't `ok` is never compared (see
+  DECISIONS.md, 2026-09-25); with it, every stored snapshot is comparable
+  with the one before it.
+- **Schedule:** the first poll after a start runs one interval after the
+  last scheduled poll (immediately if that is already due), so restarts and
+  redeploys can't keep postponing it.
 - **When to nudge:** Updating does a plain comparison of the fields the
   alerts depend on and doesn't classify what changed. It nudges when the
   new snapshot differs from the previous one in any of:

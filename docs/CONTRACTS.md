@@ -7,7 +7,9 @@ This is the single source of truth for every interface between services.
 
 - JWT: HS256, `sub` = user id, plus `exp`. Issued by User Management at
   login.
-- `JWT_SECRET` is shared as base64 of 32+ random bytes. **Every service
+- `JWT_SECRET` is shared as base64 of 32+ random bytes (`openssl rand -base64 32`;
+  Storage Management's JWT library rejects shorter keys, and Updating checks at
+  startup). **Every service
   base64-decodes it before use** — a mismatched encoding is the classic
   Java↔Python JWT bug, so check this first if signature validation fails
   across a language boundary.
@@ -20,9 +22,9 @@ This is the single source of truth for every interface between services.
   accept these on its internal endpoints without owner-scoping them to a
   real user.
 - **Sprint 1:** there is no User Management yet, and everything runs
-  locally. `JWT_SECRET` is a shared placeholder (any value, the same one in
-  every service's local config), and Updating still mints service tokens
-  with it. Updating's own endpoints take no token; `POST /admin/run-poll`
+  locally. `JWT_SECRET` is a shared throwaway value (base64 of 32+ bytes like
+  the real one, the same in every service's local config), and Updating still
+  mints service tokens with it. Updating's own endpoints take no token; `POST /admin/run-poll`
   is gated by `X-Admin-Key` only.
 
 ## Storage Management ↔ Research Evaluation / Updating
@@ -46,7 +48,8 @@ Stores the snapshot in the request body as a new `background_metadata`
 row (insert-only, never overwrite) and returns it with its id. Storage
 Management doesn't fetch anything or call Research Evaluation here;
 Updating fetched the data. Updating sends one snapshot per tracked paper
-per poll, including polls where nothing changed.
+per poll, including polls where nothing changed, except for a paper whose
+Crossref or OpenAlex lookup errored that poll (see "Poll job").
 
 **Request — snapshot (fields below):**
 
@@ -86,6 +89,11 @@ Kept in full and per paper (insert-only). Every nullable field is
 **null, never false**, when its source failed or didn't know the DOI
 (see `source_status`); nothing that compares snapshots may treat a null,
 or a field whose source wasn't `ok`, as a change.
+
+Stored snapshots never have `error` for `crossref` or `openalex`: Updating
+stores nothing for a paper on a poll where either failed (see "Poll job"). So
+for those two sources a null field means the source didn't know the DOI
+(`not_found`), and only `openalex_authors` can be `error`.
 
 | Field | Type | Source | Used for |
 |---|---|---|---|
@@ -292,7 +300,10 @@ Each poll (every `POLL_INTERVAL_HOURS`, or `POST /admin/run-poll`):
    papers with no DOI;
 2. fetches each DOI once from Crossref and OpenAlex;
 3. stores one snapshot per tracked paper in Storage Management, even when
-   nothing changed (its `fetched_at` is when the paper was last checked);
+   nothing changed (its `fetched_at` is when the paper was last checked).
+   If Crossref or OpenAlex returned `error` for a paper's DOI, it stores no
+   snapshot for that paper, lists it under `source_errors` in the run summary
+   and retries on the next poll; `not_found` is stored;
 4. compares each new snapshot with the paper's previous one, read back from
    Storage Management (see below), and sets `nudge_pending` on the paper
    in its own `tracked_papers` table if they differ;
@@ -332,7 +343,7 @@ Research Evaluation about.
 
 | Var | Used by | Notes |
 |---|---|---|
-| `JWT_SECRET` | all | base64-encoded, 32+ bytes; every service decodes before use. Sprint 1: any shared placeholder value |
+| `JWT_SECRET` | all | base64-encoded, 32+ bytes (`openssl rand -base64 32`); every service decodes before use. Sprint 1: a shared throwaway value in that format |
 | `SM_BASE_URL` | Research Evaluation, Updating | Storage Management's base URL (`http://localhost:8081` locally) |
 | `RE_BASE_URL` | Storage Management, Updating | Research Evaluation's base URL (Updating's nudge goes here) |
 | `ADMIN_API_KEY` | Updating | for `/admin/run-poll` |

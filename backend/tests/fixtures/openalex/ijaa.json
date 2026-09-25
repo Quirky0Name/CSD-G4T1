@@ -1,0 +1,3132 @@
+{
+  "id": "https://openalex.org/W3010930696",
+  "doi": "https://doi.org/10.1016/j.ijantimicag.2020.105949",
+  "title": "RETRACTED: Hydroxychloroquine and azithromycin as a treatment of COVID-19: results of an open-label non-randomized clinical trial",
+  "display_name": "RETRACTED: Hydroxychloroquine and azithromycin as a treatment of COVID-19: results of an open-label non-randomized clinical trial",
+  "publication_year": 2020,
+  "publication_date": "2020-03-20",
+  "ids": {
+    "openalex": "https://openalex.org/W3010930696",
+    "doi": "https://doi.org/10.1016/j.ijantimicag.2020.105949",
+    "mag": "3010930696",
+    "pmid": "https://pubmed.ncbi.nlm.nih.gov/32205204"
+  },
+  "language": "en",
+  "primary_location": {
+    "id": "doi:10.1016/j.ijantimicag.2020.105949",
+    "is_oa": true,
+    "landing_page_url": "https://doi.org/10.1016/j.ijantimicag.2020.105949",
+    "pdf_url": null,
+    "source": {
+      "id": "https://openalex.org/S5248501",
+      "display_name": "International Journal of Antimicrobial Agents",
+      "issn_l": "0924-8579",
+      "issn": [
+        "0924-8579",
+        "1872-7913"
+      ],
+      "is_oa": false,
+      "is_in_doaj": false,
+      "is_core": true,
+      "listed_in": [
+        "cwts-core",
+        "doyens",
+        "jufo-1",
+        "ki-jl-1",
+        "medline",
+        "norway-1"
+      ],
+      "host_organization": "https://openalex.org/P4310320990",
+      "host_organization_name": "Elsevier BV",
+      "host_organization_lineage": [
+        "https://openalex.org/P4310320990"
+      ],
+      "host_organization_lineage_names": [
+        "Elsevier BV"
+      ],
+      "type": "journal"
+    },
+    "license": null,
+    "license_id": null,
+    "version": "acceptedVersion",
+    "is_accepted": true,
+    "is_published": false,
+    "raw_source_name": "International Journal of Antimicrobial Agents",
+    "raw_type": "journal-article"
+  },
+  "type": "article",
+  "indexed_in": [
+    "crossref",
+    "pubmed"
+  ],
+  "open_access": {
+    "is_oa": true,
+    "oa_status": "bronze",
+    "oa_url": "https://doi.org/10.1016/j.ijantimicag.2020.105949",
+    "any_repository_has_fulltext": true
+  },
+  "authorships": [
+    {
+      "author_position": "first",
+      "author": {
+        "id": "https://openalex.org/A5012924666",
+        "display_name": "Philippe Gautret",
+        "orcid": "https://orcid.org/0000-0002-1664-958X",
+        "observed_orcids": [
+          "https://orcid.org/0000-0002-1664-958X"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I21491767",
+          "display_name": "Aix-Marseille Université",
+          "ror": "https://ror.org/035xkbk20",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210166444",
+          "display_name": "Institut de Recherche pour le Développement",
+          "ror": "https://ror.org/05q3vnk25",
+          "country_code": "FR",
+          "type": "government",
+          "lineage": [
+            "https://openalex.org/I2802818602",
+            "https://openalex.org/I4210090127",
+            "https://openalex.org/I4210131494",
+            "https://openalex.org/I4210166444"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Philippe Gautret",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, AP-HM, SSA, VITROME, Marseille, France",
+        "Aix Marseille Univ, IRD, AP-HM, SSA, VITROME, Marseille, France",
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, AP-HM, SSA, VITROME, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Aix Marseille Univ, IRD, AP-HM, SSA, VITROME, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5044290242",
+        "display_name": "Jean‐Christophe Lagier",
+        "orcid": "https://orcid.org/0000-0003-0771-8245",
+        "observed_orcids": [
+          "https://orcid.org/0000-0003-0771-8245"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I21491767",
+          "display_name": "Aix-Marseille Université",
+          "ror": "https://ror.org/035xkbk20",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210166444",
+          "display_name": "Institut de Recherche pour le Développement",
+          "ror": "https://ror.org/05q3vnk25",
+          "country_code": "FR",
+          "type": "government",
+          "lineage": [
+            "https://openalex.org/I2802818602",
+            "https://openalex.org/I4210090127",
+            "https://openalex.org/I4210131494",
+            "https://openalex.org/I4210166444"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Jean-Christophe Lagier",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5061281389",
+        "display_name": "Philippe Parola",
+        "orcid": "https://orcid.org/0000-0002-1061-1927",
+        "observed_orcids": [
+          "https://orcid.org/0000-0002-1061-1927"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I21491767",
+          "display_name": "Aix-Marseille Université",
+          "ror": "https://ror.org/035xkbk20",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210166444",
+          "display_name": "Institut de Recherche pour le Développement",
+          "ror": "https://ror.org/05q3vnk25",
+          "country_code": "FR",
+          "type": "government",
+          "lineage": [
+            "https://openalex.org/I2802818602",
+            "https://openalex.org/I4210090127",
+            "https://openalex.org/I4210131494",
+            "https://openalex.org/I4210166444"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Philippe Parola",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, AP-HM, SSA, VITROME, Marseille, France",
+        "Aix Marseille Univ, IRD, AP-HM, SSA, VITROME, Marseille, France",
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, AP-HM, SSA, VITROME, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Aix Marseille Univ, IRD, AP-HM, SSA, VITROME, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5015077227",
+        "display_name": "Van Thuan Hoang",
+        "orcid": "https://orcid.org/0000-0003-1369-8615",
+        "observed_orcids": [
+          "https://orcid.org/0000-0003-1369-8615"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I21491767",
+          "display_name": "Aix-Marseille Université",
+          "ror": "https://ror.org/035xkbk20",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210143793",
+          "display_name": "Thai Binh University of Medicine and Pharmacy",
+          "ror": "https://ror.org/04wtn5j93",
+          "country_code": "VN",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I4210143793"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210166444",
+          "display_name": "Institut de Recherche pour le Développement",
+          "ror": "https://ror.org/05q3vnk25",
+          "country_code": "FR",
+          "type": "government",
+          "lineage": [
+            "https://openalex.org/I2802818602",
+            "https://openalex.org/I4210090127",
+            "https://openalex.org/I4210131494",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4405269175",
+          "display_name": "Risques Infectieux Tropicaux Microorganismes EmergentS",
+          "ror": "https://ror.org/03anav932",
+          "country_code": "FR",
+          "type": "facility",
+          "lineage": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I2802818602",
+            "https://openalex.org/I3203470602",
+            "https://openalex.org/I4210090127",
+            "https://openalex.org/I4210131494",
+            "https://openalex.org/I4210166444",
+            "https://openalex.org/I4405269175"
+          ]
+        }
+      ],
+      "countries": [
+        "FR",
+        "VN"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Van Thuan Hoang",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, AP-HM, SSA, VITROME, Marseille, France; Thai Binh University of Medicine and Pharmacy, Thai Binh, Viet Nam",
+        "Aix Marseille Univ, IRD, AP-HM, SSA, VITROME, Marseille, France",
+        "IHU-Méditerranée Infection, Marseille, France",
+        "Thai Binh University of Medicine and Pharmacy, Thai Binh, Viet Nam"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, AP-HM, SSA, VITROME, Marseille, France; Thai Binh University of Medicine and Pharmacy, Thai Binh, Viet Nam",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210143793",
+            "https://openalex.org/I4210166444",
+            "https://openalex.org/I4405269175"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Aix Marseille Univ, IRD, AP-HM, SSA, VITROME, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Thai Binh University of Medicine and Pharmacy, Thai Binh, Viet Nam",
+          "institution_ids": [
+            "https://openalex.org/I4210143793"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5014150641",
+        "display_name": "Line Meddeb",
+        "orcid": "https://orcid.org/0000-0003-0536-8608",
+        "observed_orcids": [
+          "https://orcid.org/0000-0003-0536-8608"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Line Meddeb",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5042090217",
+        "display_name": "Morgane Mailhe",
+        "orcid": "https://orcid.org/0000-0002-7173-1551",
+        "observed_orcids": [
+          "https://orcid.org/0000-0002-7173-1551"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Morgane Mailhe",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5017977503",
+        "display_name": "Barbara Doudier",
+        "orcid": "https://orcid.org/0009-0001-3659-4053",
+        "observed_orcids": [
+          "https://orcid.org/0009-0001-3659-4053"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Barbara Doudier",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5032564627",
+        "display_name": "Johan Courjon",
+        "orcid": "https://orcid.org/0000-0002-0445-5104",
+        "observed_orcids": [
+          "https://orcid.org/0000-0002-0445-5104"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I154526488",
+          "display_name": "Inserm",
+          "ror": "https://ror.org/02vjkv261",
+          "country_code": "FR",
+          "type": "government",
+          "lineage": [
+            "https://openalex.org/I154526488"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I201841394",
+          "display_name": "Université Côte d'Azur",
+          "ror": "https://ror.org/019tgvf94",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I201841394"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I3018988418",
+          "display_name": "Centre Hospitalier Universitaire de Nice",
+          "ror": "https://ror.org/05qsjq305",
+          "country_code": "FR",
+          "type": "healthcare",
+          "lineage": [
+            "https://openalex.org/I3018988418"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210118704",
+          "display_name": "Centre Méditerranéen de Médecine Moléculaire",
+          "ror": "https://ror.org/029rfe283",
+          "country_code": "FR",
+          "type": "facility",
+          "lineage": [
+            "https://openalex.org/I154526488",
+            "https://openalex.org/I201841394",
+            "https://openalex.org/I4210118704"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210126779",
+          "display_name": "Observatoire de la Côte d’Azur",
+          "ror": "https://ror.org/039fj2469",
+          "country_code": "FR",
+          "type": "facility",
+          "lineage": [
+            "https://openalex.org/I1294671590",
+            "https://openalex.org/I201841394",
+            "https://openalex.org/I4210126779"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Johan Courjon",
+      "raw_affiliation_strings": [
+        "Infectiologie, Hôpital de l'Archet, Centre Hospitalier Universitaire de Nice, Nice, France; Université Côte d'Azur, Nice, France; U1065, Centre Méditerranéen de Médecine Moléculaire, C3M, Virulence Microbienne et Signalisation Inflammatoire, INSERM, Nice, France",
+        "Infectiologie, Hôpital de l'Archet, Centre Hospitalier Universitaire de Nice, Nice, France",
+        "U1065, Centre Méditerranéen de Médecine Moléculaire, C3M, Virulence Microbienne et Signalisation Inflammatoire, INSERM, Nice, France",
+        "Université Côte d'Azur, Nice, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "Infectiologie, Hôpital de l'Archet, Centre Hospitalier Universitaire de Nice, Nice, France; Université Côte d'Azur, Nice, France; U1065, Centre Méditerranéen de Médecine Moléculaire, C3M, Virulence Microbienne et Signalisation Inflammatoire, INSERM, Nice, France",
+          "institution_ids": [
+            "https://openalex.org/I154526488",
+            "https://openalex.org/I3018988418",
+            "https://openalex.org/I4210118704"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Infectiologie, Hôpital de l'Archet, Centre Hospitalier Universitaire de Nice, Nice, France",
+          "institution_ids": [
+            "https://openalex.org/I3018988418"
+          ]
+        },
+        {
+          "raw_affiliation_string": "U1065, Centre Méditerranéen de Médecine Moléculaire, C3M, Virulence Microbienne et Signalisation Inflammatoire, INSERM, Nice, France",
+          "institution_ids": [
+            "https://openalex.org/I154526488",
+            "https://openalex.org/I4210118704"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Université Côte d'Azur, Nice, France",
+          "institution_ids": [
+            "https://openalex.org/I201841394",
+            "https://openalex.org/I4210126779"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5013087130",
+        "display_name": "Valérie Giordanengo",
+        "orcid": "https://orcid.org/0000-0002-5114-1124",
+        "observed_orcids": [
+          "https://orcid.org/0000-0002-5114-1124"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I3018988418",
+          "display_name": "Centre Hospitalier Universitaire de Nice",
+          "ror": "https://ror.org/05qsjq305",
+          "country_code": "FR",
+          "type": "healthcare",
+          "lineage": [
+            "https://openalex.org/I3018988418"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Valérie Giordanengo",
+      "raw_affiliation_strings": [
+        "Department of Virology, Biological and Pathological Center, Centre Hospitalier Universitaire de Nice, 06200 Nice, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "Department of Virology, Biological and Pathological Center, Centre Hospitalier Universitaire de Nice, 06200 Nice, France",
+          "institution_ids": [
+            "https://openalex.org/I3018988418"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5088058381",
+        "display_name": "Vera Esteves Vieira",
+        "orcid": null,
+        "observed_orcids": []
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Vera Esteves Vieira",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5079148203",
+        "display_name": "Herve Tissot Dupont",
+        "orcid": "https://orcid.org/0000-0002-5644-3412",
+        "observed_orcids": [
+          "https://orcid.org/0000-0002-5644-3412"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I21491767",
+          "display_name": "Aix-Marseille Université",
+          "ror": "https://ror.org/035xkbk20",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210166444",
+          "display_name": "Institut de Recherche pour le Développement",
+          "ror": "https://ror.org/05q3vnk25",
+          "country_code": "FR",
+          "type": "government",
+          "lineage": [
+            "https://openalex.org/I2802818602",
+            "https://openalex.org/I4210090127",
+            "https://openalex.org/I4210131494",
+            "https://openalex.org/I4210166444"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Hervé Tissot Dupont",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5108723819",
+        "display_name": "Stéphane Honoré",
+        "orcid": "https://orcid.org/0000-0002-4056-0374",
+        "observed_orcids": [
+          "https://orcid.org/0000-0002-4056-0374"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I21491767",
+          "display_name": "Aix-Marseille Université",
+          "ror": "https://ror.org/035xkbk20",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210162909",
+          "display_name": "Hôpital de la Timone",
+          "ror": "https://ror.org/05jrr4320",
+          "country_code": "FR",
+          "type": "healthcare",
+          "lineage": [
+            "https://openalex.org/I4210087487",
+            "https://openalex.org/I4210162909"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Stéphane Honoré",
+      "raw_affiliation_strings": [
+        "Service Pharmacie, Hôpital Timone, AP-HM, Marseille, France; Laboratoire de Pharmacie Clinique, Aix Marseille Université, Marseille, France",
+        "Laboratoire de Pharmacie Clinique, Aix Marseille Université, Marseille, France",
+        "Service Pharmacie, Hôpital Timone, AP-HM, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "Service Pharmacie, Hôpital Timone, AP-HM, Marseille, France; Laboratoire de Pharmacie Clinique, Aix Marseille Université, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210162909"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Laboratoire de Pharmacie Clinique, Aix Marseille Université, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Service Pharmacie, Hôpital Timone, AP-HM, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210162909"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5056663199",
+        "display_name": "Philippe Colson",
+        "orcid": "https://orcid.org/0000-0001-6285-0308",
+        "observed_orcids": [
+          "https://orcid.org/0000-0001-6285-0308"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I21491767",
+          "display_name": "Aix-Marseille Université",
+          "ror": "https://ror.org/035xkbk20",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210166444",
+          "display_name": "Institut de Recherche pour le Développement",
+          "ror": "https://ror.org/05q3vnk25",
+          "country_code": "FR",
+          "type": "government",
+          "lineage": [
+            "https://openalex.org/I2802818602",
+            "https://openalex.org/I4210090127",
+            "https://openalex.org/I4210131494",
+            "https://openalex.org/I4210166444"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Philippe Colson",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5100819589",
+        "display_name": "Éric Chabrière",
+        "orcid": "https://orcid.org/0000-0002-5229-7745",
+        "observed_orcids": [
+          "https://orcid.org/0000-0002-5229-7745"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I21491767",
+          "display_name": "Aix-Marseille Université",
+          "ror": "https://ror.org/035xkbk20",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210166444",
+          "display_name": "Institut de Recherche pour le Développement",
+          "ror": "https://ror.org/05q3vnk25",
+          "country_code": "FR",
+          "type": "government",
+          "lineage": [
+            "https://openalex.org/I2802818602",
+            "https://openalex.org/I4210090127",
+            "https://openalex.org/I4210131494",
+            "https://openalex.org/I4210166444"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Eric Chabrière",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5023619971",
+        "display_name": "Bernard La Scola",
+        "orcid": "https://orcid.org/0000-0001-8006-7704",
+        "observed_orcids": [
+          "https://orcid.org/0000-0001-8006-7704"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I21491767",
+          "display_name": "Aix-Marseille Université",
+          "ror": "https://ror.org/035xkbk20",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210166444",
+          "display_name": "Institut de Recherche pour le Développement",
+          "ror": "https://ror.org/05q3vnk25",
+          "country_code": "FR",
+          "type": "government",
+          "lineage": [
+            "https://openalex.org/I2802818602",
+            "https://openalex.org/I4210090127",
+            "https://openalex.org/I4210131494",
+            "https://openalex.org/I4210166444"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Bernard La Scola",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5012670349",
+        "display_name": "Jean‐Marc Rolain",
+        "orcid": "https://orcid.org/0000-0002-2402-4467",
+        "observed_orcids": [
+          "https://orcid.org/0000-0002-2402-4467"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I21491767",
+          "display_name": "Aix-Marseille Université",
+          "ror": "https://ror.org/035xkbk20",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210166444",
+          "display_name": "Institut de Recherche pour le Développement",
+          "ror": "https://ror.org/05q3vnk25",
+          "country_code": "FR",
+          "type": "government",
+          "lineage": [
+            "https://openalex.org/I2802818602",
+            "https://openalex.org/I4210090127",
+            "https://openalex.org/I4210131494",
+            "https://openalex.org/I4210166444"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Jean-Marc Rolain",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "middle",
+      "author": {
+        "id": "https://openalex.org/A5108434160",
+        "display_name": "Philippe Brouqui",
+        "orcid": null,
+        "observed_orcids": []
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I21491767",
+          "display_name": "Aix-Marseille Université",
+          "ror": "https://ror.org/035xkbk20",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210166444",
+          "display_name": "Institut de Recherche pour le Développement",
+          "ror": "https://ror.org/05q3vnk25",
+          "country_code": "FR",
+          "type": "government",
+          "lineage": [
+            "https://openalex.org/I2802818602",
+            "https://openalex.org/I4210090127",
+            "https://openalex.org/I4210131494",
+            "https://openalex.org/I4210166444"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": false,
+      "raw_author_name": "Philippe Brouqui",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    },
+    {
+      "author_position": "last",
+      "author": {
+        "id": "https://openalex.org/A5074730004",
+        "display_name": "Didier Raoult",
+        "orcid": "https://orcid.org/0000-0002-0633-5974",
+        "observed_orcids": [
+          "https://orcid.org/0000-0002-0633-5974"
+        ]
+      },
+      "institutions": [
+        {
+          "id": "https://openalex.org/I21491767",
+          "display_name": "Aix-Marseille Université",
+          "ror": "https://ror.org/035xkbk20",
+          "country_code": "FR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I21491767"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210087217",
+          "display_name": "Méditerranée Infection Foundation",
+          "ror": "https://ror.org/0068ff141",
+          "country_code": "FR",
+          "type": "other",
+          "lineage": [
+            "https://openalex.org/I4210087217"
+          ]
+        },
+        {
+          "id": "https://openalex.org/I4210166444",
+          "display_name": "Institut de Recherche pour le Développement",
+          "ror": "https://ror.org/05q3vnk25",
+          "country_code": "FR",
+          "type": "government",
+          "lineage": [
+            "https://openalex.org/I2802818602",
+            "https://openalex.org/I4210090127",
+            "https://openalex.org/I4210131494",
+            "https://openalex.org/I4210166444"
+          ]
+        }
+      ],
+      "countries": [
+        "FR"
+      ],
+      "is_corresponding": true,
+      "raw_author_name": "Didier Raoult",
+      "raw_affiliation_strings": [
+        "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France. Electronic address: Didier.raoult@gmail.com",
+        "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+        "IHU-Méditerranée Infection, Marseille, France"
+      ],
+      "raw_orcid": null,
+      "affiliations": [
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France; Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France. Electronic address: Didier.raoult@gmail.com",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210087217",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "Aix Marseille Univ, IRD, APHM, MEPHI, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I21491767",
+            "https://openalex.org/I4210166444"
+          ]
+        },
+        {
+          "raw_affiliation_string": "IHU-Méditerranée Infection, Marseille, France",
+          "institution_ids": [
+            "https://openalex.org/I4210087217"
+          ]
+        }
+      ]
+    }
+  ],
+  "institutions": [],
+  "countries_distinct_count": 2,
+  "institutions_distinct_count": 11,
+  "corresponding_author_ids": [
+    "https://openalex.org/A5074730004"
+  ],
+  "corresponding_institution_ids": [
+    "https://openalex.org/I21491767",
+    "https://openalex.org/I4210087217",
+    "https://openalex.org/I4210166444"
+  ],
+  "apc_list": {
+    "value": 3000,
+    "currency": "USD",
+    "value_usd": 3000
+  },
+  "apc_paid": null,
+  "fwci": 116.2129,
+  "has_fulltext": false,
+  "cited_by_count": 4968,
+  "citation_normalized_percentile": {
+    "value": 0.99935191,
+    "is_in_top_1_percent": true,
+    "is_in_top_10_percent": true
+  },
+  "cited_by_percentile_year": {
+    "min": 89,
+    "max": 100
+  },
+  "biblio": {
+    "volume": "56",
+    "issue": "1",
+    "first_page": "105949",
+    "last_page": "105949"
+  },
+  "is_retracted": true,
+  "is_paratext": false,
+  "is_xpac": false,
+  "primary_topic": {
+    "id": "https://openalex.org/T10041",
+    "display_name": "COVID-19 Clinical Research Studies",
+    "score": 0.7688000202178955,
+    "subfield": {
+      "id": "https://openalex.org/subfields/2725",
+      "display_name": "Infectious Diseases"
+    },
+    "field": {
+      "id": "https://openalex.org/fields/27",
+      "display_name": "Medicine"
+    },
+    "domain": {
+      "id": "https://openalex.org/domains/4",
+      "display_name": "Health Sciences"
+    }
+  },
+  "topics": [
+    {
+      "id": "https://openalex.org/T10041",
+      "display_name": "COVID-19 Clinical Research Studies",
+      "score": 0.7688000202178955,
+      "subfield": {
+        "id": "https://openalex.org/subfields/2725",
+        "display_name": "Infectious Diseases"
+      },
+      "field": {
+        "id": "https://openalex.org/fields/27",
+        "display_name": "Medicine"
+      },
+      "domain": {
+        "id": "https://openalex.org/domains/4",
+        "display_name": "Health Sciences"
+      }
+    },
+    {
+      "id": "https://openalex.org/T11368",
+      "display_name": "Long-Term Effects of COVID-19",
+      "score": 0.05139999836683273,
+      "subfield": {
+        "id": "https://openalex.org/subfields/2728",
+        "display_name": "Neurology"
+      },
+      "field": {
+        "id": "https://openalex.org/fields/27",
+        "display_name": "Medicine"
+      },
+      "domain": {
+        "id": "https://openalex.org/domains/4",
+        "display_name": "Health Sciences"
+      }
+    },
+    {
+      "id": "https://openalex.org/T13047",
+      "display_name": "Pharmacological Receptor Mechanisms and Effects",
+      "score": 0.021299999207258224,
+      "subfield": {
+        "id": "https://openalex.org/subfields/1312",
+        "display_name": "Molecular Biology"
+      },
+      "field": {
+        "id": "https://openalex.org/fields/13",
+        "display_name": "Biochemistry, Genetics and Molecular Biology"
+      },
+      "domain": {
+        "id": "https://openalex.org/domains/1",
+        "display_name": "Life Sciences"
+      }
+    }
+  ],
+  "keywords": [
+    {
+      "id": "https://openalex.org/keywords/hydroxychloroquine",
+      "display_name": "Hydroxychloroquine",
+      "score": 0.9674007892608643
+    },
+    {
+      "id": "https://openalex.org/keywords/azithromycin",
+      "display_name": "Azithromycin",
+      "score": 0.9638175368309021
+    },
+    {
+      "id": "https://openalex.org/keywords/coronavirus-disease-2019",
+      "display_name": "Coronavirus disease 2019 (COVID-19)",
+      "score": 0.76015305519104
+    },
+    {
+      "id": "https://openalex.org/keywords/medicine",
+      "display_name": "Medicine",
+      "score": 0.694941520690918
+    },
+    {
+      "id": "https://openalex.org/keywords/randomized-controlled-trial",
+      "display_name": "Randomized controlled trial",
+      "score": 0.6298032999038696
+    },
+    {
+      "id": "https://openalex.org/keywords/2019-20-coronavirus-outbreak",
+      "display_name": "2019-20 coronavirus outbreak",
+      "score": 0.5336366891860962
+    },
+    {
+      "id": "https://openalex.org/keywords/severe-acute-respiratory-syndrome-coronavirus-2",
+      "display_name": "Severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2)",
+      "score": 0.504623293876648
+    },
+    {
+      "id": "https://openalex.org/keywords/open-label",
+      "display_name": "Open label",
+      "score": 0.49448299407958984
+    },
+    {
+      "id": "https://openalex.org/keywords/virology",
+      "display_name": "Virology",
+      "score": 0.33423560857772827
+    },
+    {
+      "id": "https://openalex.org/keywords/internal-medicine",
+      "display_name": "Internal medicine",
+      "score": 0.30655503273010254
+    },
+    {
+      "id": "https://openalex.org/keywords/antibiotics",
+      "display_name": "Antibiotics",
+      "score": 0.11130630970001221
+    },
+    {
+      "id": "https://openalex.org/keywords/outbreak",
+      "display_name": "Outbreak",
+      "score": 0.07503142952919006
+    },
+    {
+      "id": "https://openalex.org/keywords/biology",
+      "display_name": "Biology",
+      "score": 0.05325731635093689
+    },
+    {
+      "id": "https://openalex.org/keywords/microbiology",
+      "display_name": "Microbiology",
+      "score": 0.047715216875076294
+    }
+  ],
+  "concepts": [
+    {
+      "id": "https://openalex.org/C2779123688",
+      "wikidata": "https://www.wikidata.org/wiki/Q421094",
+      "display_name": "Hydroxychloroquine",
+      "level": 5,
+      "score": 0.9674007892608643
+    },
+    {
+      "id": "https://openalex.org/C2778907293",
+      "wikidata": "https://www.wikidata.org/wiki/Q165399",
+      "display_name": "Azithromycin",
+      "level": 3,
+      "score": 0.9638175368309021
+    },
+    {
+      "id": "https://openalex.org/C3008058167",
+      "wikidata": "https://www.wikidata.org/wiki/Q84263196",
+      "display_name": "Coronavirus disease 2019 (COVID-19)",
+      "level": 4,
+      "score": 0.76015305519104
+    },
+    {
+      "id": "https://openalex.org/C71924100",
+      "wikidata": "https://www.wikidata.org/wiki/Q11190",
+      "display_name": "Medicine",
+      "level": 0,
+      "score": 0.694941520690918
+    },
+    {
+      "id": "https://openalex.org/C168563851",
+      "wikidata": "https://www.wikidata.org/wiki/Q1436668",
+      "display_name": "Randomized controlled trial",
+      "level": 2,
+      "score": 0.6298032999038696
+    },
+    {
+      "id": "https://openalex.org/C3006700255",
+      "wikidata": "https://www.wikidata.org/wiki/Q81068910",
+      "display_name": "2019-20 coronavirus outbreak",
+      "level": 3,
+      "score": 0.5336366891860962
+    },
+    {
+      "id": "https://openalex.org/C3007834351",
+      "wikidata": "https://www.wikidata.org/wiki/Q82069695",
+      "display_name": "Severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2)",
+      "level": 5,
+      "score": 0.504623293876648
+    },
+    {
+      "id": "https://openalex.org/C3019800554",
+      "wikidata": "https://www.wikidata.org/wiki/Q3813242",
+      "display_name": "Open label",
+      "level": 3,
+      "score": 0.49448299407958984
+    },
+    {
+      "id": "https://openalex.org/C159047783",
+      "wikidata": "https://www.wikidata.org/wiki/Q7215",
+      "display_name": "Virology",
+      "level": 1,
+      "score": 0.33423560857772827
+    },
+    {
+      "id": "https://openalex.org/C126322002",
+      "wikidata": "https://www.wikidata.org/wiki/Q11180",
+      "display_name": "Internal medicine",
+      "level": 1,
+      "score": 0.30655503273010254
+    },
+    {
+      "id": "https://openalex.org/C501593827",
+      "wikidata": "https://www.wikidata.org/wiki/Q12187",
+      "display_name": "Antibiotics",
+      "level": 2,
+      "score": 0.11130630970001221
+    },
+    {
+      "id": "https://openalex.org/C116675565",
+      "wikidata": "https://www.wikidata.org/wiki/Q3241045",
+      "display_name": "Outbreak",
+      "level": 2,
+      "score": 0.07503142952919006
+    },
+    {
+      "id": "https://openalex.org/C86803240",
+      "wikidata": "https://www.wikidata.org/wiki/Q420",
+      "display_name": "Biology",
+      "level": 0,
+      "score": 0.05325731635093689
+    },
+    {
+      "id": "https://openalex.org/C89423630",
+      "wikidata": "https://www.wikidata.org/wiki/Q7193",
+      "display_name": "Microbiology",
+      "level": 1,
+      "score": 0.047715216875076294
+    },
+    {
+      "id": "https://openalex.org/C524204448",
+      "wikidata": "https://www.wikidata.org/wiki/Q788926",
+      "display_name": "Infectious disease (medical specialty)",
+      "level": 3,
+      "score": 0.0
+    },
+    {
+      "id": "https://openalex.org/C2779134260",
+      "wikidata": "https://www.wikidata.org/wiki/Q12136",
+      "display_name": "Disease",
+      "level": 2,
+      "score": 0.0
+    }
+  ],
+  "mesh": [
+    {
+      "descriptor_ui": "D000073640",
+      "descriptor_name": "Betacoronavirus",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": true
+    },
+    {
+      "descriptor_ui": "D000073640",
+      "descriptor_name": "Betacoronavirus",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": true
+    },
+    {
+      "descriptor_ui": "D000073640",
+      "descriptor_name": "Betacoronavirus",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": true
+    },
+    {
+      "descriptor_ui": "D000073640",
+      "descriptor_name": "Betacoronavirus",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": true
+    },
+    {
+      "descriptor_ui": "D000073640",
+      "descriptor_name": "Betacoronavirus",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": true
+    },
+    {
+      "descriptor_ui": "D000073640",
+      "descriptor_name": "Betacoronavirus",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": true
+    },
+    {
+      "descriptor_ui": "D000073640",
+      "descriptor_name": "Betacoronavirus",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": true
+    },
+    {
+      "descriptor_ui": "D000073640",
+      "descriptor_name": "Betacoronavirus",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": true
+    },
+    {
+      "descriptor_ui": "D000073640",
+      "descriptor_name": "Betacoronavirus",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": true
+    },
+    {
+      "descriptor_ui": "D000073640",
+      "descriptor_name": "Betacoronavirus",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": true
+    },
+    {
+      "descriptor_ui": "D000086382",
+      "descriptor_name": "COVID-19",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086382",
+      "descriptor_name": "COVID-19",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086382",
+      "descriptor_name": "COVID-19",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086382",
+      "descriptor_name": "COVID-19",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086382",
+      "descriptor_name": "COVID-19",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086382",
+      "descriptor_name": "COVID-19",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086382",
+      "descriptor_name": "COVID-19",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086382",
+      "descriptor_name": "COVID-19",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086382",
+      "descriptor_name": "COVID-19",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086382",
+      "descriptor_name": "COVID-19",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086402",
+      "descriptor_name": "SARS-CoV-2",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086402",
+      "descriptor_name": "SARS-CoV-2",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086402",
+      "descriptor_name": "SARS-CoV-2",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086402",
+      "descriptor_name": "SARS-CoV-2",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086402",
+      "descriptor_name": "SARS-CoV-2",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086402",
+      "descriptor_name": "SARS-CoV-2",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086402",
+      "descriptor_name": "SARS-CoV-2",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086402",
+      "descriptor_name": "SARS-CoV-2",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086402",
+      "descriptor_name": "SARS-CoV-2",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000086402",
+      "descriptor_name": "SARS-CoV-2",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000093485",
+      "descriptor_name": "COVID-19 Drug Treatment",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000093485",
+      "descriptor_name": "COVID-19 Drug Treatment",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000093485",
+      "descriptor_name": "COVID-19 Drug Treatment",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000093485",
+      "descriptor_name": "COVID-19 Drug Treatment",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000093485",
+      "descriptor_name": "COVID-19 Drug Treatment",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000093485",
+      "descriptor_name": "COVID-19 Drug Treatment",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000093485",
+      "descriptor_name": "COVID-19 Drug Treatment",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000093485",
+      "descriptor_name": "COVID-19 Drug Treatment",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000093485",
+      "descriptor_name": "COVID-19 Drug Treatment",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000093485",
+      "descriptor_name": "COVID-19 Drug Treatment",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000328",
+      "descriptor_name": "Adult",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000328",
+      "descriptor_name": "Adult",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000328",
+      "descriptor_name": "Adult",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000328",
+      "descriptor_name": "Adult",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000328",
+      "descriptor_name": "Adult",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000328",
+      "descriptor_name": "Adult",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000328",
+      "descriptor_name": "Adult",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000328",
+      "descriptor_name": "Adult",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000328",
+      "descriptor_name": "Adult",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D000328",
+      "descriptor_name": "Adult",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D004359",
+      "descriptor_name": "Drug Therapy, Combination",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D004359",
+      "descriptor_name": "Drug Therapy, Combination",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D004359",
+      "descriptor_name": "Drug Therapy, Combination",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D004359",
+      "descriptor_name": "Drug Therapy, Combination",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D004359",
+      "descriptor_name": "Drug Therapy, Combination",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D004359",
+      "descriptor_name": "Drug Therapy, Combination",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D004359",
+      "descriptor_name": "Drug Therapy, Combination",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D004359",
+      "descriptor_name": "Drug Therapy, Combination",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D004359",
+      "descriptor_name": "Drug Therapy, Combination",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D004359",
+      "descriptor_name": "Drug Therapy, Combination",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D005260",
+      "descriptor_name": "Female",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D005260",
+      "descriptor_name": "Female",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D005260",
+      "descriptor_name": "Female",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D005260",
+      "descriptor_name": "Female",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D005260",
+      "descriptor_name": "Female",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D005260",
+      "descriptor_name": "Female",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D005260",
+      "descriptor_name": "Female",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D005260",
+      "descriptor_name": "Female",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D005260",
+      "descriptor_name": "Female",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D005260",
+      "descriptor_name": "Female",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006801",
+      "descriptor_name": "Humans",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006801",
+      "descriptor_name": "Humans",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006801",
+      "descriptor_name": "Humans",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006801",
+      "descriptor_name": "Humans",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006801",
+      "descriptor_name": "Humans",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006801",
+      "descriptor_name": "Humans",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006801",
+      "descriptor_name": "Humans",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006801",
+      "descriptor_name": "Humans",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006801",
+      "descriptor_name": "Humans",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006801",
+      "descriptor_name": "Humans",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006886",
+      "descriptor_name": "Hydroxychloroquine",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006886",
+      "descriptor_name": "Hydroxychloroquine",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006886",
+      "descriptor_name": "Hydroxychloroquine",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006886",
+      "descriptor_name": "Hydroxychloroquine",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006886",
+      "descriptor_name": "Hydroxychloroquine",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006886",
+      "descriptor_name": "Hydroxychloroquine",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006886",
+      "descriptor_name": "Hydroxychloroquine",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006886",
+      "descriptor_name": "Hydroxychloroquine",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006886",
+      "descriptor_name": "Hydroxychloroquine",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D006886",
+      "descriptor_name": "Hydroxychloroquine",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008297",
+      "descriptor_name": "Male",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008297",
+      "descriptor_name": "Male",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008297",
+      "descriptor_name": "Male",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008297",
+      "descriptor_name": "Male",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008297",
+      "descriptor_name": "Male",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008297",
+      "descriptor_name": "Male",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008297",
+      "descriptor_name": "Male",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008297",
+      "descriptor_name": "Male",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008297",
+      "descriptor_name": "Male",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008297",
+      "descriptor_name": "Male",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008875",
+      "descriptor_name": "Middle Aged",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008875",
+      "descriptor_name": "Middle Aged",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008875",
+      "descriptor_name": "Middle Aged",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008875",
+      "descriptor_name": "Middle Aged",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008875",
+      "descriptor_name": "Middle Aged",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008875",
+      "descriptor_name": "Middle Aged",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008875",
+      "descriptor_name": "Middle Aged",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008875",
+      "descriptor_name": "Middle Aged",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008875",
+      "descriptor_name": "Middle Aged",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D008875",
+      "descriptor_name": "Middle Aged",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D011024",
+      "descriptor_name": "Pneumonia, Viral",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D011024",
+      "descriptor_name": "Pneumonia, Viral",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D011024",
+      "descriptor_name": "Pneumonia, Viral",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D011024",
+      "descriptor_name": "Pneumonia, Viral",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D011024",
+      "descriptor_name": "Pneumonia, Viral",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D011024",
+      "descriptor_name": "Pneumonia, Viral",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D011024",
+      "descriptor_name": "Pneumonia, Viral",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D011024",
+      "descriptor_name": "Pneumonia, Viral",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D011024",
+      "descriptor_name": "Pneumonia, Viral",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D011024",
+      "descriptor_name": "Pneumonia, Viral",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D016133",
+      "descriptor_name": "Polymerase Chain Reaction",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D016133",
+      "descriptor_name": "Polymerase Chain Reaction",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D016133",
+      "descriptor_name": "Polymerase Chain Reaction",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D016133",
+      "descriptor_name": "Polymerase Chain Reaction",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D016133",
+      "descriptor_name": "Polymerase Chain Reaction",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D016133",
+      "descriptor_name": "Polymerase Chain Reaction",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D016133",
+      "descriptor_name": "Polymerase Chain Reaction",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D016133",
+      "descriptor_name": "Polymerase Chain Reaction",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D016133",
+      "descriptor_name": "Polymerase Chain Reaction",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D016133",
+      "descriptor_name": "Polymerase Chain Reaction",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D017963",
+      "descriptor_name": "Azithromycin",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D017963",
+      "descriptor_name": "Azithromycin",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D017963",
+      "descriptor_name": "Azithromycin",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D017963",
+      "descriptor_name": "Azithromycin",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D017963",
+      "descriptor_name": "Azithromycin",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D017963",
+      "descriptor_name": "Azithromycin",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D017963",
+      "descriptor_name": "Azithromycin",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D017963",
+      "descriptor_name": "Azithromycin",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D017963",
+      "descriptor_name": "Azithromycin",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D017963",
+      "descriptor_name": "Azithromycin",
+      "qualifier_ui": "Q000008",
+      "qualifier_name": "administration & dosage",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D018352",
+      "descriptor_name": "Coronavirus Infections",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D018352",
+      "descriptor_name": "Coronavirus Infections",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D018352",
+      "descriptor_name": "Coronavirus Infections",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D018352",
+      "descriptor_name": "Coronavirus Infections",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D018352",
+      "descriptor_name": "Coronavirus Infections",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D018352",
+      "descriptor_name": "Coronavirus Infections",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D018352",
+      "descriptor_name": "Coronavirus Infections",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D018352",
+      "descriptor_name": "Coronavirus Infections",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D018352",
+      "descriptor_name": "Coronavirus Infections",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D018352",
+      "descriptor_name": "Coronavirus Infections",
+      "qualifier_ui": "Q000188",
+      "qualifier_name": "drug therapy",
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D019562",
+      "descriptor_name": "Viral Load",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D019562",
+      "descriptor_name": "Viral Load",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D019562",
+      "descriptor_name": "Viral Load",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D019562",
+      "descriptor_name": "Viral Load",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D019562",
+      "descriptor_name": "Viral Load",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D019562",
+      "descriptor_name": "Viral Load",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D019562",
+      "descriptor_name": "Viral Load",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D019562",
+      "descriptor_name": "Viral Load",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D019562",
+      "descriptor_name": "Viral Load",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D019562",
+      "descriptor_name": "Viral Load",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D058873",
+      "descriptor_name": "Pandemics",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D058873",
+      "descriptor_name": "Pandemics",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D058873",
+      "descriptor_name": "Pandemics",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D058873",
+      "descriptor_name": "Pandemics",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D058873",
+      "descriptor_name": "Pandemics",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D058873",
+      "descriptor_name": "Pandemics",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D058873",
+      "descriptor_name": "Pandemics",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D058873",
+      "descriptor_name": "Pandemics",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D058873",
+      "descriptor_name": "Pandemics",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    },
+    {
+      "descriptor_ui": "D058873",
+      "descriptor_name": "Pandemics",
+      "qualifier_ui": null,
+      "qualifier_name": null,
+      "is_major_topic": false
+    }
+  ],
+  "locations_count": 4,
+  "locations": [
+    {
+      "id": "doi:10.1016/j.ijantimicag.2020.105949",
+      "is_oa": true,
+      "landing_page_url": "https://doi.org/10.1016/j.ijantimicag.2020.105949",
+      "pdf_url": null,
+      "source": {
+        "id": "https://openalex.org/S5248501",
+        "display_name": "International Journal of Antimicrobial Agents",
+        "issn_l": "0924-8579",
+        "issn": [
+          "0924-8579",
+          "1872-7913"
+        ],
+        "is_oa": false,
+        "is_in_doaj": false,
+        "is_core": true,
+        "listed_in": [
+          "cwts-core",
+          "doyens",
+          "jufo-1",
+          "ki-jl-1",
+          "medline",
+          "norway-1"
+        ],
+        "host_organization": "https://openalex.org/P4310320990",
+        "host_organization_name": "Elsevier BV",
+        "host_organization_lineage": [
+          "https://openalex.org/P4310320990"
+        ],
+        "host_organization_lineage_names": [
+          "Elsevier BV"
+        ],
+        "type": "journal"
+      },
+      "license": null,
+      "license_id": null,
+      "version": "acceptedVersion",
+      "is_accepted": true,
+      "is_published": false,
+      "raw_source_name": "International Journal of Antimicrobial Agents",
+      "raw_type": "journal-article"
+    },
+    {
+      "id": "pmid:32205204",
+      "is_oa": false,
+      "landing_page_url": "https://pubmed.ncbi.nlm.nih.gov/32205204",
+      "pdf_url": null,
+      "source": {
+        "id": "https://openalex.org/S4306525036",
+        "display_name": "PubMed",
+        "issn_l": null,
+        "issn": null,
+        "is_oa": false,
+        "is_in_doaj": false,
+        "is_core": false,
+        "listed_in": [],
+        "host_organization": "https://openalex.org/I1299303238",
+        "host_organization_name": "National Institutes of Health",
+        "host_organization_lineage": [
+          "https://openalex.org/I1299303238"
+        ],
+        "host_organization_lineage_names": [],
+        "type": "repository"
+      },
+      "license": null,
+      "license_id": null,
+      "version": "publishedVersion",
+      "is_accepted": true,
+      "is_published": true,
+      "raw_source_name": "International journal of antimicrobial agents",
+      "raw_type": "Clinical Trial"
+    },
+    {
+      "id": "pmh:oai:pubmedcentral.nih.gov:7102549",
+      "is_oa": true,
+      "landing_page_url": "https://www.ncbi.nlm.nih.gov/pmc/articles/7102549",
+      "pdf_url": null,
+      "source": {
+        "id": "https://openalex.org/S2764455111",
+        "display_name": "PubMed Central",
+        "issn_l": null,
+        "issn": null,
+        "is_oa": true,
+        "is_in_doaj": false,
+        "is_core": false,
+        "listed_in": [],
+        "host_organization": "https://openalex.org/I1299303238",
+        "host_organization_name": "National Institutes of Health",
+        "host_organization_lineage": [
+          "https://openalex.org/I1299303238"
+        ],
+        "host_organization_lineage_names": [],
+        "type": "repository"
+      },
+      "license": null,
+      "license_id": null,
+      "version": "submittedVersion",
+      "is_accepted": false,
+      "is_published": false,
+      "raw_source_name": "Int J Antimicrob Agents",
+      "raw_type": "Text"
+    },
+    {
+      "id": "pmh:oai:HAL:hal-02525126v1",
+      "is_oa": true,
+      "landing_page_url": "https://amu.hal.science/hal-02525126",
+      "pdf_url": null,
+      "source": {
+        "id": "https://openalex.org/S4306402512",
+        "display_name": "HAL (Le Centre pour la Communication Scientifique Directe)",
+        "issn_l": null,
+        "issn": null,
+        "is_oa": false,
+        "is_in_doaj": false,
+        "is_core": false,
+        "listed_in": [],
+        "host_organization": "https://openalex.org/I1294671590",
+        "host_organization_name": "Centre National de la Recherche Scientifique",
+        "host_organization_lineage": [
+          "https://openalex.org/I1294671590"
+        ],
+        "host_organization_lineage_names": [],
+        "type": "repository"
+      },
+      "license": "cc-by-nc",
+      "license_id": "https://openalex.org/licenses/cc-by-nc",
+      "version": "submittedVersion",
+      "is_accepted": false,
+      "is_published": false,
+      "raw_source_name": "International Journal of Antimicrobial Agents, 2020, pp.105949. &#x27E8;10.1016/j.ijantimicag.2020.105949&#x27E9;",
+      "raw_type": "info:eu-repo/semantics/article"
+    }
+  ],
+  "best_oa_location": {
+    "id": "doi:10.1016/j.ijantimicag.2020.105949",
+    "is_oa": true,
+    "landing_page_url": "https://doi.org/10.1016/j.ijantimicag.2020.105949",
+    "pdf_url": null,
+    "source": {
+      "id": "https://openalex.org/S5248501",
+      "display_name": "International Journal of Antimicrobial Agents",
+      "issn_l": "0924-8579",
+      "issn": [
+        "0924-8579",
+        "1872-7913"
+      ],
+      "is_oa": false,
+      "is_in_doaj": false,
+      "is_core": true,
+      "listed_in": [
+        "cwts-core",
+        "doyens",
+        "jufo-1",
+        "ki-jl-1",
+        "medline",
+        "norway-1"
+      ],
+      "host_organization": "https://openalex.org/P4310320990",
+      "host_organization_name": "Elsevier BV",
+      "host_organization_lineage": [
+        "https://openalex.org/P4310320990"
+      ],
+      "host_organization_lineage_names": [
+        "Elsevier BV"
+      ],
+      "type": "journal"
+    },
+    "license": null,
+    "license_id": null,
+    "version": "acceptedVersion",
+    "is_accepted": true,
+    "is_published": false,
+    "raw_source_name": "International Journal of Antimicrobial Agents",
+    "raw_type": "journal-article"
+  },
+  "sustainable_development_goals": [
+    {
+      "score": 0.7900000214576721,
+      "id": "https://metadata.un.org/sdg/3",
+      "display_name": "Good health and well-being"
+    }
+  ],
+  "x_sdgs": [],
+  "awards": [
+    {
+      "id": "https://openalex.org/G3175482981",
+      "display_name": "I.H.U. Méditerranée Infection",
+      "funder_award_id": "ANR-10-IAHU-0003",
+      "funder_id": "https://openalex.org/F4320320883",
+      "funder_display_name": "Agence Nationale de la Recherche"
+    }
+  ],
+  "funders": [
+    {
+      "id": "https://openalex.org/F4320320883",
+      "display_name": "Agence Nationale de la Recherche",
+      "ror": "https://ror.org/00rbzpz17"
+    }
+  ],
+  "has_content": {
+    "grobid_xml": false,
+    "pdf": false
+  },
+  "content_urls": null,
+  "referenced_works_count": 33,
+  "referenced_works": [
+    "https://openalex.org/W2087251383",
+    "https://openalex.org/W2164687312",
+    "https://openalex.org/W2176892781",
+    "https://openalex.org/W2302013022",
+    "https://openalex.org/W2319721327",
+    "https://openalex.org/W2558875419",
+    "https://openalex.org/W2621583501",
+    "https://openalex.org/W2791942158",
+    "https://openalex.org/W2896925556",
+    "https://openalex.org/W3005212621",
+    "https://openalex.org/W3006128040",
+    "https://openalex.org/W3006645647",
+    "https://openalex.org/W3008028633",
+    "https://openalex.org/W3008763357",
+    "https://openalex.org/W3009577418",
+    "https://openalex.org/W3009885589",
+    "https://openalex.org/W3010277308",
+    "https://openalex.org/W3010850763",
+    "https://openalex.org/W3011032288",
+    "https://openalex.org/W3018649438",
+    "https://openalex.org/W3022884222",
+    "https://openalex.org/W3024400578",
+    "https://openalex.org/W3024929070",
+    "https://openalex.org/W3026101215",
+    "https://openalex.org/W3032185657",
+    "https://openalex.org/W3033527868",
+    "https://openalex.org/W3036061828",
+    "https://openalex.org/W3036778916",
+    "https://openalex.org/W3039272669",
+    "https://openalex.org/W3039720325",
+    "https://openalex.org/W3049051510",
+    "https://openalex.org/W4293111375",
+    "https://openalex.org/W6773748240"
+  ],
+  "related_works": [
+    "https://openalex.org/W3128331721",
+    "https://openalex.org/W4391146238",
+    "https://openalex.org/W4385771016",
+    "https://openalex.org/W3032966369",
+    "https://openalex.org/W3041789758",
+    "https://openalex.org/W3083333265",
+    "https://openalex.org/W3126893408",
+    "https://openalex.org/W3043393667",
+    "https://openalex.org/W3206208216",
+    "https://openalex.org/W3080608423"
+  ],
+  "abstract_inverted_index": null,
+  "counts_by_year": [
+    {
+      "year": 2026,
+      "cited_by_count": 18
+    },
+    {
+      "year": 2025,
+      "cited_by_count": 44
+    },
+    {
+      "year": 2024,
+      "cited_by_count": 142
+    },
+    {
+      "year": 2023,
+      "cited_by_count": 243
+    },
+    {
+      "year": 2022,
+      "cited_by_count": 436
+    },
+    {
+      "year": 2021,
+      "cited_by_count": 1218
+    },
+    {
+      "year": 2020,
+      "cited_by_count": 2860
+    },
+    {
+      "year": 2019,
+      "cited_by_count": 3
+    },
+    {
+      "year": 2016,
+      "cited_by_count": 1
+    },
+    {
+      "year": 2012,
+      "cited_by_count": 1
+    }
+  ],
+  "updated_date": "2026-09-23T09:40:40.371523",
+  "created_date": "2025-10-10T00:00:00"
+}
