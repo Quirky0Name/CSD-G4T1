@@ -134,6 +134,49 @@ summary is in Updating's `poll_runs` table. Nudges show up at
 `GET localhost:8000/dev/received`; `POST localhost:8000/dev/fail` makes the stub
 refuse them (`?on=false` to stop), to see a failed nudge re-sent next poll.
 
+### Mock harness (seeded scenarios)
+
+To see a nudge on demand without waiting for a real change, seed a paper whose
+"before" snapshot differs from what Crossref and OpenAlex say now, then trigger a
+poll for it. `POST localhost:8081/dev/seed?scenario=` (stub Storage Management)
+adds the paper with that earlier snapshot:
+
+| `scenario` | Paper | The nudge it should produce |
+|---|---|---|
+| `openalex_retraction` | IJAA | `is_retracted false -> true` |
+| `crossref_retraction` | IJAA | a new `retraction` notice in `crossref_updates` |
+| `corrections` | Lancet | new `correction`, `erratum` and `expression_of_concern` notices |
+| `doaj_delisting` | Lancet | `in_doaj true -> false` |
+| `no_change` | JBC | none |
+| `no_doi` | none (no DOI) | none: listed under `skipped_no_doi` |
+
+**Order matters.** Start the stubs and Updating first, then seed, then trigger. Keep
+the default `POLL_INTERVAL_HOURS` (24) rather than the `0.01` above: a poll that
+lands between the seeding and your trigger takes the nudge, and your trigger then
+shows nothing. On a fresh database Updating polls once at startup, so seed after it
+is up.
+
+```
+curl -X POST 'localhost:8081/dev/seed?scenario=openalex_retraction'     # note the "id" it returns
+```
+
+Then open `localhost:8001/docs` and run `POST /run-poll` with that
+`paper_id`. The summary lists the paper under
+`stored` and `nudged`; the reason is in Updating's log (`paper <id>: snapshot N
+changed since M: …`); the id arrives at `GET localhost:8000/dev/received`. Run it
+again: it stores another snapshot and `nudged` is empty. A manual run calls the live
+Crossref and OpenAlex APIs, so their answers may have drifted and list more reasons.
+
+The same scenarios run as tests, on recorded API responses, an in-process copy of
+both stubs and a fresh SQLite database each time, so they can be repeated and never
+touch live data. `-m live` runs them against the live APIs (checking the intended
+reason is among those logged):
+
+```
+uv run pytest tests/updating/test_scenarios.py
+uv run pytest tests/updating/test_scenarios.py -m live
+```
+
 Tests need no keys, Docker or Postgres (they use SQLite and the stub):
 
 ```
