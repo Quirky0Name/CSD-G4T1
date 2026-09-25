@@ -62,6 +62,7 @@ flowchart LR
    UM -- JWT --> SM
    UM -- JWT --> RE
    SM --> DB[(Postgres)]
+   SM --> FILES[(S3 / local disk)]
    SM --> GROBID[GROBID]
    RE[Research Evaluation - LLM] --> SM
    RE --> EXT[CrossRef / OpenAlex]
@@ -84,9 +85,15 @@ JWT paths above are wired up but not backed by real logins.
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
 | User Management | Spring Boot (backend) + React (Vite, frontend) | `users`, `folders`; auth | `frontend/` |
+<<<<<<< HEAD
 | Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `authors_background`; Postgres | `storage/` |
 | Research Evaluation | Python | Change evaluation (severity, impact, recommendation), read from Storage Management when nudged by Updating; COI text, citation-neighbourhood metrics, LLM reasoning (claims + stance, week 7) | `backend/` |
 | Updating | Python (shares the `backend/` project with Research Evaluation) | Crossref/OpenAlex status, journal and author fetching; sending snapshots to Storage Management; nudging Research Evaluation when a snapshot changed; the polling scheduler and its small polling state (`tracked_papers`) | `backend/` |
+=======
+| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `authors_background`; Postgres + S3/disk | `storage/` |
+| Research Evaluation | Python | Background-info aggregation, citation-neighbourhood metrics, LLM reasoning (claims + stance, week 7) | `backend/` |
+| Updating | Python (shares the `backend/` project with Research Evaluation) | `change_events`; the polling scheduler | `backend/` |
+>>>>>>> parent of 664937b (docs: remove PDF file storage from the architecture, uploads are read by GROBID then discarded)
 | Deployment | Docker + a public cloud target | Containerisation, environment config, CI | (cross-cutting) |
 
 Rubric note: Java + Spring Boot for at least one component is satisfied by
@@ -115,11 +122,13 @@ bare `folder_id` reference — no enforced FK across services.
 
 ## Section 2 — Storage Management
 
-Owns all Postgres persistence.
+Owns all Postgres and file persistence.
 
-- **Ingestion, two paths:** upload (PDF → GROBID header extract →
-  `papers` row) and DOI-only (CrossRef metadata → `papers` row).
+- **Ingestion, two paths:** upload (PDF → S3/disk → GROBID header extract
+  → `papers` row) and DOI-only (CrossRef metadata → `papers` row, no
+  file).
 - **Schema:** `papers`, `notes` (separate table/endpoint from `papers`),
+<<<<<<< HEAD
   `background_metadata` (insert-only history, kept in full and per paper —
   never overwrite, that's what Updating and Research Evaluation compare;
   one row per tracked paper per poll, even when nothing changed, except
@@ -129,6 +138,13 @@ Owns all Postgres persistence.
   `authors_background`.
 - **No file storage:** an uploaded PDF is only read by GROBID, then
   discarded.
+=======
+  `background_metadata` (insert-only history — never overwrite, that's
+  what Updating diffs), `background_text` (raw text for week-13 LLM
+  input; nothing here is diffed in week 7), `authors_background`.
+- **File storage:** PDF bytes never in Postgres — S3/local disk holds
+  bytes, Postgres holds the key.
+>>>>>>> parent of 664937b (docs: remove PDF file storage from the architecture, uploads are read by GROBID then discarded)
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
   `PUT /papers/{id}/notes`, `POST/GET /internal/papers/{id}/background-info`.
 - **DB hosting:** Supabase free tier.
@@ -241,7 +257,8 @@ internet.
   Compose for local dev and as the deployable unit. Research Evaluation
   and Updating share a single image (see `backend/`).
 - **Cloud target:** a single VM running the whole Compose stack.
-- **Data services:** Postgres via Supabase free tier.
+- **Data services:** Postgres via Supabase free tier; PDF storage on
+  S3 or local disk (mounted as a persistent volume if local).
 - **Config/secrets:** environment variables per service, never committed.
 - **CI:** GitHub Actions builds each service's image on merge to `main`
   and redeploys to the VM.
