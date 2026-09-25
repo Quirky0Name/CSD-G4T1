@@ -8,8 +8,9 @@ import pytest
 import respx
 from pydantic import SecretStr
 from support import TEST_JWT_KEY, TEST_JWT_SECRET, load_fixture
-from updating_support import DOIS, record_run
+from updating_support import record_run
 
+from dev.scenarios import DOIS, Scenario
 from dev.stub_research_evaluation import create_app as create_stub_re_app
 from dev.stub_storage import create_app as create_stub_app
 from updating.config import UpdatingSettings
@@ -90,6 +91,12 @@ class StubSm:
     async def add_paper(self, doi: str | None, paper_id: UUID | None = None) -> UUID:
         body = {"id": str(paper_id or uuid4()), "doi": doi}
         response = await self.client.post("/dev/papers", json=body)
+        return UUID(response.json()["id"])
+
+    async def seed_scenario(self, scenario: Scenario) -> UUID:
+        """A paper with the scenario's earlier snapshot, via the stub's `POST /dev/seed`."""
+        response = await self.client.post("/dev/seed", params={"scenario": scenario})
+        assert response.status_code == 201
         return UUID(response.json()["id"])
 
     async def reset(self) -> None:

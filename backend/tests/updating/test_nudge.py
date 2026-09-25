@@ -3,8 +3,9 @@
 import httpx
 import pytest
 from support import load_fixture
-from updating_support import DOIS, fixture_snapshot, poll_runs, tracked_rows
+from updating_support import poll_runs, tracked_rows
 
+from dev.scenarios import DOIS, fixture_snapshot
 from updating.models import PollTrigger
 from updating.poll import run_poll
 

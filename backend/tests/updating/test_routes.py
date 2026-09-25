@@ -2,8 +2,9 @@
 
 from uuid import uuid4
 
-from updating_support import DOIS, RUN_POLL, poll_runs, trigger_poll
+from updating_support import RUN_POLL, poll_runs, trigger_poll
 
+from dev.scenarios import DOIS
 from updating.models import PollTrigger
 
 

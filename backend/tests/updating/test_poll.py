@@ -5,8 +5,9 @@ from uuid import uuid4
 import httpx
 import pytest
 from support import load_fixture
-from updating_support import DOIS, fixture_snapshot, poll_runs, tracked_rows
+from updating_support import poll_runs, tracked_rows
 
+from dev.scenarios import DOIS, fixture_snapshot
 from updating import poll as poll_module
 from updating.models import PollTrigger, RunStatus
 from updating.poll import PollFailed, UnknownPaper, run_poll
