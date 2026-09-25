@@ -28,7 +28,6 @@ class StubPaper(BaseModel):
     owner_id: UUID = Field(default_factory=uuid4)
     doi: str | None = None
     issn: str | None = None
-    file_available: bool = True
 
 
 @dataclass

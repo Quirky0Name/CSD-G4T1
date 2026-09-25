@@ -79,8 +79,7 @@ async def test_service_token_lists_papers_with_a_normalised_doi(client):
     assert paper["id"] == PAPER_ID
     assert paper["doi"] == "10.1/abc"
     assert paper["issn"] == "0000-0000"
-    assert paper["file_available"] is True
-    assert set(paper) == {"id", "owner_id", "doi", "issn", "file_available"}
+    assert set(paper) == {"id", "owner_id", "doi", "issn"}
 
 
 async def test_posting_snapshots_returns_201_with_ascending_ids(client):
