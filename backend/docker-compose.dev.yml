@@ -47,6 +47,7 @@ services:
     # inside the container, localhost is the container itself
     environment:
       SM_BASE_URL: http://host.docker.internal:8081
+      RE_BASE_URL: http://research-evaluation:8000
       DATABASE_URL: postgresql+asyncpg://dev:dev@postgres:5432/research_assistant
     # Linux needs this for host.docker.internal (Storage Management runs on the host)
     extra_hosts:
