@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 public class PaperService {
@@ -27,6 +28,9 @@ public class PaperService {
     private static final Logger log = LoggerFactory.getLogger(PaperService.class);
 
     private static final byte[] PDF_MAGIC = "%PDF-".getBytes(StandardCharsets.US_ASCII);
+
+    // every DOI starts with the 10. directory indicator, a registrant code, then a slash
+    private static final Pattern DOI_SHAPE = Pattern.compile("^10\\.\\d{4,9}/\\S+$");
 
     private final PaperRepository papers;
     private final GrobidClient grobid;
@@ -63,6 +67,34 @@ public class PaperService {
         if (doi != null) {
             lookupQuietly(doi).ifPresent(found -> applyMetadata(paper, found));
         }
+        return PaperResponse.from(papers.save(paper));
+    }
+
+    @Transactional
+    public PaperResponse trackByDoi(UUID ownerId, UUID folderId, String rawDoi) {
+        String doi = MetadataClient.normalizeDoi(rawDoi);
+        if (doi == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "doi is required");
+        }
+        if (!DOI_SHAPE.matcher(doi).matches()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "\"" + rawDoi + "\" isn't a DOI, it should look like 10.1000/xyz123");
+        }
+        rejectDuplicate(ownerId, doi);
+
+        PaperMetadata found;
+        try {
+            found = metadata.lookup(doi).orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_CONTENT, "CrossRef has no paper with DOI " + doi));
+        } catch (RestClientException e) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Couldn't reach CrossRef to check that DOI, try again shortly");
+        }
+
+        Paper paper = new Paper(ownerId);
+        paper.setFolderId(folderId);
+        paper.setDoi(doi);
+        applyMetadata(paper, found);
         return PaperResponse.from(papers.save(paper));
     }
 
