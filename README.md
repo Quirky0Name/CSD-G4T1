@@ -17,13 +17,14 @@ REST, trusting a single JWT issued at login. See
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Dated log of design decisions and why they were made |
 | [docs/SETUP.md](docs/SETUP.md) | Accounts, API keys, software, and how to run the stack locally |
 | [docs/DEMO.md](docs/DEMO.md) | The week-7 demo runbook |
-| [docs/LOCAL_STORAGE_DB.md](docs/LOCAL_STORAGE_DB.md) | Running Storage Management and its Postgres locally |
+| [docs/LOCAL_STORAGE_DB.md](docs/LOCAL_STORAGE_DB.md) | Running Storage Management, its Postgres and its PDF folder locally |
 
 ## Services
 
 | Service | Stack | Folder |
 |---|---|---|
 | User Management (+ frontend) | Spring Boot + React | `frontend/` |
+
 | Storage Management | Java + Spring Boot | `storage/` |
 | Research Evaluation | Python | `backend/` |
 | Updating | Python | `backend/` |

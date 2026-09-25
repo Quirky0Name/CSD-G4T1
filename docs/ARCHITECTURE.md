@@ -21,7 +21,7 @@ Mostly zero-LLM by design, so the live demo stays reliable, with one
 deliberate exception: Research Evaluation's stance/claims LLM work is in
 scope for week 7 too, not deferred to week 13.
 
-- Ingest a paper (PDF upload or DOI-only)
+- Ingest a paper (PDF upload or DOI-only) and keep its PDF
 - Notes: a plain-text editor per paper
 - Background-info snapshot: CrossRef/OpenAlex status, journal and author
   data, fetched and stored by Updating (see Section 4), plus GROBID-extracted
@@ -62,6 +62,7 @@ flowchart LR
    UM -- JWT --> SM
    UM -- JWT --> RE
    SM --> DB[(Postgres)]
+   SM --> FILES[(Local disk - PDFs)]
    SM --> GROBID[GROBID]
    RE[Research Evaluation - LLM] --> SM
    RE --> EXT[CrossRef / OpenAlex]
@@ -74,8 +75,8 @@ Updating and Research Evaluation share data only through Storage
 Management. Updating writes snapshots there and, when a poll finds a
 change, sends Research Evaluation just the ids of the changed papers.
 Research Evaluation reads everything it needs from Storage Management:
-the snapshots (the updatable data) and the paper, notes and extracted
-text (the non-updatable data).
+the snapshots (the updatable data) and the paper, its stored PDF, notes
+and extracted text (the non-updatable data).
 
 Sprint 1 runs everything locally with a shared throwaway `JWT_SECRET`
 (still base64 of 32+ bytes); User Management doesn't exist yet, so the
@@ -84,7 +85,7 @@ JWT paths above are wired up but not backed by real logins.
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
 | User Management | Spring Boot (backend) + React (Vite, frontend) | `users`, `folders`; auth | `frontend/` |
-| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `authors_background`; Postgres | `storage/` |
+| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `authors_background`; Postgres + every tracked paper's PDF on local disk | `storage/` |
 | Research Evaluation | Python | Change evaluation (severity, impact, recommendation), read from Storage Management when nudged by Updating; COI text, citation-neighbourhood metrics, LLM reasoning (claims + stance, week 7) | `backend/` |
 | Updating | Python (shares the `backend/` project with Research Evaluation) | Crossref/OpenAlex status, journal and author fetching; sending snapshots to Storage Management; nudging Research Evaluation when a snapshot changed; the polling scheduler and its small polling state (`tracked_papers`) | `backend/` |
 | Deployment | Docker + a public cloud target | Containerisation, environment config, CI | (cross-cutting) |
@@ -115,10 +116,13 @@ bare `folder_id` reference — no enforced FK across services.
 
 ## Section 2 — Storage Management
 
-Owns all Postgres persistence.
+Owns all Postgres and file persistence.
 
-- **Ingestion, two paths:** upload (PDF → GROBID header extract →
-  `papers` row) and DOI-only (CrossRef metadata → `papers` row).
+- **Ingestion, two paths, both keeping the PDF:** upload (PDF → local
+  disk → GROBID header extract → `papers` row) and DOI-only (CrossRef
+  metadata → `papers` row). Where a DOI-only paper's PDF comes from, and
+  what happens when none can be found, is still pending (see
+  DECISIONS.md, "2026-09-25 — Storage keeps every tracked paper's PDF").
 - **Schema:** `papers`, `notes` (separate table/endpoint from `papers`),
   `background_metadata` (insert-only history, kept in full and per paper —
   never overwrite, that's what Updating and Research Evaluation compare;
@@ -127,10 +131,14 @@ Owns all Postgres persistence.
   OpenAlex failed for its DOI, see Section 4), `background_text` (raw text for
   week-13 LLM input; nothing here is diffed in week 7),
   `authors_background`.
-- **No file storage:** an uploaded PDF is only read by GROBID, then
-  discarded.
+- **File storage:** every tracked paper's PDF is kept, so Research
+  Evaluation has the paper itself to read when it evaluates a change.
+  PDF bytes never go in Postgres: they're on local disk for now, and
+  Postgres holds only the file's key. Research Evaluation reads a PDF
+  through `GET /internal/papers/{id}/pdf`, never from the disk directly.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
-  `PUT /papers/{id}/notes`, `POST/GET /internal/papers/{id}/background-info`.
+  `PUT /papers/{id}/notes`, `POST/GET /internal/papers/{id}/background-info`,
+  `GET /internal/papers/{id}/pdf`.
 - **DB hosting:** Supabase free tier.
 
 ## Section 3 — Research Evaluation
@@ -143,8 +151,9 @@ journal and author fields moved to Updating (Section 4).
 
 - **Change evaluation:** Updating calls `POST /evaluate/changes` with the
   ids of the papers that changed and nothing else. Research Evaluation
-  reads those papers' snapshots and their non-updatable data from Storage
-  Management, **works out the differences between the snapshots itself**,
+  reads those papers' snapshots and their non-updatable data (the paper,
+  its stored PDF, notes and extracted text) from Storage Management,
+  **works out the differences between the snapshots itself**,
   classifies them (retraction, correction, erratum, expression of concern,
   DOAJ delisting) and produces a severity, an impact statement and a
   recommendation. Nothing goes back to Updating. How the evaluation is
@@ -152,8 +161,9 @@ journal and author fields moved to Updating (Section 4).
   dismiss) the frontend uses, are Research Evaluation's design and aren't
   specified here yet.
 - **Structured signal layer** (no reasoning, cheap): citation-neighbourhood
-  metrics computed from OpenAlex reference/citation data, GROBID (COI/
-  funding text, verbatim, never judged).
+  metrics computed from OpenAlex reference/citation data, GROBID on the
+  PDF stored in Storage Management (COI/funding text, verbatim, never
+  judged).
 - **Also captured, storage only in week 7:** Semantic Scholar abstract/
   TL;DR, with snippets fetched (and cached/reused) at stance-comparison
   time rather than stored per paper.
@@ -192,7 +202,8 @@ Research Evaluation works out the differences and what they mean.
   `error` gates: `not_found` (e.g. DataCite DOIs) is a stable answer and is
   stored. Without the gate, a change published during an outage would be
   lost, because a field whose source wasn't `ok` is never compared (see
-  DECISIONS.md, 2026-09-25); with it, every stored snapshot is comparable
+  DECISIONS.md, "2026-09-25 — Updating stores no snapshot when Crossref or
+  OpenAlex errors"); with it, every stored snapshot is comparable
   with the one before it.
 - **Schedule:** the first poll after a start runs one interval after the
   last scheduled poll (immediately if that is already due), so restarts and
@@ -241,7 +252,9 @@ internet.
   Compose for local dev and as the deployable unit. Research Evaluation
   and Updating share a single image (see `backend/`).
 - **Cloud target:** a single VM running the whole Compose stack.
-- **Data services:** Postgres via Supabase free tier.
+- **Data services:** Postgres via Supabase free tier; PDFs on the VM's
+  local disk, mounted as a persistent volume so they survive redeploys.
+  S3 is an option later if the stack outgrows one VM.
 - **Config/secrets:** environment variables per service, never committed.
 - **CI:** GitHub Actions builds each service's image on merge to `main`
   and redeploys to the VM.

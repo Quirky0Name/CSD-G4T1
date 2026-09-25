@@ -37,7 +37,9 @@ User JWT required; the caller becomes the paper's owner. Multipart form
 with `file` (a PDF, 25 MB max) and an optional `folder_id` (uuid).
 Storage pulls the DOI out of the PDF with GROBID and fills in the rest
 from CrossRef/OpenAlex. If GROBID finds no DOI the paper is still saved,
-just without metadata. The PDF itself isn't kept.
+just without metadata. The PDF is kept on Storage Management's local
+disk, so Research Evaluation can read it later through
+`GET /internal/papers/{id}/pdf`.
 
 **Response `201`:**
 ```json
@@ -51,8 +53,8 @@ Errors come back as problem details, with the reason in `detail`:
 ## Storage Management ↔ Research Evaluation / Updating
 
 Owned by: Storage Management. Consumed by: Research Evaluation (reads
-the snapshots and paper data of the papers Updating tells it about),
-Updating (calls these on every poll).
+the snapshots, paper data and stored PDFs of the papers Updating tells
+it about), Updating (calls these on every poll).
 
 ### `GET /internal/papers`
 
@@ -103,6 +105,20 @@ Evaluation (to read the snapshots it works out differences from).
 ```json
 {"snapshots": [{"snapshot_id": 41, "fetched_at": "...", "...": "snapshot"}, {"snapshot_id": 42, "...": "..."}]}
 ```
+
+### `GET /internal/papers/{id}/pdf`
+
+Service-JWT only. Returns the paper's stored PDF as `application/pdf`.
+Used by Research Evaluation, which reads the paper itself when it
+evaluates a change and runs GROBID on it for COI/funding text. Research
+Evaluation always reads PDFs through this endpoint, never from Storage
+Management's disk.
+
+Errors: `401` missing or bad token, `403` a user token, `404` no paper
+with that id, or the paper has no stored PDF. Where a DOI-only paper's
+PDF comes from is still pending (see DECISIONS.md, "2026-09-25 — Storage
+keeps every tracked paper's PDF"), so until that's settled a paper may
+have none.
 
 ### Snapshot fields
 
@@ -174,7 +190,8 @@ snapshot or change data. Updating records no changes, so **Research
 Evaluation works out the differences itself**: it reads the papers'
 snapshots from Storage Management
 (`GET /internal/papers/{id}/background-info/history`) plus their
-non-updatable data (notes, extracted text), compares the snapshots,
+non-updatable data (notes, extracted text, and the stored PDF from
+`GET /internal/papers/{id}/pdf`), compares the snapshots,
 classifies each difference and evaluates it (severity, impact statement,
 recommendation). Nothing is returned to Updating, and Updating never calls
 this on a poll with no changes.
@@ -219,8 +236,14 @@ here yet.
 **Request:**
 
 ```json
-{"doi": "10.xxxx/...", "openalex_id": "W...", "issn": "0000-0000", "pdf_url": "https://...", "include_llm": true}
+{"doi": "10.xxxx/...", "openalex_id": "W...", "issn": "0000-0000", "pdf_url": "http://localhost:8081/internal/papers/{id}/pdf", "include_llm": true}
 ```
+
+`pdf_url` is the paper's `GET /internal/papers/{id}/pdf` on Storage
+Management, which Research Evaluation fetches with its own service
+token. It's left out when the paper has no stored PDF. Research
+Evaluation only fetches a `pdf_url` under `SM_BASE_URL`, so its service
+token is never sent anywhere else.
 
 **Response — `BackgroundInfoDTO`:**
 

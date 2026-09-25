@@ -13,7 +13,7 @@ bottom.
 | **DeepSeek** | claims + stance LLM calls | Create an account at platform.deepseek.com, top up a few USD (covers development and the demo many times over — calls cost well under 1¢ each), create an API key. |
 | **OpenAlex** | retraction status, citation counts, authors, journal/DOAJ-membership flag (fetched by Updating and Storage Management), citation-neighbourhood metrics (Research Evaluation) | Create a free account and key. This is the only key you need to request for Updating. A key is now required for the full $1/day free-usage budget (keyless calls get 1/10 of that). Passed as the `api_key` query param. Storage Management and Updating share that budget if they use the same key, so Updating fetches each DOI once per poll. |
 | **Crossref** | retraction/correction notices, canonical metadata (Updating, Storage Management) | No key needed. Pick a contact email for the `mailto` polite-pool parameter (`CROSSREF_MAILTO`) — improves rate limits, doesn't require registration. |
-| **GROBID** | COI/funding text extraction, full text for the claims LLM prompt | No key — self-hosted via Docker. |
+| **GROBID** | DOI and title from uploaded PDFs (Storage Management); COI/funding text and full text for the claims LLM prompt, from the PDFs Storage Management keeps (Research Evaluation) | No key — self-hosted via Docker. |
 
 ## Software
 
@@ -53,7 +53,8 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
 - Confirm the Storage Management snapshot endpoint and fields in
   CONTRACTS.md with that owner.
 - Download the three demo PDFs by hand ahead of the demo (see
-  [DEMO.md](DEMO.md)) for manual upload through Storage Management.
+  [DEMO.md](DEMO.md)); its seed script uploads them to Storage
+  Management, which keeps them for Research Evaluation.
 
 ## Env vars (`backend/.env`, copy from `backend/.env.example`)
 

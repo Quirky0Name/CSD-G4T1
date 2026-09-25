@@ -5,6 +5,75 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-25 — Storage keeps every tracked paper's PDF
+
+### Team decisions
+
+- **Storage Management keeps the PDF of every tracked paper**, whether it
+  was added by upload or by DOI. Research Evaluation needs the paper
+  itself to evaluate a change: a snapshot only says that a paper was
+  retracted or corrected, and judging what that means for the researcher
+  needs the paper's text. GROBID's COI/funding extraction and the claims
+  prompt, both in week-7 scope, also run on the PDF. This reverses commit
+  `32fb3be` ("stop keeping uploaded PDFs"), which read an upload with
+  GROBID and then discarded it. That change was never logged here, and it
+  left Research Evaluation nothing to read.
+- **Local disk for now.** PDFs go in a folder on Storage Management's
+  host, never in Postgres; `papers` holds only the file's key. Deployed,
+  the folder is a persistent volume on the VM (ARCHITECTURE.md, Section
+  5). It needs no cloud account or credentials for anyone running Storage
+  Management, and the whole stack runs on one VM anyway.
+- **Research Evaluation reads PDFs only through
+  `GET /internal/papers/{id}/pdf`** (service JWT), never from the folder.
+  That keeps "Research Evaluation reads everything from Storage
+  Management" true, and it keeps working if the two services end up on
+  different hosts or the files move to S3. `pdf_url` in
+  `/evaluate/background-info` now means that endpoint.
+- **Pending: where a DOI-only paper's PDF comes from.** Amir decides, as
+  part of DOI tracking. The options:
+  - download the open-access PDF (OpenAlex `best_oa_location`) and, if
+    there's none or the publisher blocks the download, track the paper
+    without a file;
+  - download the open-access PDF and refuse to track the paper when
+    there's none;
+  - require the user to upload the PDF for a DOI-only paper.
+
+  Until it's settled a paper may have no stored PDF, so
+  `GET /internal/papers/{id}/pdf` returns `404` for one, and no
+  `file_available` flag is added to responses yet. Paywalls matter here:
+  the three demo papers are on ScienceDirect, which usually blocks bots
+  (see DEMO.md).
+
+### Rejected
+
+- **Discarding the PDF once GROBID has read the DOI** (the `32fb3be`
+  design). It leaves Research Evaluation nothing to evaluate a change
+  against and drops the week-7 COI text and claims input.
+- **Keeping only the text GROBID extracts, not the PDF.** It avoids
+  storing files, but fixes the extraction at ingest: a better GROBID
+  model, a different extraction (such as passages for week-13
+  highlighting), or a re-run after a GROBID outage would all need the
+  original.
+- **S3 now.** It needs an AWS account, credentials for everyone who runs
+  Storage Management, and an SDK, for a stack that runs on one VM. Since
+  PDFs are only read through the internal endpoint, moving to S3 later
+  changes nothing outside Storage Management.
+- **Research Evaluation reading the upload folder directly.** It ties
+  both services to one disk and skips the service-token check.
+
+### Consequences
+
+- The storage code doesn't match this yet: uploads are still discarded
+  (commit `747849b` only changed ARCHITECTURE.md). `LocalFileStore` and
+  the `papers` file key have to come back and
+  `GET /internal/papers/{id}/pdf` has to be built. Some local databases
+  have already run `V2__drop_papers_file_key.sql`, so the column comes
+  back in a new migration rather than by deleting V2.
+- The DOI-tracking contract on `feat/storage-track-doi` needs the PDF
+  rule once the pending decision is made.
+
+---
+
 ## 2026-09-25 — Updating stores no snapshot when Crossref or OpenAlex errors
 
 ### Decision
