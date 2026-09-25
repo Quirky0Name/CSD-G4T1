@@ -11,6 +11,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from common.service_token import decode_jwt_secret
 
 DEFAULT_SM_BASE_URL = "http://localhost:8081"
+DEFAULT_RE_BASE_URL = "http://localhost:8000"
 DEFAULT_POLL_INTERVAL_HOURS = 24
 
 
@@ -22,6 +23,7 @@ class UpdatingSettings(BaseSettings):
     jwt_secret: SecretBytes
     database_url: str
     sm_base_url: str = DEFAULT_SM_BASE_URL
+    re_base_url: str = DEFAULT_RE_BASE_URL
     openalex_api_key: SecretStr = SecretStr("")
     crossref_mailto: str = ""
     poll_interval_hours: float = Field(default=DEFAULT_POLL_INTERVAL_HOURS, gt=0)
