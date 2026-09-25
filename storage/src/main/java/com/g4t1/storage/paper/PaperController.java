@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -29,5 +30,11 @@ public class PaperController {
                                 @RequestParam("file") MultipartFile file,
                                 @RequestParam(name = "folder_id", required = false) UUID folderId) throws IOException {
         return papers.uploadPdf(userId, folderId, file);
+    }
+
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public PaperResponse trackByDoi(@AuthenticationPrincipal UUID userId, @RequestBody TrackDoiRequest request) {
+        return papers.trackByDoi(userId, request.folderId(), request.doi());
     }
 }
