@@ -85,7 +85,7 @@ Crossref or OpenAlex lookup errored that poll (see "Poll job").
   "in_doaj": false, "journal_source_id": "S49861241", "journal_source_type": "journal",
   "journal": "...", "issn_l": "0000-0000", "publisher": "...",
   "authors": [
-    {"name": "...", "openalex_author_id": "A...", "position": "first", "institution": "...", "h_index": 12, "works_count": 40}
+    {"name": "...", "openalex_author_id": "A...", "position": "first", "institutions": ["..."], "h_index": 12, "works_count": 40}
   ],
   "cited_by_count": 1252,
   "source_status": {"crossref": "ok", "openalex": "ok", "openalex_authors": "ok"}
@@ -146,9 +146,15 @@ Rules:
   no delisting. Whoever classifies a difference must only call
   `in_doaj` true → false a delisting when `journal_source_id` is unchanged
   and `journal_source_type` is `journal`.
-- **`authors`:** `institution` is the author's affiliation on this paper
-  (from the work's `authorships`), not `last_known_institutions`. The
-  batched `/authors` response is unordered; re-order it by `authorships`.
+- **`authors`:** `institutions` is the author's affiliations on this paper
+  (every institution OpenAlex matched on the work's `authorships`, `[]` if
+  none), not `last_known_institutions`.
+  The batched `/authors` response is unordered; re-order it by `authorships`.
+  `authors` is null when OpenAlex doesn't know the DOI
+  (`openalex_authors` is `not_found`) and `[]` when the work lists none.
+  An author's `h_index` and `works_count` are null when the batch failed
+  (`openalex_authors` is `error`, and the author list is kept) or the
+  author has no OpenAlex id.
 - **DOIs are normalised the way Storage Management's `MetadataClient`
   does:** trim, strip `https?://(dx.)?doi.org/` or `doi:`
   (case-insensitive), lowercase; empty becomes null. Papers with no DOI
