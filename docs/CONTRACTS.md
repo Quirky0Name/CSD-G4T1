@@ -29,11 +29,11 @@ User JWT required; the caller becomes the paper's owner. Multipart form
 with `file` (a PDF, 25 MB max) and an optional `folder_id` (uuid).
 Storage pulls the DOI out of the PDF with GROBID and fills in the rest
 from CrossRef/OpenAlex. If GROBID finds no DOI the paper is still saved,
-just without metadata.
+just without metadata. The PDF itself isn't kept.
 
 **Response `201`:**
 ```json
-{"id": "uuid", "folder_id": "uuid", "doi": "10.xxxx/...", "openalex_id": "W...", "title": "...", "journal": "...", "issn": "0000-0000", "publication_year": 2020, "file_available": true, "created_at": "2026-09-24T08:00:00Z"}
+{"id": "uuid", "folder_id": "uuid", "doi": "10.xxxx/...", "openalex_id": "W...", "title": "...", "journal": "...", "issn": "0000-0000", "publication_year": 2020, "created_at": "2026-09-24T08:00:00Z"}
 ```
 
 Errors come back as problem details, with the reason in `detail`:
@@ -42,8 +42,8 @@ Errors come back as problem details, with the reason in `detail`:
 
 ## Storage Management ↔ Research Evaluation / Updating
 
-Owned by: Storage Management. Consumed by: Research Evaluation (reads
-files), Updating (calls these on every poll).
+Owned by: Storage Management. Consumed by: Research Evaluation,
+Updating (calls these on every poll).
 
 ### `GET /internal/papers`
 
@@ -51,7 +51,7 @@ Service-JWT only. Returns every tracked paper, for the poller to sync
 into its own `tracked_papers` table.
 
 ```json
-[{"id": "uuid", "owner_id": "uuid", "doi": "10.xxxx/...", "issn": "0000-0000", "file_available": true}]
+[{"id": "uuid", "owner_id": "uuid", "doi": "10.xxxx/...", "issn": "0000-0000"}]
 ```
 
 ### `POST /internal/papers/{id}/background-info?include_llm=true|false`
@@ -87,12 +87,6 @@ consecutive pair since its last watermark.
 - `background_text`: add `claims_assessment` (JSON); **no** `snippet_text`
   column — Semantic Scholar snippets are fetched per query at stance
   time and cached inside Research Evaluation, not stored per paper.
-
-### Internal file URL
-
-Storage Management exposes an internal URL Research Evaluation can fetch
-an uploaded PDF from (forwarding the caller's bearer token), passed to
-Research Evaluation as `pdf_url`.
 
 ## Research Evaluation
 
