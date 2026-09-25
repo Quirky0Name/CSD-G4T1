@@ -56,7 +56,6 @@ flowchart LR
    UM -- JWT --> SM
    UM -- JWT --> RE
    SM --> DB[(Postgres)]
-   SM --> FILES[(S3 / local disk)]
    SM --> GROBID[GROBID]
    RE[Research Evaluation - LLM] --> SM
    RE --> EXT[CrossRef / OpenAlex]
@@ -67,7 +66,7 @@ flowchart LR
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
 | User Management | Spring Boot (backend) + React (Vite, frontend) | `users`, `folders`; auth | `frontend/` |
-| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `authors_background`; Postgres + S3/disk | `storage/` |
+| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `authors_background`; Postgres | `storage/` |
 | Research Evaluation | Python | Background-info aggregation, citation-neighbourhood metrics, LLM reasoning (claims + stance, week 7) | `backend/` |
 | Updating | Python (shares the `backend/` project with Research Evaluation) | `change_events`; the polling scheduler | `backend/` |
 | Deployment | Docker + a public cloud target | Containerisation, environment config, CI | (cross-cutting) |
@@ -98,17 +97,16 @@ bare `folder_id` reference — no enforced FK across services.
 
 ## Section 2 — Storage Management
 
-Owns all Postgres and file persistence.
+Owns all Postgres persistence.
 
-- **Ingestion, two paths:** upload (PDF → S3/disk → GROBID header extract
-  → `papers` row) and DOI-only (CrossRef metadata → `papers` row, no
-  file).
+- **Ingestion, two paths:** upload (PDF → GROBID header extract →
+  `papers` row) and DOI-only (CrossRef metadata → `papers` row).
 - **Schema:** `papers`, `notes` (separate table/endpoint from `papers`),
   `background_metadata` (insert-only history — never overwrite, that's
   what Updating diffs), `background_text` (raw text for week-13 LLM
   input; nothing here is diffed in week 7), `authors_background`.
-- **File storage:** PDF bytes never in Postgres — S3/local disk holds
-  bytes, Postgres holds the key.
+- **No file storage:** an uploaded PDF is only read by GROBID, then
+  discarded.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
   `PUT /papers/{id}/notes`, `POST/GET /papers/{id}/background-info`.
 - **DB hosting:** Supabase free tier.
@@ -168,8 +166,7 @@ internet.
   Compose for local dev and as the deployable unit. Research Evaluation
   and Updating share a single image (see `backend/`).
 - **Cloud target:** a single VM running the whole Compose stack.
-- **Data services:** Postgres via Supabase free tier; PDF storage on
-  S3 or local disk (mounted as a persistent volume if local).
+- **Data services:** Postgres via Supabase free tier.
 - **Config/secrets:** environment variables per service, never committed.
 - **CI:** GitHub Actions builds each service's image on merge to `main`
   and redeploys to the VM.
