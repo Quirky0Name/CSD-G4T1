@@ -1,10 +1,6 @@
 """
-
-Serves `POST /evaluate/changes`, Updating's nudge: it evaluates the changed papers and
-stores the alerts in Storage Management before answering (docs/CONTRACTS.md). The other
-endpoints in CONTRACTS.md land in later stories.
-
-takes in POST /evaluate/changes for Updatigns nudge"""
+create app
+handle POST /evaluate/changes for Updatigns nudge"""
 
 import logging
 from collections.abc import AsyncIterator
