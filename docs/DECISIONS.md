@@ -209,7 +209,9 @@ in [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md).
   a nudge is retried a day later or Research Evaluation catches up on
   several snapshots at once, and "sorted by recency" means recency of the
   change, not of the processing. Alerts found in the same pair of
-  snapshots share a detection time, and the newer `id` goes first.
+  snapshots share a detection time, and the newer `id` goes first
+  (replaced on 2026-09-26: the most severe goes first, then the newer
+  `id`; see "Alerts from one poll are listed most severe first").
 - **Another user's paper gets the same `404` as a missing paper** on the
   alert list, with the same `detail`. A `403` would tell a user that a
   paper id they guessed exists. The same goes for another user's alert on
@@ -322,10 +324,13 @@ in [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md).
 
 ### Consequences
 
-- The alerts table is migration `V3__create_alerts.sql`. The `papers`
-  file key that "Storage keeps every tracked paper's PDF" (below) brings
-  back now needs `V4` or later. Agree the number with Amir before either
-  merges.
+- The alerts table is migration `V3__create_alerts.sql`. (Updated
+  2026-09-26, after merging `main`: the `papers` file key (see "Storage
+  keeps every tracked paper's PDF", below) came back by deleting
+  `V2__drop_papers_file_key.sql`, so `file_key` is in V1 again and no new
+  migration is coming. V3 stays: Flyway accepts the gap at 2,
+  and renaming the alerts migration to V2 would clash with databases that
+  already ran the deleted V2.)
 - The endpoints are Storage Management code written for this story, so
   Amir reviews them.
 

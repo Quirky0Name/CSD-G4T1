@@ -60,7 +60,6 @@ flowchart LR
    FE[React Frontend] --> UM[User Management]
    FE --> SM[Storage Management]
    UM -- JWT --> SM
-   UM -- JWT --> RE
    SM --> DB[(Postgres)]
    SM --> FILES[(Local disk - PDFs)]
    SM --> GROBID[GROBID]
@@ -102,9 +101,9 @@ touch the `users` or `folders` tables directly.
 - **Data model:** `users (id, email, password_hash, created_at)`,
   `folders (id, owner_id -> users, name, created_at)`
 - **Auth flow:** register (BCrypt hash) → login (verify hash, issue signed
-  JWT with the user's id) → every request to Storage Management or
-  Research Evaluation carries `Authorization: Bearer <token>`; those
-  services validate the signature themselves, no callback per request.
+  JWT with the user's id) → every request to Storage Management carries
+  `Authorization: Bearer <token>`; it validates the signature itself, no
+  callback per request.
 - **Frontend** (owned by this service): Vite, React Router, Axios with a
   JWT-attaching interceptor, react-hook-form + zod, Tailwind + shadcn/ui,
   React Context for auth state.

@@ -410,8 +410,6 @@ user token. A body that isn't `{"paper_ids": [uuid, ...]}` gets `422`.
 
 Classification, from the sprint's alert stories:
 
-| Change | Rule on the snapshots |
-|---|---|
 | Change | Rule on the snapshots | Severity | `change_key` |
 |---|---|---|---|
 | Retraction | `is_retracted` false → true, or a new `crossref_updates` entry of type `retraction` | `high` | `retraction` |

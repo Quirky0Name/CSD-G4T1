@@ -153,7 +153,9 @@ Out of scope:
 Storage Management, for the frontend (user JWT):
 - `GET /papers/{id}/alerts?include_dismissed=false` returns
   `{"alerts": [...]}`, sorted by `detected_at` descending, ties broken by
-  `id` descending. No alerts gives `{"alerts": []}`. Dismissed alerts
+  severity (`high`, then `medium`, then `low`), then by `id` descending
+  (DECISIONS.md, "2026-09-26 — Alerts from one poll are listed most severe
+  first"). No alerts gives `{"alerts": []}`. Dismissed alerts
   are hidden unless `include_dismissed=true`. A paper that doesn't exist
   or isn't the caller's gets `404`.
 - `PATCH /alerts/{id}` with `{"status": "acknowledged" | "dismissed"}`.
@@ -247,9 +249,11 @@ python -m uv run ruff check
 
 - **Goal:**
   - A Flyway migration creates the `alerts` table above, with its unique
-    key and index. Built as `V3__create_alerts.sql`; the number still has
-    to be agreed with Amir, since the `papers` file key is also due back
-    in a new migration.
+    key and index. Built as `V3__create_alerts.sql`. V3 stays: `main`
+    brought the `papers` file key back by deleting V2 rather than in a new
+    migration, and Flyway accepts the gap (DECISIONS.md, "2026-09-25 —
+    Alerts: stored in Storage Management, evaluated in stages",
+    Consequences).
   - `POST /internal/papers/{id}/alerts` (service JWT only) stores one
     alert:
     - `201` with the stored alert when it's new;
@@ -768,16 +772,17 @@ idempotently. Left for later:
 
 ## Contract changes that affect other owners
 
-1. **Storage Management gains an `alerts` table and three endpoints**
-   (Amir, Storage Management). The migration number has to be agreed,
-   since the `papers` file key is also coming back in a new migration.
+1. **Storage Management gains an `alerts` table and four endpoints**
+   (Amir, Storage Management). The table is migration
+   `V3__create_alerts.sql`; the number no longer needs agreeing (see S1).
 2. **`POST /evaluate/changes` requires a service token, and replies after
-   evaluating** (Zhuo En, Updating). Updating's nudge, when it's built,
-   has to send its service token (any `role=service` token is accepted;
-   Updating's is `svc:updating`) and allow for the evaluation time within
-   its HTTP timeout: each Storage Management call has a 10-second timeout
-   on Research Evaluation's side, and papers are evaluated one after
-   another. A timed-out nudge is re-sent, which is safe.
+   evaluating** (Zhuo En, Updating). Updating's nudge (cg-43, merged into
+   this branch) has to send its service token (any `role=service` token is
+   accepted; Updating's is `svc:updating`), which it doesn't yet (see "TODO
+   for other owners"), and allow for the evaluation time within its HTTP
+   timeout: each Storage Management call has a 10-second timeout on
+   Research Evaluation's side, and papers are evaluated one after another.
+   A timed-out nudge is re-sent, which is safe.
 
 ## TODO for other owners
 
@@ -800,6 +805,17 @@ idempotently. Left for later:
   client. Research Evaluation now requires a service token, so every
   nudge gets `401` and no alert is ever created. Fix: give the `re` client
   `auth=ServiceTokenAuth(...)`, the same as the `sm` client.
+
+  This isn't an Updating mistake. cg-43 was built on 2026-09-25 to the
+  contract of the time, which asked for no token on this endpoint; this
+  story added the requirement a day later (DECISIONS.md, "2026-09-25 —
+  Alerts: stored in Storage Management, evaluated in stages"). Since
+  `main` was merged into this branch (2026-09-26), the branch has both, so
+  Updating's nudge only reaches a stored alert once this item is done.
+  **Left to Zhuo En, not fixed in this branch** (the story owner's call,
+  2026-09-26), since it's Updating's code. Until then, run Updating
+  against the Research Evaluation stub (`backend/dev/stub_research_evaluation.py`,
+  see SETUP.md), which doesn't check tokens.
 - [ ] **Zhuo En (Updating): use the shared `ServiceTokenAuth` and delete
   Updating's copy.** `common/service_token.py` now has
   `ServiceTokenAuth(key, subject)`, the same logic as the class in

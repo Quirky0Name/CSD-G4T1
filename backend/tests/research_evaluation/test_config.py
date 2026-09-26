@@ -11,12 +11,6 @@ from research_evaluation.main import create_app
 pytestmark = pytest.mark.usefixtures("clean_settings_env")
 
 
-@pytest.fixture(autouse=True)
-def no_window_in_the_environment(monkeypatch):
-    """clean_settings_env (tests/conftest.py) doesn't know this Research Evaluation variable."""
-    monkeypatch.delenv("EVALUATION_SNAPSHOT_WINDOW", raising=False)
-
-
 def test_defaults_and_decoded_secret():
     settings = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
 

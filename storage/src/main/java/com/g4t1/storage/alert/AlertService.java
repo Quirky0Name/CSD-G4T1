@@ -36,9 +36,7 @@ public class AlertService {
      * If two same requests come at once -> first is stored
      */
     public StoredAlert store(UUID paperId, NewAlertRequest request) {
-        if (!papers.existsById(paperId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
-        }
+        requirePaper(paperId);
         var existing = alerts.findByPaperIdAndChangeKey(paperId, request.changeKey());
         if (existing.isPresent()) {
             return new StoredAlert(AlertResponse.from(existing.get()), false);
@@ -59,9 +57,7 @@ public class AlertService {
      * again. An unknown paper is the same "No paper" 404 as when storing.
      */
     public List<String> changeKeys(UUID paperId) {
-        if (!papers.existsById(paperId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
-        }
+        requirePaper(paperId);
         return alerts.findChangeKeysByPaperId(paperId);
     }
 
@@ -102,6 +98,12 @@ public class AlertService {
 
     private boolean ownsPaper(UUID userId, UUID paperId) {
         return papers.findById(paperId).map(paper -> paper.getOwnerId().equals(userId)).orElse(false);
+    }
+
+    private void requirePaper(UUID paperId) {
+        if (!papers.existsById(paperId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
+        }
     }
 
     private void requireOwnPaper(UUID userId, UUID paperId) {
