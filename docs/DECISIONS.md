@@ -5,6 +5,55 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-26 — A DOI-only paper needs an open-access PDF
+
+### Decision
+
+- Settles the pending question in the 2026-09-25 entry below. When a
+  paper is tracked by DOI, Storage Management downloads an open-access
+  copy of it: every `pdf_url` OpenAlex lists for the work (its
+  `best_oa_location` first, then the rest of `locations`), then Semantic
+  Scholar's `openAccessPdf`. The first link that actually returns a PDF
+  under 25 MB is stored like an upload.
+- If none does, the paper **isn't tracked**: `POST /papers` answers `422`
+  with a readable message telling the user to pick a different paper.
+  Every tracked paper therefore has a stored PDF. The message doesn't
+  suggest uploading instead: a paper with no open-access copy is usually
+  paywalled, and most users couldn't legally get the PDF without buying
+  it.
+
+### Why
+
+Research Evaluation needs the paper itself (see the entry below), so a
+tracked paper with no PDF would be one it can't evaluate. Refusing it up
+front tells the user straight away instead of failing later.
+
+### Rejected
+
+- **Tracking without a file and asking for an upload later.** It needs a
+  new "attach a PDF" endpoint and leaves Research Evaluation with papers
+  it can't read until someone remembers to upload.
+- **OpenAlex's `best_oa_location` only.** For
+  `10.1371/journal.pmed.0020124` it has no `pdf_url` and Semantic Scholar
+  doesn't know the DOI, but another OpenAlex location (PLOS) serves the
+  PDF.
+- **Europe PMC, HAL and publisher pages as extra sources.** Tried for the
+  demo papers; all answered `403` or an HTML page to a script.
+
+### Also settled while building it
+
+- **The demo papers can't be tracked by DOI.** All three are on
+  ScienceDirect, which answers `403` or an HTML page to a script, and no
+  other listed copy downloads. DEMO.md already has them uploaded by hand,
+  so the demo doesn't change.
+- A link counts only if the response starts with `%PDF-`; publishers often
+  answer a PDF link with `200` and a login or cookie page.
+- Semantic Scholar is called keyless unless `S2_API_KEY` is set (sent as
+  `x-api-key`). A failed or rate-limited lookup on either source just means
+  one less place to look, so it ends in the same `422`, not a `503`.
+
+---
+
 ## 2026-09-25 — Storage keeps every tracked paper's PDF
 
 ### Team decisions
