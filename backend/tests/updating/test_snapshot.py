@@ -2,9 +2,9 @@ from datetime import UTC, datetime
 
 import pytest
 from support import load_fixture
-from updating_support import author_batch
 
 from common.doi import Doi
+from dev.scenarios import author_batch
 from updating.snapshot import MAX_AUTHORS, build_snapshot
 from updating.sources import (
     CrossrefWork,

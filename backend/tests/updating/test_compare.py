@@ -1,6 +1,6 @@
 import pytest
-from updating_support import fixture_snapshot
 
+from dev.scenarios import fixture_snapshot
 from updating.compare import nudge_reasons
 from updating.snapshot import CrossrefUpdate, SourceStatuses
 from updating.sources import SourceStatus

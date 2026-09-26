@@ -7,7 +7,9 @@ import pytest
 from support import TEST_JWT_KEY
 
 from common.service_token import mint_service_token
+from dev.scenarios import Scenario, before_snapshot, fixture_snapshot
 from dev.stub_storage import create_app
+from updating.storage import HistoryRow
 
 PAPER_ID = "6f1c1f0e-3b7d-4a5e-9d55-0c1e6a1a0001"
 
@@ -79,8 +81,7 @@ async def test_service_token_lists_papers_with_a_normalised_doi(client):
     assert paper["id"] == PAPER_ID
     assert paper["doi"] == "10.1/abc"
     assert paper["issn"] == "0000-0000"
-    assert paper["file_available"] is True
-    assert set(paper) == {"id", "owner_id", "doi", "issn", "file_available"}
+    assert set(paper) == {"id", "owner_id", "doi", "issn"}
 
 
 async def test_posting_snapshots_returns_201_with_ascending_ids(client):
@@ -151,3 +152,44 @@ async def test_reset_forgets_papers_and_snapshots(client):
     first = await client.post(f"/internal/papers/{PAPER_ID}/background-info", json={},
                               headers=service_headers())
     assert first.json()["snapshot_id"] == 1
+
+
+@pytest.mark.parametrize("scenario", [s for s in Scenario if s is not Scenario.NO_DOI])
+async def test_seeding_a_scenario_adds_a_paper_with_a_full_snapshot(client, scenario):
+    response = await client.post("/dev/seed", params={"scenario": scenario})
+
+    assert response.status_code == 201
+    paper = response.json()
+    history = await client.get(f"/internal/papers/{paper['id']}/background-info/history",
+                               headers=service_headers())
+    [row] = history.json()["snapshots"]
+    assert HistoryRow.model_validate(row).doi == paper["doi"]  # the whole shape, as Updating reads it
+
+
+async def test_seeding_the_no_doi_scenario_adds_a_paper_with_no_doi_and_no_snapshot(client):
+    response = await client.post("/dev/seed", params={"scenario": Scenario.NO_DOI})
+
+    paper = response.json()
+    assert paper["doi"] is None
+    history = await client.get(f"/internal/papers/{paper['id']}/background-info/history",
+                               headers=service_headers())
+    assert history.json() == {"snapshots": []}
+
+
+async def test_an_unknown_scenario_is_422(client):
+    response = await client.post("/dev/seed", params={"scenario": "nope"})
+
+    assert response.status_code == 422
+
+
+def test_each_before_differs_from_the_recorded_snapshot_in_only_its_own_field():
+    def changed(scenario, name):
+        before = before_snapshot(scenario).model_dump()
+        now = fixture_snapshot(name).model_dump()
+        return {field for field in now if field != "fetched_at" and before[field] != now[field]}
+
+    assert changed(Scenario.OPENALEX_RETRACTION, "ijaa") == {"is_retracted"}
+    assert changed(Scenario.CROSSREF_RETRACTION, "ijaa") == {"crossref_updates"}
+    assert changed(Scenario.CORRECTIONS, "lancet") == {"crossref_updates"}
+    assert changed(Scenario.DOAJ_DELISTING, "lancet") == {"in_doaj"}
+    assert changed(Scenario.NO_CHANGE, "jbc") == set()

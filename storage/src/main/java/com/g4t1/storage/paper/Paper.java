@@ -31,7 +31,7 @@ public class Paper {
     private String issn;
     private Integer publicationYear;
 
-    // key into the file store; null for a DOI-only paper
+    // key into the file store; uploads keep their PDF and DOI tracking downloads an open-access one
     private String fileKey;
 
     @Column(nullable = false)

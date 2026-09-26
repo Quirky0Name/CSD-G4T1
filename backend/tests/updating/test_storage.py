@@ -1,6 +1,6 @@
 import pytest
-from updating_support import DOIS, fixture_snapshot
 
+from dev.scenarios import DOIS, fixture_snapshot
 from updating import storage
 from updating.storage import latest_snapshot
 

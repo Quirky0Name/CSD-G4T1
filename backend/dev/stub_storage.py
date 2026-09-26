@@ -2,10 +2,10 @@
 and Research Evaluation before the real endpoints exist (CG-68).
 
 Implements the `/internal/**` contract in docs/CONTRACTS.md and checks the service
-token the way Storage Management's JwtAuthFilter does. Stub-only helpers, which take no
-token: `POST /dev/papers` and `POST /dev/reset` seed it, and
-`GET /dev/papers/{id}/alerts` shows the alerts Research Evaluation stored. It is a
-development aid and should never be pointed at from a deployed environment.
+token the way Storage Management's JwtAuthFilter does. Three stub-only helpers seed it:
+`POST /dev/papers`, `POST /dev/reset` and `POST /dev/seed?scenario=`, which adds a paper
+with a synthetic earlier snapshot (dev/scenarios.py) so the next poll has a change to find.
+It is a development aid and should never be pointed at from a deployed environment.
 
 Run it with:
     uv run --env-file .env uvicorn dev.stub_storage:create_app --factory --port 8081
@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 
 from common.doi import normalize_doi
 from common.service_token import decode_jwt_secret
+from dev.scenarios import Scenario, before_snapshot
 
 
 class StubPaper(BaseModel):
@@ -30,7 +31,6 @@ class StubPaper(BaseModel):
     owner_id: UUID = Field(default_factory=uuid4)
     doi: str | None = None
     issn: str | None = None
-    file_available: bool = True
 
 
 class NewAlert(BaseModel):
@@ -60,6 +60,12 @@ class Store:
     # per paper, keyed by change_key: one alert per change, like the real unique constraint
     alerts: dict[UUID, dict[str, dict[str, Any]]] = field(default_factory=dict)
     last_alert_id: int = 0
+
+    def add_snapshot(self, paper_id: UUID, snapshot: dict[str, Any]) -> dict[str, Any]:
+        self.last_snapshot_id += 1
+        stored = {"snapshot_id": self.last_snapshot_id, "paper_id": str(paper_id), **snapshot}
+        self.snapshots.setdefault(paper_id, []).append(stored)
+        return stored
 
     def clear(self) -> None:
         self.papers.clear()
@@ -103,10 +109,7 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
     @internal.post("/papers/{paper_id}/background-info", status_code=201)
     def store_snapshot(paper_id: UUID, snapshot: dict[str, Any]) -> dict[str, Any]:
         find_paper(paper_id)
-        store.last_snapshot_id += 1
-        stored = {"snapshot_id": store.last_snapshot_id, "paper_id": str(paper_id), **snapshot}
-        store.snapshots.setdefault(paper_id, []).append(stored)
-        return stored
+        return store.add_snapshot(paper_id, snapshot)
 
     @internal.get("/papers/{paper_id}/background-info/history")
     def history(
@@ -162,6 +165,16 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
     def add_paper(paper: StubPaper) -> StubPaper:
         paper.doi = normalize_doi(paper.doi)
         store.papers[paper.id] = paper
+        return paper
+
+    @dev.post("/seed", status_code=201)
+    def seed(scenario: Scenario) -> StubPaper:
+        """Add a paper whose earlier snapshot differs from what the recorded APIs say now."""
+        before = before_snapshot(scenario)
+        paper = StubPaper(doi=before.doi if before else None)
+        store.papers[paper.id] = paper
+        if before:
+            store.add_snapshot(paper.id, before.model_dump(mode="json"))
         return paper
 
     @dev.post("/reset", status_code=204)
