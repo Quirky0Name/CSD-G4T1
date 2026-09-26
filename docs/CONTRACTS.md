@@ -314,10 +314,21 @@ Rules:
 
 ## Research Evaluation
 
-Called by Updating (a nudge when papers changed, and stance checks if ever
-needed for a manual comparison) and Storage Management (COI text / claims).
-Not called directly by the frontend: alerts reach it through Storage
-Management.
+Called only by Updating, with the nudge (`POST /evaluate/changes`) when
+papers changed. Research Evaluation in turn calls Storage Management: it
+reads snapshots (and later the PDF, notes and text) and stores alerts.
+Storage Management never calls Research Evaluation, and neither does the
+frontend: alerts reach the frontend through Storage Management. See
+DECISIONS.md, "2026-09-26 — Research Evaluation is called only by
+Updating's nudge".
+
+The other three endpoints below (`/evaluate/background-info`,
+`/evaluate/citation-neighbourhood`, `/evaluate/stance`) are **under
+review**. They're from the 2026-09-18 design, when Storage Management and
+Updating called Research Evaluation for them; that no longer holds. They
+are likely to become steps inside Research Evaluation's own evaluation
+rather than endpoints other services call, to be settled in the stance and
+claims stories. None of them is built.
 
 ### `POST /evaluate/changes`
 
@@ -569,7 +580,7 @@ Research Evaluation about.
 |---|---|---|
 | `JWT_SECRET` | all | base64-encoded, 32+ bytes (`openssl rand -base64 32`); every service decodes before use. Sprint 1: a shared throwaway value in that format |
 | `SM_BASE_URL` | Research Evaluation, Updating | Storage Management's base URL (`http://localhost:8081` locally) |
-| `RE_BASE_URL` | Storage Management, Updating | Research Evaluation's base URL (Updating's nudge goes here) |
+| `RE_BASE_URL` | Updating | Research Evaluation's base URL (Updating's nudge goes here); Storage Management doesn't call Research Evaluation |
 | `ADMIN_API_KEY` | Updating | for `/admin/run-poll` |
 
 See [SETUP.md](SETUP.md) for the full env var list including the

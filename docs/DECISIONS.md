@@ -5,6 +5,33 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-26 — Research Evaluation is called only by Updating's nudge
+
+### Team decisions
+
+- **Only Updating calls Research Evaluation, and only to nudge it.**
+  Updating's job is to notice that a paper's status changed; what the
+  change means, including whether a related paper's stance matters, is
+  Research Evaluation's. So Updating never asks for a stance check: if it
+  sees something, it nudges, and Research Evaluation decides what to
+  evaluate. This follows the 2026-09-24 split (Updating snapshots,
+  Research Evaluation evaluates).
+- **Storage Management never calls Research Evaluation.** It's the store.
+  Research Evaluation reads what it needs from it (snapshots, and later
+  the PDF, notes and extracted text) and writes alerts to it.
+- **`/evaluate/background-info`, `/evaluate/citation-neighbourhood` and
+  `/evaluate/stance` are under review.** CONTRACTS.md still described
+  them with callers from the 2026-09-18 design (Storage Management asking
+  for COI text and claims at ingest; Updating asking for stance checks),
+  which the 2026-09-24 split made obsolete but nobody revisited. They are
+  likely to become internal steps of Research Evaluation's evaluation
+  (the later stance and claims stories) rather than endpoints; whether any
+  stays an endpoint, e.g. a manual comparison for the demo, is for those
+  stories. They aren't deleted from CONTRACTS.md until then. `RE_BASE_URL`
+  is Updating's only.
+
+---
+
 ## 2026-09-26 — One alert per Crossref notice, for now
 
 ### Team decisions

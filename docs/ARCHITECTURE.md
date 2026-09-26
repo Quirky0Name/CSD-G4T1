@@ -198,9 +198,11 @@ journal and author fields moved to Updating (Section 4).
   validation, both live in the demo. Provider: DeepSeek (see
   [DECISIONS.md](DECISIONS.md)). Results are cached and pre-warmed for
   the demo so a slow/failed call can't stall it.
-- **Endpoints (internal):** `POST /evaluate/changes`,
-  `POST /evaluate/background-info`, `POST /evaluate/citation-neighbourhood`,
-  `POST /evaluate/stance`.
+- **Endpoints (internal):** `POST /evaluate/changes`, called only by
+  Updating's nudge. `POST /evaluate/background-info`,
+  `POST /evaluate/citation-neighbourhood` and `POST /evaluate/stance` are
+  under review: likely internal steps of Research Evaluation's evaluation
+  rather than endpoints (see CONTRACTS.md).
 
 ## Section 4 — Updating
 
