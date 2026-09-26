@@ -124,6 +124,24 @@ isn't JSON, or an id that isn't a number; `401` missing or bad token;
 `403` a service token; `404` no alert with that id **or** an alert on
 another user's paper (the same `detail` for both).
 
+### `POST /papers` (track by DOI)
+
+Same endpoint, sent as JSON instead of multipart, for a paper you don't
+have a PDF for. User JWT required; the caller becomes the paper's owner.
+The DOI is normalised (a `https://doi.org/` or `doi:` prefix is fine,
+case doesn't matter) and looked up on CrossRef/OpenAlex before saving.
+
+**Request:** `{"doi": "10.xxxx/...", "folder_id": "uuid"}`. `folder_id` is
+optional; leaving it out or sending `""` means no folder.
+
+**Response `201`:** same shape as the upload.
+
+Errors come back as problem details, with the reason in `detail`:
+`400` no DOI or not a DOI, `401` missing or bad token, `403` service
+token, `409` you already track a paper with that DOI, `422` CrossRef has
+no paper with that DOI, `503` CrossRef couldn't be reached (nothing is
+saved, try again).
+
 ## Storage Management ↔ Research Evaluation / Updating
 
 Owned by: Storage Management. Consumed by: Research Evaluation (reads
@@ -147,7 +165,8 @@ row (insert-only, never overwrite) and returns it with its id. Storage
 Management doesn't fetch anything or call Research Evaluation here;
 Updating fetched the data. Updating sends one snapshot per tracked paper
 per poll, including polls where nothing changed, except for a paper whose
-Crossref or OpenAlex lookup errored that poll (see "Poll job").
+Crossref or OpenAlex lookup, or whose previous-snapshot read, failed that
+poll (see "Poll job").
 
 **Request — snapshot (fields below):**
 
@@ -162,7 +181,7 @@ Crossref or OpenAlex lookup errored that poll (see "Poll job").
   "in_doaj": false, "journal_source_id": "S49861241", "journal_source_type": "journal",
   "journal": "...", "issn_l": "0000-0000", "publisher": "...",
   "authors": [
-    {"name": "...", "openalex_author_id": "A...", "position": "first", "institution": "...", "h_index": 12, "works_count": 40}
+    {"name": "...", "openalex_author_id": "A...", "position": "first", "institutions": ["..."], "h_index": 12, "works_count": 40}
   ],
   "cited_by_count": 1252,
   "source_status": {"crossref": "ok", "openalex": "ok", "openalex_authors": "ok"}
@@ -329,9 +348,15 @@ Rules:
   no delisting. Whoever classifies a difference must only call
   `in_doaj` true → false a delisting when `journal_source_id` is unchanged
   and `journal_source_type` is `journal`.
-- **`authors`:** `institution` is the author's affiliation on this paper
-  (from the work's `authorships`), not `last_known_institutions`. The
-  batched `/authors` response is unordered; re-order it by `authorships`.
+- **`authors`:** `institutions` is the author's affiliations on this paper
+  (every institution OpenAlex matched on the work's `authorships`, `[]` if
+  none), not `last_known_institutions`.
+  The batched `/authors` response is unordered; re-order it by `authorships`.
+  `authors` is null when OpenAlex doesn't know the DOI
+  (`openalex_authors` is `not_found`) and `[]` when the work lists none.
+  An author's `h_index` and `works_count` are null when the batch failed
+  (`openalex_authors` is `error`, and the author list is kept) or the
+  author has no OpenAlex id.
 - **DOIs are normalised the way Storage Management's `MetadataClient`
   does:** trim, strip `https?://(dx.)?doi.org/` or `doi:`
   (case-insensitive), lowercase; empty becomes null. Papers with no DOI
@@ -578,8 +603,11 @@ Each poll (every `POLL_INTERVAL_HOURS`, or `POST /admin/run-poll`):
    snapshot for that paper, lists it under `source_errors` in the run summary
    and retries on the next poll; `not_found` is stored;
 4. compares each new snapshot with the paper's previous one, read back from
-   Storage Management (see below), and sets `nudge_pending` on the paper
-   in its own `tracked_papers` table if they differ;
+   Storage Management before the new one is stored (see below), and sets
+   `nudge_pending` on the paper in its own `tracked_papers` table if they
+   differ. If that read fails, it stores no snapshot for the paper, lists it
+   under `store_errors` and retries on the next poll: storing anyway would
+   make the next poll compare against this snapshot and miss the change;
 5. sends the ids of all papers with `nudge_pending` to
    `POST /evaluate/changes`. On a `202` it clears the flag. A poll with no
    changes sends nothing; after a failed nudge the flag stays set and the

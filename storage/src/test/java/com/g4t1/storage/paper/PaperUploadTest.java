@@ -8,6 +8,7 @@ import com.g4t1.storage.metadata.PaperMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
@@ -17,6 +18,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -47,6 +50,9 @@ class PaperUploadTest {
     @MockitoBean
     MetadataClient metadata;
 
+    @Value("${storage.upload-dir}")
+    String uploadDir;
+
     private final UUID user = UUID.randomUUID();
 
     @BeforeEach
@@ -65,13 +71,16 @@ class PaperUploadTest {
                 .andExpect(jsonPath("$.doi").value("10.1016/abc.123"))
                 .andExpect(jsonPath("$.openalex_id").value("W123"))
                 .andExpect(jsonPath("$.title").value("CrossRef title"))
-                .andExpect(jsonPath("$.journal").value("The Lancet"));
+                .andExpect(jsonPath("$.journal").value("The Lancet"))
+                .andExpect(jsonPath("$.file_available").value(true));
 
-        assertThat(papers.findAll().getFirst().getOwnerId()).isEqualTo(user);
+        Paper saved = papers.findAll().getFirst();
+        assertThat(saved.getOwnerId()).isEqualTo(user);
+        assertThat(saved.getFileKey()).isNotNull();
     }
 
     @Test
-    void uploadStoresPaperDetailsInDatabase() throws Exception {
+    void uploadStoresPaperDetailsInDatabaseAndPdfOnDisk() throws Exception {
         when(grobid.extractHeader(any())).thenReturn(Optional.of(new PdfHeader("10.1016/ABC.123", "Header title")));
         when(metadata.lookup("10.1016/abc.123")).thenReturn(Optional.of(
                 new PaperMetadata("10.1016/abc.123", "W123", "CrossRef title", "The Lancet", "0140-6736", 2020)));
@@ -90,6 +99,7 @@ class PaperUploadTest {
         assertThat(saved.getIssn()).isEqualTo("0140-6736");
         assertThat(saved.getPublicationYear()).isEqualTo(2020);
         assertThat(saved.getCreatedAt()).isNotNull();
+        assertThat(Files.readAllBytes(Path.of(uploadDir, saved.getFileKey()))).isEqualTo(PDF);
     }
 
     @Test

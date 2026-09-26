@@ -18,6 +18,9 @@ from updating.snapshot import Snapshot
 PaperId = NewType("PaperId", UUID)
 SnapshotId = NewType("SnapshotId", int)
 
+# Storage Management may cap a history request that has no `limit`, so we page explicitly
+HISTORY_PAGE_SIZE = 100
+
 
 class ServiceTokenAuth(httpx.Auth):
     """Signs every request with a fresh short-lived service token."""
@@ -43,6 +46,16 @@ class StoredSnapshot(BaseModel):
     snapshot_id: SnapshotId
 
 
+class HistoryRow(Snapshot):
+    """A stored snapshot as the history endpoint returns it."""
+
+    snapshot_id: SnapshotId
+
+
+class _HistoryPage(BaseModel):
+    snapshots: list[HistoryRow]
+
+
 _PAPERS = TypeAdapter(list[SmPaper])
 
 
@@ -60,3 +73,22 @@ async def post_snapshot(
     )
     response.raise_for_status()
     return StoredSnapshot.model_validate(response.json()).snapshot_id
+
+
+async def latest_snapshot(
+    http: httpx.AsyncClient, paper_id: PaperId, after_id: SnapshotId | None
+) -> HistoryRow | None:
+    """The newest snapshot with an id above `after_id` (any snapshot when it's None), or None."""
+    latest: HistoryRow | None = None
+    while True:
+        params: dict[str, int] = {"limit": HISTORY_PAGE_SIZE}
+        if after_id is not None:
+            params["after_id"] = after_id
+        response = await http.get(f"/internal/papers/{paper_id}/background-info/history", params=params)
+        response.raise_for_status()
+        rows = _HistoryPage.model_validate(response.json()).snapshots
+        if rows:
+            latest = rows[-1]
+            after_id = latest.snapshot_id
+        if len(rows) < HISTORY_PAGE_SIZE:
+            return latest

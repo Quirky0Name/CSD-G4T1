@@ -1,5 +1,6 @@
 package com.g4t1.storage.paper;
 
+import com.g4t1.storage.file.LocalFileStore;
 import com.g4t1.storage.grobid.GrobidClient;
 import com.g4t1.storage.grobid.GrobidClient.PdfHeader;
 import com.g4t1.storage.metadata.MetadataClient;
@@ -20,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 public class PaperService {
@@ -28,14 +30,19 @@ public class PaperService {
 
     private static final byte[] PDF_MAGIC = "%PDF-".getBytes(StandardCharsets.US_ASCII);
 
+    // every DOI starts with the 10. directory indicator, a registrant code, then a slash
+    private static final Pattern DOI_SHAPE = Pattern.compile("^10\\.\\d{4,9}/\\S+$");
+
     private final PaperRepository papers;
+    private final LocalFileStore files;
     private final GrobidClient grobid;
     private final MetadataClient metadata;
     private final DataSize maxPdfSize;
 
-    public PaperService(PaperRepository papers, GrobidClient grobid, MetadataClient metadata,
+    public PaperService(PaperRepository papers, LocalFileStore files, GrobidClient grobid, MetadataClient metadata,
                         @Value("${storage.max-pdf-size}") DataSize maxPdfSize) {
         this.papers = papers;
+        this.files = files;
         this.grobid = grobid;
         this.metadata = metadata;
         this.maxPdfSize = maxPdfSize;
@@ -63,6 +70,35 @@ public class PaperService {
         if (doi != null) {
             lookupQuietly(doi).ifPresent(found -> applyMetadata(paper, found));
         }
+        paper.setFileKey(files.save(bytes));
+        return PaperResponse.from(papers.save(paper));
+    }
+
+    @Transactional
+    public PaperResponse trackByDoi(UUID ownerId, UUID folderId, String rawDoi) {
+        String doi = MetadataClient.normalizeDoi(rawDoi);
+        if (doi == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "doi is required");
+        }
+        if (!DOI_SHAPE.matcher(doi).matches()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "\"" + rawDoi + "\" isn't a DOI, it should look like 10.1000/xyz123");
+        }
+        rejectDuplicate(ownerId, doi);
+
+        PaperMetadata found;
+        try {
+            found = metadata.lookup(doi).orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_CONTENT, "CrossRef has no paper with DOI " + doi));
+        } catch (RestClientException e) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Couldn't reach CrossRef to check that DOI, try again shortly");
+        }
+
+        Paper paper = new Paper(ownerId);
+        paper.setFolderId(folderId);
+        paper.setDoi(doi);
+        applyMetadata(paper, found);
         return PaperResponse.from(papers.save(paper));
     }
 
@@ -72,7 +108,7 @@ public class PaperService {
         }
     }
 
-    // GROBID already found the DOI, so a CrossRef outage shouldn't block saving the paper
+    // the PDF is already in hand, so a CrossRef outage shouldn't block saving it
     private Optional<PaperMetadata> lookupQuietly(String doi) {
         try {
             return metadata.lookup(doi);

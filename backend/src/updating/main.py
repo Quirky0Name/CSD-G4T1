@@ -43,11 +43,13 @@ def create_app(settings: UpdatingSettings | None = None) -> FastAPI:
             sm_auth = ServiceTokenAuth(config.jwt_secret.get_secret_value())
             async with (
                 httpx.AsyncClient(base_url=config.sm_base_url, auth=sm_auth, timeout=HTTP_TIMEOUT_SECONDS) as sm,
+                httpx.AsyncClient(base_url=config.re_base_url, timeout=HTTP_TIMEOUT_SECONDS) as re,
                 httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as sources,
             ):
                 deps = PollDeps(
                     sm=sm,
                     sources=sources,
+                    re=re,
                     sessions=sessions,
                     crossref_mailto=config.crossref_mailto,
                     openalex_api_key=config.openalex_api_key,

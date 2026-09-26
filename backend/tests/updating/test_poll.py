@@ -1,15 +1,13 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
 import httpx
 import pytest
 from support import load_fixture
-from updating_support import DOIS, poll_runs, tracked_rows
+from updating_support import DOIS, fixture_snapshot, poll_runs, tracked_rows
 
 from updating import poll as poll_module
 from updating.models import PollTrigger, RunStatus
 from updating.poll import PollFailed, run_poll
-from updating.snapshot import build_snapshot
-from updating.sources import CrossrefWork, OpenAlexWork
 
 
 async def poll(deps):
@@ -27,12 +25,7 @@ async def test_stores_one_snapshot_per_paper_and_records_it(deps, sm, sources):
     assert [s.paper_id for s in summary.stored] == [lancet, jbc]
     for paper_id, name in [(lancet, "lancet"), (jbc, "jbc")]:
         [row] = await sm.history(paper_id)
-        expected = build_snapshot(
-            DOIS[name],
-            datetime.now(UTC),
-            CrossrefWork.model_validate(load_fixture("crossref", name)["message"]),
-            OpenAlexWork.model_validate(load_fixture("openalex", name)),
-        ).model_dump(mode="json")
+        expected = fixture_snapshot(name).model_dump(mode="json")
         stored = {k: v for k, v in row.items() if k not in {"snapshot_id", "paper_id"}}
         assert stored | {"fetched_at": None} == expected | {"fetched_at": None}
         assert datetime.fromisoformat(row["fetched_at"]).microsecond == 0
@@ -54,6 +47,7 @@ async def test_papers_sharing_a_doi_are_fetched_once_and_each_get_a_snapshot(dep
 
     assert sources.routes[("lancet", "crossref")].call_count == 1
     assert sources.routes[("lancet", "openalex")].call_count == 1
+    assert sources.routes[("lancet", "openalex_authors")].call_count == 1
     assert len(await sm.history(first)) == len(await sm.history(second)) == 1
 
 
@@ -113,6 +107,8 @@ async def test_a_source_error_stores_nothing_and_is_listed(deps, sm, sources, fa
     # the outage doesn't hold up other papers
     assert [s.paper_id for s in summary.stored] == [healthy]
     assert len(await sm.history(healthy)) == 1
+    # a DOI that gets no snapshot doesn't cost an author lookup either
+    assert sources.routes[("lancet", "openalex_authors")].call_count == 0
 
 
 async def test_not_found_is_stored(deps, sm, sources):
@@ -124,8 +120,39 @@ async def test_not_found_is_stored(deps, sm, sources):
     assert summary.source_errors == []
     [row] = await sm.history(paper)
     assert row["crossref_updates"] is None
-    assert row["source_status"] == {"crossref": "not_found", "openalex": "ok", "openalex_authors": None}
+    assert row["source_status"] == {"crossref": "not_found", "openalex": "ok", "openalex_authors": "ok"}
     assert row["journal_source_type"] == "repository"
+
+
+async def test_a_failed_author_batch_is_stored_with_null_stats_not_gated(deps, sm, sources):
+    sources.serve("lancet", openalex_authors=500)
+    paper = await sm.add_paper(DOIS["lancet"])
+
+    summary = await poll(deps)
+
+    assert summary.source_errors == []
+    assert [s.paper_id for s in summary.stored] == [paper]
+    [row] = await sm.history(paper)
+    assert row["source_status"] == {"crossref": "ok", "openalex": "ok", "openalex_authors": "error"}
+    assert [a["name"] for a in row["authors"]] == [
+        "Mandeep R. Mehra", "Sapan S. Desai", "Frank T. Ruschitzka", "Amit N. Patel",
+    ]  # fmt: skip
+    assert all(a["h_index"] is None and a["works_count"] is None for a in row["authors"])
+    assert row["is_retracted"] is True  # the rest of the snapshot is unaffected
+
+
+async def test_a_work_with_no_authors_is_stored_without_an_author_lookup(deps, sm, sources):
+    sources.serve("jbc")
+    no_authors = {**load_fixture("openalex", "jbc"), "authorships": []}
+    sources.routes[("jbc", "openalex")].return_value = httpx.Response(200, json=no_authors)
+    paper = await sm.add_paper(DOIS["jbc"])
+
+    await poll(deps)
+
+    [row] = await sm.history(paper)
+    assert row["authors"] == []
+    assert row["source_status"]["openalex_authors"] == "ok"
+    assert sources.routes[("jbc", "openalex_authors")].call_count == 0
 
 
 async def test_a_skipped_paper_is_stored_on_the_next_poll_once_the_source_is_back(deps, sm, sources):
