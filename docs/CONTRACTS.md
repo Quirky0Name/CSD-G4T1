@@ -125,6 +125,58 @@ isn't JSON, or an id that isn't a number; `401` missing or bad token;
 `403` a service token; `404` no alert with that id **or** an alert on
 another user's paper (the same `detail` for both).
 
+### `POST /alerts/{id}/notes`
+
+User JWT required, and only the owner of the alert's paper can add a
+note. Adds a note to the researcher's log on an alert, e.g. what they did
+about it. These aren't the paper's own notes (`PUT /papers/{id}/notes`).
+Adding a note never changes the alert's `status` or `status_changed_at`,
+and any alert can get one, dismissed or not. Notes can't be edited or
+deleted.
+
+**Request:**
+
+```json
+{"text": "Removed the citation from my draft."}
+```
+
+`text` is required: 1 to 2000 characters, not blank. The limit counts
+UTF-16 code units, like JavaScript's `length`, so an emoji counts as 2.
+
+**Response `201`:**
+
+```json
+{"text": "Removed the citation from my draft.", "created_at": "2026-09-26T10:00:00Z"}
+```
+
+Errors, as problem details: `400` a missing or blank `text`, one over
+2000 characters, a body that isn't JSON, or an id that isn't a number;
+`401` missing or bad token; `403` a service token; `404` no alert with
+that id **or** an alert on another user's paper (the same `detail` as
+`PATCH /alerts/{id}`). A refused request stores nothing.
+
+### `GET /alerts/{id}/notes`
+
+User JWT required, and only the owner of the alert's paper can read its
+notes. Returns the alert's notes, **newest first** (by `created_at`, then
+the newer note).
+
+**Response `200`:**
+
+```json
+{"notes": [
+  {"text": "Emailed my co-author.", "created_at": "2026-09-27T09:00:00Z"},
+  {"text": "Removed the citation from my draft.", "created_at": "2026-09-26T10:00:00Z"}
+]}
+```
+
+An alert with no notes gives `{"notes": []}`. The alert list
+(`GET /papers/{id}/alerts`) doesn't include notes; they're read per alert.
+
+Errors, as problem details: `400` an id that isn't a number; `401`
+missing or bad token; `403` a service token; `404` as for
+`POST /alerts/{id}/notes`.
+
 ### `POST /papers` (track by DOI)
 
 Same endpoint, sent as JSON instead of multipart, for a paper you don't
