@@ -114,12 +114,23 @@ poll (see "Poll job").
 ```
 
 **Response `201`:** the same body plus `snapshot_id` and `paper_id`.
+`crossref_updates`, `authors` and `source_status` come back exactly as
+sent; Storage Management doesn't look inside them.
+
+Errors: `400` a missing `doi`, `fetched_at` or `source_status`, `401`
+missing or bad token, `403` a user token, `404` no paper with that id.
 
 ### `GET /internal/papers/{id}/background-info/history?after_id=&limit=`
 
 Ascending order by snapshot id. Used by Updating (to read a paper's
 previous snapshot before deciding whether to nudge) and by Research
-Evaluation (to read the snapshots it works out differences from).
+Evaluation (to read the snapshots it works out differences from). Both
+parameters are optional: no `after_id` starts from the first snapshot,
+no `limit` returns them all. Each row has every snapshot field, with
+nulls written out.
+
+Errors: `400` a `limit` below 1, `401` missing or bad token, `403` a
+user token, `404` no paper with that id.
 
 ```json
 {"snapshots": [{"snapshot_id": 41, "fetched_at": "...", "...": "snapshot"}, {"snapshot_id": 42, "...": "..."}]}
