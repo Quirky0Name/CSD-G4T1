@@ -16,7 +16,7 @@ import java.util.Optional;
 
 /**
  * 
- * looksup doi and returns metadata for the paper
+ * looksup doi and returns metadata for the paper (lookup())
  */
 @Component
 public class MetadataClient {

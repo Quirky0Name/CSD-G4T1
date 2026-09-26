@@ -1,6 +1,7 @@
 # Local dev stack for Research Evaluation + Updating.
 # Brings up GROBID + Postgres (real dependencies) and both FastAPI apps.
-# Research Evaluation is still an empty stub; Updating polls on a schedule.
+# Updating polls on a schedule and nudges Research Evaluation, which stores alerts in
+# Storage Management (running on the host).
 # See ../ARCHITECTURE.md and ../SETUP.md.
 
 services:
@@ -31,6 +32,12 @@ services:
     command: ["uvicorn", "research_evaluation.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     env_file:
       - .env
+    # inside the container, localhost is the container itself
+    environment:
+      SM_BASE_URL: http://host.docker.internal:8081
+    # Linux needs this for host.docker.internal (Storage Management runs on the host)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./src:/app/src
       - re_cache:/app/cache

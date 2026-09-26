@@ -60,7 +60,6 @@ flowchart LR
    FE[React Frontend] --> UM[User Management]
    FE --> SM[Storage Management]
    UM -- JWT --> SM
-   UM -- JWT --> RE
    SM --> DB[(Postgres)]
    SM --> FILES[(Local disk - PDFs)]
    SM --> GROBID[GROBID]
@@ -102,9 +101,9 @@ touch the `users` or `folders` tables directly.
 - **Data model:** `users (id, email, password_hash, created_at)`,
   `folders (id, owner_id -> users, name, created_at)`
 - **Auth flow:** register (BCrypt hash) → login (verify hash, issue signed
-  JWT with the user's id) → every request to Storage Management or
-  Research Evaluation carries `Authorization: Bearer <token>`; those
-  services validate the signature themselves, no callback per request.
+  JWT with the user's id) → every request to Storage Management carries
+  `Authorization: Bearer <token>`; it validates the signature itself, no
+  callback per request.
 - **Frontend** (owned by this service): Vite, React Router, Axios with a
   JWT-attaching interceptor, react-hook-form + zod, Tailwind + shadcn/ui,
   React Context for auth state.
@@ -137,8 +136,9 @@ Owns all Postgres and file persistence.
   Postgres holds only the file's key. Research Evaluation reads a PDF
   through `GET /internal/papers/{id}/pdf`, never from the disk directly.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
-  `PUT /papers/{id}/notes`, `POST/GET /internal/papers/{id}/background-info`,
-  `GET /internal/papers/{id}/pdf`.
+  `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /internal/papers/{id}/background-info`,
+  `GET /internal/papers/{id}/pdf`, `POST /internal/papers/{id}/alerts`,
+  `GET /internal/papers/{id}/alerts/change-keys`.
 - **DB hosting:** Supabase free tier.
 
 ## Section 3 — Research Evaluation
@@ -156,10 +156,38 @@ journal and author fields moved to Updating (Section 4).
   **works out the differences between the snapshots itself**,
   classifies them (retraction, correction, erratum, expression of concern,
   DOAJ delisting) and produces a severity, an impact statement and a
-  recommendation. Nothing goes back to Updating. How the evaluation is
-  stored, and the change list and researcher actions (acknowledge,
-  dismiss) the frontend uses, are Research Evaluation's design and aren't
-  specified here yet.
+  recommendation. Each evaluated change is stored as an alert in Storage
+  Management (`POST /internal/papers/{id}/alerts`); Research Evaluation
+  keeps no database of its own for this, and the frontend reads and acts
+  on alerts through Storage Management.
+- **The nudge is answered after the evaluation.** Research Evaluation
+  replies `202` once every paper's alerts are stored, and `503` if any
+  paper failed, so Updating's `nudge_pending` flag (Section 4) is the
+  retry: Research Evaluation keeps no pending list or watermark. On every
+  nudge it reads each paper's newest N snapshots (`EVALUATION_SNAPSHOT_WINDOW`,
+  default 5) and runs detection on all of them (cheap). That window
+  covers a change whose nudge failed up to N − 2 times in a row; a longer
+  run of failures loses it. It then asks Storage Management which change keys
+  already have an alert and evaluates only the new changes. So a change
+  is never evaluated twice, which matters once evaluation calls an LLM,
+  and Storage Management still stores each change once (by its change
+  key) if two nudges ever overlap.
+- **Change evaluation runs in three stages** (the plan is in
+  [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md)):
+  1. **Detection** (`changes.py`): compare two consecutive snapshots and
+     list the changes, by the classification table in CONTRACTS.md.
+     Deterministic, so whether a paper was retracted never depends on an
+     LLM.
+  2. **Rule-based assessment** (`rules.py`): every change gets a severity,
+     description and recommendation from fixed templates, so every alert
+     is complete.
+  3. **LLM investigation** of the changes stage 1 can't classify (`other`):
+     a placeholder for now. Later stories (LLM meaningfulness, stance
+     checks) also revise the stage-2 assessment rather than replacing
+     detection.
+
+  So far the evaluation doesn't read the paper's PDF, notes or extracted
+  text; the templates only use the snapshots.
 - **Structured signal layer** (no reasoning, cheap): citation-neighbourhood
   metrics computed from OpenAlex reference/citation data, GROBID on the
   PDF stored in Storage Management (COI/funding text, verbatim, never
@@ -172,9 +200,11 @@ journal and author fields moved to Updating (Section 4).
   validation, both live in the demo. Provider: DeepSeek (see
   [DECISIONS.md](DECISIONS.md)). Results are cached and pre-warmed for
   the demo so a slow/failed call can't stall it.
-- **Endpoints (internal):** `POST /evaluate/changes`,
-  `POST /evaluate/background-info`, `POST /evaluate/citation-neighbourhood`,
-  `POST /evaluate/stance`.
+- **Endpoints (internal):** `POST /evaluate/changes`, called only by
+  Updating's nudge. `POST /evaluate/background-info`,
+  `POST /evaluate/citation-neighbourhood` and `POST /evaluate/stance` are
+  under review: likely internal steps of Research Evaluation's evaluation
+  rather than endpoints (see CONTRACTS.md).
 
 ## Section 4 — Updating
 

@@ -4,7 +4,9 @@
 import base64
 import binascii
 import time
+from collections.abc import Generator
 
+import httpx
 import jwt
 
 MIN_KEY_BYTES = 32
@@ -31,3 +33,18 @@ def mint_service_token(key: bytes, subject: str) -> str:
     now = int(time.time())
     claims = {"sub": subject, "role": "service", "iat": now, "exp": now + TOKEN_TTL_SECONDS}
     return jwt.encode(claims, key, algorithm="HS256")
+
+
+class ServiceTokenAuth(httpx.Auth):
+    """object to hold the key
+        mints a new JWT and attaches it to requests
+        allows for all backend services to use -> just add subject
+    """
+
+    def __init__(self, key: bytes, subject: str) -> None:
+        self._key = key
+        self._subject = subject
+
+    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response]:
+        request.headers["Authorization"] = f"Bearer {mint_service_token(self._key, self._subject)}"
+        yield request
