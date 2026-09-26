@@ -5,7 +5,6 @@ import httpx
 import pytest
 from research_evaluation_support import BASE_TIME, notice, nudge
 
-from research_evaluation import llm
 from research_evaluation.rules import assess as real_assess
 
 
@@ -61,42 +60,17 @@ async def test_each_kind_of_change_is_stored_with_its_severity(client, sm, field
     assert (alert["change_type"], alert["severity"]) == (change_type, severity)
 
 
-async def test_stage_3_is_called_for_other_changes_only_and_keeps_the_stage_2_assessment(client, sm, monkeypatch):
-    calls = []
-    placeholder = llm.investigate
-
-    def spy(change, context, assessment):
-        calls.append((change.change_type, context.paper_id, context.previous.snapshot_id, context.current.snapshot_id))
-        result = placeholder(change, context, assessment)
-        assert result == assessment  # the placeholder keeps the stage-2 assessment
-        return result
-
-    monkeypatch.setattr("research_evaluation.evaluate.llm.investigate", spy)
+async def test_an_other_change_is_stored_with_its_rule_based_assessment(client, sm):
     paper = await sm.add_paper()
-    before = await sm.add_snapshot(paper, 1)
-    after = await sm.add_snapshot(paper, 2, crossref_updates=[notice("10.1/w", "withdrawal", label="Withdrawal"),
-                                                              notice("10.1/c", "correction")])
+    await sm.add_snapshot(paper, 1)
+    await sm.add_snapshot(paper, 2, crossref_updates=[notice("10.1/w", "withdrawal", label="Withdrawal")])
 
     assert (await nudge(client, [paper])).status_code == 202
 
-    assert calls == [("other", paper, before["snapshot_id"], after["snapshot_id"])]
-    other = next(alert for alert in await sm.alerts(paper) if alert["change_type"] == "other")
-    assert other["change_key"] == "other:withdrawal:10.1/w"
-    assert "a 'Withdrawal' notice" in other["description"]
-
-
-async def test_the_stage_3_result_is_what_gets_stored(client, sm, monkeypatch):
-    def rewrite(change, context, assessment):
-        return assessment.model_copy(update={"description": "Investigated by stage 3"})
-
-    monkeypatch.setattr("research_evaluation.evaluate.llm.investigate", rewrite)
-    paper = await sm.add_paper()
-    await sm.add_snapshot(paper, 1)
-    await sm.add_snapshot(paper, 2, crossref_updates=[notice("10.1/w", "withdrawal")])
-
-    await nudge(client, [paper])
-
-    assert [alert["description"] for alert in await sm.alerts(paper)] == ["Investigated by stage 3"]
+    [alert] = await sm.alerts(paper)
+    assert (alert["change_type"], alert["severity"]) == ("other", "medium")
+    assert alert["change_key"] == "other:withdrawal:10.1/w"
+    assert "a 'Withdrawal' notice" in alert["description"]
 
 
 async def test_a_second_nudge_for_the_same_papers_stores_nothing_new(client, sm):
@@ -305,27 +279,12 @@ def assessed(monkeypatch):
     return keys
 
 
-@pytest.fixture
-def investigated(monkeypatch):
-    """Records the change key of every change stage 3 investigates."""
-    keys = []
-    placeholder = llm.investigate
-
-    def spy(change, context, assessment):
-        keys.append(change.change_key)
-        return placeholder(change, context, assessment)
-
-    monkeypatch.setattr("research_evaluation.evaluate.llm.investigate", spy)
-    return keys
-
-
-async def test_a_second_nudge_evaluates_and_stores_nothing_already_stored(client, sm, assessed, investigated):
+async def test_a_second_nudge_evaluates_and_stores_nothing_already_stored(client, sm, assessed):
     paper = await sm.add_paper()
     await sm.add_snapshot(paper, 1)
     await sm.add_snapshot(paper, 2, is_retracted=True, crossref_updates=[notice("10.1/w", "withdrawal")])
     await nudge(client, [paper])
     assessed.clear()
-    investigated.clear()
     stores_before = sm.calls("POST", "/alerts")
 
     second = await nudge(client, [paper])
@@ -333,7 +292,6 @@ async def test_a_second_nudge_evaluates_and_stores_nothing_already_stored(client
     assert second.status_code == 202
     assert second.json()["alerts_created"] == 0
     assert assessed == []
-    assert investigated == []
     assert sm.calls("POST", "/alerts") == stores_before
     assert len(await sm.alerts(paper)) == 2
 
@@ -353,17 +311,6 @@ async def test_only_a_new_change_among_stored_ones_is_evaluated_and_stored(clien
     assert assessed == ["correction:10.1/c"]
     assert sm.calls("POST", "/alerts") == stores_before + 1
     assert sorted(alert["change_key"] for alert in await sm.alerts(paper)) == ["correction:10.1/c", "retraction"]
-
-
-async def test_stage_3_is_not_called_again_for_a_stored_other_change(client, sm, investigated):
-    paper = await sm.add_paper()
-    await sm.add_snapshot(paper, 1)
-    await sm.add_snapshot(paper, 2, crossref_updates=[notice("10.1/w", "withdrawal")])
-
-    await nudge(client, [paper])
-    await nudge(client, [paper])
-
-    assert investigated == ["other:withdrawal:10.1/w"]
 
 
 async def test_the_same_change_in_two_pairs_of_one_history_is_evaluated_once(client, sm, assessed):

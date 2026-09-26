@@ -187,10 +187,13 @@ journal and author fields moved to Updating (Section 4).
   2. **Rule-based assessment** (`rules.py`): every change gets a severity,
      description and recommendation from fixed templates, so every alert
      is complete.
-  3. **LLM investigation** of the changes stage 1 can't classify (`other`):
-     a placeholder for now. Later stories (LLM meaningfulness, stance
-     checks) also revise the stage-2 assessment rather than replacing
-     detection.
+  3. **LLM evaluation** (not built yet): judges what each new change
+     means and how it affects the researcher, revising the stage-2
+     assessment rather than replacing detection. It covers every kind of
+     change, `other` included; there's no separate LLM step that first
+     classifies `other` changes and then evaluates them (DECISIONS.md,
+     2026-09-27). Until it exists, an `other` change keeps its rule-based
+     text.
 
   So far the evaluation doesn't read the paper's PDF, notes or extracted
   text; the templates only use the snapshots.

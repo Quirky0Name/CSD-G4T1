@@ -5,6 +5,32 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-27 — No separate LLM step for `other` changes
+
+### Decision
+
+- **`llm.py` and its `investigate()` placeholder are removed.** It ran only
+  for `other` changes and returned the stage-2 assessment unchanged.
+  `evaluate_paper` now runs detection, the key check, the rules and
+  storing, nothing else.
+- **The LLM evaluation stays, as one layer over every change.** It judges
+  whether a change matters and how it affects the researcher, revising the
+  stage-2 assessment. An `other` change goes through it like any other
+  change, instead of an extra layer that first works out what the `other`
+  change is and then evaluates it again.
+- **Stored alerts don't change.** An `other` change is stored as before:
+  `change_type` `other`, severity `medium`, the generic "Crossref recorded
+  a '…' notice" text.
+
+### Why
+
+- The placeholder did nothing, and its hook (`other` changes only) is the
+  wrong shape for an LLM step that covers every change.
+- "Investigation" is kept for fetching what a change is (the notice, the
+  new version of the paper), which isn't an LLM step.
+
+---
+
 ## 2026-09-26 — Researchers can keep a log of notes on an alert
 
 ### Team decisions

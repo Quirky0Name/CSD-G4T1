@@ -17,7 +17,7 @@ class ChangeType(StrEnum):
     ERRATUM = "erratum"
     EXPRESSION_OF_CONCERN = "expression_of_concern"
     DOAJ_DELISTING = "doaj_delisting"
-    OTHER = "other"  # a Crossref notice type we don't classify yet; stage 3 will investigate these
+    OTHER = "other"  # a Crossref notice type we don't classify yet; the later LLM evaluation (insight) will judge these
 
 
 # Crossref `updated-by` types with their own alert; any other type becomes OTHER

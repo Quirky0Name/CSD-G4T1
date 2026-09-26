@@ -373,14 +373,16 @@ widened, and verified: a notice listed under several types gives one alert,
 of the most severe type. That's temporary (see "Later stories", "LLM
 evaluation of all flagged changes together").
 
-The evaluation runs in three stages. This story builds stages 1 and 2 and
-leaves a placeholder for stage 3:
+The evaluation runs in three stages. This story builds stages 1 and 2.
+Stage 3 was first planned as an LLM step for `other` changes only, with a
+placeholder in `llm.py`; that placeholder was removed on 2026-09-27
+(DECISIONS.md), and stage 3 is now one LLM evaluation over every change:
 
 | Stage | Job | File | Built in |
 |---|---|---|---|
 | 1. Detection | the `if` checks: compare two snapshots field by field and list what changed | `changes.py` | this story (S4) |
 | 2. Rule-based assessment | give every change a severity, description and recommendation from fixed rules | `rules.py` | this story (S4) |
-| 3. LLM investigation | for changes stage 1 can't classify (`other`), let an LLM investigate and assess them | `llm.py` | placeholder in S5; the real thing is a later story |
+| 3. LLM evaluation | judge what each new change (`other` included) means for the researcher, revising stage 2's assessment | — | a later story |
 
 The stages don't call each other. `evaluate.py` (S5) runs them once each,
 in order, for every change, and stores the results; see S5.
@@ -389,8 +391,8 @@ in order, for every change, and stores the results; see S5.
   depend on an LLM. Stage 1 decides *that* something changed, and stages 2
   and 3 decide *what it means*.
 - Stage 2 runs on every change, so every alert always has a complete
-  assessment. Stage 3 can later revise it instead of producing one from
-  scratch.
+  assessment. The LLM evaluation can later revise it instead of producing
+  one from scratch.
 
 - **Goal:**
   - Given two consecutive snapshots, stage 1 returns the changes worth an
@@ -408,8 +410,8 @@ in order, for every change, and stores the results; see S5.
     - **A new Crossref entry of a type we don't classify** (such as
       `withdrawal`, `removal`, `partial_retraction`) is **kept, not
       dropped**, as `change_type: other`, with its raw details (Crossref
-      type, label, notice DOI, date). These are what stage 3 will
-      investigate.
+      type, label, notice DOI, date). The LLM evaluation will judge
+      them along with every other change.
   - Stage 2 gives each change a `change_key` and a rule-based severity,
     description and recommendation:
 
@@ -474,7 +476,9 @@ alert body.
     context, assessment)` function that returns the stage-2 assessment
     unchanged, and `evaluate.py` already calls it for `other` changes. The
     LLM story replaces the function's body and nothing else (see "Later
-    stories").
+    stories"). *Removed on 2026-09-27 (DECISIONS.md): the LLM evaluation
+    will cover every change, so `evaluate.py` now stores the stage-2
+    assessment directly.*
   - The evaluation has exactly two outcomes:
     - **`202`:** every paper's alerts are stored.
     - **`503`:** anything else went wrong while evaluating, so Updating
@@ -506,8 +510,8 @@ alert body.
     with the same idempotent behaviour.
 - **Files:**
   - `backend/src/research_evaluation/`: `config.py`, `auth.py`,
-    `storage.py`, `evaluate.py`, `llm.py` (the stage-3 placeholder),
-    `main.py`
+    `storage.py`, `evaluate.py`, `llm.py` (the stage-3 placeholder,
+    removed on 2026-09-27), `main.py`
   - `backend/src/common/service_token.py`: adds a `ServiceTokenAuth`
     that takes the subject. Updating's copy is left alone.
   - `backend/dev/stub_storage.py`
@@ -516,7 +520,8 @@ alert body.
 - **Verification:** integration tests against the stub and its alerts:
   - each change type, including `other`, from nudge to stored alert
   - the stage-3 placeholder is called for `other` changes only, and its
-    alerts are stored with the stage-2 assessment
+    alerts are stored with the stage-2 assessment (since 2026-09-27: an
+    `other` change is stored with its stage-2 assessment, with no stage 3)
   - repeated nudges
   - several new snapshots, each alert with the right `detected_at`
   - the baseline-only case
@@ -608,7 +613,8 @@ the other Storage Management calls.
     detection (stage 1 still runs on the whole history, since it's cheap;
     since S9, on the newest N snapshots);
   - stage 2, stage 3 and storing run only for changes whose key isn't
-    stored yet;
+    stored yet (stage 3's placeholder was removed on 2026-09-27; the LLM
+    evaluation must keep this property);
   - the stub Storage Management gets the same endpoint;
   - a failed key lookup gives `503`, like any other Storage Management
     failure.
@@ -618,7 +624,8 @@ the other Storage Management calls.
   - a re-nudge makes no store calls for known changes, and doesn't call
     stages 2 or 3 for them;
   - a new change among old ones is the only one evaluated and stored;
-  - stage 3 isn't called for an already stored `other` change;
+  - stage 3 isn't called for an already stored `other` change (test
+    removed with the placeholder on 2026-09-27);
   - a key-lookup failure gives `503`, and the retry works;
   - the existing tests still pass.
 - **Doc deltas:** CONTRACTS (the `/evaluate/changes` flow); ARCHITECTURE §3
@@ -741,12 +748,17 @@ history of status changes was considered and not wanted (DECISIONS.md,
 Not built in this story. They plug into the stages in S4 and S5 without
 changing detection or storage.
 
-### LLM investigation of unclassified changes (stage 3)
+### LLM evaluation of changes (stage 3)
 
-Replaces the body of the `investigate` placeholder in `llm.py`. For an
-`other` change, the LLM gets the change's raw details and investigates
-what it means for the researcher. The function itself is to be defined in
-that story. What's settled so far:
+First planned as an LLM step for `other` changes only, replacing the body
+of the `investigate` placeholder in `llm.py`. On 2026-09-27 the
+placeholder was removed (DECISIONS.md): the LLM evaluation is one layer
+over every new change, `other` included, with no separate layer that
+first works out what an `other` change is and then evaluates it again. It
+gets each change's raw details and judges what it means for the
+researcher (see also "LLM evaluation of all flagged changes together").
+Its hook in `evaluate.py` is to be defined in that story. What's settled
+so far:
 
 - **Structured, not open-ended.** The LLM gets a fixed brief: what to
   consider (the notice type and label, what the notice says, which
@@ -795,7 +807,8 @@ that story. What's settled so far:
 - **Stance checks:** using the LLM (`POST /evaluate/stance`) to judge
   whether the stance between two papers changed in a meaningful way.
 
-Both would revise the stage-2 assessment in the same way as stage 3, and
+Both would revise the stage-2 assessment in the same way as the LLM
+evaluation (stage 3), and
 also run after the `202`.
 
 ### LLM evaluation of all flagged changes together

@@ -3,8 +3,8 @@
 The conductor: for each paper it reads the newest N snapshots from Storage Management
 (N = EVALUATION_SNAPSHOT_WINDOW) and runs stage 1 (changes.py) on every consecutive pair.
 It then asks Storage Management which change keys already have an alert, and runs stage 2
-(rules.py), stage 3 (llm.py, for `other` changes) and storing only for the new ones, so a
-change is never evaluated twice, which matters once stage 3 calls an LLM. It keeps no
+(rules.py) and storing only for the new ones, so a change is never evaluated twice, which
+matters once the later LLM evaluation (insight) runs on them. It keeps no
 state of its own: the window covers changes whose nudge failed on earlier polls (up to
 N - 2 failed nudges in a row), and the stored keys say what's already done."""
 
@@ -16,7 +16,6 @@ from uuid import UUID
 import httpx
 from pydantic import BaseModel, ValidationError
 
-from research_evaluation import llm
 from research_evaluation.changes import Change, ChangeType, find_changes
 from research_evaluation.rules import Assessment, Severity, assess
 from research_evaluation.storage import PaperGone, snapshot_history, store_alert, stored_change_keys
@@ -71,7 +70,6 @@ async def evaluate_paper(sm: httpx.AsyncClient, paper_id: UUID, snapshot_window:
     1. detect changes (classified) - compare only N newest snapshots
         a. get all alerts for that paper to see if RE has already evaluated that change
     2. interpret what the classified changes mean
-        a. investigate changes unable to be classified (LLM -> stochastic)
     3. LLM evaluate if the change is actually meaningful and how it impacts user
     
     
@@ -79,7 +77,7 @@ async def evaluate_paper(sm: httpx.AsyncClient, paper_id: UUID, snapshot_window:
     returns how many alerts were new
     """
     detected = [
-        (llm.Context(paper_id=paper_id, previous=previous, current=current), change)
+        change
         for previous, current in pairwise(await snapshot_history(sm, paper_id, last=snapshot_window))
         for change in find_changes(previous, current)
     ]
@@ -89,14 +87,12 @@ async def evaluate_paper(sm: httpx.AsyncClient, paper_id: UUID, snapshot_window:
     # get old change keys
     evaluated = await stored_change_keys(sm, paper_id)
     created = 0
-    for context, change in detected:
+    for change in detected:
         # stored on an earlier nudge or already handled in this history 
         if change.change_key in evaluated:
             continue
         evaluated.add(change.change_key)
         assessment = assess(change)
-        if change.change_type is ChangeType.OTHER:
-            assessment = llm.investigate(change, context, assessment)
         if await store_alert(sm, paper_id, _alert(change, assessment)):
             created += 1
     return created
