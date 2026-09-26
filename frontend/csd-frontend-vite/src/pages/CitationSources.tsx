@@ -1,9 +1,80 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeftIcon, ArrowPathIcon, CalendarIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
+import {
+  ArrowLeftIcon,
+  ArrowPathIcon,
+  CalendarIcon,
+  ChevronDownIcon,
+  PlusIcon,
+} from '@heroicons/react/20/solid'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
+import CitedSourcesList, { type CitedSource } from '../components/CitedSourcesList'
+import UploadSourceDialog from '../components/UploadSourceDialog'
+
+const placeholderSources: CitedSource[] = [
+  {
+    id: 'placeholder-1',
+    title: 'A placeholder research paper',
+    doi: '10.1234/example.paper',
+    journal: 'Example Journal',
+    severity: 'High',
+    createdAt: '2026-09-26',
+  },
+  {
+    id: 'placeholder-2',
+    title: 'Another tracked source',
+    doi: '10.5678/another.source',
+    journal: 'Research Review',
+    severity: 'Medium',
+    createdAt: '2026-09-26',
+  },
+  {
+    id: 'placeholder-3',
+    title: 'Long-term outcomes in clinical research',
+    doi: '10.1000/clinical.outcomes',
+    journal: 'The Lancet',
+    severity: 'Low',
+    createdAt: '2026-09-25',
+  },
+  {
+    id: 'placeholder-4',
+    title: 'Methods for evidence-based reviews',
+    doi: '10.1000/evidence.methods',
+    journal: 'Nature Reviews',
+    severity: 'Medium',
+    createdAt: '2026-09-24',
+  },
+  {
+    id: 'placeholder-5',
+    title: 'Evaluating changes in public health data',
+    doi: '10.1000/public.health',
+    journal: 'Journal of Public Health',
+    severity: 'High',
+    createdAt: '2026-09-23',
+  },
+  {
+    id: 'placeholder-6',
+    title: 'A systematic review of emerging treatments',
+    doi: null,
+    journal: 'Medical Science Quarterly',
+    severity: 'Low',
+    createdAt: '2026-09-22',
+  },
+  {
+    id: 'placeholder-7',
+    title: 'Understanding reproducibility in science',
+    doi: '10.1000/reproducibility',
+    journal: 'Open Research Journal',
+    severity: null,
+    createdAt: '2026-09-21',
+  },
+]
 
 function CitationSources() {
   const navigate = useNavigate()
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [showPopulatedPreview, setShowPopulatedPreview] = useState(true)
+  const sources = showPopulatedPreview ? placeholderSources : []
 
   return (
     <main className="px-4 py-10 sm:px-6 lg:px-8">
@@ -69,8 +140,47 @@ function CitationSources() {
               Update now
             </button>
           </span>
+
+          <button
+            type="button"
+            onClick={() => setUploadOpen(true)}
+            aria-label="Upload PDF"
+            title="Upload PDF"
+            className="cursor-pointer rounded-full bg-indigo-500 p-2 text-white shadow-xs hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
+          >
+            <PlusIcon aria-hidden="true" className="size-5" />
+          </button>
         </div>
       </div>
+
+      <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-white/10 pt-5">
+        <span className="text-sm text-gray-400">Preview state</span>
+        <button
+          type="button"
+          onClick={() => setShowPopulatedPreview(true)}
+          className={`rounded-md px-3 py-2 text-sm font-semibold ${
+            showPopulatedPreview
+              ? 'bg-white/10 text-white'
+              : 'text-gray-400 hover:bg-white/5 hover:text-white'
+          }`}
+        >
+          Populated
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowPopulatedPreview(false)}
+          className={`rounded-md px-3 py-2 text-sm font-semibold ${
+            !showPopulatedPreview
+              ? 'bg-white/10 text-white'
+              : 'text-gray-400 hover:bg-white/5 hover:text-white'
+          }`}
+        >
+          Empty
+        </button>
+      </div>
+
+      <CitedSourcesList sources={sources} />
+      <UploadSourceDialog open={uploadOpen} onClose={() => setUploadOpen(false)} />
     </main>
   )
 }
