@@ -360,9 +360,13 @@ snapshot or change data. Updating records no changes, so **Research
 Evaluation works out the differences itself**: it reads the papers'
 snapshots from Storage Management
 (`GET /internal/papers/{id}/background-info/history`), compares every
-consecutive pair, classifies each difference and evaluates it (severity,
-description, recommendation), then stores each result as an alert in
-Storage Management. Reading the paper's non-updatable data (notes,
+consecutive pair and classifies each difference. It then asks which
+changes already have an alert (`GET /internal/papers/{id}/alerts/change-keys`,
+skipped when nothing was detected) and evaluates only the new ones
+(severity, description, recommendation), storing each as an alert in
+Storage Management. A change already stored, or one that appears in two
+pairs of the same history (e.g. the retraction flag on one poll and the
+retraction notice on a later one), is evaluated once. Reading the paper's non-updatable data (notes,
 extracted text, and the stored PDF from `GET /internal/papers/{id}/pdf`)
 is for later stories. Updating never calls this on a poll with no changes.
 

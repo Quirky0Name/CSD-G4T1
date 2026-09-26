@@ -6,6 +6,7 @@ import pytest
 from research_evaluation_support import BASE_TIME, notice, nudge
 
 from research_evaluation import llm
+from research_evaluation.rules import assess as real_assess
 
 
 def day(n: int) -> str:
@@ -285,3 +286,177 @@ async def test_one_failing_paper_does_not_stop_the_others(client, sm):
     assert response.json()["failed_paper_ids"] == [str(bad)]
     assert response.json()["alerts_created"] == 1
     assert [alert["change_type"] for alert in await sm.alerts(good)] == ["retraction"]
+
+
+# --- only changes not stored yet are evaluated ---
+
+
+@pytest.fixture
+def assessed(monkeypatch):
+    """Records the change key of every change stage 2 assesses."""
+    keys = []
+
+    def spy(change):
+        keys.append(change.change_key)
+        return real_assess(change)
+
+    monkeypatch.setattr("research_evaluation.evaluate.assess", spy)
+    return keys
+
+
+@pytest.fixture
+def investigated(monkeypatch):
+    """Records the change key of every change stage 3 investigates."""
+    keys = []
+    placeholder = llm.investigate
+
+    def spy(change, context, assessment):
+        keys.append(change.change_key)
+        return placeholder(change, context, assessment)
+
+    monkeypatch.setattr("research_evaluation.evaluate.llm.investigate", spy)
+    return keys
+
+
+async def test_a_second_nudge_evaluates_and_stores_nothing_already_stored(client, sm, assessed, investigated):
+    paper = await sm.add_paper()
+    await sm.add_snapshot(paper, 1)
+    await sm.add_snapshot(paper, 2, is_retracted=True, crossref_updates=[notice("10.1/w", "withdrawal")])
+    await nudge(client, [paper])
+    assessed.clear()
+    investigated.clear()
+    stores_before = sm.calls("POST", "/alerts")
+
+    second = await nudge(client, [paper])
+
+    assert second.status_code == 202
+    assert second.json()["alerts_created"] == 0
+    assert assessed == []
+    assert investigated == []
+    assert sm.calls("POST", "/alerts") == stores_before
+    assert len(await sm.alerts(paper)) == 2
+
+
+async def test_only_a_new_change_among_stored_ones_is_evaluated_and_stored(client, sm, assessed):
+    paper = await sm.add_paper()
+    await sm.add_snapshot(paper, 1)
+    await sm.add_snapshot(paper, 2, is_retracted=True)
+    await nudge(client, [paper])
+    await sm.add_snapshot(paper, 3, is_retracted=True, crossref_updates=[notice("10.1/c", "correction")])
+    assessed.clear()
+    stores_before = sm.calls("POST", "/alerts")
+
+    response = await nudge(client, [paper])
+
+    assert response.json()["alerts_created"] == 1
+    assert assessed == ["correction:10.1/c"]
+    assert sm.calls("POST", "/alerts") == stores_before + 1
+    assert sorted(alert["change_key"] for alert in await sm.alerts(paper)) == ["correction:10.1/c", "retraction"]
+
+
+async def test_stage_3_is_not_called_again_for_a_stored_other_change(client, sm, investigated):
+    paper = await sm.add_paper()
+    await sm.add_snapshot(paper, 1)
+    await sm.add_snapshot(paper, 2, crossref_updates=[notice("10.1/w", "withdrawal")])
+
+    await nudge(client, [paper])
+    await nudge(client, [paper])
+
+    assert investigated == ["other:withdrawal:10.1/w"]
+
+
+async def test_the_same_change_in_two_pairs_of_one_history_is_evaluated_once(client, sm, assessed):
+    # the OpenAlex flag on day 2, then the Crossref notice on day 3: both are the key `retraction`
+    paper = await sm.add_paper()
+    await sm.add_snapshot(paper, 1)
+    await sm.add_snapshot(paper, 2, is_retracted=True)
+    await sm.add_snapshot(paper, 3, is_retracted=True, crossref_updates=[notice("10.1/r", "retraction")])
+
+    response = await nudge(client, [paper])
+
+    assert response.json()["alerts_created"] == 1
+    assert assessed == ["retraction"]
+    assert sm.calls("POST", "/alerts") == 1
+    [alert] = await sm.alerts(paper)
+    assert alert["detected_at"] == day(2)
+
+
+async def test_the_stored_keys_are_read_once_per_paper(client, sm):
+    paper = await sm.add_paper()
+    await sm.add_snapshot(paper, 1)
+    await sm.add_snapshot(paper, 2, is_retracted=True)
+    await sm.add_snapshot(paper, 3, is_retracted=True, in_doaj=False)
+
+    await nudge(client, [paper])
+
+    assert sm.calls("GET", "/alerts/change-keys") == 1
+
+
+async def test_the_stored_keys_are_not_read_when_nothing_changed(client, sm):
+    baseline_only = await sm.add_paper()
+    await sm.add_snapshot(baseline_only, 1)
+    unchanged = await sm.add_paper()
+    await sm.add_snapshot(unchanged, 1)
+    await sm.add_snapshot(unchanged, 2)
+
+    response = await nudge(client, [baseline_only, unchanged])
+
+    assert response.status_code == 202
+    assert sm.calls("GET", "/alerts/change-keys") == 0
+
+
+@pytest.mark.parametrize(
+    ("fault", "cause"),
+    [
+        (500, "Storage Management answered 500"),
+        (401, "Storage Management answered 401"),
+        (httpx.ReadTimeout("slow"), "Storage Management timed out"),
+        (httpx.Response(200, json={"keys": []}), "unreadable response from Storage Management"),
+    ],
+)
+async def test_a_failed_key_lookup_gives_503_and_a_retry_stores_the_alerts(client, sm, caplog, fault, cause):
+    paper = await sm.add_paper()
+    await sm.add_snapshot(paper, 1)
+    await sm.add_snapshot(paper, 2, is_retracted=True)
+    sm.transport.faults["/alerts/change-keys"] = fault
+
+    failed = await nudge(client, [paper])
+
+    assert failed.status_code == 503
+    assert failed.json()["failed_paper_ids"] == [str(paper)]
+    assert f"evaluating paper {paper} failed: {cause}" in caplog.text
+    assert await sm.alerts(paper) == []
+
+    sm.transport.faults.clear()
+    retried = await nudge(client, [paper])
+
+    assert retried.status_code == 202
+    assert [alert["change_type"] for alert in await sm.alerts(paper)] == ["retraction"]
+
+
+async def test_a_paper_deleted_before_its_keys_are_read_is_skipped(client, sm):
+    paper = await sm.add_paper()
+    await sm.add_snapshot(paper, 1)
+    await sm.add_snapshot(paper, 2, is_retracted=True)
+    sm.transport.faults["/alerts/change-keys"] = httpx.Response(404, json={"detail": f"No paper {paper}"})
+
+    response = await nudge(client, [paper])
+
+    assert response.status_code == 202
+    assert response.json()["skipped_paper_ids"] == [str(paper)]
+    assert sm.calls("POST", "/alerts") == 0
+
+
+async def test_the_stub_lists_change_keys_like_storage_management(sm):
+    paper = await sm.add_paper()
+    unknown = uuid4()
+    for key in ["retraction", "correction:10.1/c"]:
+        alert = {"change_type": key.split(":")[0], "change_key": key, "severity": "high", "description": "d",
+                 "recommendation": "r", "detected_at": day(2), "snapshot_id": 2, "previous_snapshot_id": 1}
+        assert (await sm.client.post(f"/internal/papers/{paper}/alerts", json=alert)).status_code == 201
+
+    listed = await sm.client.get(f"/internal/papers/{paper}/alerts/change-keys")
+    missing = await sm.client.get(f"/internal/papers/{unknown}/alerts/change-keys")
+
+    assert listed.json() == {"change_keys": ["correction:10.1/c", "retraction"]}
+    assert (missing.status_code, missing.json()["detail"]) == (404, f"No paper {unknown}")

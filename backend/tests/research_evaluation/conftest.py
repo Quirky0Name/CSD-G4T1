@@ -15,13 +15,17 @@ from research_evaluation.storage import SERVICE_SUBJECT, sm_client
 
 class FaultInjectingTransport(httpx.AsyncBaseTransport):
     """Makes Storage Management's `/internal/**` endpoints fail for requests whose path ends
-    with a given suffix. The stub-only `/dev/**` helpers the tests read with never fail."""
+    with a given suffix, and records every `/internal/**` request. The stub-only `/dev/**`
+    helpers the tests read with never fail and aren't recorded."""
 
     def __init__(self, inner: httpx.AsyncBaseTransport) -> None:
         self._inner = inner
         self.faults: dict[str, int | httpx.Response | Exception] = {}
+        self.requests: list[tuple[str, str]] = []  # (method, path)
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        if request.url.path.startswith("/internal/"):
+            self.requests.append((request.method, request.url.path))
         for suffix, fault in self.faults.items():
             if request.url.path.startswith("/internal/") and request.url.path.endswith(suffix):
                 if isinstance(fault, Exception):
@@ -55,6 +59,10 @@ class StubSm:
 
     async def alerts(self, paper_id: UUID) -> list[dict]:
         return (await self.client.get(f"/dev/papers/{paper_id}/alerts")).json()
+
+    def calls(self, method: str, suffix: str) -> int:
+        """How many `/internal/**` requests with this method and path ending were made."""
+        return sum(1 for m, path in self.transport.requests if m == method and path.endswith(suffix))
 
 
 @pytest.fixture

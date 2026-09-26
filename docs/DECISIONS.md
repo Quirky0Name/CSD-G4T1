@@ -5,6 +5,42 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-26 — Only changes not stored yet are evaluated
+
+### Team decisions
+
+- **Research Evaluation checks which changes already have an alert before
+  evaluating.** It still detects changes over the paper's whole snapshot
+  history on every nudge (cheap, in memory, and it's what catches a change
+  whose nudge failed earlier), then asks Storage Management for the
+  paper's stored change keys (`GET /internal/papers/{id}/alerts/change-keys`)
+  and runs the assessment, stage 3 and storing only for changes whose key
+  isn't there. Before this, every nudge re-assessed every old change and
+  re-posted it (Storage Management answered `200` and stored nothing).
+  That was cheap with rule-based templates, but the evaluation is meant to
+  move to an LLM, and re-evaluating old changes would then re-pay for the
+  same LLM calls on every nudge.
+- **The lookup is skipped when detection finds nothing,** so a nudge for a
+  paper with no changes costs one request, as before.
+- **A change key that appears in two pairs of one history is evaluated
+  once, keeping the earlier pair's change.** For example, OpenAlex's
+  retraction flag on one poll and Crossref's retraction notice on a later
+  one are both `retraction`. This matches what Storage Management kept
+  before (the first alert for a key), so the stored alert may lack the
+  notice DOI when the flag came first.
+- **A failed lookup is a failure like any other** (`503`, and Updating
+  re-sends), and a "No paper" `404` from it skips the paper, like the
+  other Storage Management calls.
+
+### Known limit
+
+Two nudges for the same paper arriving at the same moment can both see no
+stored key and both evaluate a new change. Storage Management's unique
+change key still stores only one alert. If LLM cost ever makes that
+matter, the LLM step can run only for alerts that came back `201`.
+
+---
+
 ## 2026-09-26 — Research Evaluation is called only by Updating's nudge
 
 ### Team decisions

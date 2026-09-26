@@ -1,10 +1,11 @@
 """Change evaluation for Updating's nudge (docs/EVALUATION-REVIEW-CHANGES.md, S5).
 
-The conductor: for each paper it reads the snapshot history from Storage Management,
-runs stage 1 (changes.py) on every consecutive pair, stage 2 (rules.py) on every change
-and stage 3 (llm.py) on the `other` changes, then stores each alert in Storage
-Management. It keeps no state of its own: re-reading the full history on every nudge is
-safe because Storage Management stores an alert once per change key."""
+The conductor: for each paper it reads the snapshot history from Storage Management and
+runs stage 1 (changes.py) on every consecutive pair. It then asks Storage Management
+which change keys already have an alert, and runs stage 2 (rules.py), stage 3 (llm.py,
+for `other` changes) and storing only for the new ones, so a change is never evaluated
+twice, which matters once stage 3 calls an LLM. It keeps no state of its own: detection
+over the whole history is cheap, and the stored keys say what's already done."""
 
 import logging
 from datetime import datetime
@@ -17,7 +18,7 @@ from pydantic import BaseModel, ValidationError
 from research_evaluation import llm
 from research_evaluation.changes import Change, ChangeType, find_changes
 from research_evaluation.rules import Assessment, Severity, assess
-from research_evaluation.storage import PaperGone, snapshot_history, store_alert
+from research_evaluation.storage import PaperGone, snapshot_history, store_alert, stored_change_keys
 
 log = logging.getLogger(__name__)
 
@@ -66,19 +67,33 @@ async def evaluate_papers(sm: httpx.AsyncClient, paper_ids: list[UUID]) -> Evalu
 
 async def evaluate_paper(sm: httpx.AsyncClient, paper_id: UUID) -> int:
     """
-    1. gets changes (classified)
-    2. assess those changes: interpret what the classified changes mean
-    3. investigate those changes (LLM -> stochastic)
+    1. gets changes (classified) from the whole history
+    2. skips the changes SM already has an alert for (evaluated on an earlier nudge)
+    3. assess the new changes: interpret what the classified changes mean
+    4. investigate the new `other` changes (LLM -> stochastic)
+    returns how many alerts were new
     """
+    detected = [
+        (llm.Context(paper_id=paper_id, previous=previous, current=current), change)
+        for previous, current in pairwise(await snapshot_history(sm, paper_id))
+        for change in find_changes(previous, current)
+    ]
+    # nothing to evaluate, so no need to ask SM what's stored
+    if not detected:
+        return 0  
+    # get old change keys
+    evaluated = await stored_change_keys(sm, paper_id)
     created = 0
-    for previous, current in pairwise(await snapshot_history(sm, paper_id)):
-        context = llm.Context(paper_id=paper_id, previous=previous, current=current)
-        for change in find_changes(previous, current):
-            assessment = assess(change)
-            if change.change_type is ChangeType.OTHER:
-                assessment = llm.investigate(change, context, assessment)
-            if await store_alert(sm, paper_id, _alert(change, assessment)):
-                created += 1
+    for context, change in detected:
+        # stored on an earlier nudge or already handled in this history 
+        if change.change_key in evaluated:
+            continue
+        evaluated.add(change.change_key)
+        assessment = assess(change)
+        if change.change_type is ChangeType.OTHER:
+            assessment = llm.investigate(change, context, assessment)
+        if await store_alert(sm, paper_id, _alert(change, assessment)):
+            created += 1
     return created
 
 

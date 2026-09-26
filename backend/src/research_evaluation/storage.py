@@ -1,6 +1,7 @@
 """
 handle communitcation with SM
 - GET snapshot history
+- GET change keys already stored (the changes evaluated on earlier nudges)
 - POST alerts
 
 handle HTTP codes
@@ -29,6 +30,12 @@ class _History(BaseModel):
     snapshots: list[Snapshot]
 
 
+class _ChangeKeys(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    change_keys: list[str]
+
+
 def sm_client(request: Request) -> httpx.AsyncClient:
     """return SM client that was created at startup"""
     # request.app returns the app handling the request 
@@ -42,6 +49,13 @@ async def snapshot_history(http: httpx.AsyncClient, paper_id: UUID) -> list[Snap
     # turn json body into python objects (BaseModel wrapper)
     history = _History.model_validate(response.json())
     return sorted(history.snapshots, key=lambda snapshot: snapshot.snapshot_id)
+
+
+async def stored_change_keys(http: httpx.AsyncClient, paper_id: UUID) -> set[str]:
+    """the change keys SM already has an alert for: changes evaluated on an earlier nudge"""
+    response = await http.get(f"/internal/papers/{paper_id}/alerts/change-keys")
+    _raise_for_status(response, paper_id)
+    return set(_ChangeKeys.model_validate(response.json()).change_keys)
 
 
 async def store_alert(http: httpx.AsyncClient, paper_id: UUID, alert: dict[str, Any]) -> bool:

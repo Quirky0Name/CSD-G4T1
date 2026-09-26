@@ -141,6 +141,12 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
         row = stored[alert.change_key]
         return {key: value for key, value in row.items() if key not in INTERNAL_ALERT_FIELDS}
 
+    @internal.get("/papers/{paper_id}/alerts/change-keys")
+    def change_keys(paper_id: UUID) -> dict[str, list[str]]:
+        """Every change key stored for the paper, sorted, as in Storage Management."""
+        find_paper(paper_id)
+        return {"change_keys": sorted(store.alerts.get(paper_id, {}))}
+
     dev = APIRouter(prefix="/dev")
 
     @dev.get("/papers/{paper_id}/alerts")

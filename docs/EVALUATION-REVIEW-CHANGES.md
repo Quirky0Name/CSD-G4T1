@@ -1,6 +1,6 @@
 # Seeing and reviewing paper changes (plan)
 
-**Status: in progress** (S1–S7 done and verified; S8 planned). Work happens on
+**Status: built** (S1–S8 done and verified). Work happens on
 `feat/eval-reviewing-changes`. As each subtask is built and verified, the
 parts of it that change a contract or a decision move into CONTRACTS.md,
 ARCHITECTURE.md and DECISIONS.md, and the subtask is marked done below.
@@ -569,7 +569,12 @@ old change in the paper's history.
 
 ### S8: Research Evaluation evaluates only new changes
 
-**Status: planned.**
+**Status: done, verified (PASS).** Decided while building it, all in
+DECISIONS.md ("2026-09-26 — Only changes not stored yet are evaluated"):
+the key lookup is skipped when detection finds nothing; a change key that
+appears in two pairs of one history is evaluated once, keeping the earlier
+pair's change; a "No paper" `404` from the lookup skips the paper, like
+the other Storage Management calls.
 
 - **Goal:**
   - `evaluate_paper` fetches the paper's stored change keys once, after
@@ -631,6 +636,14 @@ that story. What's settled so far:
   a new internal endpoint (such as `PATCH /internal/alerts/{id}`) and a
   new Flyway migration for the added columns (such as the proposal, its
   sources and its validation status).
+- **Only new changes reach it.** Since S8, Research Evaluation checks
+  which change keys already have an alert before evaluating, so an LLM
+  stage never re-investigates a change on a later nudge. Keep that
+  property: an LLM stage must run only for changes that weren't stored
+  yet. Two nudges for the same paper arriving at the same moment could
+  still both evaluate a new change (only one alert is stored); if that
+  ever matters for LLM cost, the LLM step can instead run only for alerts
+  that came back `201`.
 - **Updating only nudges on the four known signals,** so an unclassified
   Crossref type on its own never reaches Research Evaluation today. It is
   only seen when it arrives in the same poll as a known change. To catch
