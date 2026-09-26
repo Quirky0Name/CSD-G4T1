@@ -66,14 +66,14 @@ function CitedSourcesList({ sources }: CitedSourcesListProps) {
                 </MenuButton>
                 <MenuItems
                   transition
-                  className="absolute right-0 z-10 mt-0.5 w-32 origin-top-right rounded-md bg-gray-800 py-2 shadow-lg outline outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
+                  className="absolute right-0 z-10 mt-0.5 w-36 origin-top-right rounded-md bg-gray-800 py-2 shadow-lg outline outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
                 >
                   <MenuItem>
                     <button
                       type="button"
                       className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
                     >
-                      View<span className="sr-only">, {source.title}</span>
+                      Refresh check<span className="sr-only">, {source.title}</span>
                     </button>
                   </MenuItem>
                   <MenuItem>
@@ -81,7 +81,7 @@ function CitedSourcesList({ sources }: CitedSourcesListProps) {
                       type="button"
                       className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
                     >
-                      Remove<span className="sr-only">, {source.title}</span>
+                      Delete<span className="sr-only">, {source.title}</span>
                     </button>
                   </MenuItem>
                 </MenuItems>
@@ -111,8 +111,11 @@ function CitedSourcesList({ sources }: CitedSourcesListProps) {
                 {source.severity} severity
               </button>
             ) : (
-              <div className="absolute top-4 right-4 inline-flex items-center gap-x-1.5 text-xs font-medium text-emerald-400">
-                <CheckCircleIcon aria-hidden="true" className="size-4" />
+              <div
+                title="No changes detected since last check"
+                className="absolute -top-2 right-3 z-10 inline-flex items-center gap-x-1.5 rounded-full bg-gray-900/95 px-2 py-1 text-[11px] font-medium text-gray-400 shadow-md inset-ring inset-ring-white/10"
+              >
+                <CheckCircleIcon aria-hidden="true" className="size-3 text-emerald-500/80" />
                 No recent changes
               </div>
             )}
