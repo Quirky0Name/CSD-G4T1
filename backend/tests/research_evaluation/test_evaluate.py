@@ -460,3 +460,83 @@ async def test_the_stub_lists_change_keys_like_storage_management(sm):
 
     assert listed.json() == {"change_keys": ["correction:10.1/c", "retraction"]}
     assert (missing.status_code, missing.json()["detail"]) == (404, f"No paper {unknown}")
+
+
+# --- only the newest N snapshots are compared (EVALUATION_SNAPSHOT_WINDOW, default 5) ---
+
+
+async def add_history(sm, days: int, correction_on: int | None = None, retracted_on: int | None = None):
+    """A paper with a snapshot on each of `days` days; a correction notice from `correction_on`
+    and the retraction flag from `retracted_on` onwards (both stay in later snapshots)."""
+    paper = await sm.add_paper()
+    for n in range(1, days + 1):
+        fields = {}
+        if correction_on is not None and n >= correction_on:
+            fields["crossref_updates"] = [notice("10.1/c", "correction")]
+        if retracted_on is not None and n >= retracted_on:
+            fields["is_retracted"] = True
+        await sm.add_snapshot(paper, n, **fields)
+    return paper
+
+
+async def test_the_history_request_asks_for_the_newest_window(client, sm):
+    paper = await add_history(sm, days=2, retracted_on=2)
+
+    await nudge(client, [paper])
+
+    assert sm.queries("GET", "/background-info/history") == ["last=5"]
+
+
+async def test_a_change_older_than_the_window_is_not_seen(client, sm):
+    # 7 snapshots, window 5 → only snapshots 3..7 are compared: the correction (2 → 3) is out
+    paper = await add_history(sm, days=7, correction_on=3, retracted_on=7)
+
+    response = await nudge(client, [paper])
+
+    assert response.json()["alerts_created"] == 1
+    assert [alert["change_key"] for alert in await sm.alerts(paper)] == ["retraction"]
+
+
+@pytest.mark.parametrize("settings", [6], indirect=True)
+async def test_a_bigger_window_reaches_further_back(client, sm):
+    # window 6 → snapshots 2..7 are compared, so the correction (2 → 3) is seen
+    paper = await add_history(sm, days=7, correction_on=3, retracted_on=7)
+
+    response = await nudge(client, [paper])
+
+    assert sm.queries("GET", "/background-info/history") == ["last=6"]
+    assert response.json()["alerts_created"] == 2
+    assert sorted(alert["change_key"] for alert in await sm.alerts(paper)) == ["correction:10.1/c", "retraction"]
+
+
+@pytest.mark.parametrize("settings", [2], indirect=True)
+async def test_the_smallest_window_compares_only_the_last_pair(client, sm):
+    paper = await add_history(sm, days=3, correction_on=2, retracted_on=3)
+
+    await nudge(client, [paper])
+
+    assert [alert["change_key"] for alert in await sm.alerts(paper)] == ["retraction"]
+
+
+@pytest.mark.parametrize(("polls_after_the_change", "caught"), [(3, True), (4, False)])
+async def test_a_change_is_caught_up_after_at_most_n_minus_2_failed_nudges(client, sm, polls_after_the_change, caught):
+    # the retraction appears on day 2; each later day is a poll whose nudge failed; window 5
+    paper = await add_history(sm, days=2 + polls_after_the_change, retracted_on=2)
+
+    await nudge(client, [paper])
+
+    assert [alert["change_key"] for alert in await sm.alerts(paper)] == (["retraction"] if caught else [])
+
+
+async def test_the_stub_returns_the_newest_n_snapshots_oldest_first(sm):
+    paper = await sm.add_paper()
+    ids = [(await sm.add_snapshot(paper, n))["snapshot_id"] for n in range(1, 5)]
+    url = f"/internal/papers/{paper}/background-info/history"
+
+    def snapshot_ids(response):
+        return [row["snapshot_id"] for row in response.json()["snapshots"]]
+
+    assert snapshot_ids(await sm.client.get(url, params={"last": 2})) == ids[-2:]
+    assert snapshot_ids(await sm.client.get(url, params={"last": 10})) == ids
+    assert snapshot_ids(await sm.client.get(url)) == ids
+    assert (await sm.client.get(url, params={"last": 0})).status_code == 422

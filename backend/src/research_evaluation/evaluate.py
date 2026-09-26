@@ -1,11 +1,12 @@
 """Change evaluation for Updating's nudge (docs/EVALUATION-REVIEW-CHANGES.md, S5).
 
-The conductor: for each paper it reads the snapshot history from Storage Management and
-runs stage 1 (changes.py) on every consecutive pair. It then asks Storage Management
-which change keys already have an alert, and runs stage 2 (rules.py), stage 3 (llm.py,
-for `other` changes) and storing only for the new ones, so a change is never evaluated
-twice, which matters once stage 3 calls an LLM. It keeps no state of its own: detection
-over the whole history is cheap, and the stored keys say what's already done."""
+The conductor: for each paper it reads the newest N snapshots from Storage Management
+(N = EVALUATION_SNAPSHOT_WINDOW) and runs stage 1 (changes.py) on every consecutive pair.
+It then asks Storage Management which change keys already have an alert, and runs stage 2
+(rules.py), stage 3 (llm.py, for `other` changes) and storing only for the new ones, so a
+change is never evaluated twice, which matters once stage 3 calls an LLM. It keeps no
+state of its own: the window covers changes whose nudge failed on earlier polls (up to
+N - 2 failed nudges in a row), and the stored keys say what's already done."""
 
 import logging
 from datetime import datetime
@@ -43,7 +44,7 @@ class EvaluationResult(BaseModel):
     failed_paper_ids: list[UUID]
 
 
-async def evaluate_papers(sm: httpx.AsyncClient, paper_ids: list[UUID]) -> EvaluationResult:
+async def evaluate_papers(sm: httpx.AsyncClient, paper_ids: list[UUID], snapshot_window: int) -> EvaluationResult:
     """eval all papers
     saved failed to reply Updating"""
     created = 0
@@ -52,7 +53,7 @@ async def evaluate_papers(sm: httpx.AsyncClient, paper_ids: list[UUID]) -> Evalu
     # a repeated id is evaluated once
     for paper_id in dict.fromkeys(paper_ids):  
         try:
-            created += await evaluate_paper(sm, paper_id)
+            created += await evaluate_paper(sm, paper_id, snapshot_window)
         except PaperGone:
             log.info("skipping paper %s: Storage Management has no such paper", paper_id)
             skipped.append(paper_id)
@@ -65,17 +66,21 @@ async def evaluate_papers(sm: httpx.AsyncClient, paper_ids: list[UUID]) -> Evalu
     return EvaluationResult(alerts_created=created, skipped_paper_ids=skipped, failed_paper_ids=failed)
 
 
-async def evaluate_paper(sm: httpx.AsyncClient, paper_id: UUID) -> int:
+async def evaluate_paper(sm: httpx.AsyncClient, paper_id: UUID, snapshot_window: int) -> int:
     """
-    1. gets changes (classified) from the whole history
-    2. skips the changes SM already has an alert for (evaluated on an earlier nudge)
-    3. assess the new changes: interpret what the classified changes mean
-    4. investigate the new `other` changes (LLM -> stochastic)
+    1. detect changes (classified) - compare only N newest snapshots
+        a. get all alerts for that paper to see if RE has already evaluated that change
+    2. interpret what the classified changes mean
+        investigate changes unable to be classified (LLM -> stochastic)
+    3. LLM evaluate if the change is actually meaningful and how it impacts user
+    
+    
+    store each new change as an alert in SM
     returns how many alerts were new
     """
     detected = [
         (llm.Context(paper_id=paper_id, previous=previous, current=current), change)
-        for previous, current in pairwise(await snapshot_history(sm, paper_id))
+        for previous, current in pairwise(await snapshot_history(sm, paper_id, last=snapshot_window))
         for change in find_changes(previous, current)
     ]
     # nothing to evaluate, so no need to ask SM what's stored

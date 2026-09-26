@@ -42,9 +42,10 @@ def sm_client(request: Request) -> httpx.AsyncClient:
     return request.app.state.sm
 
 
-async def snapshot_history(http: httpx.AsyncClient, paper_id: UUID) -> list[Snapshot]:
-    """get all snapshot of the paper (oldest first) from SM"""
-    response = await http.get(f"/internal/papers/{paper_id}/background-info/history")
+async def snapshot_history(http: httpx.AsyncClient, paper_id: UUID, last: int) -> list[Snapshot]:
+    """get the newest last N snapshots of the paper (oldest first) from SM
+    last = snapshot window"""
+    response = await http.get(f"/internal/papers/{paper_id}/background-info/history", params={"last": last})
     _raise_for_status(response, paper_id)
     # turn json body into python objects (BaseModel wrapper)
     history = _History.model_validate(response.json())

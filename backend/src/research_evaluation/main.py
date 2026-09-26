@@ -9,7 +9,7 @@ from typing import Annotated
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, Depends, FastAPI
+from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -30,14 +30,23 @@ class ChangesNudge(BaseModel):
 router = APIRouter()
 
 
+def snapshot_window(request: Request) -> int:
+    """EVALUATION_SNAPSHOT_WINDOW, stored at startup (tests override this)
+    number of snapshots to look back on
+        for when RE fails after nudge -> check again in next nudge"""
+    return request.app.state.snapshot_window
+
+
 @router.post("/evaluate/changes", status_code=202, dependencies=[Depends(require_service_token)])
 async def evaluate_changes(
-    nudge: ChangesNudge, sm: Annotated[httpx.AsyncClient, Depends(sm_client)]
+    nudge: ChangesNudge,
+    sm: Annotated[httpx.AsyncClient, Depends(sm_client)],
+    window: Annotated[int, Depends(snapshot_window)],
 ) -> EvaluationResult:
     """202 once every paper's alerts are stored
     503 if any paper failed, so Updating keeps
     its `nudge_pending` flag and re-sends the ids on its next poll."""
-    result = await evaluate_papers(sm, nudge.paper_ids)
+    result = await evaluate_papers(sm, nudge.paper_ids, window)
     if result.failed_paper_ids:
         return JSONResponse(
             status_code=503,
@@ -66,6 +75,7 @@ def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
         ) as sm:
             app.state.jwt_key = key
             app.state.sm = sm
+            app.state.snapshot_window = config.evaluation_snapshot_window
             yield
 
     app = FastAPI(title="Research Evaluation", lifespan=lifespan)

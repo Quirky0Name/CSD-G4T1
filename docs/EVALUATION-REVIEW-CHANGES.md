@@ -1,6 +1,6 @@
 # Seeing and reviewing paper changes (plan)
 
-**Status: built** (S1–S8 done and verified). Work happens on
+**Status: built** (S1–S9 done and verified). Work happens on
 `feat/eval-reviewing-changes`. As each subtask is built and verified, the
 parts of it that change a contract or a decision move into CONTRACTS.md,
 ARCHITECTURE.md and DECISIONS.md, and the subtask is marked done below.
@@ -438,7 +438,7 @@ alert body.
     gets `401`, a bad body gets `422`.
   - `evaluate.py` runs the stages. For each paper id:
     1. read the paper's **full** snapshot history from Storage
-       Management;
+       Management (since S9: only the newest N snapshots);
     2. run stage 1 on every consecutive pair (the first snapshot is only a
        baseline);
     3. run stage 2 on every change, then stage 3 on the `other` changes;
@@ -578,7 +578,8 @@ the other Storage Management calls.
 
 - **Goal:**
   - `evaluate_paper` fetches the paper's stored change keys once, after
-    detection (stage 1 still runs on the whole history, since it's cheap);
+    detection (stage 1 still runs on the whole history, since it's cheap;
+    since S9, on the newest N snapshots);
   - stage 2, stage 3 and storing run only for changes whose key isn't
     stored yet;
   - the stub Storage Management gets the same endpoint;
@@ -597,6 +598,50 @@ the other Storage Management calls.
   (check, then evaluate); DECISIONS (why: future LLM stages must never
   re-evaluate a stored change); this plan (S8 done, and a note under
   "Later stories" that the LLM stages rely on it).
+
+### S9: Evaluate only the newest N snapshots (a setting, default 5)
+
+**Status: done, verified (PASS).**
+
+- **Goal:**
+  - A new Research Evaluation setting, `EVALUATION_SNAPSHOT_WINDOW`,
+    default `5`, minimum `2` (one pair). Startup fails on anything
+    smaller.
+  - Research Evaluation asks Storage Management for only the newest N
+    snapshots, still oldest first, and runs detection on those. The key
+    check (S8) and everything after it are unchanged.
+  - The history endpoint gains a `last=N` query parameter. Research
+    Evaluation sends it; the stub implements it. No Java code: the Java
+    endpoint isn't built yet (CG-68, see "TODO for other owners").
+- **The limit it sets:** a change is found as long as a nudge gets through
+  within N − 2 failed nudges in a row. With N = 5 and the default 24-hour
+  poll, that's about 3 days of failures; after that the change is lost.
+  Raise N before deployment.
+- **Files:**
+  - `backend/src/research_evaluation/`: `config.py` (the setting),
+    `main.py` (stored at startup, given to the endpoint), `evaluate.py`,
+    `storage.py` (sends `last`)
+  - `backend/dev/stub_storage.py` (`last`), `backend/.env.example`
+  - `backend/tests/research_evaluation/`: `conftest.py`, `test_config.py`,
+    `test_evaluate.py`
+- **Verification:**
+  - with N = 5, a change 5 or more pairs back isn't detected, and a newer
+    one is;
+  - a different configured N moves that boundary (N = 6, and N = 2 for
+    the last pair only);
+  - a change is caught after 3 failed nudges and missed after 4, with
+    N = 5;
+  - the request carries `last=N`;
+  - the default is 5, an env var overrides it, and 1, 0, a negative number
+    or a non-number is rejected, including at startup;
+  - the stub's `last` returns the newest N, oldest first;
+  - all existing tests still pass.
+- **Doc deltas:** CONTRACTS (`last`, and the order `after_id`, then
+  `last`, then `limit`; the `/evaluate/changes` flow and its limit);
+  ARCHITECTURE §3; DECISIONS ("Research Evaluation compares only the
+  newest N snapshots", plus pointers from the entries that said "whole
+  history"); SETUP (the env var); this plan (S9, and `last` in Amir's
+  TODO).
 
 ## Later stories
 
@@ -740,10 +785,14 @@ idempotently. Left for later:
   `POST /internal/papers/{id}/background-info` and
   `GET /internal/papers/{id}/background-info/history`, with the
   `background_metadata` table, as in CONTRACTS.md. Research Evaluation
-  depends on the history read: all snapshots, oldest first, as
-  `{"snapshots": [...]}`, with no default page size, and `404` with
-  `detail` exactly `No paper <id>` for an unknown paper. Until then the
-  whole flow only works against the stub.
+  depends on the history read: snapshots oldest first, as
+  `{"snapshots": [...]}`, with no default page size; the `last=N`
+  parameter (only the newest N, still oldest first; applied after
+  `after_id` and before `limit`), which Research Evaluation sends on every
+  nudge; and `404` with `detail` exactly `No paper <id>` for an unknown
+  paper. If `last` were left out, Spring would ignore it and return the
+  whole history: the same alerts, but the window would have no effect.
+  Until the endpoint exists, the whole flow only works against the stub.
 
 - [ ] **Zhuo En (Updating): send a service token with the nudge.** The
   nudge on `main` (cg-43) calls `POST /evaluate/changes` with no token:

@@ -74,6 +74,7 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
 | `ADMIN_API_KEY` | any value you pick and share with the team, for `/admin/run-poll` |
 | `POLL_INTERVAL_HOURS` | `24` (default) |
 | `CACHE_MAX_ENTRIES` | `5000` (default) |
+| `EVALUATION_SNAPSHOT_WINDOW` | `5` (default), at least `2`: how many of a paper's newest snapshots Research Evaluation compares on each nudge. A change is missed if its nudge keeps failing for more than N − 2 polls in a row; raise it (e.g. `30`) before deployment |
 
 ## Scaffolding only (no keys needed)
 
@@ -130,9 +131,11 @@ summary is in Updating's `poll_runs` table.
 ## Running Research Evaluation locally (stub Storage Management)
 
 Research Evaluation needs only `JWT_SECRET` (the same value as the stub and
-Updating) and `SM_BASE_URL` (default `http://localhost:8081`). It keeps no
-database. It reads `.env` from the directory it's started in, so start it
-from `backend/`. It refuses to start without a valid `JWT_SECRET`.
+Updating) and `SM_BASE_URL` (default `http://localhost:8081`), plus the
+optional `EVALUATION_SNAPSHOT_WINDOW` (default `5`, see the table above).
+It keeps no database. It reads `.env` from the directory it's started in,
+so start it from `backend/`. It refuses to start without a valid
+`JWT_SECRET`, or with a window below `2`.
 
 ```
 # terminal 1: the stub on 8081, as above

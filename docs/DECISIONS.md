@@ -5,6 +5,43 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-26 — Research Evaluation compares only the newest N snapshots
+
+### Team decisions
+
+- **Each nudge compares only the paper's newest N snapshots,** N being the
+  Research Evaluation setting `EVALUATION_SNAPSHOT_WINDOW` (default 5,
+  minimum 2, i.e. one pair). It asks Storage Management for them with a
+  new `last=N` parameter on the history endpoint, so only those snapshots
+  are read, not the whole history, which grows by one row per paper per
+  poll for as long as the paper is tracked.
+- **Why not only the last pair:** older pairs matter when a nudge failed.
+  If Research Evaluation or Storage Management fails a nudge, Updating
+  keeps its flag and re-sends on the next poll, by which time a newer
+  snapshot exists and the change is no longer in the last pair. Looking at
+  the last pair only would reply `202` for a retry, Updating would clear
+  its flag, and the change would never become an alert.
+
+### The limit this sets
+
+A change is still found as long as a nudge gets through within
+**N − 2 failed nudges in a row**. With N = 5 and the default 24-hour poll,
+that's 3 failed nudges, about 3 days of Research Evaluation or Storage
+Management failing the nudge. After more, the change has left the window
+and is lost, silently. 5 is a starting value; raise it (e.g. to 30)
+before deployment. A bigger N costs only a larger read per nudge, since
+changes already stored are skipped before evaluation.
+
+### Consequences
+
+- The history endpoint's contract gains `last` (CONTRACTS.md). The Java
+  endpoint isn't built yet (CG-68); until it implements `last`, it would
+  return the whole history, which gives the same alerts with more to read.
+- The window is a Research Evaluation setting only (SETUP.md). Updating
+  reads the history on its own terms.
+
+---
+
 ## 2026-09-26 — Only changes not stored yet are evaluated
 
 ### Team decisions
@@ -12,7 +49,8 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 - **Research Evaluation checks which changes already have an alert before
   evaluating.** It still detects changes over the paper's whole snapshot
   history on every nudge (cheap, in memory, and it's what catches a change
-  whose nudge failed earlier), then asks Storage Management for the
+  whose nudge failed earlier; since narrowed to the newest N snapshots,
+  see the entry above), then asks Storage Management for the
   paper's stored change keys (`GET /internal/papers/{id}/alerts/change-keys`)
   and runs the assessment, stage 3 and storing only for changes whose key
   isn't there. Before this, every nudge re-assessed every old change and
@@ -207,7 +245,8 @@ in [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md).
   to prevent that, i.e. its own database. Replying after the evaluation,
   with `503` on any failure, makes Updating's existing flag the retry.
   Re-reading the full history on every nudge is safe because storing an
-  alert is idempotent. The cost is that Updating waits: a few Storage
+  alert is idempotent (narrowed to the newest N snapshots on 2026-09-26,
+  "Research Evaluation compares only the newest N snapshots"). The cost is that Updating waits: a few Storage
   Management calls per paper while the evaluation is rule-based. The LLM
   stages (later stories) are too slow for this and will run after the
   reply, updating alerts that are already stored.

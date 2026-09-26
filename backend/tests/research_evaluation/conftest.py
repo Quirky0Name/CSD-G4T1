@@ -8,8 +8,8 @@ from support import TEST_JWT_KEY, TEST_JWT_SECRET
 from common.service_token import ServiceTokenAuth
 from dev.stub_storage import create_app as create_stub_app
 from research_evaluation.auth import jwt_key
-from research_evaluation.config import ResearchEvaluationSettings
-from research_evaluation.main import create_app
+from research_evaluation.config import DEFAULT_SNAPSHOT_WINDOW, ResearchEvaluationSettings
+from research_evaluation.main import create_app, snapshot_window
 from research_evaluation.storage import SERVICE_SUBJECT, sm_client
 
 
@@ -21,11 +21,11 @@ class FaultInjectingTransport(httpx.AsyncBaseTransport):
     def __init__(self, inner: httpx.AsyncBaseTransport) -> None:
         self._inner = inner
         self.faults: dict[str, int | httpx.Response | Exception] = {}
-        self.requests: list[tuple[str, str]] = []  # (method, path)
+        self.requests: list[tuple[str, str, str]] = []  # (method, path, query string)
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
         if request.url.path.startswith("/internal/"):
-            self.requests.append((request.method, request.url.path))
+            self.requests.append((request.method, request.url.path, str(request.url.params)))
         for suffix, fault in self.faults.items():
             if request.url.path.startswith("/internal/") and request.url.path.endswith(suffix):
                 if isinstance(fault, Exception):
@@ -62,7 +62,11 @@ class StubSm:
 
     def calls(self, method: str, suffix: str) -> int:
         """How many `/internal/**` requests with this method and path ending were made."""
-        return sum(1 for m, path in self.transport.requests if m == method and path.endswith(suffix))
+        return sum(1 for m, path, _ in self.transport.requests if m == method and path.endswith(suffix))
+
+    def queries(self, method: str, suffix: str) -> list[str]:
+        """The query strings of the `/internal/**` requests with this method and path ending."""
+        return [query for m, path, query in self.transport.requests if m == method and path.endswith(suffix)]
 
 
 @pytest.fixture
@@ -73,16 +77,24 @@ async def sm():
 
 
 @pytest.fixture
-def settings() -> ResearchEvaluationSettings:
-    return ResearchEvaluationSettings(jwt_secret=TEST_JWT_SECRET, sm_base_url="http://stub")
+def settings(request) -> ResearchEvaluationSettings:
+    """The default window, or another one via `@pytest.mark.parametrize("settings", [3], indirect=True)`.
+    Every value is passed explicitly, so a developer's env or .env can't leak in."""
+    return ResearchEvaluationSettings(
+        jwt_secret=TEST_JWT_SECRET,
+        sm_base_url="http://stub",
+        evaluation_snapshot_window=getattr(request, "param", DEFAULT_SNAPSHOT_WINDOW),
+    )
 
 
 @pytest.fixture
 async def client(sm, settings):
     """Research Evaluation, talking to the stub. The lifespan doesn't run under
-    ASGITransport, so the key and the Storage Management client come in as overrides."""
+    ASGITransport, so the key, the Storage Management client and the snapshot window come in
+    as overrides."""
     app = create_app(settings)
     app.dependency_overrides[jwt_key] = lambda: TEST_JWT_KEY
     app.dependency_overrides[sm_client] = lambda: sm.client
+    app.dependency_overrides[snapshot_window] = lambda: settings.evaluation_snapshot_window
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://re") as http:
         yield http

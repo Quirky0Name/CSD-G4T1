@@ -168,9 +168,11 @@ journal and author fields moved to Updating (Section 4).
 - **The nudge is answered after the evaluation.** Research Evaluation
   replies `202` once every paper's alerts are stored, and `503` if any
   paper failed, so Updating's `nudge_pending` flag (Section 4) is the
-  retry: Research Evaluation keeps no pending list or watermark. It reads
-  each paper's full snapshot history on every nudge and runs detection on
-  all of it (cheap), then asks Storage Management which change keys
+  retry: Research Evaluation keeps no pending list or watermark. On every
+  nudge it reads each paper's newest N snapshots (`EVALUATION_SNAPSHOT_WINDOW`,
+  default 5) and runs detection on all of them (cheap). That window
+  covers a change whose nudge failed up to N − 2 times in a row; a longer
+  run of failures loses it. It then asks Storage Management which change keys
   already have an alert and evaluates only the new changes. So a change
   is never evaluated twice, which matters once evaluation calls an LLM,
   and Storage Management still stores each change once (by its change

@@ -113,11 +113,15 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
         paper_id: UUID,
         after_id: int | None = None,
         limit: Annotated[int | None, Query(ge=1)] = None,
+        last: Annotated[int | None, Query(ge=1)] = None,
     ) -> dict[str, list[dict[str, Any]]]:
+        """Oldest first. `last=N` keeps only the newest N (still oldest first)."""
         find_paper(paper_id)
         rows = store.snapshots.get(paper_id, [])
         if after_id is not None:
             rows = [row for row in rows if row["snapshot_id"] > after_id]
+        if last is not None:
+            rows = rows[-last:]
         return {"snapshots": rows[:limit]}
 
     @internal.post("/papers/{paper_id}/alerts")

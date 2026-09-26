@@ -170,7 +170,7 @@ Crossref or OpenAlex lookup errored that poll (see "Poll job").
 
 **Response `201`:** the same body plus `snapshot_id` and `paper_id`.
 
-### `GET /internal/papers/{id}/background-info/history?after_id=&limit=`
+### `GET /internal/papers/{id}/background-info/history?after_id=&last=&limit=`
 
 Ascending order by snapshot id. Used by Updating (to read a paper's
 previous snapshot before deciding whether to nudge) and by Research
@@ -180,9 +180,17 @@ Evaluation (to read the snapshots it works out differences from).
 {"snapshots": [{"snapshot_id": 41, "fetched_at": "...", "...": "snapshot"}, {"snapshot_id": 42, "...": "..."}]}
 ```
 
-With no `limit`, it returns the whole history: Research Evaluation reads
-every snapshot of a paper on each nudge, so a default page size would
-silently hide changes. A paper Storage Management doesn't know gets `404`
+Query parameters, all optional and applied in this order:
+- `after_id`: only snapshots with a higher id;
+- `last=N` (1 or more): only the newest N of those, **still oldest
+  first**. Research Evaluation sends `last=<EVALUATION_SNAPSHOT_WINDOW>`
+  (default 5) and compares only those snapshots;
+- `limit`: at most this many, from the oldest.
+
+With none of them it returns the whole history; there's no default page
+size, which would silently hide snapshots. Until the Java endpoint
+implements `last`, it would ignore it and return everything, which gives
+the same alerts, just with more to read. A paper Storage Management doesn't know gets `404`
 with `detail` exactly `No paper <id>`, the same as
 `POST /internal/papers/{id}/alerts`. Research Evaluation relies on that
 text to tell a missing paper (skipped) from a missing route (a failure).
@@ -357,10 +365,11 @@ Called by Updating at the end of a poll in which a paper's new snapshot
 differed from its previous one (see "When Updating nudges" below). It is a
 nudge, not a payload: it carries only the ids of the changed papers, never
 snapshot or change data. Updating records no changes, so **Research
-Evaluation works out the differences itself**: it reads the papers'
-snapshots from Storage Management
-(`GET /internal/papers/{id}/background-info/history`), compares every
-consecutive pair and classifies each difference. It then asks which
+Evaluation works out the differences itself**: it reads each paper's
+newest N snapshots from Storage Management
+(`GET /internal/papers/{id}/background-info/history?last=N`, N =
+`EVALUATION_SNAPSHOT_WINDOW`, default 5), compares every consecutive pair
+of those and classifies each difference. It then asks which
 changes already have an alert (`GET /internal/papers/{id}/alerts/change-keys`,
 skipped when nothing was detected) and evaluates only the new ones
 (severity, description, recommendation), storing each as an alert in
@@ -434,8 +443,11 @@ still evaluated and their alerts stored.
 
 Any status but `202` (or no response) means the nudge wasn't accepted,
 and Updating re-sends the same paper ids on its next poll. That's safe:
-Research Evaluation re-reads the full history each time, and Storage
-Management stores each change once. Updating waits for the evaluation, so
+Research Evaluation re-reads the newest N snapshots each time, and Storage
+Management stores each change once. A change is still found as long as a
+nudge gets through within N − 2 failed nudges in a row (N = 5: 3 failed
+nudges, about 3 days at the default 24-hour poll); after more, it has left
+the window and is lost. Updating waits for the evaluation, so
 its HTTP timeout must allow for it: each Storage Management call has a
 10-second timeout on Research Evaluation's side, and papers are evaluated
 one after another. A timed-out nudge is simply re-sent.
