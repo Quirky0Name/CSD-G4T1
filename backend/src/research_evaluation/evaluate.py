@@ -71,7 +71,7 @@ async def evaluate_paper(sm: httpx.AsyncClient, paper_id: UUID, snapshot_window:
     1. detect changes (classified) - compare only N newest snapshots
         a. get all alerts for that paper to see if RE has already evaluated that change
     2. interpret what the classified changes mean
-        investigate changes unable to be classified (LLM -> stochastic)
+        a. investigate changes unable to be classified (LLM -> stochastic)
     3. LLM evaluate if the change is actually meaningful and how it impacts user
     
     
