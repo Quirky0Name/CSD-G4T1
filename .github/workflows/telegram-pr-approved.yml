@@ -1,0 +1,56 @@
+name: Notify on PR merge
+on:
+  pull_request_target:
+    types: [closed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  notify:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and send message
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          MERGER: ${{ github.event.pull_request.merged_by.login }}
+        run: |
+          outstanding=""
+          count=0
+          while IFS=$'\t' read -r n title url author; do
+            outstanding+="• $author's #$n $title"$'\n'"   $url"$'\n'
+            count=$((count + 1))
+          done < <(gh pr list --repo "$REPO" --state open --limit 200 \
+                     --json number,title,url,isDraft,author \
+                     --jq '.[] | select(.isDraft | not) | [.number, .title, .url, .author.login] | @tsv')
+
+          msg=""
+          if [ -n "$PR_NUM" ]; then
+            msg+="✅ $PR_AUTHOR's PR #$PR_NUM merged by $MERGER"$'\n'
+            msg+="$PR_TITLE"$'\n'
+            msg+="$PR_URL"$'\n\n'
+          fi
+
+          if [ "$count" -eq 0 ]; then
+            msg+="All PRs merged! 🎉"
+          else
+            msg+="⏳ Open PRs ($count):"$'\n'"$outstanding"
+          fi
+
+          echo "$msg"
+          curl -s --fail-with-body -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+            -d chat_id="${CHAT_ID}" \
+            -d disable_web_page_preview=true \
+            --data-urlencode text="${msg}"
