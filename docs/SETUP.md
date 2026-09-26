@@ -92,7 +92,8 @@ build order.
 
 ## Running Updating locally (stub Storage Management and Research Evaluation)
 
-Storage Management's `/internal/**` endpoints don't exist yet (CG-68), so
+Storage Management now has the snapshot endpoints (CG-68), and
+`GET /internal/papers` arrives with PR #10. Until you run the real one,
 `backend/dev/stub_storage.py` stands in for them: in memory, checking the
 service token the way the real service does. Research Evaluation's
 `POST /evaluate/changes` doesn't exist yet either, so
