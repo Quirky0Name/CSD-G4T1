@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 import pytest
 from research_evaluation_support import notice, snapshot_dict
 from support import load_fixture
+from updating_support import author_batch
 
 from common.doi import Doi
 from research_evaluation.changes import ChangeType, Snapshot, find_changes
@@ -291,7 +292,9 @@ def stored_by_updating(name: str, doi: str, snapshot_id: int) -> dict:
     Management would return it."""
     crossref = CrossrefWork.model_validate(load_fixture("crossref", name)["message"])
     openalex = OpenAlexWork.model_validate(load_fixture("openalex", name))
-    built = build_snapshot(Doi(doi), datetime(2026, 9, 25, 12, 0, tzinfo=UTC), crossref, openalex)
+    built = build_snapshot(
+        Doi(doi), datetime(2026, 9, 25, 12, 0, tzinfo=UTC), crossref, openalex, author_batch(name)
+    )
     return {"snapshot_id": snapshot_id, "paper_id": "00000000-0000-0000-0000-000000000001",
             **built.model_dump(mode="json")}
 
