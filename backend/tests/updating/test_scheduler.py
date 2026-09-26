@@ -5,11 +5,12 @@ import pytest
 from apscheduler.triggers.interval import IntervalTrigger
 from fastapi.testclient import TestClient
 from support import TEST_JWT_SECRET
+from updating_support import record_run
 
 from updating.config import UpdatingSettings
-from updating.db import init_db, make_engine, make_sessions
+from updating.db import make_engine, make_sessions
 from updating.main import create_app
-from updating.models import PollRun, PollTrigger, RunStatus
+from updating.models import PollTrigger
 from updating.scheduler import build_scheduler, first_run_time, last_scheduled_start
 
 NOW = datetime(2026, 9, 25, 12, 0, tzinfo=UTC)
@@ -42,15 +43,7 @@ def test_job_is_registered_at_the_configured_interval():
 
 
 def seed_run(database_url: str, trigger: PollTrigger, started_at: datetime) -> None:
-    async def seed() -> None:
-        engine = make_engine(database_url)
-        await init_db(engine)
-        async with make_sessions(engine)() as session:
-            session.add(PollRun(trigger=trigger, status=RunStatus.SUCCEEDED, started_at=started_at))
-            await session.commit()
-        await engine.dispose()
-
-    asyncio.run(seed())
+    asyncio.run(record_run(database_url, trigger, started_at))
 
 
 @pytest.mark.usefixtures("clean_settings_env")
@@ -73,6 +66,7 @@ def test_last_scheduled_start_ignores_other_triggers(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'updating.db'}"
     started = datetime(2026, 9, 24, 8, 0, tzinfo=UTC)
     seed_run(url, PollTrigger.SCHEDULED, started)
+    seed_run(url, PollTrigger.MANUAL, started + timedelta(hours=3))  # later, but not the schedule
 
     async def read():
         engine = make_engine(url)

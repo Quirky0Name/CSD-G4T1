@@ -241,7 +241,7 @@ Research Evaluation works out the differences and what they mean.
   `last_snapshot_id`, `nudge_pending`) and `poll_runs` (a summary per
   run). There are no change records; the snapshots in Storage Management
   are the only history.
-- **Endpoints:** `POST /admin/run-poll`.
+- **Endpoints:** `POST /run-poll`.
 
 ## Section 5 — Deployment
 

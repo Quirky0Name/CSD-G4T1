@@ -1,13 +1,16 @@
-from datetime import datetime
+import asyncio
+from datetime import UTC, datetime
+from uuid import uuid4
 
 import httpx
 import pytest
 from support import load_fixture
-from updating_support import DOIS, fixture_snapshot, poll_runs, tracked_rows
+from updating_support import poll_runs, tracked_rows
 
+from dev.scenarios import DOIS, fixture_snapshot
 from updating import poll as poll_module
 from updating.models import PollTrigger, RunStatus
-from updating.poll import PollFailed, run_poll
+from updating.poll import PollFailed, UnknownPaper, run_poll
 
 
 async def poll(deps):
@@ -233,3 +236,63 @@ async def test_an_unexpected_error_marks_the_run_failed_and_propagates(deps, sm,
 
     [run] = await poll_runs(deps)
     assert run.status is RunStatus.FAILED and run.error == "RuntimeError"
+
+
+async def test_a_single_paper_run_stores_only_that_paper_and_keeps_the_other_rows(deps, sm, sources):
+    sources.serve("lancet")
+    sources.serve("jbc")
+    lancet = await sm.add_paper(DOIS["lancet"])
+    jbc = await sm.add_paper(DOIS["jbc"])
+    await poll(deps)
+    jbc_snapshot = (await tracked_rows(deps))[jbc].last_snapshot_id
+
+    summary = await run_poll(deps, PollTrigger.MANUAL, lancet)
+
+    assert summary.paper_id == lancet
+    assert [s.paper_id for s in summary.stored] == [lancet]
+    assert len(await sm.history(lancet)) == 2 and len(await sm.history(jbc)) == 1
+    rows = await tracked_rows(deps)
+    assert set(rows) == {lancet, jbc}
+    assert rows[jbc].last_snapshot_id == jbc_snapshot
+    assert sources.routes[("jbc", "crossref")].call_count == 1  # fetched by the first poll only
+    run = (await poll_runs(deps))[-1]
+    assert run.trigger is PollTrigger.MANUAL
+    assert run.summary["paper_id"] == str(lancet)
+
+
+async def test_a_single_paper_run_for_a_paper_without_a_doi_lists_it_as_skipped(deps, sm, sources):
+    no_doi = await sm.add_paper(None)
+
+    summary = await run_poll(deps, PollTrigger.MANUAL, no_doi)
+
+    assert summary.skipped_no_doi == [no_doi]
+    assert summary.stored == [] and await tracked_rows(deps) == {}
+
+
+async def test_a_single_paper_run_for_an_unknown_paper_fails_the_run(deps, sm, sources):
+    await sm.add_paper(DOIS["jbc"])
+    unknown = uuid4()
+
+    with pytest.raises(UnknownPaper, match=str(unknown)):
+        await run_poll(deps, PollTrigger.MANUAL, unknown)
+
+    [run] = await poll_runs(deps)
+    assert run.status is RunStatus.FAILED and str(unknown) in run.error
+    assert await tracked_rows(deps) == {}  # rejected before anything was synced
+
+
+async def test_a_poll_that_comes_due_during_another_waits_for_it(deps, sm, sources):
+    sources.serve("jbc")
+    await sm.add_paper(DOIS["jbc"])
+    await deps.lock.acquire()  # another poll is running
+    waiting = asyncio.create_task(poll(deps))
+    await asyncio.sleep(0)
+
+    assert not waiting.done()
+    assert await poll_runs(deps) == []  # no run is recorded until it has the lock
+    released_at = datetime.now(UTC)
+    deps.lock.release()
+    summary = await waiting
+
+    assert summary.started_at >= released_at
+    assert len(summary.stored) == 1

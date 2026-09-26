@@ -16,7 +16,7 @@ SCHEMA = "updating"
 
 class PollTrigger(StrEnum):
     SCHEDULED = "scheduled"
-    # TODO: add user-triggered checks
+    MANUAL = "manual"  # POST /run-poll; never moves the schedule
 
 
 class RunStatus(StrEnum):
