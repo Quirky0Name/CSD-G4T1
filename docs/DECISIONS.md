@@ -5,43 +5,72 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
-## 2026-09-26 — A DOI-only paper needs an open-access PDF
+## 2026-09-26 — Storage stores snapshots and open-access PDFs & migrations tidied
 
 ### Decision
 
-- Settles the pending question in the 2026-09-25 entry below. When a
-  paper is tracked by DOI, Storage Management downloads an open-access
-  copy of it: every `pdf_url` OpenAlex lists for the work (its
-  `best_oa_location` first, then the rest of `locations`), then Semantic
-  Scholar's `openAccessPdf`. The first link that actually returns a PDF
-  under 25 MB is stored like an upload.
-- If none does, the paper **isn't tracked**: `POST /papers` answers `422`
-  with a readable message telling the user to pick a different paper.
-  Every tracked paper therefore has a stored PDF. The message doesn't
-  suggest uploading instead: a paper with no open-access copy is usually
-  paywalled, and most users couldn't legally get the PDF without buying
-  it.
+- **Storage Management now keeps the snapshots Updating sends** (CG-68):
+  one insert-only `background_metadata` row per `POST
+  /internal/papers/{id}/background-info`, read back in order by
+  `GET .../history`. Updating stops needing the stub for these two calls.
+- **`crossref_updates`, `authors` and `source_status` are stored exactly as
+  sent**, as JSON text. Storage never reads inside them, so Updating can
+  add a field (as PR #9 did with `institutions`) without a storage change.
+  Scalar fields get their own columns. Authors stay inside the snapshot,
+  not in a separate `authors_background` table — nothing queries single
+  authors yet; split them out if a feature needs to.
+- **Migrations are V1 (papers), V3 (alerts, PR #15) and V4 (snapshots).**
+  PR #12 deleted `V2__drop_papers_file_key.sql`; it isn't restored, since
+  V1 already creates `papers` with `file_key`. Snapshots are V4, not V2,
+  so they still apply after V3 whichever PR lands first.
+- **A DOI-only paper needs an open-access PDF.** Settles the pending
+  question in the 2026-09-25 entry below. When a paper is tracked by DOI,
+  Storage Management downloads an open-access copy of it: every `pdf_url`
+  OpenAlex lists for the work (its `best_oa_location` first, then the rest
+  of `locations`), then Semantic Scholar's `openAccessPdf`. The first link
+  that actually returns a PDF under 25 MB is stored like an upload — using
+  the same `file_key` column V1 already creates, so this needs no new
+  migration.
+- If none of those links works, the paper **isn't tracked**: `POST
+  /papers` answers `422` with a readable message telling the user to pick
+  a different paper. Every tracked paper therefore has a stored PDF. The
+  message doesn't suggest uploading instead: a paper with no open-access
+  copy is usually paywalled, and most users couldn't legally get the PDF
+  without buying it.
 
 ### Why
 
-Research Evaluation needs the paper itself (see the entry below), so a
-tracked paper with no PDF would be one it can't evaluate. Refusing it up
-front tells the user straight away instead of failing later.
+- No shared or deployed database exists yet, only local test ones, so the
+  cheapest fix for the deleted V2 is a one-off reset for anyone who ran it
+  (LOCAL_STORAGE_DB.md) rather than two extra migrations kept forever.
+- Research Evaluation needs the paper itself, so a tracked paper with no
+  PDF would be one it can't evaluate. Refusing it up front tells the user
+  straight away instead of failing later.
 
 ### Rejected
 
-- **Tracking without a file and asking for an upload later.** It needs a
-  new "attach a PDF" endpoint and leaves Research Evaluation with papers
-  it can't read until someone remembers to upload.
+- **Restoring V2 and re-adding `file_key` in another migration.** It keeps
+  old local databases working, but adds two migrations just to undo each
+  other, for data nobody needs.
+- **Typed columns or tables for the JSON snapshot fields.** They'd tie
+  storage's schema to Updating's snapshot builder.
+- **Tracking a DOI-only paper without a file and asking for an upload
+  later.** It needs a new "attach a PDF" endpoint and leaves Research
+  Evaluation with papers it can't read until someone remembers to upload.
 - **OpenAlex's `best_oa_location` only.** For
   `10.1371/journal.pmed.0020124` it has no `pdf_url` and Semantic Scholar
   doesn't know the DOI, but another OpenAlex location (PLOS) serves the
   PDF.
-- **Europe PMC, HAL and publisher pages as extra sources.** Tried for the
-  demo papers; all answered `403` or an HTML page to a script.
+- **Europe PMC, HAL and publisher pages as extra PDF sources.** Tried for
+  the demo papers; all answered `403` or an HTML page to a script.
 
 ### Also settled while building it
 
+- From here on, a migration on `main` is never edited or deleted; changes
+  go in a new, higher-numbered one. The Supabase database will start empty
+  and run V1, V3, V4 in order.
+- History rows write every field, nulls included: Updating's history
+  parser requires all of them.
 - **The demo papers can't be tracked by DOI.** All three are on
   ScienceDirect, which answers `403` or an HTML page to a script, and no
   other listed copy downloads. DEMO.md already has them uploaded by hand,
