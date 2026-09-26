@@ -137,9 +137,16 @@ Out of scope:
   papers. Those are separate user stories (see "Later stories"). This
   story builds the evaluation pipeline they plug into, with one
   rule-based assessor (see S4).
-- **The snapshot history endpoint in the real Storage Management.** It
-  isn't built yet. Research Evaluation is developed against
-  `backend/dev/stub_storage.py`, like Updating.
+- **The snapshot history endpoint in the real Storage Management.**
+  `GET /internal/papers/{id}/background-info/history` (and the
+  `background_metadata` table behind it) is Storage Management's, but it
+  isn't built in Java yet (CG-68). Only the Python stub
+  (`backend/dev/stub_storage.py`) has it, so Research Evaluation is
+  developed and tested against the stub, like Updating. Research
+  Evaluation calls whatever runs at `SM_BASE_URL`: against the real
+  Storage Management today, the history read gets a bare `404` and every
+  nudge answers `503`, until the endpoint exists. No Research Evaluation
+  change is needed then. See "TODO for other owners".
 
 ## API
 
@@ -661,6 +668,15 @@ idempotently. Left for later:
    another. A timed-out nudge is re-sent, which is safe.
 
 ## TODO for other owners
+
+- [ ] **Amir (Storage Management, CG-68): build the snapshot endpoints.**
+  `POST /internal/papers/{id}/background-info` and
+  `GET /internal/papers/{id}/background-info/history`, with the
+  `background_metadata` table, as in CONTRACTS.md. Research Evaluation
+  depends on the history read: all snapshots, oldest first, as
+  `{"snapshots": [...]}`, with no default page size, and `404` with
+  `detail` exactly `No paper <id>` for an unknown paper. Until then the
+  whole flow only works against the stub.
 
 - [ ] **Zhuo En (Updating): send a service token with the nudge.** The
   nudge on `main` (cg-43) calls `POST /evaluate/changes` with no token:
