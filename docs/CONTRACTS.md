@@ -257,6 +257,27 @@ unknown `change_type` or `severity`, or a `detected_at` that isn't a
 timestamp; `401` missing or bad token; `403` a user token; `404` no paper
 with that id.
 
+### `GET /internal/papers/{id}/alerts/change-keys`
+
+Service-JWT only. The change key of every alert stored for the paper,
+whatever its status (a dismissed alert is still a change that was
+evaluated). Research Evaluation calls this after detecting a paper's
+changes and evaluates and stores only those whose key isn't listed, so a
+change is never evaluated twice.
+
+**Response `200`:**
+
+```json
+{"change_keys": ["correction:10.xxxx/...", "retraction"]}
+```
+
+A paper with no alerts gives `{"change_keys": []}`. The keys come back
+sorted, but callers should treat the list as a set.
+
+Errors, as problem details: `400` an id that isn't a UUID; `401` missing
+or bad token; `403` a user token; `404` no paper with that id, with
+`detail` exactly `No paper <id>`, as on the other internal endpoints.
+
 ### Snapshot fields
 
 Kept in full and per paper (insert-only). Every nullable field is

@@ -47,6 +47,18 @@ public class AlertService {
     }
 
     /**
+     * Every change key stored for the paper, whatever the alert's status. Research Evaluation
+     * checks these before evaluating, so a change it has already evaluated is never evaluated
+     * again. An unknown paper is the same "No paper" 404 as when storing.
+     */
+    public List<String> changeKeys(UUID paperId) {
+        if (!papers.existsById(paperId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
+        }
+        return alerts.findChangeKeysByPaperId(paperId);
+    }
+
+    /**
      * The paper's alerts, newest first, for its owner. Dismissed alerts are left out unless asked
      * for. A paper that doesn't exist and one that belongs to someone else are the same 404, so the
      * response never tells a user whether another user's paper exists.

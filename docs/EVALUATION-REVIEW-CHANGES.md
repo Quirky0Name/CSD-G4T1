@@ -1,6 +1,6 @@
 # Seeing and reviewing paper changes (plan)
 
-**Status: built** (S1–S6 done and verified). Work happens on
+**Status: in progress** (S1–S7 done and verified; S8 planned). Work happens on
 `feat/eval-reviewing-changes`. As each subtask is built and verified, the
 parts of it that change a contract or a decision move into CONTRACTS.md,
 ARCHITECTURE.md and DECISIONS.md, and the subtask is marked done below.
@@ -187,7 +187,7 @@ follows the `paper/` package:
 
 | Class | Job | Existing equivalent |
 |---|---|---|
-| `InternalAlertController` | The HTTP layer for `POST /internal/papers/{id}/alerts`: takes the paper id from the path and the body, calls the service, answers `201` or `200`. No business logic. | `PaperController` |
+| `InternalAlertController` | The HTTP layer for Research Evaluation: `POST /internal/papers/{id}/alerts` (takes the paper id from the path and the body, calls the service, answers `201` or `200`) and `GET /internal/papers/{id}/alerts/change-keys` (S7). No business logic. | `PaperController` |
 | `AlertController` | The same for the frontend's `GET /papers/{id}/alerts` and `PATCH /alerts/{id}` (S2, S3). | `PaperController` |
 | `NewAlertRequest` | A Java `record` that holds the JSON **body** of the POST, and nothing else. It also carries the shape rules as annotations (`@NotBlank`, `@NotNull`, enum types), which Spring checks before the service runs because the controller's parameter is marked `@Valid`. | — |
 | `AlertService` | The business rules, which need the database: does the paper exist, is this `change_key` already stored, does this user own the alert's paper. It builds and saves alerts. Storing is deliberately not one transaction: if two requests race, the unique constraint rejects the second insert and the service re-reads the first alert in a fresh transaction (on Postgres, a failed insert aborts the transaction around it). | `PaperService` |
@@ -538,6 +538,60 @@ smoke run used the stub.
     its env vars.
   - **DEMO:** live steps 3–4 point at these endpoints until the frontend
     panel exists.
+
+### S7: Storage Management lists a paper's change keys
+
+**Status: done, verified (PASS).**
+
+Added after S1–S6, so that Research Evaluation can check which changes it
+has already evaluated before evaluating (see S8). It matters once
+evaluation uses an LLM: without it, every nudge would re-evaluate every
+old change in the paper's history.
+
+- **Goal:** `GET /internal/papers/{id}/alerts/change-keys` (service token
+  only) returns `{"change_keys": [...]}`: every change key stored for the
+  paper, whatever the alert's status. It gives `[]` when there are none.
+  An unknown paper gets `404` with `detail` "No paper <id>", matching the
+  other internal endpoints. A user token gets `403`, and a missing or bad
+  token gets `401`.
+- **Files:**
+  - `storage/.../alert/`: `AlertRepository.java` (a query that returns
+    only the keys), `AlertService.java` (`changeKeys`),
+    `InternalAlertController.java` (the mapping), `ChangeKeysResponse.java`
+    (new)
+  - `storage/src/test/java/com/g4t1/storage/alert/InternalChangeKeysTest.java`
+- **Verification:** keys for the paper only, not other papers' keys;
+  acknowledged and dismissed alerts' keys included; the empty list; `404`;
+  a non-UUID id; each auth outcome.
+- **Doc deltas:** CONTRACTS (the endpoint), ARCHITECTURE §2 (the endpoint
+  list), this plan (S7, and `InternalAlertController` in the layout
+  table).
+
+### S8: Research Evaluation evaluates only new changes
+
+**Status: planned.**
+
+- **Goal:**
+  - `evaluate_paper` fetches the paper's stored change keys once, after
+    detection (stage 1 still runs on the whole history, since it's cheap);
+  - stage 2, stage 3 and storing run only for changes whose key isn't
+    stored yet;
+  - the stub Storage Management gets the same endpoint;
+  - a failed key lookup gives `503`, like any other Storage Management
+    failure.
+- **Files:** `backend/src/research_evaluation/storage.py`, `evaluate.py`,
+  `backend/dev/stub_storage.py`, the Research Evaluation tests.
+- **Verification:**
+  - a re-nudge makes no store calls for known changes, and doesn't call
+    stages 2 or 3 for them;
+  - a new change among old ones is the only one evaluated and stored;
+  - stage 3 isn't called for an already stored `other` change;
+  - a key-lookup failure gives `503`, and the retry works;
+  - the existing tests still pass.
+- **Doc deltas:** CONTRACTS (the `/evaluate/changes` flow); ARCHITECTURE §3
+  (check, then evaluate); DECISIONS (why: future LLM stages must never
+  re-evaluate a stored change); this plan (S8 done, and a note under
+  "Later stories" that the LLM stages rely on it).
 
 ## Later stories
 

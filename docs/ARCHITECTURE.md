@@ -142,7 +142,8 @@ Owns all Postgres and file persistence.
   through `GET /internal/papers/{id}/pdf`, never from the disk directly.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
   `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /internal/papers/{id}/background-info`,
-  `GET /internal/papers/{id}/pdf`, `POST /internal/papers/{id}/alerts`.
+  `GET /internal/papers/{id}/pdf`, `POST /internal/papers/{id}/alerts`,
+  `GET /internal/papers/{id}/alerts/change-keys`.
 - **DB hosting:** Supabase free tier.
 
 ## Section 3 — Research Evaluation
