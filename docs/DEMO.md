@@ -49,7 +49,10 @@ the publisher during the demo.
    acknowledge one change. Until the panel exists, show the same thing on
    Storage Management's API: `GET /papers/{id}/alerts` (newest first, with
    severity, description, recommendation and detection time), then
-   `PATCH /alerts/{id}` with `{"status": "acknowledged"}`.
+   `PATCH /alerts/{id}` with `{"status": "acknowledged"}`. Then record what
+   the researcher did, `POST /alerts/{id}/notes` with
+   `{"text": "Removed the citation from my draft."}`, and read the log back
+   with `GET /alerts/{id}/notes`.
 5. Run the poll again live to show it stores another snapshot but doesn't
    nudge again.
 

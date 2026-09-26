@@ -20,7 +20,7 @@ class AlertServiceRaceTest {
 
     private final AlertRepository alerts = mock(AlertRepository.class);
     private final PaperRepository papers = mock(PaperRepository.class);
-    private final AlertService service = new AlertService(alerts, papers);
+    private final AlertService service = new AlertService(alerts, mock(AlertNoteRepository.class), papers);
 
     private final UUID paperId = UUID.randomUUID();
     private final NewAlertRequest request = new NewAlertRequest(ChangeType.CORRECTION, "correction:10.1/x",

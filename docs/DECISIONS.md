@@ -5,6 +5,55 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-26 — Researchers can keep a log of notes on an alert
+
+### Team decisions
+
+- **A researcher can add notes to an alert and read them back**
+  (`POST` and `GET /alerts/{id}/notes`), e.g. "Removed the citation from
+  my draft". The acknowledge/dismiss story asks that researchers can record
+  the actions they took after a change is raised and review them later.
+  The status only says *that* they dealt with an alert, not *what* they
+  did.
+- **The notes are an append-only log.** Each note keeps its own time, and
+  none is edited or deleted; a correction is a new note. A single note
+  field would be overwritten, and then the earlier notes couldn't be
+  reviewed.
+- **Notes are separate from the status.** Adding a note never changes
+  `status` or `status_changed_at`, and a dismissed alert can still get
+  notes. The status rules of 2026-09-25 are unchanged, and the status keeps
+  only its latest value.
+- **Notes have their own endpoints, not a field on every alert.** The alert
+  JSON, `PATCH /alerts/{id}`, the response Research Evaluation gets from
+  `POST /internal/papers/{id}/alerts`, and the stub Storage Management all
+  stay as they were. The cost is one request per alert whose notes the
+  frontend shows, which is small for one paper's alerts.
+- **Newest first**, like the alert list.
+- **No author column.** Only the owner of the alert's paper can read or add
+  notes (the same rule as `PATCH /alerts/{id}`), so the author is always
+  the paper's owner, known from `papers.owner_id`, as for alerts
+  themselves.
+- **A note is 1–2000 characters of non-blank text,** enough for a few
+  sentences on what was done. The limit is Bean Validation's `@Size`,
+  which counts UTF-16 code units (like JavaScript's `length`), so an emoji
+  counts as 2.
+
+### Rejected
+
+- **One note field on the alert, overwritten on each save.** It loses the
+  earlier notes, which is the gap this closes.
+- **A history of status changes** (every acknowledge and dismiss kept, each
+  with an optional note). The story owner's call: only the notes are
+  needed, and the status keeps its latest value.
+
+### Consequences
+
+- `alert_notes` is migration `V4__create_alert_notes.sql`. Like the alert
+  endpoints, it's Storage Management code written for this story, so Amir
+  reviews it.
+
+---
+
 ## 2026-09-26 — Alerts from one poll are listed most severe first
 
 ### Team decisions

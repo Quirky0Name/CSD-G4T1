@@ -1,6 +1,6 @@
 # Seeing and reviewing paper changes (plan)
 
-**Status: built** (S1–S9 done and verified). Work happens on
+**Status: built** (S1–S10 done and verified). Work happens on
 `feat/eval-reviewing-changes`. As each subtask is built and verified, the
 parts of it that change a contract or a decision move into CONTRACTS.md,
 ARCHITECTURE.md and DECISIONS.md, and the subtask is marked done below.
@@ -116,6 +116,22 @@ In Storage Management's Postgres, created by a Flyway migration (S1).
   duplicates, and the two snapshot ids let anyone replay how an alert was
   produced.
 
+### `alert_notes` table (database)
+
+The researcher's log of notes on an alert (S10). Migration
+`V4__create_alert_notes.sql`.
+
+| Column | Type | In the API? | Why it exists |
+|---|---|---|---|
+| `id` | bigint, primary key | no | orders notes created in the same microsecond |
+| `alert_id` | bigint, FK → `alerts`, `on delete cascade` | no (it's in the path) | which alert; ownership comes from the alert's paper; notes are deleted with their alert, and so with its paper |
+| `text` | text | yes | what the researcher wrote, 1–2000 characters |
+| `created_at` | timestamptz | yes | when it was written; the sort key, newest first |
+
+- **An index on `alert_id`** serves `GET /alerts/{id}/notes`.
+- There's no author column and no `updated_at`: only the paper's owner can
+  write notes, and notes are never edited.
+
 ## Scope
 
 In scope: the whole path from Updating's nudge to the researcher acting
@@ -159,6 +175,9 @@ Storage Management, for the frontend (user JWT):
   are hidden unless `include_dismissed=true`. A paper that doesn't exist
   or isn't the caller's gets `404`.
 - `PATCH /alerts/{id}` with `{"status": "acknowledged" | "dismissed"}`.
+- `POST /alerts/{id}/notes` with `{"text": "..."}` adds a note to the
+  alert's log (`201`), and `GET /alerts/{id}/notes` returns
+  `{"notes": [...]}`, newest first (S10).
 
 Storage Management, for Research Evaluation (service JWT):
 - `POST /internal/papers/{id}/alerts` stores one alert. It's idempotent on
@@ -190,7 +209,7 @@ follows the `paper/` package:
 | Class | Job | Existing equivalent |
 |---|---|---|
 | `InternalAlertController` | The HTTP layer for Research Evaluation: `POST /internal/papers/{id}/alerts` (takes the paper id from the path and the body, calls the service, answers `201` or `200`) and `GET /internal/papers/{id}/alerts/change-keys` (S7). No business logic. | `PaperController` |
-| `AlertController` | The same for the frontend's `GET /papers/{id}/alerts` and `PATCH /alerts/{id}` (S2, S3). | `PaperController` |
+| `AlertController` | The same for the frontend's `GET /papers/{id}/alerts` and `PATCH /alerts/{id}` (S2, S3), and `POST`/`GET /alerts/{id}/notes` (S10). | `PaperController` |
 | `NewAlertRequest` | A Java `record` that holds the JSON **body** of the POST, and nothing else. It also carries the shape rules as annotations (`@NotBlank`, `@NotNull`, enum types), which Spring checks before the service runs because the controller's parameter is marked `@Valid`. | — |
 | `AlertService` | The business rules, which need the database: does the paper exist, is this `change_key` already stored, does this user own the alert's paper. It builds and saves alerts. Storing is deliberately not one transaction: if two requests race, the unique constraint rejects the second insert and the service re-reads the first alert in a fresh transaction (on Postgres, a failed insert aborts the transaction around it). | `PaperService` |
 | `AlertRepository` | Database access. It's a Spring Data JPA interface: methods such as `findByPaperIdAndChangeKey(...)` are declared, and Hibernate generates the SQL. No SQL is written by hand. | `PaperRepository` |
@@ -198,6 +217,10 @@ follows the `paper/` package:
 | `AlertResponse` | The outgoing JSON shape, built from an `Alert`, leaving out the internal columns. | `PaperResponse` |
 | `ChangeType`, `Severity`, `AlertStatus` | The allowed values, as Java enums. | — |
 | `V3__create_alerts.sql` | Creates the table. Flyway runs it at startup, and Hibernate only checks that `Alert` matches it (`ddl-auto: validate`). | `V1__create_papers.sql` |
+| `AlertNote`, `AlertNoteRepository` | The entity and repository for `alert_notes` (S10). | `Alert`, `AlertRepository` |
+| `NewNoteRequest` | The body of `POST /alerts/{id}/notes`, with `@NotBlank` and `@Size(max = 2000)` on `text`. | `StatusChangeRequest` |
+| `AlertNoteResponse`, `AlertNoteListResponse` | One note as JSON, and the `{"notes": [...]}` wrapper. | `AlertResponse`, `AlertListResponse` |
+| `V4__create_alert_notes.sql` | Creates `alert_notes`. | `V3__create_alerts.sql` |
 
 Each part of the HTTP request is handled in a different place:
 
@@ -647,6 +670,72 @@ the other Storage Management calls.
   history"); SETUP (the env var); this plan (S9, and `last` in Amir's
   TODO).
 
+### S10: A log of notes on an alert
+
+**Status: done, verified (PASS).**
+
+Added for the acknowledge/dismiss story ("As a researcher, I want to mark
+an alert as acknowledged or dismissed, so that I can record my decision and
+clear what I've dealt with"), which asks that researchers can record the
+actions they took after a change is raised and review them afterwards. The
+status alone only keeps the latest decision, so the researcher can now also
+write notes on an alert, e.g. "Removed the citation from my draft". A
+history of status changes was considered and not wanted (DECISIONS.md,
+"2026-09-26 — Researchers can keep a log of notes on an alert").
+
+- **Goal:**
+  - Migration `V4__create_alert_notes.sql` creates `alert_notes` (see
+    "`alert_notes` table (database)").
+  - `POST /alerts/{id}/notes` (user JWT) with `{"text": "..."}` stores a
+    note and answers `201` with `{"text", "created_at"}`.
+  - `GET /alerts/{id}/notes` (user JWT) answers `{"notes": [...]}`, newest
+    first (ties broken by id), or `{"notes": []}`.
+  - Errors on both, as problem details: `400` a missing, blank or
+    over-2000 `text`, a body that isn't JSON, or an id that isn't a number;
+    `401`; `403` a service token; `404` a missing alert or one on another
+    user's paper, with the same `detail` as `PATCH`. A refused request
+    stores nothing.
+  - Notes are append-only, separate from the status (adding one never
+    changes `status` or `status_changed_at`), and have no author column.
+- **Files:**
+  - `storage/src/main/resources/db/migration/V4__create_alert_notes.sql`
+  - `storage/.../alert/`: `AlertNote.java`, `AlertNoteRepository.java`,
+    `NewNoteRequest.java`, `AlertNoteResponse.java`,
+    `AlertNoteListResponse.java` (new); `AlertService.java`,
+    `AlertController.java`
+  - `storage/src/test/java/com/g4t1/storage/alert/AlertNoteTest.java`
+    (new); `AlertServiceRaceTest.java` (the new constructor argument)
+- **Verification:** newest first, with the POST's `created_at` matching the
+  GET's; each alert shows only its own notes; `[]` for none; 2000
+  characters accepted and 2001 refused; blank, missing and non-JSON bodies
+  refused; another user's alert and a missing alert give the same `404`;
+  each auth outcome; a note on a dismissed alert leaves `status` and
+  `status_changed_at` alone; deleting the paper deletes its notes; nothing
+  is stored on any refusal; all existing tests pass.
+- **How it fits together, and gotchas:**
+  - `AlertService.requireOwnAlert` is the one ownership check for
+    `PATCH /alerts/{id}` and both note mappings, so all three give the same
+    `404` `detail` (`No alert <id>`) for a missing alert and another user's.
+  - These are **not** the paper's notes (`PUT /papers/{id}/notes`, the
+    `notes` table in ARCHITECTURE.md): those are one editable text per
+    paper, and these are a log per alert.
+  - The alert list and `AlertResponse` don't include notes, so Research
+    Evaluation and the stub Storage Management are untouched. The frontend
+    reads notes per alert.
+  - `AlertNote` truncates `created_at` to microseconds, as `changeStatus`
+    does for `status_changed_at`, so the POST's response matches later
+    reads from Postgres.
+  - The 2000 limit counts UTF-16 code units, so an emoji counts as 2.
+  - Known edges: `{"text": 123}` is accepted as `"123"` (Jackson converts
+    numbers to strings); a note containing `\u0000` is rejected by
+    Postgres' `text` and gives `500` (the other text columns behave the
+    same); and an alert deleted between the ownership check and the insert
+    gives `500` from the foreign key instead of `404`.
+- **Doc deltas:** CONTRACTS (both endpoints); ARCHITECTURE §2
+  (`alert_notes` and the endpoints); DECISIONS ("Researchers can keep a log
+  of notes on an alert"); DEMO (live step 4); this plan (S10, the table,
+  the API, the layout table and "Contract changes").
+
 ## Later stories
 
 Not built in this story. They plug into the stages in S4 and S5 without
@@ -775,6 +864,8 @@ idempotently. Left for later:
 1. **Storage Management gains an `alerts` table and four endpoints**
    (Amir, Storage Management). The table is migration
    `V3__create_alerts.sql`; the number no longer needs agreeing (see S1).
+   S10 adds the `alert_notes` table (`V4__create_alert_notes.sql`) and
+   `POST`/`GET /alerts/{id}/notes`.
 2. **`POST /evaluate/changes` requires a service token, and replies after
    evaluating** (Zhuo En, Updating). Updating's nudge (cg-43, merged into
    this branch) has to send its service token (any `role=service` token is

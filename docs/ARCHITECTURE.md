@@ -133,14 +133,16 @@ Owns all Postgres and file persistence.
   detects on a paper, with its severity, description, recommendation,
   detection time and the researcher's status; unique per paper and
   `change_key`, so a re-sent nudge can't store a change twice; deleted
-  with its paper).
+  with its paper), `alert_notes` (the researcher's append-only log of
+  notes on an alert, e.g. what they did about it; deleted with its
+  alert).
 - **File storage:** every tracked paper's PDF is kept, so Research
   Evaluation has the paper itself to read when it evaluates a change.
   PDF bytes never go in Postgres: they're on local disk for now, and
   Postgres holds only the file's key. Research Evaluation reads a PDF
   through `GET /internal/papers/{id}/pdf`, never from the disk directly.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
-  `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /internal/papers/{id}/background-info`,
+  `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /alerts/{id}/notes`, `POST/GET /internal/papers/{id}/background-info`,
   `GET /internal/papers/{id}/pdf`, `POST /internal/papers/{id}/alerts`,
   `GET /internal/papers/{id}/alerts/change-keys`.
 - **DB hosting:** Supabase free tier.
