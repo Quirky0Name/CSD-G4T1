@@ -85,7 +85,7 @@ JWT paths above are wired up but not backed by real logins.
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
 | User Management | Spring Boot (backend) + React (Vite, frontend) | `users`, `folders`; auth | `frontend/` |
-| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `authors_background`; Postgres + every tracked paper's PDF on local disk | `storage/` |
+| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`; Postgres + every tracked paper's PDF on local disk | `storage/` |
 | Research Evaluation | Python | Change evaluation (severity, impact, recommendation), read from Storage Management when nudged by Updating; COI text, citation-neighbourhood metrics, LLM reasoning (claims + stance, week 7) | `backend/` |
 | Updating | Python (shares the `backend/` project with Research Evaluation) | Crossref/OpenAlex status, journal and author fetching; sending snapshots to Storage Management; nudging Research Evaluation when a snapshot changed; the polling scheduler and its small polling state (`tracked_papers`) | `backend/` |
 | Deployment | Docker + a public cloud target | Containerisation, environment config, CI | (cross-cutting) |
@@ -120,17 +120,17 @@ Owns all Postgres and file persistence.
 
 - **Ingestion, two paths, both keeping the PDF:** upload (PDF → local
   disk → GROBID header extract → `papers` row) and DOI-only (CrossRef
-  metadata → `papers` row). Where a DOI-only paper's PDF comes from, and
-  what happens when none can be found, is still pending (see
-  DECISIONS.md, "2026-09-25 — Storage keeps every tracked paper's PDF").
+  metadata → open-access PDF from OpenAlex, then Semantic Scholar → local
+  disk → `papers` row). A DOI with no downloadable open-access PDF isn't
+  tracked (see DECISIONS.md, 2026-09-26).
 - **Schema:** `papers`, `notes` (separate table/endpoint from `papers`),
   `background_metadata` (insert-only history, kept in full and per paper —
   never overwrite, that's what Updating and Research Evaluation compare;
   one row per tracked paper per poll, even when nothing changed, except
   that Updating stores none for a paper on a poll where Crossref or
-  OpenAlex failed for its DOI, see Section 4), `background_text` (raw text for
-  week-13 LLM input; nothing here is diffed in week 7),
-  `authors_background`.
+  OpenAlex failed for its DOI, see Section 4; a snapshot's authors live
+  inside it as JSON, not in a separate table), `background_text` (raw
+  text for week-13 LLM input; nothing here is diffed in week 7).
 - **File storage:** every tracked paper's PDF is kept, so Research
   Evaluation has the paper itself to read when it evaluates a change.
   PDF bytes never go in Postgres: they're on local disk for now, and
@@ -241,7 +241,7 @@ Research Evaluation works out the differences and what they mean.
   `last_snapshot_id`, `nudge_pending`) and `poll_runs` (a summary per
   run). There are no change records; the snapshots in Storage Management
   are the only history.
-- **Endpoints:** `POST /admin/run-poll`.
+- **Endpoints:** `POST /run-poll`.
 
 ## Section 5 — Deployment
 

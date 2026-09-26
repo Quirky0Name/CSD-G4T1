@@ -3,10 +3,12 @@ package com.g4t1.storage.paper;
 import com.g4t1.storage.TestTokens;
 import com.g4t1.storage.grobid.GrobidClient;
 import com.g4t1.storage.metadata.MetadataClient;
+import com.g4t1.storage.metadata.OpenAccessPdfClient;
 import com.g4t1.storage.metadata.PaperMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
@@ -17,6 +19,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.client.ResourceAccessException;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -46,15 +51,24 @@ class PaperTrackDoiTest {
     @MockitoBean
     MetadataClient metadata;
 
+    @MockitoBean
+    OpenAccessPdfClient openAccess;
+
+    @Value("${storage.upload-dir}")
+    String uploadDir;
+
+    private static final byte[] PDF = "%PDF-1.7 open access copy".getBytes(StandardCharsets.US_ASCII);
+
     private final UUID user = UUID.randomUUID();
 
     @BeforeEach
     void clean() {
         papers.deleteAll();
+        when(openAccess.download(any())).thenReturn(Optional.of(PDF));
     }
 
     @Test
-    void trackingByDoiSavesCrossRefMetadataWithNoFile() throws Exception {
+    void trackingByDoiSavesCrossRefMetadataAndTheOpenAccessPdf() throws Exception {
         when(metadata.lookup("10.1016/s0140-6736(20)31180-6")).thenReturn(Optional.of(new PaperMetadata(
                 "10.1016/s0140-6736(20)31180-6", "W3027680906", "Hydroxychloroquine or chloroquine",
                 "The Lancet", "0140-6736", 2020)));
@@ -64,11 +78,26 @@ class PaperTrackDoiTest {
                 .andExpect(jsonPath("$.doi").value("10.1016/s0140-6736(20)31180-6"))
                 .andExpect(jsonPath("$.openalex_id").value("W3027680906"))
                 .andExpect(jsonPath("$.journal").value("The Lancet"))
-                .andExpect(jsonPath("$.publication_year").value(2020));
+                .andExpect(jsonPath("$.publication_year").value(2020))
+                .andExpect(jsonPath("$.file_available").value(true));
 
         Paper saved = papers.findAll().getFirst();
         assertThat(saved.getOwnerId()).isEqualTo(user);
         assertThat(saved.getFolderId()).isNull();
+        assertThat(Files.readAllBytes(Path.of(uploadDir, saved.getFileKey()))).isEqualTo(PDF);
+    }
+
+    @Test
+    void doiWithNoOpenAccessPdfIsNotTracked() throws Exception {
+        when(metadata.lookup(any())).thenReturn(Optional.of(
+                new PaperMetadata("10.1000/xyz123", null, "A paper", null, null, null)));
+        when(openAccess.download("10.1000/xyz123")).thenReturn(Optional.empty());
+
+        track("10.1000/xyz123")
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.detail").value("Couldn't find an open-access PDF for DOI 10.1000/xyz123, "
+                        + "so it can't be tracked. Try a different paper"));
+        assertThat(papers.count()).isZero();
     }
 
     @Test
