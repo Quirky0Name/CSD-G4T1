@@ -9,7 +9,7 @@ bottom.
 
 | Service | Needed for | Notes |
 |---|---|---|
-| **Semantic Scholar** | abstract/TL;DR/snippet lookups | Request a key through their API-key request form **first** — approval can take days. Keyless calls work meanwhile but hit frequent 429s. Header: `x-api-key`. |
+| **Semantic Scholar** | abstract/TL;DR/snippet lookups; open-access PDF links when Storage Management tracks a paper by DOI | Request a key through their API-key request form **first** — approval can take days. Keyless calls work meanwhile but hit frequent 429s. Header: `x-api-key`. |
 | **DeepSeek** | claims + stance LLM calls | Create an account at platform.deepseek.com, top up a few USD (covers development and the demo many times over — calls cost well under 1¢ each), create an API key. |
 | **OpenAlex** | retraction status, citation counts, authors, journal/DOAJ-membership flag (fetched by Updating and Storage Management), citation-neighbourhood metrics (Research Evaluation) | Create a free account and key. This is the only key you need to request for Updating. A key is now required for the full $1/day free-usage budget (keyless calls get 1/10 of that). Passed as the `api_key` query param. Storage Management and Updating share that budget if they use the same key, so Updating fetches each DOI once per poll. |
 | **Crossref** | retraction/correction notices, canonical metadata (Updating, Storage Management) | No key needed. Pick a contact email for the `mailto` polite-pool parameter (`CROSSREF_MAILTO`) — improves rate limits, doesn't require registration. |
@@ -71,7 +71,6 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
 | `SM_BASE_URL` | Storage Management's running URL (`http://localhost:8081`); the stub in `backend/dev/` listens on the same port |
 | `RE_BASE_URL` | Research Evaluation's running URL (`http://localhost:8000`); the stub in `backend/dev/` listens on the same port |
 | `GROBID_URL` | `http://grobid:8070` in Docker Compose |
-| `ADMIN_API_KEY` | any value you pick and share with the team, for `/admin/run-poll` |
 | `POLL_INTERVAL_HOURS` | `24` (default) |
 | `CACHE_MAX_ENTRIES` | `5000` (default) |
 | `EVALUATION_SNAPSHOT_WINDOW` | `5` (default), at least `2`: how many of a paper's newest snapshots Research Evaluation compares on each nudge. A change is missed if its nudge keeps failing for more than N − 2 polls in a row; raise it (e.g. `30`) before deployment |
@@ -138,54 +137,48 @@ summary is in Updating's `poll_runs` table. Nudges show up at
 `GET localhost:8000/dev/received`; `POST localhost:8000/dev/fail` makes the stub
 refuse them (`?on=false` to stop), to see a failed nudge re-sent next poll.
 
-## Running Research Evaluation locally (stub Storage Management)
+### Mock harness (seeded scenarios)
 
-Research Evaluation needs only `JWT_SECRET` (the same value as the stub and
-Updating) and `SM_BASE_URL` (default `http://localhost:8081`), plus the
-optional `EVALUATION_SNAPSHOT_WINDOW` (default `5`, see the table above).
-It keeps no database. It reads `.env` from the directory it's started in,
-so start it from `backend/`. It refuses to start without a valid
-`JWT_SECRET`, or with a window below `2`.
+To see a nudge on demand without waiting for a real change, seed a paper whose
+"before" snapshot differs from what Crossref and OpenAlex say now, then trigger a
+poll for it. `POST localhost:8081/dev/seed?scenario=` (stub Storage Management)
+adds the paper with that earlier snapshot:
+
+| `scenario` | Paper | The nudge it should produce |
+|---|---|---|
+| `openalex_retraction` | IJAA | `is_retracted false -> true` |
+| `crossref_retraction` | IJAA | a new `retraction` notice in `crossref_updates` |
+| `corrections` | Lancet | new `correction`, `erratum` and `expression_of_concern` notices |
+| `doaj_delisting` | Lancet | `in_doaj true -> false` |
+| `no_change` | JBC | none |
+| `no_doi` | none (no DOI) | none: listed under `skipped_no_doi` |
+
+**Order matters.** Start the stubs and Updating first, then seed, then trigger. Keep
+the default `POLL_INTERVAL_HOURS` (24) rather than the `0.01` above: a poll that
+lands between the seeding and your trigger takes the nudge, and your trigger then
+shows nothing. On a fresh database Updating polls once at startup, so seed after it
+is up.
 
 ```
-# terminal 1: the stub on 8081, as above
-uv run --env-file .env uvicorn dev.stub_storage:create_app --factory --port 8081
-
-# terminal 2: Research Evaluation on 8000
-uv run uvicorn research_evaluation.main:app --port 8000
+curl -X POST 'localhost:8081/dev/seed?scenario=openalex_retraction'     # note the "id" it returns
 ```
 
-To see a change become an alert without running Updating, store two
-snapshots of a paper in the stub and nudge Research Evaluation the way
-Updating does. Both calls need a service token:
+Then open `localhost:8001/docs` and run `POST /run-poll` with that
+`paper_id`. The summary lists the paper under
+`stored` and `nudged`; the reason is in Updating's log (`paper <id>: snapshot N
+changed since M: …`); the id arrives at `GET localhost:8000/dev/received`. Run it
+again: it stores another snapshot and `nudged` is empty. A manual run calls the live
+Crossref and OpenAlex APIs, so their answers may have drifted and list more reasons.
+
+The same scenarios run as tests, on recorded API responses, an in-process copy of
+both stubs and a fresh SQLite database each time, so they can be repeated and never
+touch live data. `-m live` runs them against the live APIs (checking the intended
+reason is among those logged):
 
 ```
-TOKEN=$(uv run --env-file .env python -c "import os; from common.service_token import decode_jwt_secret, mint_service_token; print(mint_service_token(decode_jwt_secret(os.environ['JWT_SECRET']), 'svc:updating'))")
-PAPER=$(curl -s -X POST localhost:8081/dev/papers -H 'content-type: application/json' \
-  -d '{"doi": "10.1016/j.ijantimicag.2020.105949"}' | python -c "import sys, json; print(json.load(sys.stdin)['id'])")
-
-# a baseline, then a snapshot where the paper is retracted
-# (snapshot bodies: see "POST /internal/papers/{id}/background-info" in CONTRACTS.md)
-curl -X POST localhost:8081/internal/papers/$PAPER/background-info -H "Authorization: Bearer $TOKEN" \
-  -H 'content-type: application/json' -d @baseline.json
-curl -X POST localhost:8081/internal/papers/$PAPER/background-info -H "Authorization: Bearer $TOKEN" \
-  -H 'content-type: application/json' -d @retracted.json
-
-# the nudge: 202 {"alerts_created": 1, ...}; sending it again creates nothing new
-curl -X POST localhost:8000/evaluate/changes -H "Authorization: Bearer $TOKEN" \
-  -H 'content-type: application/json' -d "{\"paper_ids\": [\"$PAPER\"]}"
-
-# the stored alert (stub-only, no token)
-curl localhost:8081/dev/papers/$PAPER/alerts
+uv run pytest tests/updating/test_scenarios.py
+uv run pytest tests/updating/test_scenarios.py -m live
 ```
-
-Stop the stub and nudge again to see the failure path: `503`, and Research
-Evaluation logs `evaluating paper <id> failed: could not reach Storage
-Management (ConnectError)`.
-
-In Docker Compose, the `research-evaluation` container reads the same
-`backend/.env` and, like `updating`, has `SM_BASE_URL` overridden to
-`http://host.docker.internal:8081`.
 
 Tests need no keys, Docker or Postgres (they use SQLite and the stub):
 

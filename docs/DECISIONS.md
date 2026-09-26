@@ -5,334 +5,81 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
-## 2026-09-26 — Alerts from one poll are listed most severe first
+## 2026-09-26 — Storage stores snapshots and open-access PDFs & migrations tidied
 
-### Team decisions
+### Decision
 
-- **`GET /papers/{id}/alerts` breaks ties on `detected_at` by severity**
-  (`high`, then `medium`, then `low`), then by `id` descending. Alerts
-  found in the same pair of snapshots share a detection time, and were
-  ordered by `id` alone, i.e. by the order Research Evaluation stored
-  them. Stage 1 lists the retraction first, so it got the lowest id and
-  was listed last, below an erratum from the same poll, with the notices
-  in between in Crossref's listing order. The most severe alert at the
-  bottom reads as the least important. This replaces the 2026-09-25 rule
-  that the newer `id` goes first.
-- **Storage Management sorts; the order Research Evaluation stores alerts
-  in doesn't matter.** It's an in-memory sort of one paper's alerts, which
-  are few, so no query or index changes.
+- **Storage Management now keeps the snapshots Updating sends** (CG-68):
+  one insert-only `background_metadata` row per `POST
+  /internal/papers/{id}/background-info`, read back in order by
+  `GET .../history`. Updating stops needing the stub for these two calls.
+- **`crossref_updates`, `authors` and `source_status` are stored exactly as
+  sent**, as JSON text. Storage never reads inside them, so Updating can
+  add a field (as PR #9 did with `institutions`) without a storage change.
+  Scalar fields get their own columns. Authors stay inside the snapshot,
+  not in a separate `authors_background` table — nothing queries single
+  authors yet; split them out if a feature needs to.
+- **Migrations are V1 (papers), V3 (alerts, PR #15) and V4 (snapshots).**
+  PR #12 deleted `V2__drop_papers_file_key.sql`; it isn't restored, since
+  V1 already creates `papers` with `file_key`. Snapshots are V4, not V2,
+  so they still apply after V3 whichever PR lands first.
+- **A DOI-only paper needs an open-access PDF.** Settles the pending
+  question in the 2026-09-25 entry below. When a paper is tracked by DOI,
+  Storage Management downloads an open-access copy of it: every `pdf_url`
+  OpenAlex lists for the work (its `best_oa_location` first, then the rest
+  of `locations`), then Semantic Scholar's `openAccessPdf`. The first link
+  that actually returns a PDF under 25 MB is stored like an upload — using
+  the same `file_key` column V1 already creates, so this needs no new
+  migration.
+- If none of those links works, the paper **isn't tracked**: `POST
+  /papers` answers `422` with a readable message telling the user to pick
+  a different paper. Every tracked paper therefore has a stored PDF. The
+  message doesn't suggest uploading instead: a paper with no open-access
+  copy is usually paywalled, and most users couldn't legally get the PDF
+  without buying it.
 
----
+### Why
 
-## 2026-09-26 — Research Evaluation compares only the newest N snapshots
-
-### Team decisions
-
-- **Each nudge compares only the paper's newest N snapshots,** N being the
-  Research Evaluation setting `EVALUATION_SNAPSHOT_WINDOW` (default 5,
-  minimum 2, i.e. one pair). It asks Storage Management for them with a
-  new `last=N` parameter on the history endpoint, so only those snapshots
-  are read, not the whole history, which grows by one row per paper per
-  poll for as long as the paper is tracked.
-- **Why not only the last pair:** older pairs matter when a nudge failed.
-  If Research Evaluation or Storage Management fails a nudge, Updating
-  keeps its flag and re-sends on the next poll, by which time a newer
-  snapshot exists and the change is no longer in the last pair. Looking at
-  the last pair only would reply `202` for a retry, Updating would clear
-  its flag, and the change would never become an alert.
-
-### The limit this sets
-
-A change is still found as long as a nudge gets through within
-**N − 2 failed nudges in a row**. With N = 5 and the default 24-hour poll,
-that's 3 failed nudges, about 3 days of Research Evaluation or Storage
-Management failing the nudge. After more, the change has left the window
-and is lost, silently. 5 is a starting value; raise it (e.g. to 30)
-before deployment. A bigger N costs only a larger read per nudge, since
-changes already stored are skipped before evaluation.
-
-### Consequences
-
-- The history endpoint's contract gains `last` (CONTRACTS.md). The Java
-  endpoint isn't built yet (CG-68); until it implements `last`, it would
-  return the whole history, which gives the same alerts with more to read.
-- The window is a Research Evaluation setting only (SETUP.md). Updating
-  reads the history on its own terms.
-
----
-
-## 2026-09-26 — Only changes not stored yet are evaluated
-
-### Team decisions
-
-- **Research Evaluation checks which changes already have an alert before
-  evaluating.** It still detects changes over the paper's whole snapshot
-  history on every nudge (cheap, in memory, and it's what catches a change
-  whose nudge failed earlier; since narrowed to the newest N snapshots,
-  see the entry above), then asks Storage Management for the
-  paper's stored change keys (`GET /internal/papers/{id}/alerts/change-keys`)
-  and runs the assessment, stage 3 and storing only for changes whose key
-  isn't there. Before this, every nudge re-assessed every old change and
-  re-posted it (Storage Management answered `200` and stored nothing).
-  That was cheap with rule-based templates, but the evaluation is meant to
-  move to an LLM, and re-evaluating old changes would then re-pay for the
-  same LLM calls on every nudge.
-- **The lookup is skipped when detection finds nothing,** so a nudge for a
-  paper with no changes costs one request, as before.
-- **A change key that appears in two pairs of one history is evaluated
-  once, keeping the earlier pair's change.** For example, OpenAlex's
-  retraction flag on one poll and Crossref's retraction notice on a later
-  one are both `retraction`. This matches what Storage Management kept
-  before (the first alert for a key), so the stored alert may lack the
-  notice DOI when the flag came first.
-- **A failed lookup is a failure like any other** (`503`, and Updating
-  re-sends), and a "No paper" `404` from it skips the paper, like the
-  other Storage Management calls.
-
-### Known limit
-
-Two nudges for the same paper arriving at the same moment can both see no
-stored key and both evaluate a new change. Storage Management's unique
-change key still stores only one alert. If LLM cost ever makes that
-matter, the LLM step can run only for alerts that came back `201`.
-
----
-
-## 2026-09-26 — Research Evaluation is called only by Updating's nudge
-
-### Team decisions
-
-- **Only Updating calls Research Evaluation, and only to nudge it.**
-  Updating's job is to notice that a paper's status changed; what the
-  change means, including whether a related paper's stance matters, is
-  Research Evaluation's. So Updating never asks for a stance check: if it
-  sees something, it nudges, and Research Evaluation decides what to
-  evaluate. This follows the 2026-09-24 split (Updating snapshots,
-  Research Evaluation evaluates).
-- **Storage Management never calls Research Evaluation.** It's the store.
-  Research Evaluation reads what it needs from it (snapshots, and later
-  the PDF, notes and extracted text) and writes alerts to it.
-- **`/evaluate/background-info`, `/evaluate/citation-neighbourhood` and
-  `/evaluate/stance` are under review.** CONTRACTS.md still described
-  them with callers from the 2026-09-18 design (Storage Management asking
-  for COI text and claims at ingest; Updating asking for stance checks),
-  which the 2026-09-24 split made obsolete but nobody revisited. They are
-  likely to become internal steps of Research Evaluation's evaluation
-  (the later stance and claims stories) rather than endpoints; whether any
-  stays an endpoint, e.g. a manual comparison for the demo, is for those
-  stories. They aren't deleted from CONTRACTS.md until then. `RE_BASE_URL`
-  is Updating's only.
-
----
-
-## 2026-09-26 — One alert per Crossref notice, for now
-
-### Team decisions
-
-- **A notice Crossref files under several types gives one alert, of the
-  most severe type.** A notice is the separate document a journal
-  publishes to announce a retraction, correction, erratum or expression of
-  concern, with its own DOI. Crossref sometimes lists one notice under two
-  types, one per source: the Lancet fixture's notice
-  `10.1016/s0140-6736(20)31249-6` is a Retraction Watch `correction` and a
-  publisher `erratum`, and IJAA's retraction notice is also a publisher
-  `erratum`. One alert per type showed the researcher two alerts about
-  one document, the second one milder. The order, most severe first:
-  `retraction`, `expression_of_concern`, `correction`, any unclassified
-  type (`other`), `erratum`, the same as the severities, with ties broken
-  in that order. This replaces the narrower rule of 2026-09-25, which only
-  folded notices listed as a `retraction` (approved by the story's owner,
-  and now a case of this one).
-- **A notice already seen on an earlier poll gives no new alert under a
-  new type**, unless the new type is `retraction`. The change key
-  includes the type, so otherwise a later relabel would store a second
-  alert.
-- **Notices without a DOI can't be matched up**, so each of their types
-  still counts on its own.
-
-### Temporary
-
-This is a stopgap. The intended design is that detection hands the whole
-list of flagged changes for a paper to an LLM stage, which evaluates them
-together (duplicates, how they relate, what they mean for the researcher)
-instead of one alert per notice by fixed rules. Known losses until then:
-- a known notice relabelled as more severe (e.g. `erratum`, later
-  `correction`) raises nothing new; only a relabel to `retraction` does;
-- when one notice has two unclassified types, the first one listed names
-  the `other` alert.
-
----
-
-## 2026-09-25 — Alerts: stored in Storage Management, evaluated in stages
-
-Part of the "seeing and reviewing paper changes" story; the full plan is
-in [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md).
-
-### Team decisions
-
-- **Storage Management stores alerts**, one row per change Research
-  Evaluation detects on a paper, with its assessment (severity,
-  description, recommendation, detection time) and the researcher's
-  status. Research Evaluation writes them with
-  `POST /internal/papers/{id}/alerts`. The frontend will read and act on
-  them through Storage Management too. Reasons:
-  - Storage Management is the team's persistence service (ARCHITECTURE.md,
-    Section 2), and the frontend already talks to it, so a paper and its
-    alerts come from one backend.
-  - Storage Management already checks user JWTs and knows each paper's
-    owner, so an alert needs no copied `owner_id`: ownership comes from
-    `papers.owner_id`.
-  - Research Evaluation stays off the frontend's path ("not called
-    directly by the frontend" in CONTRACTS.md still holds) and needs no
-    database of its own for change evaluation.
-- **Storing an alert is idempotent on (`paper_id`, `change_key`).** A
-  repeat returns the stored alert, **unchanged**, with `200`: the first
-  description is kept, and so is the researcher's status. Updating re-sends
-  a nudge whenever it didn't get a `202`, so Research Evaluation may store
-  the same change more than once, and a researcher who already
-  acknowledged or dismissed an alert must not see it come back as `new`.
-- **The unique constraint, not a transaction, settles a race.** If two
-  requests for the same change both miss the lookup, the second insert
-  hits the unique constraint and Storage Management re-reads the first
-  one's alert. The store is deliberately not one transaction: on Postgres,
-  a failed insert aborts the transaction around it, so the re-read has to
-  happen in a fresh one. (The plan's layout table first said "in one
-  transaction".)
-- **An alert is deleted with its paper** (`on delete cascade`). An alert
-  means nothing without its paper. This wasn't in the plan's table design.
-- **Enum values are lowercase in the API and in the database**
-  (`retraction`, `high`, `new`), so a row reads the same as the JSON.
-  Only the exact lowercase value is accepted.
-- **An alert's detection time is the `fetched_at` of the first snapshot
-  the change shows up in,** not the time Research Evaluation stored the
-  alert. It's when a poll first saw the change, so it stays the same when
-  a nudge is retried a day later or Research Evaluation catches up on
-  several snapshots at once, and "sorted by recency" means recency of the
-  change, not of the processing. Alerts found in the same pair of
-  snapshots share a detection time, and the newer `id` goes first
-  (replaced on 2026-09-26: the most severe goes first, then the newer
-  `id`; see "Alerts from one poll are listed most severe first").
-- **Another user's paper gets the same `404` as a missing paper** on the
-  alert list, with the same `detail`. A `403` would tell a user that a
-  paper id they guessed exists. The same goes for another user's alert on
-  `PATCH /alerts/{id}`.
-- **Dismissing hides an alert by default; acknowledging keeps it.** The
-  researcher's call when the plan was approved: "acknowledge" means "I've
-  seen this and it matters", "dismiss" means "not relevant to me". The
-  list leaves dismissed alerts out unless `include_dismissed=true`, so
-  nothing is lost and the frontend can still offer a "show dismissed"
-  view.
-- **Status rules.** `acknowledged` and `dismissed` can each replace any
-  other status, so a researcher can change their mind in either direction.
-  Setting the status an alert already has changes nothing, so
-  `status_changed_at` records when the researcher actually changed it, not
-  when a button was pressed twice. An alert can't go back to `new`: `new`
-  means Research Evaluation found it and nobody has responded yet.
-
-- **Detection is deterministic; what a change means comes after.**
-  Research Evaluation evaluates in stages: detection (compare snapshots),
-  then a rule-based assessment, then (later stories) LLM stages that revise
-  it. Whether a paper was retracted must never depend on an LLM, and the
-  rule-based stage means every alert is complete even when an LLM is slow
-  or down.
-- **Severities:** retraction `high`; expression of concern and correction
-  `medium`; erratum and DOAJ delisting `low`; `other` `medium`. A
-  retraction means the findings are withdrawn. An expression of concern
-  means they're in question and may be retracted. A correction changes the
-  paper's content, usually after an author's error. An erratum is usually
-  a publisher's error in the published version. A DOAJ delisting is about
-  the journal, not this paper. An unrecognised notice gets `medium`, so
-  it's looked at rather than ignored.
-- **One retraction alert per paper.** OpenAlex's `is_retracted` and a
-  Crossref `retraction` notice report the same event, sometimes on
-  different polls; both use the change key `retraction`, so the second is
-  a no-op in Storage Management.
-- **A Crossref type we don't classify becomes an `other` alert** instead of
-  being dropped, with its raw type, label, notice DOI and date, so a
-  withdrawal or removal still reaches the researcher, and the later LLM
-  story (stage 3) has something to investigate.
-
-- **`POST /evaluate/changes` requires a service token.** Any
-  `role=service` token is accepted and user tokens are refused, as on
-  Storage Management's `/internal/**`. A user could otherwise trigger
-  evaluations of any paper id; Updating already mints service tokens for
-  Storage Management, so it costs Updating one header.
-- **Research Evaluation evaluates before replying `202`, and keeps no
-  state.** CONTRACTS.md first said it would evaluate after replying. But
-  Updating clears its `nudge_pending` flag on a `202`, and the next
-  snapshot then looks unchanged, so a nudge accepted and then lost (Storage
-  Management down mid-evaluation, a restart) would lose the change for
-  good. Research Evaluation would need a durable pending list of its own
-  to prevent that, i.e. its own database. Replying after the evaluation,
-  with `503` on any failure, makes Updating's existing flag the retry.
-  Re-reading the full history on every nudge is safe because storing an
-  alert is idempotent (narrowed to the newest N snapshots on 2026-09-26,
-  "Research Evaluation compares only the newest N snapshots"). The cost is that Updating waits: a few Storage
-  Management calls per paper while the evaluation is rule-based. The LLM
-  stages (later stories) are too slow for this and will run after the
-  reply, updating alerts that are already stored.
-- **Any failure gives `503`, for now.** Temporary failures recover on
-  Updating's next poll. Failures that repeat (a config error, a bug) fail
-  on every poll until someone fixes them; each is logged with the paper id
-  and the cause. Handling them better is left for later
-  (EVALUATION-REVIEW-CHANGES.md, "Failure handling").
-
-### Deviations
-
-- **Built differently from the plan in S5:**
-  - Storage Management's paper-not-found `404` is recognised by its
-    `detail` being exactly `No paper <id>` (the plan said "a
-    problem-details body"). Spring answers a missing route with a problem
-    details body too, so only the text tells them apart.
-  - One failing paper doesn't stop the others in the same nudge: their
-    alerts are stored, and the reply is still `503`.
-  - The `202` and `503` replies carry a summary (`alerts_created`,
-    `skipped_paper_ids`, `failed_paper_ids`) for logs and the demo.
-    Updating only looks at the status.
-  - The stub Storage Management answers `422` for a bad alert body where
-    the real one answers `400`, and doesn't check `notice_doi` length or
-    whitespace-only text. It also has a stub-only
-    `GET /dev/papers/{id}/alerts` for tests and demos.
-- **Descriptions are templates for now.** ARCHITECTURE.md, Section 3 says
-  Research Evaluation reads the paper, its PDF and notes when it evaluates
-  a change. This story only uses the snapshots; the PDF-aware and LLM
-  evaluation are later stories.
-- **An entry whose notice DOI is also listed as a `retraction` gives no
-  alert of its own.** (Approved by the story's owner, then widened on
-  2026-09-26 to any notice listed under several types.) The CONTRACTS.md table identifies entries by
-  (`notice_doi`, `type`), which would make IJAA's retraction notice (a
-  Retraction Watch `retraction` and a publisher `erratum`) a high
-  retraction alert plus a low erratum alert about the same document. The
-  second would understate it. Found in the IJAA fixture while building
-  detection.
-- **The change key is set by detection (stage 1), not by the rule-based
-  assessment.** It identifies the change, which is detection's job; the
-  plan first put it in stage 2.
-- **Settled on 2026-09-26:** the same notice under two non-retraction
-  types gave two alerts (the Lancet fixture's notice
-  `10.1016/s0140-6736(20)31249-6`, a `correction` and an `erratum`). It now
-  gives one; see the 2026-09-26 entry.
+- No shared or deployed database exists yet, only local test ones, so the
+  cheapest fix for the deleted V2 is a one-off reset for anyone who ran it
+  (LOCAL_STORAGE_DB.md) rather than two extra migrations kept forever.
+- Research Evaluation needs the paper itself, so a tracked paper with no
+  PDF would be one it can't evaluate. Refusing it up front tells the user
+  straight away instead of failing later.
 
 ### Rejected
 
-- **Research Evaluation owning the alerts in its own schema**
-  (database-per-service, the pattern Updating follows for `tracked_papers`).
-  It's the textbook microservices split, but it would put Research
-  Evaluation on the frontend's path, with user JWTs, CORS and a copied
-  `owner_id`, against a team design where Storage Management is the
-  persistence service the frontend talks to.
+- **Restoring V2 and re-adding `file_key` in another migration.** It keeps
+  old local databases working, but adds two migrations just to undo each
+  other, for data nobody needs.
+- **Typed columns or tables for the JSON snapshot fields.** They'd tie
+  storage's schema to Updating's snapshot builder.
+- **Tracking a DOI-only paper without a file and asking for an upload
+  later.** It needs a new "attach a PDF" endpoint and leaves Research
+  Evaluation with papers it can't read until someone remembers to upload.
+- **OpenAlex's `best_oa_location` only.** For
+  `10.1371/journal.pmed.0020124` it has no `pdf_url` and Semantic Scholar
+  doesn't know the DOI, but another OpenAlex location (PLOS) serves the
+  PDF.
+- **Europe PMC, HAL and publisher pages as extra PDF sources.** Tried for
+  the demo papers; all answered `403` or an HTML page to a script.
 
-### Consequences
+### Also settled while building it
 
-- The alerts table is migration `V3__create_alerts.sql`. (Updated
-  2026-09-26, after merging `main`: the `papers` file key (see "Storage
-  keeps every tracked paper's PDF", below) came back by deleting
-  `V2__drop_papers_file_key.sql`, so `file_key` is in V1 again and no new
-  migration is coming. V3 stays: Flyway accepts the gap at 2,
-  and renaming the alerts migration to V2 would clash with databases that
-  already ran the deleted V2.)
-- The endpoints are Storage Management code written for this story, so
-  Amir reviews them.
+- From here on, a migration on `main` is never edited or deleted; changes
+  go in a new, higher-numbered one. The Supabase database will start empty
+  and run V1, V3, V4 in order.
+- History rows write every field, nulls included: Updating's history
+  parser requires all of them.
+- **The demo papers can't be tracked by DOI.** All three are on
+  ScienceDirect, which answers `403` or an HTML page to a script, and no
+  other listed copy downloads. DEMO.md already has them uploaded by hand,
+  so the demo doesn't change.
+- A link counts only if the response starts with `%PDF-`; publishers often
+  answer a PDF link with `200` and a login or cookie page.
+- Semantic Scholar is called keyless unless `S2_API_KEY` is set (sent as
+  `x-api-key`). A failed or rate-limited lookup on either source just means
+  one less place to look, so it ends in the same `422`, not a `503`.
 
 ---
 

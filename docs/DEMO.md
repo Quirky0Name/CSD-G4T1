@@ -30,13 +30,13 @@ the publisher during the demo.
 
 ## Live sequence
 
-1. **Updating, Swagger UI:** run the poll once for the tracked paper and
-   show the snapshot it stores (retraction status, Crossref updates,
-   DOAJ/journal, authors).
+1. **Storage Management:** show the baseline snapshot seeded for the tracked
+   paper (retraction status, Crossref updates, DOAJ/journal, authors). Don't
+   poll it yet: a poll before step 3 would take the nudge that step 3 shows.
 2. **Research Evaluation:** call `/evaluate/stance` for tracked vs.
    contradicts (expect `contradicts`) and tracked vs. supports (expect
    `supports`).
-3. **Updating, Swagger UI:** `POST /admin/run-poll?paper_id=<tracked>` —
+3. **Updating, Swagger UI:** `POST /run-poll?paper_id=<tracked>` —
    show the new snapshot (now `is_retracted=true` with a `retraction`
    entry in `crossref_updates`) and that the run summary lists the paper
    as nudged, then show that Research Evaluation read the two snapshots
@@ -52,6 +52,14 @@ the publisher during the demo.
    `PATCH /alerts/{id}` with `{"status": "acknowledged"}`.
 5. Run the poll again live to show it stores another snapshot but doesn't
    nudge again.
+
+## Rehearsing the Updating half
+
+The seeded-scenario harness in [SETUP.md](SETUP.md) ("Mock harness") runs steps 3
+and 5 without the real papers or a real change: seed a scenario, trigger the poll
+from Swagger and check the nudge arrives. Nothing may poll the tracked paper
+between seeding and step 3, including Updating's startup poll and a short
+`POLL_INTERVAL_HOURS`.
 
 ## Fallback if a live call fails
 

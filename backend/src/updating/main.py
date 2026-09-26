@@ -1,8 +1,9 @@
 """Updating service (docs/ARCHITECTURE.md, Section 4).
 
 Runs the scheduled poll from the FastAPI lifespan. Single process only: one uvicorn
-worker, one replica. `POST /admin/run-poll` lands in PR 4."""
+worker, one replica. `POST /run-poll` (routes.py) shares the poll lock with the scheduler."""
 
+import asyncio
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -11,6 +12,7 @@ from datetime import UTC, datetime
 import httpx
 from fastapi import FastAPI
 
+from updating import routes
 from updating.config import UpdatingSettings
 from updating.db import init_db, make_engine, make_sessions
 from updating.poll import PollDeps
@@ -27,7 +29,13 @@ def configure_logging() -> None:
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
-def create_app(settings: UpdatingSettings | None = None) -> FastAPI:
+def create_app(
+    settings: UpdatingSettings | None = None,
+    *,
+    sm_transport: httpx.AsyncBaseTransport | None = None,
+    re_transport: httpx.AsyncBaseTransport | None = None,
+) -> FastAPI:
+    """The transports let the mock harness run against in-process stubs instead of the network."""
     configure_logging()
 
     @asynccontextmanager
@@ -42,8 +50,12 @@ def create_app(settings: UpdatingSettings | None = None) -> FastAPI:
             )
             sm_auth = ServiceTokenAuth(config.jwt_secret.get_secret_value())
             async with (
-                httpx.AsyncClient(base_url=config.sm_base_url, auth=sm_auth, timeout=HTTP_TIMEOUT_SECONDS) as sm,
-                httpx.AsyncClient(base_url=config.re_base_url, timeout=HTTP_TIMEOUT_SECONDS) as re,
+                httpx.AsyncClient(
+                    base_url=config.sm_base_url, auth=sm_auth, timeout=HTTP_TIMEOUT_SECONDS, transport=sm_transport
+                ) as sm,
+                httpx.AsyncClient(
+                    base_url=config.re_base_url, timeout=HTTP_TIMEOUT_SECONDS, transport=re_transport
+                ) as re,
                 httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as sources,
             ):
                 deps = PollDeps(
@@ -53,7 +65,9 @@ def create_app(settings: UpdatingSettings | None = None) -> FastAPI:
                     sessions=sessions,
                     crossref_mailto=config.crossref_mailto,
                     openalex_api_key=config.openalex_api_key,
+                    lock=asyncio.Lock(),
                 )
+                app.state.poll_deps = deps
                 app.state.scheduler = build_scheduler(deps, config.poll_interval_hours, next_run)
                 app.state.scheduler.start()
                 try:
@@ -63,7 +77,9 @@ def create_app(settings: UpdatingSettings | None = None) -> FastAPI:
         finally:
             await engine.dispose()
 
-    return FastAPI(title="Updating", lifespan=lifespan)
+    app = FastAPI(title="Updating", lifespan=lifespan)
+    app.include_router(routes.router)
+    return app
 
 
 app = create_app()

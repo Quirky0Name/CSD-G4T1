@@ -1,5 +1,11 @@
 # Storage Management
 
+> **Ran Storage Management locally before 2026-09-26?** Reset your local
+> database once: `docker rm -f storage-db`, then run the `docker run` below
+> again and empty your upload folder. The migrations were tidied, and an
+> old database won't start without the reset. See
+> [Resetting your local database](#resetting-your-local-database).
+
 ## Running locally
 
 Start Postgres:
@@ -24,6 +30,25 @@ Then from `storage/`:
 ```
 
 It runs on `localhost:8081` and creates its tables on first start.
+
+## Resetting your local database
+
+Migrations were tidied on 2026-09-26 (see DECISIONS.md): the old
+`V2__drop_papers_file_key.sql` is gone. If your local database ran it,
+Storage Management won't start ("applied migration not resolved
+locally"). Reset it once; it's only test data:
+
+```
+docker rm -f storage-db
+```
+
+then run the `docker run` above again, and empty your upload folder too
+(see below). The same reset fixes any other migration error on a local
+database.
+
+**Migration rule.** Never edit or delete a migration once it's on `main`,
+always add a new, higher-numbered one. Numbers can have gaps (there's no
+V2); Flyway only cares that they go up.
 
 ## PDFs
 

@@ -10,8 +10,13 @@ doesn't gate: authors aren't compared, so the snapshot is stored with `error` an
 Before a snapshot is posted, the paper's previous one is read back from Storage Management
 and compared with it (compare.py). A difference sets `nudge_pending` on the paper; at the end
 of the poll every pending paper is sent to Research Evaluation in one call, and the flag is
-cleared only when it answers 202. A paper's first snapshot is a baseline and never nudges."""
+cleared only when it answers 202. A paper's first snapshot is a baseline and never nudges.
 
+One poll at a time: `PollDeps.lock` is shared by the scheduled job and `POST /run-poll`.
+A scheduled tick that finds it held waits, so a single-paper manual run doesn't push every other
+paper back a full interval; the manual trigger refuses instead (`run_manual_poll`)."""
+
+import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -44,6 +49,14 @@ class PollFailed(Exception):
     """The poll couldn't run at all (Storage Management's paper list was unavailable)."""
 
 
+class UnknownPaper(PollFailed):
+    """A single-paper poll was asked for a paper Storage Management doesn't list."""
+
+
+class PollAlreadyRunning(Exception):
+    """A manual trigger found another poll in progress."""
+
+
 @dataclass(frozen=True)
 class PollDeps:
     sm: httpx.AsyncClient
@@ -52,6 +65,7 @@ class PollDeps:
     sessions: async_sessionmaker[AsyncSession]
     crossref_mailto: str
     openalex_api_key: SecretStr
+    lock: asyncio.Lock  # one poll at a time; the scheduled job and the manual trigger share it
 
 
 class _Frozen(BaseModel):
@@ -85,6 +99,7 @@ class NudgeError(_Frozen):
 class PollSummary(_Frozen):
     run_id: int
     trigger: PollTrigger
+    paper_id: PaperId | None  # set for a single-paper run, null for a full one
     started_at: datetime
     finished_at: datetime
     stored: list[Stored]
@@ -95,25 +110,43 @@ class PollSummary(_Frozen):
     nudge_error: NudgeError | None
 
 
-async def run_poll(deps: PollDeps, trigger: PollTrigger) -> PollSummary:
-    started_at = datetime.now(UTC)
-    async with deps.sessions() as session:
-        run = PollRun(trigger=trigger, status=RunStatus.RUNNING, started_at=started_at)
-        session.add(run)
-        await session.commit()
-        run_id = run.id
+async def run_poll(
+    deps: PollDeps, trigger: PollTrigger, paper_id: PaperId | None = None
+) -> PollSummary:
+    """Poll every tracked paper, or only `paper_id`. Waits if another poll is running."""
+    # the run row is created inside the lock, so a run that waits (or is cancelled while
+    # waiting, at shutdown) leaves no `running` row behind
+    async with deps.lock:
+        started_at = datetime.now(UTC)
+        async with deps.sessions() as session:
+            run = PollRun(trigger=trigger, status=RunStatus.RUNNING, started_at=started_at)
+            session.add(run)
+            await session.commit()
+            run_id = run.id
 
-    try:
-        summary = await _poll(deps, run_id, trigger, started_at)
-    except Exception as exc:  # a cancelled run (shutdown) is a BaseException and stays `running`
-        error = str(exc) if isinstance(exc, PollFailed) else type(exc).__name__
-        await _close_run(deps, run_id, RunStatus.FAILED, summary=None, error=error)
-        raise
-    await _close_run(deps, run_id, RunStatus.SUCCEEDED, summary=summary, error=None)
-    return summary
+        try:
+            summary = await _poll(deps, run_id, trigger, paper_id, started_at)
+        except Exception as exc:  # a cancelled run (shutdown) is a BaseException and stays `running`
+            error = str(exc) if isinstance(exc, PollFailed) else type(exc).__name__
+            await _close_run(deps, run_id, RunStatus.FAILED, summary=None, error=error)
+            raise
+        await _close_run(deps, run_id, RunStatus.SUCCEEDED, summary=summary, error=None)
+        return summary
 
 
-async def _poll(deps: PollDeps, run_id: int, trigger: PollTrigger, started_at: datetime) -> PollSummary:
+async def run_manual_poll(deps: PollDeps, paper_id: PaperId | None) -> PollSummary:
+    """The manual trigger: refuses instead of waiting, so a busy poller answers at once."""
+    if deps.lock.locked():
+        raise PollAlreadyRunning
+    # No await sits between the check and run_poll taking the lock. The one gap: a scheduled
+    # tick that is waiting is handed the lock at release, and `locked()` stays False until it
+    # runs, so a manual call in that instant queues behind that poll instead of being refused.
+    return await run_poll(deps, PollTrigger.MANUAL, paper_id)
+
+
+async def _poll(
+    deps: PollDeps, run_id: int, trigger: PollTrigger, only_paper: PaperId | None, started_at: datetime
+) -> PollSummary:
     try:
         papers = await list_papers(deps.sm)
     except (httpx.HTTPError, ValueError) as exc:
@@ -121,11 +154,16 @@ async def _poll(deps: PollDeps, run_id: int, trigger: PollTrigger, started_at: d
             f"could not list papers from Storage Management: {type(exc).__name__}"
         ) from exc
 
-    dois = {paper.id: paper.doi for paper in papers if paper.doi}
-    skipped_no_doi = [paper.id for paper in papers if not paper.doi]
+    if only_paper is not None and only_paper not in {paper.id for paper in papers}:
+        raise UnknownPaper(f"Storage Management has no paper {only_paper}")
+    polled = [paper for paper in papers if only_paper in (None, paper.id)]
+    # every paper feeds the sync, so a single-paper run can't drop the other papers' rows
+    all_dois = {paper.id: paper.doi for paper in papers if paper.doi}
+    dois = {paper.id: paper.doi for paper in polled if paper.doi}
+    skipped_no_doi = [paper.id for paper in polled if not paper.doi]
     for paper_id in skipped_no_doi:
         log.info("skipping paper %s: no DOI", paper_id)
-    last_snapshot_ids = await _sync_tracked_papers(deps, dois)
+    last_snapshot_ids = await _sync_tracked_papers(deps, all_dois)
 
     papers_by_doi: dict[Doi, list[PaperId]] = {}
     for paper_id, doi in dois.items():
@@ -176,6 +214,7 @@ async def _poll(deps: PollDeps, run_id: int, trigger: PollTrigger, started_at: d
     return PollSummary(
         run_id=run_id,
         trigger=trigger,
+        paper_id=only_paper,
         started_at=started_at,
         finished_at=datetime.now(UTC),
         stored=stored,

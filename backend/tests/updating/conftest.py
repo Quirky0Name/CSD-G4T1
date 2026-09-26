@@ -1,3 +1,5 @@
+import asyncio
+from datetime import UTC, datetime, timedelta
 from urllib.parse import quote
 from uuid import UUID, uuid4
 
@@ -5,12 +7,16 @@ import httpx
 import pytest
 import respx
 from pydantic import SecretStr
-from support import TEST_JWT_KEY, load_fixture
-from updating_support import DOIS
+from support import TEST_JWT_KEY, TEST_JWT_SECRET, load_fixture
+from updating_support import record_run
 
+from dev.scenarios import DOIS, Scenario
 from dev.stub_research_evaluation import create_app as create_stub_re_app
 from dev.stub_storage import create_app as create_stub_app
+from updating.config import UpdatingSettings
 from updating.db import init_db, make_engine, make_sessions
+from updating.main import create_app
+from updating.models import PollTrigger
 from updating.poll import PollDeps
 from updating.snapshot import Snapshot, author_ids
 from updating.sources import OPENALEX_AUTHORS_URL, OpenAlexWork
@@ -87,6 +93,12 @@ class StubSm:
         response = await self.client.post("/dev/papers", json=body)
         return UUID(response.json()["id"])
 
+    async def seed_scenario(self, scenario: Scenario) -> UUID:
+        """A paper with the scenario's earlier snapshot, via the stub's `POST /dev/seed`."""
+        response = await self.client.post("/dev/seed", params={"scenario": scenario})
+        assert response.status_code == 201
+        return UUID(response.json()["id"])
+
     async def reset(self) -> None:
         await self.client.post("/dev/reset")
 
@@ -147,5 +159,29 @@ async def deps(sm, re, sources, tmp_path):
             sessions=make_sessions(engine),
             crossref_mailto="",
             openalex_api_key=SecretStr(""),
+            lock=asyncio.Lock(),
         )
     await engine.dispose()
+
+
+@pytest.fixture
+async def updating_app(sm, re, tmp_path, clean_settings_env):
+    """The real Updating app on a fresh SQLite database, wired to the in-process stubs.
+
+    ASGITransport doesn't run the lifespan, so it is entered here. A scheduled poll is put on
+    record first, so the scheduler's next tick is a full interval away instead of running at
+    startup and storing baselines before the test's trigger."""
+    url = f"sqlite+aiosqlite:///{tmp_path / 'app.db'}"
+    await record_run(url, PollTrigger.SCHEDULED, datetime.now(UTC))
+    settings = UpdatingSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET, database_url=url)
+    app = create_app(settings, sm_transport=sm.transport, re_transport=re.transport)
+    async with app.router.lifespan_context(app):
+        assert app.state.scheduler.get_job("poll").next_run_time > datetime.now(UTC) + timedelta(hours=1)
+        yield app
+
+
+@pytest.fixture
+async def updating_client(updating_app):
+    transport = httpx.ASGITransport(app=updating_app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://updating") as client:
+        yield client

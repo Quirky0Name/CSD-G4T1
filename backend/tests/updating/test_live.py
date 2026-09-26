@@ -5,9 +5,9 @@ from datetime import UTC, datetime
 import httpx
 import pytest
 from pydantic import SecretStr
-from updating_support import DOIS
 
 from common.doi import Doi
+from dev.scenarios import DOIS
 from updating.snapshot import author_ids, build_snapshot
 from updating.sources import fetch_crossref, fetch_openalex, fetch_openalex_authors
 
