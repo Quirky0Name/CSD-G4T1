@@ -73,12 +73,13 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
 | `GROBID_URL` | `http://grobid:8070` in Docker Compose |
 | `POLL_INTERVAL_HOURS` | `24` (default) |
 | `CACHE_MAX_ENTRIES` | `5000` (default) |
+| `EVALUATION_SNAPSHOT_WINDOW` | `5` (default), at least `2`: how many of a paper's newest snapshots Research Evaluation compares on each nudge. A change is missed if its nudge keeps failing for more than N − 2 polls in a row; raise it (e.g. `30`) before deployment |
 
 ## Scaffolding only (no keys needed)
 
 To just bring up the skeleton and confirm it boots (Updating needs `JWT_SECRET`
-and `DATABASE_URL` in `backend/.env` to start; Research Evaluation is still an
-empty stub):
+and `DATABASE_URL` in `backend/.env` to start, and Research Evaluation needs
+`JWT_SECRET`):
 
 ```
 cd backend
@@ -95,9 +96,10 @@ build order.
 Storage Management's `/internal/**` endpoints don't exist yet (CG-68), so
 `backend/dev/stub_storage.py` stands in for them: in memory, checking the
 service token the way the real service does. Research Evaluation's
-`POST /evaluate/changes` doesn't exist yet either, so
-`backend/dev/stub_research_evaluation.py` accepts Updating's nudges and records
-them. Without it, every change logs a failed nudge (the paper stays pending
+`POST /evaluate/changes` requires a service token, which Updating's nudge doesn't
+send yet (see [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md), "TODO
+for other owners"), so `backend/dev/stub_research_evaluation.py` stands in for it:
+it accepts Updating's nudges without checking a token and records them. Without it, every change logs a failed nudge (the paper stays pending
 and is re-sent next poll). Run Updating as **one process**
 (one uvicorn worker); the scheduler doesn't coordinate across processes.
 

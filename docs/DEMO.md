@@ -41,9 +41,15 @@ the publisher during the demo.
    entry in `crossref_updates`) and that the run summary lists the paper
    as nudged, then show that Research Evaluation read the two snapshots
    from Storage Management, worked out the differences and evaluated them
-   (severity, impact text and recommendation).
+   (severity, impact text and recommendation). The nudge's reply says how
+   many alerts it created, and the alert is stored in Storage Management:
+   `GET /papers/{id}/alerts` with the researcher's token (or, against the
+   stub, `GET /dev/papers/{id}/alerts`).
 4. **Frontend:** show the changes panel on the paper detail page, then
-   acknowledge one change.
+   acknowledge one change. Until the panel exists, show the same thing on
+   Storage Management's API: `GET /papers/{id}/alerts` (newest first, with
+   severity, description, recommendation and detection time), then
+   `PATCH /alerts/{id}` with `{"status": "acknowledged"}`.
 5. Run the poll again live to show it stores another snapshot but doesn't
    nudge again.
 
