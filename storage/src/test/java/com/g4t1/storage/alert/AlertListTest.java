@@ -62,6 +62,23 @@ class AlertListTest {
     }
 
     @Test
+    void alertsFromOnePollComeMostSevereFirst() throws Exception {
+        // stored in the order Research Evaluation detects them, so the retraction has the lowest id
+        String poll = "2026-09-10T00:00:00Z";
+        long retraction = seed(paperId, "retraction", poll, Severity.HIGH, AlertStatus.NEW).getId();
+        long erratum = seed(paperId, "erratum:a", poll, Severity.LOW, AlertStatus.NEW).getId();
+        long correction = seed(paperId, "correction:b", poll, Severity.MEDIUM, AlertStatus.NEW).getId();
+        long concern = seed(paperId, "expression_of_concern:c", poll, Severity.MEDIUM, AlertStatus.NEW).getId();
+        // a later poll still comes first, whatever its severity
+        long later = seed(paperId, "erratum:d", "2026-09-11T00:00:00Z", Severity.LOW, AlertStatus.NEW).getId();
+
+        list(paperId, owner)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.alerts[*].id").value(contains(
+                        (int) later, (int) retraction, (int) concern, (int) correction, (int) erratum)));
+    }
+
+    @Test
     void eachAlertHasItsFieldsAndNotItsInternalColumns() throws Exception {
         Alert alert = seed(paperId, "retraction", "2026-09-20T12:00:00Z", AlertStatus.NEW);
 
@@ -166,8 +183,12 @@ class AlertListTest {
     }
 
     private Alert seed(UUID paper, String changeKey, String detectedAt, AlertStatus status) {
+        return seed(paper, changeKey, detectedAt, Severity.HIGH, status);
+    }
+
+    private Alert seed(UUID paper, String changeKey, String detectedAt, Severity severity, AlertStatus status) {
         String type = changeKey.split(":")[0];
-        Alert alert = new Alert(paper, new NewAlertRequest(ChangeType.of(type), changeKey, Severity.HIGH,
+        Alert alert = new Alert(paper, new NewAlertRequest(ChangeType.of(type), changeKey, severity,
                 "Description of " + type, "Recommendation for " + type, "10.1/notice",
                 Instant.parse(detectedAt), 42L, 41L));
         if (status != AlertStatus.NEW) {

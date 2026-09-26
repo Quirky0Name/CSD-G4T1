@@ -235,6 +235,7 @@ async def test_a_storage_management_failure_gives_503_and_a_retry_stores_the_ale
 
     assert failed.status_code == 503
     assert failed.json()["failed_paper_ids"] == [str(paper)]
+    assert failed.json()["detail"]
     assert f"evaluating paper {paper} failed: {cause}" in caplog.text
     assert await sm.alerts(paper) == []
 

@@ -58,7 +58,8 @@ Errors come back as problem details, with the reason in `detail`:
 User JWT required, and only the paper's owner sees its alerts. Returns
 the changes Research Evaluation detected on the paper, each with its
 assessment, **newest first**: by `detected_at` descending, with ties
-(changes found in the same pair of snapshots) broken by `id` descending.
+(changes found in the same pair of snapshots) broken by severity (`high`,
+then `medium`, then `low`), then by `id` descending.
 
 Dismissed alerts are left out unless `include_dismissed=true`.
 Acknowledged alerts are always listed, with their status.

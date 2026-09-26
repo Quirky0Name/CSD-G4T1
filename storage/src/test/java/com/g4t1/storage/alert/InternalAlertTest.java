@@ -14,6 +14,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -21,6 +22,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -47,6 +49,9 @@ class InternalAlertTest {
 
     @Autowired
     AlertRepository alerts;
+
+    @Autowired
+    JdbcTemplate jdbc;
 
     private UUID paperId;
 
@@ -91,6 +96,11 @@ class InternalAlertTest {
         assertThat(saved.getStatus()).isEqualTo(AlertStatus.NEW);
         assertThat(saved.getStatusChangedAt()).isNull();
         assertThat(saved.getCreatedAt()).isNotNull();
+
+        // the raw columns hold the same lowercase values as the API, not the enum names
+        List<String> columns = jdbc.queryForObject("select change_type, severity, status from alerts",
+                (row, n) -> List.of(row.getString(1), row.getString(2), row.getString(3)));
+        assertThat(columns).containsExactly("retraction", "high", "new");
     }
 
     @Test

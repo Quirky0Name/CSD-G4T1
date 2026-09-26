@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.util.Locale;
 
+// declared most severe first: AlertService lists alerts from the same poll in this order
 public enum Severity {
     HIGH, MEDIUM, LOW;
 

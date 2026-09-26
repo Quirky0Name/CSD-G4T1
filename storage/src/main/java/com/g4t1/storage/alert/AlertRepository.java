@@ -16,8 +16,8 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     @Query("select a.changeKey from Alert a where a.paperId = :paperId order by a.changeKey")
     List<String> findChangeKeysByPaperId(@Param("paperId") UUID paperId);
 
-    // newest first; alerts from the same snapshot pair share detected_at, so id breaks the tie
-    List<Alert> findByPaperIdOrderByDetectedAtDescIdDesc(UUID paperId);
+    // unordered; AlertService sorts the list, since the order depends on severity
+    List<Alert> findByPaperId(UUID paperId);
 
-    List<Alert> findByPaperIdAndStatusNotOrderByDetectedAtDescIdDesc(UUID paperId, AlertStatus status);
+    List<Alert> findByPaperIdAndStatusNot(UUID paperId, AlertStatus status);
 }

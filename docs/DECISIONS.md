@@ -5,6 +5,25 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-26 — Alerts from one poll are listed most severe first
+
+### Team decisions
+
+- **`GET /papers/{id}/alerts` breaks ties on `detected_at` by severity**
+  (`high`, then `medium`, then `low`), then by `id` descending. Alerts
+  found in the same pair of snapshots share a detection time, and were
+  ordered by `id` alone, i.e. by the order Research Evaluation stored
+  them. Stage 1 lists the retraction first, so it got the lowest id and
+  was listed last, below an erratum from the same poll, with the notices
+  in between in Crossref's listing order. The most severe alert at the
+  bottom reads as the least important. This replaces the 2026-09-25 rule
+  that the newer `id` goes first.
+- **Storage Management sorts; the order Research Evaluation stores alerts
+  in doesn't matter.** It's an in-memory sort of one paper's alerts, which
+  are few, so no query or index changes.
+
+---
+
 ## 2026-09-26 — Research Evaluation compares only the newest N snapshots
 
 ### Team decisions
