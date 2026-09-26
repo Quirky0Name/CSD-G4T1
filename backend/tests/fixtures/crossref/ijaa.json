@@ -1,0 +1,769 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2026,
+          9,
+          24
+        ]
+      ],
+      "date-time": "2026-09-24T16:57:01Z",
+      "timestamp": 1790269021938,
+      "version": "4.1.0"
+    },
+    "update-to": [
+      {
+        "DOI": "10.1016/j.ijantimicag.2020.105949",
+        "type": "retraction",
+        "label": "Retraction",
+        "source": "publisher",
+        "updated": {
+          "date-parts": [
+            [
+              2020,
+              7,
+              1
+            ]
+          ],
+          "date-time": "2020-07-01T00:00:00Z",
+          "timestamp": 1593561600000
+        }
+      }
+    ],
+    "reference-count": 23,
+    "publisher": "Elsevier BV",
+    "issue": "1",
+    "license": [
+      {
+        "start": {
+          "date-parts": [
+            [
+              2020,
+              7,
+              1
+            ]
+          ],
+          "date-time": "2020-07-01T00:00:00Z",
+          "timestamp": 1593561600000
+        },
+        "content-version": "tdm",
+        "delay-in-days": 0,
+        "URL": "https://www.elsevier.com/tdm/userlicense/1.0/"
+      },
+      {
+        "start": {
+          "date-parts": [
+            [
+              2020,
+              7,
+              1
+            ]
+          ],
+          "date-time": "2020-07-01T00:00:00Z",
+          "timestamp": 1593561600000
+        },
+        "content-version": "tdm",
+        "delay-in-days": 0,
+        "URL": "https://www.elsevier.com/legal/tdmrep-license"
+      },
+      {
+        "start": {
+          "date-parts": [
+            [
+              2021,
+              7,
+              24
+            ]
+          ],
+          "date-time": "2021-07-24T00:00:00Z",
+          "timestamp": 1627084800000
+        },
+        "content-version": "am",
+        "delay-in-days": 388,
+        "URL": "http://www.elsevier.com/open-access/userlicense/1.0/"
+      }
+    ],
+    "content-domain": {
+      "domain": [
+        "clinicalkey.fr",
+        "clinicalkey.jp",
+        "clinicalkey.es",
+        "clinicalkey.com.au",
+        "clinicalkey.com",
+        "elsevier.com",
+        "sciencedirect.com"
+      ],
+      "crossmark-restriction": true
+    },
+    "short-container-title": [
+      "International Journal of Antimicrobial Agents"
+    ],
+    "published-print": {
+      "date-parts": [
+        [
+          2020,
+          7
+        ]
+      ]
+    },
+    "DOI": "10.1016/j.ijantimicag.2020.105949",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [
+        [
+          2020,
+          3,
+          20
+        ]
+      ],
+      "date-time": "2020-03-20T12:28:15Z",
+      "timestamp": 1584707295000
+    },
+    "page": "105949",
+    "update-policy": "https://doi.org/10.1016/elsevier_cm_policy",
+    "source": "Crossref",
+    "is-referenced-by-count": 3376,
+    "title": [
+      "RETRACTED: Hydroxychloroquine and azithromycin as a treatment of COVID-19: results of an open-label non-randomized clinical trial"
+    ],
+    "prefix": "10.1016",
+    "volume": "56",
+    "author": [
+      {
+        "given": "Philippe",
+        "family": "Gautret",
+        "sequence": "first",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Jean-Christophe",
+        "family": "Lagier",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Philippe",
+        "family": "Parola",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Van Thuan",
+        "family": "Hoang",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Line",
+        "family": "Meddeb",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Morgane",
+        "family": "Mailhe",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Barbara",
+        "family": "Doudier",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Johan",
+        "family": "Courjon",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Valérie",
+        "family": "Giordanengo",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Vera Esteves",
+        "family": "Vieira",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Hervé",
+        "family": "Tissot Dupont",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Stéphane",
+        "family": "Honoré",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Philippe",
+        "family": "Colson",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Eric",
+        "family": "Chabrière",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Bernard",
+        "family": "La Scola",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Jean-Marc",
+        "family": "Rolain",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Philippe",
+        "family": "Brouqui",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "given": "Didier",
+        "family": "Raoult",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "member": "78",
+    "reference": [
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0001",
+        "doi-asserted-by": "crossref",
+        "DOI": "10.1016/j.ijantimicag.2020.105924",
+        "article-title": "Severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) and coronavirus disease-2019 (COVID-19): The epidemic and the challenges",
+        "author": "Lai",
+        "year": "2020",
+        "journal-title": "Int J Antimicrob Agents"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0002",
+        "article-title": "A review of the 2019 Novel Coronavirus (COVID-19) based on current evidence”",
+        "author": "Wang",
+        "year": "2020",
+        "journal-title": "Int J Antimicrob Agents"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0003",
+        "unstructured": "WHO Director-General's opening remarks at the media briefing on COVID-19 - 11 March 2020. [https://www.who.int/dg/speeches/detail/who-director-general-s-opening-remarks-at-the-media-briefing-on-covid-19---11-march-2020]"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0004",
+        "doi-asserted-by": "crossref",
+        "DOI": "10.1001/jama.2020.2648",
+        "article-title": "Characteristics of and important lessons from the coronavirus disease 2019 (COVID-19) outbreak in China: summary of a report of 72 314 cases from the Chinese Center for Disease Control and Prevention",
+        "author": "Wu",
+        "year": "2020",
+        "journal-title": "JAMA"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0005",
+        "unstructured": "Santé Publique France. Infection au nouveau Coronavirus (SARS-CoV-2), COVID-19, France et Monde [https://www.santepubliquefrance.fr/maladies-et-traumatismes/maladies-et-infections-respiratoires/infection-a-coronavirus/articles/infection-au-nouveau-coronavirus-sars-cov-2-covid-19-france-et-monde]"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0006",
+        "doi-asserted-by": "crossref",
+        "DOI": "10.1016/j.ijantimicag.2020.105923",
+        "article-title": "Chloroquine for the 2019 novel coronavirus SARS-CoV-2",
+        "author": "Colson",
+        "year": "2020",
+        "journal-title": "Int J Antimicrob Agents"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0007",
+        "doi-asserted-by": "crossref",
+        "DOI": "10.1016/j.ijantimicag.2020.105932",
+        "article-title": "Chloroquine and hydroxychloroquine as available weapons to fight COVID-19",
+        "author": "Colson",
+        "year": "2020",
+        "journal-title": "Int J Antimicrob Agents"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0008",
+        "first-page": "10",
+        "article-title": "Remdesivir and chloroquine effectively inhibit the recently emerged novel coronavirus (2019-nCoV) in vitro",
+        "author": "Wang",
+        "year": "2020",
+        "journal-title": "Cell Res"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0009",
+        "doi-asserted-by": "crossref",
+        "DOI": "10.5582/bst.2020.01047",
+        "article-title": "Breakthrough: Chloroquine phosphate has shown apparent efficacy in treatment of COVID-19 associated pneumonia in clinical studies",
+        "author": "Gao",
+        "year": "2020",
+        "journal-title": "Biosci Trends"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0010",
+        "unstructured": "Chinese Clinical Trial Registry. http://www.chictr.org.cn/searchproj.aspx?title=%E6%B0%AF%E5%96%B9&officialname=&subjectid=&secondaryid=&applier=&studyleader=&ethicalcommitteesanction=&sponsor=&studyailment=&studyailmentcode=&studytype=0&studystage=0&studydesign=0&minstudyexecutetime=&maxstudyexecutetime=&recruitmentstatus=0&gender=0&agreetosign=&secsponsor=&regno=&regstatus=0&country=&province=&city=&institution=&institutionlevel=&measure=&intercode=&sourceofspends=&createyear=0&isuploadrf=&whetherpublic=&btngo=btn&verifycode=&page=1."
+      },
+      {
+        "issue": "3",
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0011",
+        "first-page": "185",
+        "article-title": "Expert consensus on chloroquine phosphate for the treatment of novel coronavirus pneumonia]",
+        "volume": "43",
+        "year": "2020",
+        "journal-title": "Zhonghua Jie He He Hu Xi Za Zhi"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0012",
+        "doi-asserted-by": "crossref",
+        "first-page": "2845",
+        "DOI": "10.1021/jm0601856",
+        "article-title": "Design and synthesis of hydroxyferroquine derivatives with antimalarial and antiviral activities",
+        "volume": "49",
+        "author": "Biot",
+        "year": "2006",
+        "journal-title": "J Med Chem"
+      },
+      {
+        "issue": "6",
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0013",
+        "doi-asserted-by": "crossref",
+        "first-page": "1386",
+        "DOI": "10.1016/j.ophtha.2016.01.058",
+        "article-title": "Recommendations on Screening for Chloroquine and Hydroxychloroquine Retinopathy (2016 Revision)",
+        "volume": "123",
+        "author": "Marmor",
+        "year": "2016",
+        "journal-title": "Ophthalmology"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0014",
+        "doi-asserted-by": "crossref",
+        "DOI": "10.1093/cid/ciaa237",
+        "article-title": "In Vitro Antiviral Activity and Projection of Optimized Dosing Design of Hydroxychloroquine for the Treatment of Severe Acute Respiratory Syndrome Coronavirus 2 (SARS-CoV-2)",
+        "author": "Yao",
+        "year": "2020",
+        "journal-title": "Clin Infect Dis"
+      },
+      {
+        "issue": "2",
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0015",
+        "doi-asserted-by": "crossref",
+        "first-page": "167",
+        "DOI": "10.1001/archinte.159.2.167",
+        "article-title": "Treatment of Q fever endocarditis: comparison of 2 regimens containing doxycycline and ofloxacin or hydroxychloroquine",
+        "volume": "159",
+        "author": "Raoult",
+        "year": "1999",
+        "journal-title": "Arch Intern Med"
+      },
+      {
+        "issue": "6",
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0016",
+        "doi-asserted-by": "crossref",
+        "first-page": "463",
+        "DOI": "10.1097/QCO.0000000000000489",
+        "article-title": "Whipple's disease and Tropheryma whipplei infections: when to suspect them and how to diagnose and treat them",
+        "volume": "31",
+        "author": "Lagier",
+        "year": "2018",
+        "journal-title": "Curr Opin Infect Dis"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0017",
+        "doi-asserted-by": "crossref",
+        "DOI": "10.1016/j.tmaid.2020.101632",
+        "article-title": "Rapid viral diagnosis and ambulatory management of suspected COVID-19 cases presenting at the infectious diseases referral hospital in Marseille, France, - January 31st to March 1st, 2020: A respiratory virus snapshot",
+        "author": "Amrane",
+        "year": "2020",
+        "journal-title": "Travel Med Infect Dis"
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0018",
+        "doi-asserted-by": "crossref",
+        "first-page": "166",
+        "DOI": "10.1016/j.jchromb.2017.06.011",
+        "article-title": "Simultaneous UHPLC-UV analysis of hydroxychloroquine, minocycline and doxycycline from serum samples for the therapeutic drug monitoring of Q fever and Whipple's disease",
+        "volume": "1060",
+        "author": "Armstrong",
+        "year": "2017",
+        "journal-title": "J. Chromatogr. B Analyt. Technol. Biomed. Life Sci."
+      },
+      {
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0019",
+        "doi-asserted-by": "crossref",
+        "DOI": "10.1016/S0140-6736(20)30566-3",
+        "article-title": "Clinical course and risk factors for mortality of adult inpatients with COVID-19 in Wuhan, China: a retrospective cohort study",
+        "author": "Zhou",
+        "year": "2020",
+        "journal-title": "Lancet"
+      },
+      {
+        "issue": "50",
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0020",
+        "doi-asserted-by": "crossref",
+        "first-page": "14408",
+        "DOI": "10.1073/pnas.1618029113",
+        "article-title": "Zika virus cell tropism in the developing human brain and inhibition by azithromycin",
+        "volume": "113",
+        "author": "Retallack",
+        "year": "2016",
+        "journal-title": "Proc Natl Acad Sci U S A"
+      },
+      {
+        "issue": "7",
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0021",
+        "doi-asserted-by": "crossref",
+        "first-page": "317",
+        "DOI": "10.1021/acsinfecdis.5b00030",
+        "article-title": "Evaluation of Ebola Virus Inhibitors for Drug Repurposing",
+        "volume": "1",
+        "author": "Madrid",
+        "year": "2015",
+        "journal-title": "ACS Infect Dis"
+      },
+      {
+        "issue": "1",
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0022",
+        "doi-asserted-by": "crossref",
+        "first-page": "6",
+        "DOI": "10.4172/1948-5964.1000173",
+        "article-title": "Azithromycin inhibits the replication of Zika virus",
+        "volume": "10",
+        "author": "Bosseboeuf",
+        "year": "2018",
+        "journal-title": "J Antivirals Antiretrovirals"
+      },
+      {
+        "issue": "19",
+        "key": "10.1016/j.ijantimicag.2020.105949_bib0023",
+        "doi-asserted-by": "crossref",
+        "first-page": "2034",
+        "DOI": "10.1001/jama.2015.13896",
+        "article-title": "Early administration of azithromycin and prevention of severe lower respiratory tract illnesses in preschool children with a history of such illnesses: A randomized clinical trial",
+        "volume": "314",
+        "author": "Bacharier",
+        "year": "2015",
+        "journal-title": "JAMA"
+      }
+    ],
+    "updated-by": [
+      {
+        "DOI": "10.1016/j.ijantimicag.2024.107416",
+        "type": "retraction",
+        "label": "Retraction",
+        "source": "retraction-watch",
+        "updated": {
+          "date-parts": [
+            [
+              2024,
+              12,
+              16
+            ]
+          ],
+          "date-time": "2024-12-16T00:00:00Z",
+          "timestamp": 1734307200000
+        },
+        "record-id": "59596"
+      },
+      {
+        "DOI": "10.1016/j.ijantimicag.2024.107416",
+        "type": "erratum",
+        "label": "Erratum",
+        "source": "publisher",
+        "updated": {
+          "date-parts": [
+            [
+              2025,
+              1,
+              1
+            ]
+          ],
+          "date-time": "2025-01-01T00:00:00Z",
+          "timestamp": 1735689600000
+        }
+      },
+      {
+        "DOI": "10.1016/j.ijantimicag.2020.105949",
+        "type": "retraction",
+        "label": "Retraction",
+        "source": "publisher",
+        "updated": {
+          "date-parts": [
+            [
+              2020,
+              7,
+              1
+            ]
+          ],
+          "date-time": "2020-07-01T00:00:00Z",
+          "timestamp": 1593561600000
+        }
+      }
+    ],
+    "container-title": [
+      "International Journal of Antimicrobial Agents"
+    ],
+    "original-title": [],
+    "language": "en",
+    "link": [
+      {
+        "URL": "https://api.elsevier.com/content/article/PII:S0924857920300996?httpAccept=text/xml",
+        "content-type": "text/xml",
+        "content-version": "vor",
+        "intended-application": "text-mining"
+      },
+      {
+        "URL": "https://api.elsevier.com/content/article/PII:S0924857920300996?httpAccept=text/plain",
+        "content-type": "text/plain",
+        "content-version": "vor",
+        "intended-application": "text-mining"
+      }
+    ],
+    "deposited": {
+      "date-parts": [
+        [
+          2025,
+          2,
+          23
+        ]
+      ],
+      "date-time": "2025-02-23T17:56:17Z",
+      "timestamp": 1740333377000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://linkinghub.elsevier.com/retrieve/pii/S0924857920300996"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          2020,
+          7
+        ]
+      ]
+    },
+    "references-count": 23,
+    "journal-issue": {
+      "issue": "1",
+      "published-print": {
+        "date-parts": [
+          [
+            2020,
+            7
+          ]
+        ]
+      }
+    },
+    "alternative-id": [
+      "S0924857920300996"
+    ],
+    "URL": "https://doi.org/10.1016/j.ijantimicag.2020.105949",
+    "relation": {
+      "has-review": [
+        {
+          "id-type": "doi",
+          "id": "10.3410/f.737589198.793573012",
+          "asserted-by": "object"
+        },
+        {
+          "id-type": "doi",
+          "id": "10.3410/f.737589198.793575483",
+          "asserted-by": "object"
+        },
+        {
+          "id-type": "doi",
+          "id": "10.3410/f.737589198.793575078",
+          "asserted-by": "object"
+        },
+        {
+          "id-type": "doi",
+          "id": "10.3410/f.737589198.793575992",
+          "asserted-by": "object"
+        }
+      ],
+      "has-preprint": [
+        {
+          "id-type": "doi",
+          "id": "10.1101/2020.03.16.20037135",
+          "asserted-by": "object"
+        }
+      ]
+    },
+    "ISSN": [
+      "0924-8579"
+    ],
+    "issn-type": [
+      {
+        "value": "0924-8579",
+        "type": "print"
+      }
+    ],
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          2020,
+          7
+        ]
+      ]
+    },
+    "assertion": [
+      {
+        "value": "Elsevier",
+        "name": "publisher",
+        "label": "This article is maintained by"
+      },
+      {
+        "value": "RETRACTED: Hydroxychloroquine and azithromycin as a treatment of COVID-19: results of an open-label non-randomized clinical trial",
+        "name": "articletitle",
+        "label": "Article Title"
+      },
+      {
+        "value": "International Journal of Antimicrobial Agents",
+        "name": "journaltitle",
+        "label": "Journal Title"
+      },
+      {
+        "value": "https://doi.org/10.1016/j.ijantimicag.2020.105949",
+        "name": "articlelink",
+        "label": "CrossRef DOI link to publisher maintained version"
+      },
+      {
+        "value": "article",
+        "name": "content_type",
+        "label": "Content Type"
+      },
+      {
+        "value": "© 2024 Published by Elsevier B.V.",
+        "name": "copyright",
+        "label": "Copyright"
+      }
+    ],
+    "article-number": "105949"
+  }
+}
