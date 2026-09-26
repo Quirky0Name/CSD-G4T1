@@ -5,6 +5,50 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-26 — Storage stores Updating's snapshots; migrations tidied
+
+### Decision
+
+- **Storage Management now keeps the snapshots Updating sends** (CG-68):
+  one insert-only `background_metadata` row per `POST
+  /internal/papers/{id}/background-info`, read back in order by
+  `GET .../history`. Updating stops needing the stub for these two calls.
+- **`crossref_updates`, `authors` and `source_status` are stored exactly as
+  sent**, as JSON text. Storage never reads inside them, so Updating can
+  add a field (as PR #9 did with `institutions`) without a storage change.
+  Scalar fields get their own columns.
+- **Authors stay inside the snapshot**, not in a separate
+  `authors_background` table. Nothing queries single authors yet; split
+  them out if a feature needs to.
+- **Migrations are V1 (papers), V3 (alerts, PR #15) and V4 (snapshots).**
+  PR #12 deleted `V2__drop_papers_file_key.sql`; it isn't restored, since
+  V1 already creates `papers` with `file_key`. Snapshots are V4, not V2,
+  so they still apply after V3 whichever PR lands first.
+
+### Why
+
+No shared or deployed database exists yet, only local test ones, so the
+cheapest fix for the deleted V2 is a one-off reset for anyone who ran it
+(LOCAL_STORAGE_DB.md) rather than two extra migrations kept forever.
+
+### Rejected
+
+- **Restoring V2 and re-adding `file_key` in another migration.** It keeps
+  old local databases working, but adds two migrations just to undo each
+  other, for data nobody needs.
+- **Typed columns or tables for the JSON fields.** They'd tie storage's
+  schema to Updating's snapshot builder.
+
+### Also settled while building it
+
+- From here on, a migration on `main` is never edited or deleted; changes
+  go in a new, higher-numbered one. The Supabase database will start empty
+  and run V1, V3, V4 in order.
+- History rows write every field, nulls included: Updating's history
+  parser requires all of them.
+
+---
+
 ## 2026-09-25 — Storage keeps every tracked paper's PDF
 
 ### Team decisions

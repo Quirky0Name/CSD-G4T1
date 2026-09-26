@@ -85,7 +85,7 @@ JWT paths above are wired up but not backed by real logins.
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
 | User Management | Spring Boot (backend) + React (Vite, frontend) | `users`, `folders`; auth | `frontend/` |
-| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `authors_background`; Postgres + every tracked paper's PDF on local disk | `storage/` |
+| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`; Postgres + every tracked paper's PDF on local disk | `storage/` |
 | Research Evaluation | Python | Change evaluation (severity, impact, recommendation), read from Storage Management when nudged by Updating; COI text, citation-neighbourhood metrics, LLM reasoning (claims + stance, week 7) | `backend/` |
 | Updating | Python (shares the `backend/` project with Research Evaluation) | Crossref/OpenAlex status, journal and author fetching; sending snapshots to Storage Management; nudging Research Evaluation when a snapshot changed; the polling scheduler and its small polling state (`tracked_papers`) | `backend/` |
 | Deployment | Docker + a public cloud target | Containerisation, environment config, CI | (cross-cutting) |
@@ -128,9 +128,9 @@ Owns all Postgres and file persistence.
   never overwrite, that's what Updating and Research Evaluation compare;
   one row per tracked paper per poll, even when nothing changed, except
   that Updating stores none for a paper on a poll where Crossref or
-  OpenAlex failed for its DOI, see Section 4), `background_text` (raw text for
-  week-13 LLM input; nothing here is diffed in week 7),
-  `authors_background`.
+  OpenAlex failed for its DOI, see Section 4; a snapshot's authors live
+  inside it as JSON, not in a separate table), `background_text` (raw
+  text for week-13 LLM input; nothing here is diffed in week 7).
 - **File storage:** every tracked paper's PDF is kept, so Research
   Evaluation has the paper itself to read when it evaluates a change.
   PDF bytes never go in Postgres: they're on local disk for now, and
