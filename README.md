@@ -18,6 +18,7 @@ REST, trusting a single JWT issued at login. See
 | [docs/SETUP.md](docs/SETUP.md) | Accounts, API keys, software, and how to run the stack locally |
 | [docs/DEMO.md](docs/DEMO.md) | The week-7 demo runbook |
 | [docs/LOCAL_STORAGE_DB.md](docs/LOCAL_STORAGE_DB.md) | Running Storage Management, its Postgres and its PDF folder locally |
+| [docs/EVALUATION-REVIEW-CHANGES.md](docs/EVALUATION-REVIEW-CHANGES.md) | The "seeing and reviewing paper changes" story: alerts, how Research Evaluation detects and assesses changes, and TODOs for other owners |
 
 ## Services
 
