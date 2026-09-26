@@ -1,7 +1,8 @@
 """The polling schedule. The job is `run_poll` itself: APScheduler logs a job's
 exceptions and carries on, so no wrapper is needed. `max_instances=1` stops a slow
-poll overlapping the next tick (one process only; PR 4 adds a lock for the admin
-trigger)."""
+poll overlapping the next tick (one process only). `run_poll` also takes the lock it shares
+with the manual trigger: a tick that finds it held waits for that run rather than being skipped,
+which would push every other paper back a full interval."""
 
 from datetime import UTC, datetime, timedelta
 

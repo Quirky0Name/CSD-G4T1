@@ -120,9 +120,9 @@ Owns all Postgres and file persistence.
 
 - **Ingestion, two paths, both keeping the PDF:** upload (PDF → local
   disk → GROBID header extract → `papers` row) and DOI-only (CrossRef
-  metadata → `papers` row). Where a DOI-only paper's PDF comes from, and
-  what happens when none can be found, is still pending (see
-  DECISIONS.md, "2026-09-25 — Storage keeps every tracked paper's PDF").
+  metadata → open-access PDF from OpenAlex, then Semantic Scholar → local
+  disk → `papers` row). A DOI with no downloadable open-access PDF isn't
+  tracked (see DECISIONS.md, 2026-09-26).
 - **Schema:** `papers`, `notes` (separate table/endpoint from `papers`),
   `background_metadata` (insert-only history, kept in full and per paper —
   never overwrite, that's what Updating and Research Evaluation compare;
@@ -241,7 +241,7 @@ Research Evaluation works out the differences and what they mean.
   `last_snapshot_id`, `nudge_pending`) and `poll_runs` (a summary per
   run). There are no change records; the snapshots in Storage Management
   are the only history.
-- **Endpoints:** `POST /admin/run-poll`.
+- **Endpoints:** `POST /run-poll`.
 
 ## Section 5 — Deployment
 
