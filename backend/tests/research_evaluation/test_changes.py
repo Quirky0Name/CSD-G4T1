@@ -3,9 +3,9 @@ from datetime import UTC, datetime
 import pytest
 from research_evaluation_support import notice, snapshot_dict
 from support import load_fixture
-from updating_support import author_batch
 
 from common.doi import Doi
+from dev.scenarios import author_batch
 from research_evaluation.changes import ChangeType, Snapshot, find_changes
 from updating.snapshot import build_snapshot
 from updating.sources import CrossrefWork, OpenAlexWork

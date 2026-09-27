@@ -36,12 +36,21 @@ public class AlertService {
      * Store alert (idempotent -> check w change_key)
      *
      * If two same requests come at once -> first is stored
+     *
+     * One exception to "an existing alert comes back unchanged": a retraction notice for a
+     * retraction alert stored without one (OpenAlex's flag came first) replaces it and makes it a
+     * new alert (201), so it joins the paper's next report and its notice gets investigated.
      */
     public StoredAlert store(UUID paperId, NewAlertRequest request) {
         requirePaper(paperId);
         var existing = alerts.findByPaperIdAndChangeKey(paperId, request.changeKey());
         if (existing.isPresent()) {
-            return new StoredAlert(AlertResponse.from(existing.get()), false);
+            Alert stored = existing.get();
+            if (addsNoticeToRetraction(stored, request) && replace(stored, request)) {
+                return new StoredAlert(AlertResponse.from(alerts.findById(stored.getId()).orElseThrow()), true);
+            }
+            // a lost replacement race means another request just replaced it: return what's stored now
+            return new StoredAlert(AlertResponse.from(alerts.findById(stored.getId()).orElse(stored)), false);
         }
         try {
             return new StoredAlert(AlertResponse.from(alerts.saveAndFlush(new Alert(paperId, request))), true);
@@ -51,6 +60,20 @@ public class AlertService {
                     .map(winner -> new StoredAlert(AlertResponse.from(winner), false))
                     .orElseThrow(() -> e);
         }
+    }
+
+    private static boolean addsNoticeToRetraction(Alert stored, NewAlertRequest request) {
+        return stored.getChangeType() == ChangeType.RETRACTION
+                && stored.getNoticeDoi() == null
+                && request.changeType() == ChangeType.RETRACTION
+                && request.noticeDoi() != null
+                && !request.noticeDoi().isBlank();
+    }
+
+    private boolean replace(Alert stored, NewAlertRequest request) {
+        return alerts.replaceNoticelessRetraction(stored.getId(), request.severity(), request.description(),
+                request.recommendation(), request.noticeDoi(), request.detectedAt(), request.snapshotId(),
+                request.previousSnapshotId(), AlertStatus.NEW) == 1;
     }
 
     /**

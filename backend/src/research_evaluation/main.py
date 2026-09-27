@@ -9,7 +9,7 @@ from typing import Annotated
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, Depends, FastAPI, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -17,6 +17,7 @@ from common.service_token import ServiceTokenAuth
 from research_evaluation.auth import require_service_token
 from research_evaluation.config import ResearchEvaluationSettings
 from research_evaluation.evaluate import EvaluationResult, evaluate_papers
+from research_evaluation.investigation.run import InvestigationContext, investigate_papers
 from research_evaluation.storage import SERVICE_SUBJECT, sm_client
 
 # Updating waits for the evaluation, within its own 20 s timeout
@@ -37,16 +38,28 @@ def snapshot_window(request: Request) -> int:
     return request.app.state.snapshot_window
 
 
+def investigation_context(request: Request) -> InvestigationContext:
+    """The external client and settings investigation runs with, made at startup (tests override this)."""
+    return request.app.state.investigation
+
+
 @router.post("/evaluate/changes", status_code=202, dependencies=[Depends(require_service_token)])
 async def evaluate_changes(
     nudge: ChangesNudge,
     sm: Annotated[httpx.AsyncClient, Depends(sm_client)],
     window: Annotated[int, Depends(snapshot_window)],
+    investigation: Annotated[InvestigationContext, Depends(investigation_context)],
+    background: BackgroundTasks,
 ) -> EvaluationResult:
     """202 once every paper's alerts are stored
     503 if any paper failed, so Updating keeps
-    its `nudge_pending` flag and re-sends the ids on its next poll."""
-    result = await evaluate_papers(sm, nudge.paper_ids, window)
+    its `nudge_pending` flag and re-sends the ids on its next poll.
+    Either way, the papers evaluated without failure are investigated after the reply is sent,
+    so Updating never waits for investigation."""
+    evaluation = await evaluate_papers(sm, nudge.paper_ids, window)
+    if evaluation.to_investigate:
+        background.add_task(investigate_papers, sm, investigation, evaluation.to_investigate)
+    result = evaluation.result
     if result.failed_paper_ids:
         return JSONResponse(
             status_code=503,
@@ -70,12 +83,21 @@ def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
         # missing values (mainly JWT_SECRET) -> fail
         config = settings or ResearchEvaluationSettings()
         key = config.jwt_secret.get_secret_value()
-        async with httpx.AsyncClient(
-            base_url=config.sm_base_url, auth=ServiceTokenAuth(key, SERVICE_SUBJECT), timeout=HTTP_TIMEOUT_SECONDS
-        ) as sm:
+        async with (
+            httpx.AsyncClient(
+                base_url=config.sm_base_url, auth=ServiceTokenAuth(key, SERVICE_SUBJECT), timeout=HTTP_TIMEOUT_SECONDS
+            ) as sm,
+            # Crossref and Europe PMC only: no base URL, no auth, never the service token
+            httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as external,
+        ):
             app.state.jwt_key = key
             app.state.sm = sm
             app.state.snapshot_window = config.evaluation_snapshot_window
+            app.state.investigation = InvestigationContext(
+                external=external,
+                crossref_mailto=config.crossref_mailto,
+                pdf_timeout=config.investigation_pdf_timeout_seconds,
+            )
             yield
 
     app = FastAPI(title="Research Evaluation", lifespan=lifespan)

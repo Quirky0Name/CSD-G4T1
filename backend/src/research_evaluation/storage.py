@@ -3,6 +3,7 @@ handle communitcation with SM
 - GET snapshot history
 - GET change keys already stored (the changes evaluated on earlier nudges)
 - POST alerts
+- open a report, POST its documents, mark it investigated (investigation)
 
 handle HTTP codes
 """
@@ -34,6 +35,21 @@ class _ChangeKeys(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     change_keys: list[str]
+
+
+class ReportAlert(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    change_key: str
+
+
+class OpenedReport(BaseModel):
+    """A report Storage Management just opened: its id and the alerts it grouped."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: int
+    alerts: list[ReportAlert]
 
 
 def sm_client(request: Request) -> httpx.AsyncClient:
@@ -68,6 +84,36 @@ async def store_alert(http: httpx.AsyncClient, paper_id: UUID, alert: dict[str, 
     if response.status_code not in (200, 201):
         raise ValueError(f"unexpected status {response.status_code} storing an alert")
     return response.status_code == 201
+
+
+async def open_report(http: httpx.AsyncClient, paper_id: UUID) -> OpenedReport | None:
+    """Opens a report grouping the paper's alerts that aren't in one yet (201), or None when
+    there are none (204)."""
+    response = await http.post(f"/internal/papers/{paper_id}/reports")
+    _raise_for_status(response, paper_id)
+    if response.status_code == 204:
+        return None
+    if response.status_code != 201:
+        raise ValueError(f"unexpected status {response.status_code} opening a report")
+    return OpenedReport.model_validate(response.json())
+
+
+async def store_document(http: httpx.AsyncClient, body: dict[str, Any], timeout: float) -> dict[str, Any]:
+    """Stores one document of a report and returns the row as Storage Management stored it
+    (201 new, 200 already there). Storage Management downloads a new version's or current
+    copy's PDF before answering, hence the caller's longer timeout."""
+    response = await http.post("/internal/documents", json=body, timeout=timeout)
+    response.raise_for_status()
+    if response.status_code not in (200, 201):
+        raise ValueError(f"unexpected status {response.status_code} storing a document")
+    return response.json()
+
+
+async def mark_investigated(http: httpx.AsyncClient, paper_id: UUID, report_id: int) -> None:
+    response = await http.patch(
+        f"/internal/papers/{paper_id}/reports/{report_id}", json={"status": "investigated"}
+    )
+    _raise_for_status(response, paper_id)
 
 
 def _raise_for_status(response: httpx.Response, paper_id: UUID) -> None:
