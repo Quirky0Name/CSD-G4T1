@@ -96,25 +96,56 @@ token but never for a real secret.
 
 Full request and response shapes, and every error, are in CONTRACTS.md.
 
-For the frontend (a user token; each user only ever sees their own data):
+### Endpoints needed for frontend
 
-| Endpoint | What it does |
-|---|---|
-| `GET /papers` | your tracked papers (the cited sources), newest first |
-| `POST /papers` (multipart `file`, optional `folder_id`) | track a paper by uploading its PDF |
-| `POST /papers` (JSON `{"doi": "...", "folder_id": "..."}`) | track a paper by DOI; needs an open-access PDF |
-| `GET /papers/{id}/alerts?include_dismissed=false` | a paper's alerts, newest first |
-| `PATCH /alerts/{id}` (`{"status": "acknowledged"}` or `"dismissed"`) | respond to an alert |
-| `POST /alerts/{id}/notes` (`{"text": "..."}`) | add a note to an alert |
-| `GET /alerts/{id}/notes` | an alert's notes, newest first |
-| `POST /research-paper` (multipart `file`, optional `folder_id`) | upload or replace your own paper for a project |
-| `GET /research-paper?folder_id=` | your own paper for a project |
-| `DELETE /research-paper?folder_id=` | delete it |
+Storage Management is `localhost:8081` (`/api/...` through the Vite proxy
+above) and every call here needs the demo user token. Updating is
+`localhost:8001` and needs no token in sprint 1.
 
-Not built yet: all of a user's alerts in one call, one alert by id, and
-push notifications (for a "new alert" toast, re-fetch the alerts every so
-often). Checking a paper on demand is Updating's `POST /run-poll`, not
-Storage Management.
+1. **Alert List**
+    1. **Retrieve all alert list.** Not built as one call. For now, get
+       the papers (2.1), then `GET /papers/{id}/alerts` for each one.
+       Dismissed alerts are left out unless you add
+       `?include_dismissed=true`.
+    2. **Retrieve alert by id.** Not built. Find it in its paper's list
+       from `GET /papers/{id}/alerts`.
+
+    Also available on an alert:
+    - `PATCH /alerts/{id}` with `{"status": "acknowledged"}` or
+      `{"status": "dismissed"}`: respond to it.
+    - `POST /alerts/{id}/notes` with `{"text": "..."}`: add a note.
+    - `GET /alerts/{id}/notes`: its notes, newest first.
+
+2. **Cited Source List**
+    1. **Retrieve list of cited sources.** `GET /papers`: your tracked
+       papers, newest first, as `{"papers": [...]}`.
+    2. **Manual check paper by id.** Updating, not Storage Management:
+       `POST /run-poll?paper_id=<id>` on `localhost:8001`. It fetches the
+       paper's latest status now instead of waiting for the schedule.
+       Updating has no CORS headers either, so add a second Vite proxy
+       entry, e.g. `'/updating': { target: 'http://localhost:8001',
+       changeOrigin: true, rewrite: (p) => p.replace(/^\/updating/, '') }`,
+       and call `/updating/run-poll?paper_id=<id>`.
+    3. **Scheduled checks papers.** Nothing to call: Updating checks every
+       tracked paper by itself every `POLL_INTERVAL_HOURS` (24 by default).
+    4. **Upload paper.** `POST /papers`, either multipart with `file` (a
+       PDF, 25 MB max) and optional `folder_id`, or JSON
+       `{"doi": "10.xxxx/...", "folder_id": "..."}` to track by DOI (needs
+       an open-access PDF, otherwise `422`).
+    5. **Retrieve paper severity state.** Not built as a field. Work it out
+       from `GET /papers/{id}/alerts`: the highest `severity` (`high`,
+       `medium`, `low`) among alerts whose `status` is `new`, or none if
+       there aren't any.
+
+3. **Notification**
+    1. **Ability to send user toast on change notice.** No push from the
+       backend. Re-fetch the alerts every minute or so and show a toast
+       for any alert id you haven't seen before whose `status` is `new`.
+
+Your own research paper (the draft) for a project:
+`POST /research-paper` (multipart `file`, optional `folder_id`) to upload
+or replace it, and `GET` / `DELETE /research-paper?folder_id=` to read or
+remove it.
 
 For other services only (a service token; the frontend can't call these):
 `GET /internal/papers`, `POST` and `GET /internal/papers/{id}/background-info`
