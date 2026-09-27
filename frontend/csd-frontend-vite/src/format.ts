@@ -33,6 +33,16 @@ export function formatDateTime(iso: string): string {
   })
 }
 
+// GET /papers/{id}/alerts' order (docs/CONTRACTS.md): newest first by
+// detected_at, ties broken by severity then by id descending. Alert lists
+// from different papers are each ordered this way already; combining them
+// needs the same comparator to stay newest-first as one list.
+export function compareAlerts(a: Alert, b: Alert): number {
+  if (a.detected_at !== b.detected_at) return a.detected_at < b.detected_at ? 1 : -1
+  if (a.severity !== b.severity) return SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]
+  return b.id - a.id
+}
+
 // The paper's severity state (LOCAL_STORAGE_DB.md, "Retrieve paper severity
 // state"): the highest severity among its unresolved alerts, or none.
 export function highestNewSeverity(alerts: Alert[]): Severity | null {
