@@ -248,6 +248,31 @@ that isn't a UUID; `401` missing or bad token; `403` a service token; `413`
 over 25 MB. A refused upload changes nothing: the project keeps the
 research paper it had.
 
+### `GET /research-paper?folder_id=`
+
+User JWT required. The caller's research paper for one of their projects;
+leave `folder_id` out (or send `""`) for the "no folder" project.
+
+**Response `200`:** the same body as the upload's, for the current
+upload.
+
+Errors, as problem details: `400` a `folder_id` that isn't a UUID; `401`
+missing or bad token; `403` a service token; `404` the project has no
+research paper (`detail`: `No research paper in folder <id>`, or `No
+research paper outside folders`). Another user's research paper is never
+returned: the same `folder_id` under another owner is another project.
+
+### `DELETE /research-paper?folder_id=`
+
+User JWT required. Deletes the caller's research paper for one of their
+projects and its PDF; leave `folder_id` out (or send `""`) for the "no
+folder" project. Uploading to the project again afterwards starts a new
+research paper, with a new `id`.
+
+**Response `204`**, no body.
+
+Errors: as for `GET /research-paper`. A `404` deletes nothing.
+
 ## Storage Management ↔ Research Evaluation / Updating
 
 Owned by: Storage Management. Consumed by: Research Evaluation (reads

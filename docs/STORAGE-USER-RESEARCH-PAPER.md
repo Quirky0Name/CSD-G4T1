@@ -1,16 +1,25 @@
 # The researcher's own paper, one per project
 
-**Status:** the upload is built. The researcher's GET and DELETE, and
-Research Evaluation's read (`GET /internal/papers/{id}/research-paper`),
-are next on `feat/storage-user-research-paper`.
+**Status:** the researcher's upload, GET and DELETE are built. Research
+Evaluation's read (`GET /internal/papers/{id}/research-paper`) is next on
+`feat/storage-user-research-paper`.
 
 Storage Management keeps the researcher's own paper (the draft they're
 writing) for each of their projects, so Research Evaluation can judge what a
 change in a tracked paper means for what the researcher is writing. It's a
 PDF, stored the same way as a tracked paper's: the file on local disk, its
 key in Postgres. The contract is in CONTRACTS.md ("Folders and projects",
-`POST /research-paper`) and the reasoning in DECISIONS.md ("2026-09-27 — The
-researcher's own paper, one per project").
+`POST`, `GET` and `DELETE /research-paper`) and the reasoning in
+DECISIONS.md ("2026-09-27 — The researcher's own paper, one per project").
+
+| Endpoint | Who | Does |
+|---|---|---|
+| `POST /research-paper` (multipart `file`, `folder_id`) | the researcher (user JWT) | stores the project's research paper, or replaces it: `201` new, `200` replaced |
+| `GET /research-paper?folder_id=` | the researcher | `{id, folder_id, filename, uploaded_at}`, or `404` |
+| `DELETE /research-paper?folder_id=` | the researcher | deletes the row and the PDF: `204`, or `404` |
+
+The owner always comes from the JWT's `sub`, never from the request, and
+`folder_id` left out (or `""`) means the "no folder" project.
 
 ## Folders and projects
 
@@ -40,8 +49,8 @@ All in `storage/`:
 | Table | `src/main/resources/db/migration/V6__create_research_papers.sql` |
 | Entity | `src/main/java/com/g4t1/storage/research/ResearchPaper.java` |
 | Repository | `research/ResearchPaperRepository.java` |
-| Upload, replace | `research/ResearchPaperService.java` |
-| `POST /research-paper` | `research/ResearchPaperController.java` |
+| Upload, replace, read, delete | `research/ResearchPaperService.java` |
+| `POST`, `GET`, `DELETE /research-paper` | `research/ResearchPaperController.java` |
 | Response body | `research/ResearchPaperResponse.java` |
 | PDF files on disk | `file/LocalFileStore.java` (shared with tracked papers) |
 | PDF check | `file/Pdfs.java` (shared) |
@@ -96,6 +105,20 @@ transaction, where it finds the winner's row and replaces its file.
 No GROBID or CrossRef call is made: a draft usually has no DOI, and nothing
 reads its metadata yet.
 
+## Reading and deleting
+
+- **`GET /research-paper`** → `ResearchPaperService.find`: a plain
+  `findByOwnerIdAndFolderId` (no lock), `404` when the project has none.
+  The `404` `detail` says which project: `No research paper in folder <id>`
+  or `No research paper outside folders`.
+- **`DELETE /research-paper`** → `ResearchPaperService.delete`: in one
+  transaction, the same locked lookup as an upload, then the row is
+  deleted. The PDF is deleted after the commit. A missing row is a `404`
+  and deletes nothing. Because the lookup is locked, a delete and an upload
+  on the same project go one after the other: a delete that waits on an
+  upload removes the upload's new file, and an upload that waits on a
+  delete finds no row and starts a new research paper, with a new `id`.
+
 ## Gotchas
 
 - **Needs Postgres 15 or later** for `unique nulls not distinct`. The local
@@ -123,7 +146,9 @@ reads its metadata yet.
 
 - **User Management / frontend:** once folders exist, send their real
   ids. The upload is `multipart/form-data` with `file` and an optional
-  `folder_id`; leave `folder_id` out for the "no folder" project.
+  `folder_id`; leave `folder_id` out for the "no folder" project. Show a
+  project's current research paper with `GET /research-paper` (a `404`
+  means none yet) and remove it with `DELETE /research-paper`.
 - **Later, if a tracked paper should be in several folders:** that needs a
   papers ↔ folders join table in place of `papers.folder_id`, a change to
   `POST /papers`, its response and the one-DOI-per-user rule, and a decision

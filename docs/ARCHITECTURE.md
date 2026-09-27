@@ -151,7 +151,7 @@ Owns all Postgres and file persistence.
   folder.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
   `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /alerts/{id}/notes`,
-  `POST /research-paper`, `POST/GET /internal/papers/{id}/background-info`,
+  `POST/GET/DELETE /research-paper`, `POST/GET /internal/papers/{id}/background-info`,
   `GET /internal/papers/{id}/pdf`, `POST /internal/papers/{id}/alerts`,
   `GET /internal/papers/{id}/alerts/change-keys`.
 - **DB hosting:** Supabase free tier.

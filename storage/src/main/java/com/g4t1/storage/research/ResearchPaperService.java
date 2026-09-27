@@ -63,6 +63,34 @@ public class ResearchPaperService {
         return new StoredResearchPaper(ResearchPaperResponse.from(stored.researchPaper()), stored.replacedKey() == null);
     }
 
+    /**
+     * The owner's research paper for a project (folderId null = the "no folder" project).
+     */
+    public ResearchPaperResponse find(UUID ownerId, UUID folderId) {
+        return researchPapers.findByOwnerIdAndFolderId(ownerId, folderId)
+                .map(ResearchPaperResponse::from)
+                .orElseThrow(() -> noResearchPaper(folderId));
+    }
+
+    /**
+     * Deletes the owner's research paper for a project, and its PDF once the row is gone.
+     */
+    public void delete(UUID ownerId, UUID folderId) {
+        String key = tx.execute(status -> {
+            ResearchPaper current = researchPapers.findForUpdateByOwnerIdAndFolderId(ownerId, folderId)
+                    .orElseThrow(() -> noResearchPaper(folderId));
+            researchPapers.delete(current);
+            return current.getFileKey();
+        });
+        files.delete(key);
+    }
+
+    private static ResponseStatusException noResearchPaper(UUID folderId) {
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, folderId == null
+                ? "No research paper outside folders"
+                : "No research paper in folder " + folderId);
+    }
+
     private Stored storeRow(UUID ownerId, UUID folderId, String key, String filename) {
         try {
             return tx.execute(status -> insertOrReplace(ownerId, folderId, key, filename));

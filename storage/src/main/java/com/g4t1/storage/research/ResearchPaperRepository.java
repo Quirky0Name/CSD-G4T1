@@ -9,8 +9,10 @@ import java.util.UUID;
 
 public interface ResearchPaperRepository extends JpaRepository<ResearchPaper, UUID> {
 
-    // a null folderId finds the owner's "no folder" project (the derived query uses IS NULL).
-    // Locked until the transaction ends, so two uploads to one project replace its file one at a time.
+    // a null folderId finds the owner's "no folder" project (the derived query uses IS NULL)
+    Optional<ResearchPaper> findByOwnerIdAndFolderId(UUID ownerId, UUID folderId);
+
+    // as above, locked until the transaction ends, so uploads and deletes on one project go one at a time
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<ResearchPaper> findForUpdateByOwnerIdAndFolderId(UUID ownerId, UUID folderId);
 }
