@@ -109,6 +109,24 @@ public class PaperService {
         return PaperResponse.from(papers.save(paper));
     }
 
+    /**
+     * The tracked paper's stored PDF (uploaded, or downloaded when tracked by DOI), for Research
+     * Evaluation. An unknown paper is the same "No paper" 404 as the other internal endpoints; a paper
+     * without a PDF and a PDF missing from disk get their own 404s.
+     */
+    public byte[] storedPdf(UUID paperId) {
+        Paper paper = papers.findById(paperId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId));
+        if (!paper.hasFile()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Paper " + paperId + " has no stored PDF");
+        }
+        return files.read(paper.getFileKey()).orElseThrow(() -> {
+            log.warn("Paper {} points at a PDF that isn't on disk", paperId);
+            return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "The PDF for paper " + paperId + " is missing from disk");
+        });
+    }
+
     private void rejectDuplicate(UUID ownerId, String doi) {
         if (doi != null && papers.existsByOwnerIdAndDoi(ownerId, doi)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "You're already tracking the paper with DOI " + doi);
