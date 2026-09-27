@@ -62,12 +62,12 @@ are merged, which is the one case where a migration had to be renamed.
 ## PDFs
 
 Storage Management keeps every tracked paper's PDF on local disk, and
-Postgres holds only each file's key (see ARCHITECTURE.md, Section 2).
+each project's research paper (the researcher's own draft, see
+STORAGE-USER-RESEARCH-PAPER.md). Postgres holds only each file's key (see
+ARCHITECTURE.md, Section 2).
 
-- **Not built yet.** The code on `main` still discards uploads. Until the
-  file store and the `papers` file key come back (DECISIONS.md,
-  "2026-09-25 — Storage keeps every tracked paper's PDF"), nothing is
-  written to disk.
+- Both kinds of PDF go in the same folder, named `<uuid>.pdf`. Replacing a
+  project's research paper deletes the old file.
 - The folder is set by `UPLOAD_DIR`, default `uploads/` in the directory
   you start Storage Management from (so `storage/uploads/` with the steps
   above). It will be created on first start. Don't commit it.

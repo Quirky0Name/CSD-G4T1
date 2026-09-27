@@ -63,6 +63,122 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
   wrong shape for an LLM step that covers every change.
 - "Investigation" is kept for fetching what a change is (the notice, the
   new version of the paper), which isn't an LLM step.
+## 2026-09-27 — Research Evaluation reads tracked papers' PDFs
+
+### Team decisions
+
+- **`GET /internal/papers/{id}/pdf` is built**, as CONTRACTS.md has
+  described it since "2026-09-25 — Storage keeps every tracked paper's
+  PDF". Storage Management already kept every tracked paper's PDF, but
+  nothing served it, so Research Evaluation had no way to read the paper
+  itself.
+- **Its three `404`s have different `detail`s**: `No paper <id>`, `Paper
+  <id> has no stored PDF`, and `The PDF for paper <id> is missing from
+  disk`. Research Evaluation skips a paper only on `No paper <id>`, so
+  "no file" must not look like "no paper".
+- **No single-paper details endpoint for Research Evaluation**
+  (`GET /internal/papers/{id}`) for now. The snapshots it already reads
+  carry the DOI, OpenAlex id, title, year, journal, ISSN-L, publisher and
+  authors, and they're fresher than `papers`, whose title is set once at
+  ingest and goes stale (2026-09-24). What only `papers` has (owner,
+  folder, ISSN, when tracking started, whether there's a file) Research
+  Evaluation doesn't need: it gets the researcher's own paper by paper id,
+  and a `404` from `/pdf` already says there's no file.
+
+### Rejected
+
+- **`GET /internal/papers/{id}` with the paper's stored details.** Another
+  interface to keep in step with `papers` for data Research Evaluation
+  reads fresher from the snapshots. Revisit if a stage needs the owner,
+  the folder or the ingest-time metadata.
+
+### Also found while building it
+
+- **The snapshot endpoints never reached `main`.** `POST
+  /internal/papers/{id}/background-info` and `GET .../history` are built
+  on `feat/storage-snapshot-endpoints` (CG-68), but PR #20 merged that
+  branch into `feat/storage-snapshot-table` after that branch was already
+  merged into `main` (PR #19). So on `main`, Updating and Research
+  Evaluation only get snapshots from the stub. Amir will merge it. Two
+  places it differs from this file: an unknown paper's `404` says `No
+  paper with id <id>` instead of `No paper <id>`, and `last=N` is ignored
+  (allowed for now, see the history endpoint).
+
+---
+
+## 2026-09-27 — The researcher's own paper, one per project
+
+### Team decisions
+
+- **Storage Management keeps the researcher's own paper** (the draft
+  they're writing) for each project, uploaded as a PDF with
+  `POST /research-paper`. Research Evaluation needs it to judge what a
+  change in a tracked paper means for what the researcher is writing, not
+  just that the tracked paper changed. It's stored like a tracked paper's
+  PDF: the file on local disk, its key in Postgres.
+- **A folder is one project, and `folder_id` null means no folder.**
+  Everything a user keeps outside folders counts as one more project of
+  theirs, the "no folder" project. This is the rule everywhere
+  (`papers`, `research_papers`, every request and response): no folder is
+  always `null`, never a sentinel id. On input, a missing `folder_id` or
+  `""` both mean no folder, as `POST /papers` already accepted.
+- **A project is keyed by owner and `folder_id`.** Folders belong to User
+  Management, which doesn't exist yet, so Storage can't check who owns a
+  folder id, and any client can send any UUID. With the owner in the key,
+  one user's upload can never replace or reach another's.
+- **One research paper per project; the newest upload replaces it.** The
+  row keeps its id, and the old PDF is deleted from disk. A change should
+  be judged against the draft as it is now.
+- **Research Evaluation reads it by tracked paper id**
+  (`GET /internal/papers/{id}/research-paper`), not by folder. It's nudged
+  with paper ids, and Storage Management already knows each paper's owner
+  and folder, so one call gets the right draft.
+- **A tracked paper is in exactly one project**, its owner plus its
+  `folder_id`. A user can track a DOI only once, so it can't be in two of
+  their folders. Several users tracking one DOI each have their own paper
+  row, snapshots and alerts, and Research Evaluation evaluates each row on
+  its own, so it only ever needs that row's project's research paper.
+- **Its own table, `research_papers`**, not rows in `papers`: a draft has
+  no DOI, snapshots or alerts, and isn't polled.
+- **No GROBID or CrossRef on upload.** A draft usually has no DOI, and
+  nothing reads its metadata yet.
+
+### Rejected
+
+- **A flag on `papers` for the researcher's own paper.** Updating would
+  list it for polling, and every paper query would have to filter it out.
+- **A sentinel folder id (e.g. the nil UUID) for no folder.** `papers`
+  already uses null, and two spellings of "no folder" would have to be
+  kept in step.
+- **Keeping every version of the draft.** Nothing needs the older ones.
+- **Research Evaluation reading by owner and folder**
+  (`?owner_id=&folder_id=`), or adding `folder_id` to `GET /internal/papers`
+  for it. Research Evaluation only has paper ids, so it would first have to
+  look up each paper's owner and folder, and that list is every tracked
+  paper of every user, meant for Updating's poll.
+- **Finding a paper's projects by its DOI across users.** Each user's row
+  is evaluated on its own, so this would hand Research Evaluation other
+  users' drafts while it evaluates one user's alert.
+- **A papers ↔ folders join table**, so one tracked paper could sit in
+  several of a user's folders. It changes `POST /papers`, its response and
+  the one-DOI-per-user rule, and raises whether alerts become per project.
+  Revisit once User Management has folders.
+
+### Also settled while building it
+
+- The table is migration `V6__create_research_papers.sql`, with
+  `unique nulls not distinct (owner_id, folder_id)`: a plain unique
+  constraint would let any number of "no folder" rows through. It needs
+  Postgres 15+ (the local `postgres:17` and Supabase are; so is H2 2.4,
+  which the tests use).
+- Two uploads to one project at once: the row is locked while its file is
+  replaced, and if both find no row, the database rejects one insert and
+  that upload retries as a replace. The old file is deleted only after the
+  row points at the new one; a failed write deletes the new file instead.
+- The internal read's "no research paper" `404` has its own `detail`, not
+  `No paper <id>`, which Research Evaluation reads as the paper being gone.
+  If a re-upload deletes the file between reading the row and reading the
+  file, the read looks the row up once more.
 
 ---
 

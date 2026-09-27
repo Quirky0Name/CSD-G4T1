@@ -93,9 +93,10 @@ build order.
 
 ## Running Updating locally (stub Storage Management and Research Evaluation)
 
-Storage Management's `/internal/**` endpoints don't exist yet (CG-68), so
-`backend/dev/stub_storage.py` stands in for them: in memory, checking the
-service token the way the real service does. Research Evaluation's
+The real Storage Management now has the `/internal/**` endpoints Updating
+calls (CG-68). Until you run it, `backend/dev/stub_storage.py` stands in
+for them: in memory, checking the service token the way the real service
+does. Research Evaluation's
 `POST /evaluate/changes` requires a service token, which Updating's nudge doesn't
 send yet (see [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md), "TODO
 for other owners"), so `backend/dev/stub_research_evaluation.py` stands in for it:
