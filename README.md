@@ -19,6 +19,8 @@ REST, trusting a single JWT issued at login. See
 | [docs/DEMO.md](docs/DEMO.md) | The week-7 demo runbook |
 | [docs/LOCAL_STORAGE_DB.md](docs/LOCAL_STORAGE_DB.md) | Running Storage Management, its Postgres and its PDF folder locally |
 | [docs/EVALUATION-REVIEW-CHANGES.md](docs/EVALUATION-REVIEW-CHANGES.md) | The "seeing and reviewing paper changes" story: alerts, how Research Evaluation detects and assesses changes, and TODOs for other owners |
+| [docs/EVALUATION-INVESTIGATION.md](docs/EVALUATION-INVESTIGATION.md) | Investigation: grouping a nudge's new alerts into a report and fetching each change's notice and new paper into it, with the codebase context and what's left for later sprints |
+| [docs/RE-changes-explained.md](docs/RE-changes-explained.md) | Research behind investigation: every way each detected change shows up in real life, with real examples, and what can be fetched for it |
 | [docs/STORAGE-USER-RESEARCH-PAPER.md](docs/STORAGE-USER-RESEARCH-PAPER.md) | The researcher's own paper, one per project (folder, or "no folder"): how it's stored and replaced, where the code lives, and gotchas |
 | [docs/STORAGE-USER-TRACKED-PDF.md](docs/STORAGE-USER-TRACKED-PDF.md) | Tracked papers' stored PDFs: how both ingest paths keep them, how Research Evaluation reads them, and what else it can read from Storage Management |
 

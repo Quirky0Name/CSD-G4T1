@@ -119,7 +119,8 @@ In Storage Management's Postgres, created by a Flyway migration (S1).
 ### `alert_notes` table (database)
 
 The researcher's log of notes on an alert (S10). Migration
-`V4__create_alert_notes.sql`.
+`V5__create_alert_notes.sql` (V4 until 2026-09-27, when it was renumbered;
+see DECISIONS.md, "Alert notes migration renumbered to V5").
 
 | Column | Type | In the API? | Why it exists |
 |---|---|---|---|
@@ -180,7 +181,9 @@ Storage Management, for Research Evaluation (service JWT):
 - `POST /internal/papers/{id}/alerts` stores one alert. It's idempotent on
   (`paper_id`, `change_key`): a new alert gets `201`, and an existing one
   gets `200` with the stored alert, unchanged (the researcher's status is
-  kept).
+  kept). One exception since 2026-09-27: a retraction notice for a
+  `retraction` alert stored without one replaces it and makes it new
+  (`201`) (EVALUATION-INVESTIGATION.md, S7).
 
 Research Evaluation, for Updating (service JWT):
 - `POST /evaluate/changes` with `{"paper_ids": [...]}`. It answers `202`
@@ -217,7 +220,7 @@ follows the `paper/` package:
 | `AlertNote`, `AlertNoteRepository` | The entity and repository for `alert_notes` (S10). | `Alert`, `AlertRepository` |
 | `NewNoteRequest` | The body of `POST /alerts/{id}/notes`, with `@NotBlank` and `@Size(max = 2000)` on `text`. | `StatusChangeRequest` |
 | `AlertNoteResponse`, `AlertNoteListResponse` | One note as JSON, and the `{"notes": [...]}` wrapper. | `AlertResponse`, `AlertListResponse` |
-| `V4__create_alert_notes.sql` | Creates `alert_notes`. | `V3__create_alerts.sql` |
+| `V5__create_alert_notes.sql` | Creates `alert_notes`. | `V3__create_alerts.sql` |
 
 Each part of the HTTP request is handled in a different place:
 
@@ -370,14 +373,16 @@ widened, and verified: a notice listed under several types gives one alert,
 of the most severe type. That's temporary (see "Later stories", "LLM
 evaluation of all flagged changes together").
 
-The evaluation runs in three stages. This story builds stages 1 and 2 and
-leaves a placeholder for stage 3:
+The evaluation runs in three stages. This story builds stages 1 and 2.
+Stage 3 was first planned as an LLM step for `other` changes only, with a
+placeholder in `llm.py`; that placeholder was removed on 2026-09-27
+(DECISIONS.md), and stage 3 is now one LLM evaluation over every change:
 
 | Stage | Job | File | Built in |
 |---|---|---|---|
 | 1. Detection | the `if` checks: compare two snapshots field by field and list what changed | `changes.py` | this story (S4) |
 | 2. Rule-based assessment | give every change a severity, description and recommendation from fixed rules | `rules.py` | this story (S4) |
-| 3. LLM investigation | for changes stage 1 can't classify (`other`), let an LLM investigate and assess them | `llm.py` | placeholder in S5; the real thing is a later story |
+| 3. LLM evaluation | judge what each new change (`other` included) means for the researcher, revising stage 2's assessment | — | a later story |
 
 The stages don't call each other. `evaluate.py` (S5) runs them once each,
 in order, for every change, and stores the results; see S5.
@@ -386,8 +391,8 @@ in order, for every change, and stores the results; see S5.
   depend on an LLM. Stage 1 decides *that* something changed, and stages 2
   and 3 decide *what it means*.
 - Stage 2 runs on every change, so every alert always has a complete
-  assessment. Stage 3 can later revise it instead of producing one from
-  scratch.
+  assessment. The LLM evaluation can later revise it instead of producing
+  one from scratch.
 
 - **Goal:**
   - Given two consecutive snapshots, stage 1 returns the changes worth an
@@ -405,8 +410,8 @@ in order, for every change, and stores the results; see S5.
     - **A new Crossref entry of a type we don't classify** (such as
       `withdrawal`, `removal`, `partial_retraction`) is **kept, not
       dropped**, as `change_type: other`, with its raw details (Crossref
-      type, label, notice DOI, date). These are what stage 3 will
-      investigate.
+      type, label, notice DOI, date). The LLM evaluation will judge
+      them along with every other change.
   - Stage 2 gives each change a `change_key` and a rule-based severity,
     description and recommendation:
 
@@ -471,7 +476,9 @@ alert body.
     context, assessment)` function that returns the stage-2 assessment
     unchanged, and `evaluate.py` already calls it for `other` changes. The
     LLM story replaces the function's body and nothing else (see "Later
-    stories").
+    stories"). *Removed on 2026-09-27 (DECISIONS.md): the LLM evaluation
+    will cover every change, so `evaluate.py` now stores the stage-2
+    assessment directly.*
   - The evaluation has exactly two outcomes:
     - **`202`:** every paper's alerts are stored.
     - **`503`:** anything else went wrong while evaluating, so Updating
@@ -503,8 +510,8 @@ alert body.
     with the same idempotent behaviour.
 - **Files:**
   - `backend/src/research_evaluation/`: `config.py`, `auth.py`,
-    `storage.py`, `evaluate.py`, `llm.py` (the stage-3 placeholder),
-    `main.py`
+    `storage.py`, `evaluate.py`, `llm.py` (the stage-3 placeholder,
+    removed on 2026-09-27), `main.py`
   - `backend/src/common/service_token.py`: adds a `ServiceTokenAuth`
     that takes the subject. Updating's copy is left alone.
   - `backend/dev/stub_storage.py`
@@ -513,7 +520,8 @@ alert body.
 - **Verification:** integration tests against the stub and its alerts:
   - each change type, including `other`, from nudge to stored alert
   - the stage-3 placeholder is called for `other` changes only, and its
-    alerts are stored with the stage-2 assessment
+    alerts are stored with the stage-2 assessment (since 2026-09-27: an
+    `other` change is stored with its stage-2 assessment, with no stage 3)
   - repeated nudges
   - several new snapshots, each alert with the right `detected_at`
   - the baseline-only case
@@ -598,14 +606,18 @@ DECISIONS.md ("2026-09-26 — Only changes not stored yet are evaluated"):
 the key lookup is skipped when detection finds nothing; a change key that
 appears in two pairs of one history is evaluated once, keeping the earlier
 pair's change; a "No paper" `404` from the lookup skips the paper, like
-the other Storage Management calls.
+the other Storage Management calls. **Changed on 2026-09-27**
+(EVALUATION-INVESTIGATION.md, S7): a retraction with a notice is sent even
+when `retraction` is stored, and within one history it's used over the
+flag's notice-less change, whichever pair came first.
 
 - **Goal:**
   - `evaluate_paper` fetches the paper's stored change keys once, after
     detection (stage 1 still runs on the whole history, since it's cheap;
     since S9, on the newest N snapshots);
   - stage 2, stage 3 and storing run only for changes whose key isn't
-    stored yet;
+    stored yet (stage 3's placeholder was removed on 2026-09-27; the LLM
+    evaluation must keep this property);
   - the stub Storage Management gets the same endpoint;
   - a failed key lookup gives `503`, like any other Storage Management
     failure.
@@ -615,7 +627,8 @@ the other Storage Management calls.
   - a re-nudge makes no store calls for known changes, and doesn't call
     stages 2 or 3 for them;
   - a new change among old ones is the only one evaluated and stored;
-  - stage 3 isn't called for an already stored `other` change;
+  - stage 3 isn't called for an already stored `other` change (test
+    removed with the placeholder on 2026-09-27);
   - a key-lookup failure gives `503`, and the retry works;
   - the existing tests still pass.
 - **Doc deltas:** CONTRACTS (the `/evaluate/changes` flow); ARCHITECTURE §3
@@ -681,7 +694,7 @@ history of status changes was considered and not wanted (DECISIONS.md,
 "2026-09-26 — Researchers can keep a log of notes on an alert").
 
 - **Goal:**
-  - Migration `V4__create_alert_notes.sql` creates `alert_notes` (see
+  - Migration `V5__create_alert_notes.sql` creates `alert_notes` (see
     "`alert_notes` table (database)").
   - `POST /alerts/{id}/notes` (user JWT) with `{"text": "..."}` stores a
     note and answers `201` with `{"text", "created_at"}`.
@@ -695,7 +708,7 @@ history of status changes was considered and not wanted (DECISIONS.md,
   - Notes are append-only, separate from the status (adding one never
     changes `status` or `status_changed_at`), and have no author column.
 - **Files:**
-  - `storage/src/main/resources/db/migration/V4__create_alert_notes.sql`
+  - `storage/src/main/resources/db/migration/V5__create_alert_notes.sql`
   - `storage/.../alert/`: `AlertNote.java`, `AlertNoteRepository.java`,
     `NewNoteRequest.java`, `AlertNoteResponse.java`,
     `AlertNoteListResponse.java` (new); `AlertService.java`,
@@ -738,12 +751,25 @@ history of status changes was considered and not wanted (DECISIONS.md,
 Not built in this story. They plug into the stages in S4 and S5 without
 changing detection or storage.
 
-### LLM investigation of unclassified changes (stage 3)
+**Investigation is now built** (EVALUATION-INVESTIGATION.md): after the
+nudge's reply, each paper's new alerts are grouped into a report in
+Storage Management, and each change's notice, new version and the paper's
+current copy are fetched deterministically into it (Crossref, Europe PMC,
+PDFs downloaded by Storage Management), replacing the LLM fetch tools
+sketched below. The LLM step below is now **impact**: it takes a report id
+and judges the report's alerts together from those documents.
 
-Replaces the body of the `investigate` placeholder in `llm.py`. For an
-`other` change, the LLM gets the change's raw details and investigates
-what it means for the researcher. The function itself is to be defined in
-that story. What's settled so far:
+### LLM evaluation of changes (stage 3)
+
+First planned as an LLM step for `other` changes only, replacing the body
+of the `investigate` placeholder in `llm.py`. On 2026-09-27 the
+placeholder was removed (DECISIONS.md): the LLM evaluation is one layer
+over every new change, `other` included, with no separate layer that
+first works out what an `other` change is and then evaluates it again. It
+gets each change's raw details and judges what it means for the
+researcher (see also "LLM evaluation of all flagged changes together").
+Its hook in `evaluate.py` is to be defined in that story. What's settled
+so far:
 
 - **Structured, not open-ended.** The LLM gets a fixed brief: what to
   consider (the notice type and label, what the notice says, which
@@ -792,7 +818,8 @@ that story. What's settled so far:
 - **Stance checks:** using the LLM (`POST /evaluate/stance`) to judge
   whether the stance between two papers changed in a meaningful way.
 
-Both would revise the stage-2 assessment in the same way as stage 3, and
+Both would revise the stage-2 assessment in the same way as the LLM
+evaluation (stage 3), and
 also run after the `202`.
 
 ### LLM evaluation of all flagged changes together
@@ -861,7 +888,7 @@ idempotently. Left for later:
 1. **Storage Management gains an `alerts` table and four endpoints**
    (Amir, Storage Management). The table is migration
    `V3__create_alerts.sql`; the number no longer needs agreeing (see S1).
-   S10 adds the `alert_notes` table (`V4__create_alert_notes.sql`) and
+   S10 adds the `alert_notes` table (`V5__create_alert_notes.sql`) and
    `POST`/`GET /alerts/{id}/notes`.
 2. **`POST /evaluate/changes` requires a service token, and replies after
    evaluating** (Zhuo En, Updating). Updating's nudge (cg-43, merged into

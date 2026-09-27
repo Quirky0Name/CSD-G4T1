@@ -58,6 +58,24 @@ class OpenAccessPdfClientTest {
     }
 
     @Test
+    void theDownloadSaysWhichLinkItCameFrom() {
+        server.expect(requestTo(startsWith(OPENALEX))).andRespond(withSuccess("""
+                {"best_oa_location": {"pdf_url": "https://publisher.example/blocked.pdf"},
+                 "locations": [{"pdf_url": "https://repo.example/copy.pdf"}]}
+                """, MediaType.APPLICATION_JSON));
+        server.expect(requestTo(startsWith(S2))).andRespond(withStatus(HttpStatus.NOT_FOUND));
+        server.expect(requestTo("https://publisher.example/blocked.pdf")).andRespond(withStatus(HttpStatus.FORBIDDEN));
+        server.expect(requestTo("https://repo.example/copy.pdf"))
+                .andRespond(withSuccess(PDF, MediaType.APPLICATION_PDF));
+
+        var downloaded = client.downloadWithSource(DOI).orElseThrow();
+
+        assertThat(downloaded.bytes()).isEqualTo(PDF);
+        assertThat(downloaded.sourceUrl()).isEqualTo("https://repo.example/copy.pdf");
+        server.verify();
+    }
+
+    @Test
     void nothingDownloadableMeansNoPdf() {
         server.expect(requestTo(startsWith(OPENALEX)))
                 .andRespond(withSuccess("{\"best_oa_location\": null, \"locations\": []}", MediaType.APPLICATION_JSON));

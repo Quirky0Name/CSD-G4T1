@@ -58,6 +58,12 @@ public class Alert {
 
     private Instant statusChangedAt;
 
+    // the report that grouped this alert (docs/EVALUATION-INVESTIGATION.md); null until one does.
+    // Only ReportService sets it, with one bulk update over the paper's unreported alerts. Read-only
+    // here, or saving an alert loaded before that update (e.g. a status change) would write it back
+    @Column(insertable = false, updatable = false)
+    private Long reportId;
+
     @Column(nullable = false)
     private Instant createdAt;
 
@@ -140,6 +146,10 @@ public class Alert {
 
     public void setStatusChangedAt(Instant statusChangedAt) {
         this.statusChangedAt = statusChangedAt;
+    }
+
+    public Long getReportId() {
+        return reportId;
     }
 
     public Instant getCreatedAt() {

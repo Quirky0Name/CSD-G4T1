@@ -9,6 +9,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Entity
@@ -46,7 +47,8 @@ public class Paper {
 
     @PrePersist
     void onCreate() {
-        createdAt = Instant.now();
+        // Postgres keeps microseconds; truncating makes the POST response match GET /papers
+        createdAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
     }
 
     public boolean hasFile() {
