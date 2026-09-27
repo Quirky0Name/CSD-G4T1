@@ -1033,6 +1033,66 @@ changed: it builds `ReportService` itself, whose constructor now takes a
   `FaultInjectingTransport`), and the stub's own in
   `test_stub_reports.py`.
 
+### Research Evaluation: the three prompts and the assessment (S4)
+
+**Status: done, verified (PASS).** Two small changes from the plan's
+file list: `storage.py`'s `PaperDetails` also accepts author names as
+plain strings (a test found it dropped them), and the `live` marker's
+description in `backend/pyproject.toml` names Gemini.
+
+- **`impact/llm.py`:** `generate(client, model, *, system, parts, schema)`
+  → `Answer(value, model_version)`. `parts` mixes `str` and `Pdf(bytes)`;
+  PDFs go as `application/pdf` inline parts, with the schema as
+  `response_schema`, JSON output and automatic function calling off. No
+  text in the response raises `ValueError`, JSON that doesn't fit raises
+  pydantic's `ValidationError`. `GeminiLlm(client, model)` implements the
+  `Llm` protocol that the rest of `impact/` uses.
+- **`impact/schemas.py`:** the three answers (`ChangeAssessment`,
+  `ImpactAssessment`, `RecommendedActions`, with `extra="ignore"`) and
+  `Evaluation`, the `PUT` body.
+- **`impact/prompts.py`:** `SYSTEM`, `CHANGE_TASK`, `IMPACT_TASK` and
+  `ACTIONS_TASK` are the texts in "The prompts" word for word (a verifier
+  compared them). `change_prompt(inputs)` lays out step 1 (paper details,
+  alerts, one `<document>` block per document with its Crossref record as
+  JSON, its flag, its text and where its PDF is, then each attached PDF
+  after an `ATTACHED PDF: …` label, then the task) and returns the parts
+  with the PDFs attached and left out. `impact_prompt` and
+  `actions_prompt` build steps 2 and 3.
+- **The PDF budget** (`MAX_INLINE_PDF_BYTES`, 40 MB) takes the stored
+  paper, then new versions, then the current copy; one that doesn't fit is
+  skipped (a smaller one after it can still go in) and recorded as "over
+  the size budget".
+- **`impact/assess.py`:** `assess(llm, sm, inputs)` → `Evaluation`. Step
+  1; at severity `none` it returns straight away (`draft`
+  `not_needed`). Otherwise `draft_pdf(sm, paper_id)`, then step 2 (with
+  the draft, or `NO DRAFT`), then step 3. It stores nothing: S5's runner
+  does.
+- **Gotcha: `_defuse`** escapes `<document`, `</document` and variants in
+  any case or spacing inside a document's text, so text can't close its
+  own block. The PDFs can't be defused; the system instruction covers
+  them.
+- **Known gaps:** `model_version` is step 1's only (a moving alias could
+  answer steps 2 and 3 with another version); `Evaluation` doesn't
+  enforce Storage Management's rule that texts aren't blank, so a blank
+  answer from the model fails the `PUT` (`400`), which S5 treats as a
+  failed report. Only document text is defused: a DOI goes into the
+  block's `doi="…"` attribute unescaped, and the paper's title, journal
+  and authors in the `TRACKED PAPER` header aren't defused (both are
+  third-party metadata, low risk; Crossref DOIs with `"` or `<` are
+  practically nonexistent). An alert is matched to its document by exact
+  DOI (both are normalised upstream).
+- **Tests:** `tests/research_evaluation/impact/test_assess.py` (a
+  `FakeLlm` that records every call and how many draft requests Storage
+  Management had seen by then, against the stub) and `test_llm.py` (a fake
+  Gemini client). The `live` test sends the IJAA notice's recorded
+  Crossref record and `tests/fixtures/impact/draft_cites_ijaa.pdf` (a
+  hand-written one-page draft citing the IJAA paper as key evidence in its
+  Discussion) to real Gemini. It passed once with `gemini-3.8-flash`
+  (during S4's first verification); later runs that day hit the quota.
+- **Free tier limits:** about 20 requests per model per day, and
+  `gemini-flash-latest` was often `503` ("high demand") on 2026-09-28. The
+  `live` test fails on either; run it again later.
+
 ## Open questions
 
 None left.

@@ -257,7 +257,10 @@ journal and author fields moved to Updating (Section 4).
   paper support or contradict a tracked one) and methodology/claims
   validation, both live in the demo. Provider: DeepSeek (see
   [DECISIONS.md](DECISIONS.md)). Results are cached and pre-warmed for
-  the demo so a slow/failed call can't stall it.
+  the demo so a slow/failed call can't stall it. **Impact's LLM is
+  Gemini** (`GEMINI_API_KEY`, `GEMINI_MODEL`), which reads the paper, its
+  new copies and the researcher's draft as PDFs directly
+  ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)).
 - **Endpoints (internal):** `POST /evaluate/changes`, called only by
   Updating's nudge. `POST /evaluate/background-info`,
   `POST /evaluate/citation-neighbourhood` and `POST /evaluate/stance` are

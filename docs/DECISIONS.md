@@ -5,6 +5,68 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-28 — Impact asks Gemini three questions, reading the PDFs itself
+
+The plan is [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S4.
+
+### Team decisions
+
+- **Impact's LLM is Gemini** (`GEMINI_API_KEY`, `GEMINI_MODEL`, default
+  `gemini-flash-latest`; the story owner's call, commit `1cb2e09`).
+  DeepSeek stays for stance and claims. Gemini reads PDFs natively (several
+  per request, each up to 50 MB or 1,000 pages), so the stored paper, a
+  new version, the current copy and the researcher's draft go in as the
+  files themselves; impact needs no PDF text extraction, which doesn't
+  exist yet. Every answer is structured output against a pydantic schema,
+  with no tools.
+- **Three calls, one gate** (the story owner's call):
+  1. what changed and how severe it is: a summary and a severity of
+     `none` / `low` / `medium` / `high` for anyone relying on the paper;
+  2. how it impacts the researcher: how the draft uses the tracked paper
+     (each citing sentence, its role, the claim relied on) and whether the
+     change affects each use, giving an impact level;
+  3. the recommended actions.
+
+  At severity `none` impact stops after the first call and stores only
+  the summary and the severity. Each call has one job and is tested alone
+  with a fake model; the gate saves two calls for the common "not
+  meaningful" cases (a notice about another article, an affiliation fix).
+- **The draft is read only after the gate, and goes only into the second
+  call.** A change that isn't meaningful never touches the draft, and the
+  draft never shares a call with third-party notice text.
+- **The impact level follows a fixed table** of change severity against
+  how the draft uses the paper (RE-changes-explained.md §6): a methods or
+  data dependency escalates even a medium change, and a background mention
+  stays `low` even for a retraction. The table is in the prompt.
+- **Drafts go to whichever Gemini key is configured, free tier included**
+  (the story owner's call: it doesn't matter for this project), knowing
+  that Google may use free-tier content to improve its products and that
+  people may read it.
+- **Fetched text and PDFs stay data.** Documents go in `<document>` tags,
+  and a document tag written inside a document's own text (any case or
+  spacing) is defused; every PDF is announced by a label; the system
+  instruction says never to follow instructions inside them.
+  `PROMPT_VERSION` and the answering model's version are stored with each
+  result.
+
+### Rejected
+
+- **One call with everything.** It gives up the gate, puts the draft next
+  to notice text, and can't be tested step by step.
+- **Extracting PDF text first** (GROBID full text or a Python library).
+  Not built, and Gemini reads the PDFs itself, layout and figures included.
+
+### Also settled while building it
+
+- The free tier allows about 20 requests per model per day (seen live on
+  2026-09-28, as `429 RESOURCE_EXHAUSTED`), and `gemini-flash-latest`
+  answered `503` ("high demand") several times in a row. A meaningful
+  report takes three calls, so the free tier covers about six a day.
+- `gemini-flash-latest` currently resolves to `gemini-3.8-flash`;
+  `gemini-2.5-flash` is no longer available to new keys.
+
+---
+
 ## 2026-09-28 — A report's impact evaluation is stored once, through report-id endpoints
 
 The plan is [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S1 and S2.

@@ -1,0 +1,55 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1716 >>
+stream
+BT
+/F2 16 Tf 1 0 0 1 56 764 Tm (Early outpatient treatment of COVID-19: a retrospective cohort study) Tj
+/F1 10 Tf 1 0 0 1 56 744 Tm (A. Researcher, B. Colleague - Draft, not for circulation) Tj
+/F2 12 Tf 1 0 0 1 56 722 Tm (1. Introduction) Tj
+/F1 10 Tf 1 0 0 1 56 702 Tm (Repurposed drugs were widely tried early in the COVID-19 pandemic [1, 2].) Tj
+/F2 12 Tf 1 0 0 1 56 680 Tm (2. Methods) Tj
+/F1 10 Tf 1 0 0 1 56 660 Tm (We followed 212 outpatients treated between March and June 2020 and compared) Tj
+/F1 10 Tf 1 0 0 1 56 640 Tm (the time to a negative nasopharyngeal PCR between treated and untreated patients.) Tj
+/F2 12 Tf 1 0 0 1 56 618 Tm (3. Discussion) Tj
+/F1 10 Tf 1 0 0 1 56 598 Tm (Our finding that hydroxychloroquine shortens viral carriage agrees with Gautret et al.,) Tj
+/F1 10 Tf 1 0 0 1 56 578 Tm (who reported that hydroxychloroquine, reinforced by azithromycin, significantly) Tj
+/F1 10 Tf 1 0 0 1 56 558 Tm (reduced viral load in COVID-19 patients by day 6 [1]. This result is the main) Tj
+/F1 10 Tf 1 0 0 1 56 538 Tm (evidence for the treatment protocol we recommend in Section 4.) Tj
+/F2 12 Tf 1 0 0 1 56 516 Tm (References) Tj
+/F1 9 Tf 1 0 0 1 56 497 Tm ([1] Gautret P, Lagier JC, Parola P, et al. Hydroxychloroquine and azithromycin as a) Tj
+/F1 9 Tf 1 0 0 1 56 478 Tm (    treatment of COVID-19: results of an open-label non-randomized clinical trial.) Tj
+/F1 9 Tf 1 0 0 1 56 459 Tm (    Int J Antimicrob Agents. 2020;56\(1\):105949. doi:10.1016/j.ijantimicag.2020.105949) Tj
+/F1 9 Tf 1 0 0 1 56 440 Tm ([2] Cao B, Wang Y, Wen D, et al. A trial of lopinavir-ritonavir in adults hospitalized) Tj
+/F1 9 Tf 1 0 0 1 56 421 Tm (    with severe Covid-19. N Engl J Med. 2020;382:1787-1799.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000002019 00000 n 
+0000002116 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2218
+%%EOF

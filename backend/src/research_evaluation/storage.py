@@ -118,10 +118,12 @@ class PaperDetails(BaseModel):
     @field_validator("authors", mode="before")
     @classmethod
     def _names(cls, value: Any) -> list[str]:
-        """Snapshots hold authors as objects ({name, ...}) or null; only the names are kept."""
+        """Snapshots hold authors as objects ({name, ...}) or null; only the names are kept.
+        Names given as plain strings are kept as they are."""
         if not value:
             return []
-        return [a["name"] for a in value if isinstance(a, dict) and a.get("name")]
+        names = (a.get("name") if isinstance(a, dict) else a for a in value)
+        return [name for name in names if isinstance(name, str) and name]
 
 
 def sm_client(request: Request) -> httpx.AsyncClient:

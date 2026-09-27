@@ -8,6 +8,7 @@ import pytest
 
 from research_evaluation.impact.inputs import MissingPdf, gather_inputs
 from research_evaluation.storage import (
+    PaperDetails,
     PaperGone,
     ReportGone,
     document_pdf,
@@ -280,3 +281,11 @@ async def test_every_request_carries_the_service_token_and_stays_in_storage_mana
     for request in sm.transport.sent:
         assert request.url.host == "stub"
         assert request.headers["Authorization"].startswith("Bearer ")
+
+
+def test_paper_details_keep_author_names_from_objects_or_strings():
+    from_snapshot = PaperDetails.model_validate(
+        {"authors": [{"name": "A. One"}, {"name": None}, {"position": "last"}, "B. Two", ""]}
+    )
+    assert from_snapshot.authors == ["A. One", "B. Two"]
+    assert PaperDetails.model_validate({"authors": None}).authors == []
