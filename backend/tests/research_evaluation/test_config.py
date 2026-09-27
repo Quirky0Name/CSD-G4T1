@@ -131,3 +131,45 @@ def test_the_app_refuses_to_start_without_jwt_secret(tmp_path, monkeypatch):
 
     with pytest.raises(ValidationError, match="jwt_secret"), TestClient(create_app()):
         pass
+
+
+def test_the_impact_llm_timeout_defaults_to_120_and_comes_from_the_environment(monkeypatch):
+    default = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+    assert default.impact_llm_timeout_seconds == 120
+
+    monkeypatch.setenv("IMPACT_LLM_TIMEOUT_SECONDS", "30.5")
+
+    settings = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+    assert settings.impact_llm_timeout_seconds == 30.5
+
+
+@pytest.mark.parametrize("timeout", ["0", "-1", "soon"])
+def test_an_impact_llm_timeout_of_zero_or_less_or_not_a_number_fails(monkeypatch, timeout):
+    monkeypatch.setenv("IMPACT_LLM_TIMEOUT_SECONDS", timeout)
+
+    with pytest.raises(ValidationError, match="impact_llm_timeout_seconds"):
+        ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+
+
+def test_the_app_starts_without_a_gemini_key_and_impact_is_off(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
+    app = create_app()
+
+    with TestClient(app):
+        assert app.state.impact is None
+
+
+def test_startup_makes_impact_a_gemini_model_with_the_timeout(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setenv("GEMINI_MODEL", "gemini-test")
+    monkeypatch.setenv("IMPACT_LLM_TIMEOUT_SECONDS", "45")
+    app = create_app()
+
+    with TestClient(app):
+        llm = app.state.impact.llm
+        assert llm.model == "gemini-test"
+        # the SDK takes milliseconds
+        assert llm.client._api_client._http_options.timeout == 45_000

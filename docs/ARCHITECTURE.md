@@ -231,21 +231,25 @@ journal and author fields moved to Updating (Section 4).
      version, and the paper's current copy, and stores them as the
      report's documents; Storage Management downloads the PDFs. It fetches
      facts and judges nothing.
-  4. **Impact** (`impact/`, not built yet): an LLM judges a report's
-     alerts together, from its documents, and writes its evaluation into
-     the report. It covers every kind of change, `other` included; there's
-     no separate LLM step that first classifies `other` changes
-     (DECISIONS.md, 2026-09-27). **The handoff is a report id:**
+  4. **Impact** (`impact/`, right after investigation, in the same
+     background task): Gemini judges a report's alerts together, from its
+     documents, the paper's stored PDF and the researcher's draft, and
+     writes its evaluation into the report, which becomes `assessed`
+     ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)). Three questions: what
+     changed and how severe it is (`none` = not meaningful, and it stops
+     there); how it affects the researcher, from how their draft uses the
+     paper; what they should do. It covers every kind of change, `other`
+     included; there's no separate LLM step that first classifies `other`
+     changes (DECISIONS.md, 2026-09-27). **The handoff is a report id:**
      investigation returns the ids of the reports it finished, and impact
      reads everything else from Storage Management, so the two stay
-     independent. Until impact exists, an `other` change keeps its
-     rule-based text.
+     independent. Alerts keep their rule-based text; impact's judgment is
+     on the report. Without `GEMINI_API_KEY` impact doesn't run.
 
-  So far the evaluation doesn't read the paper's PDF, notes or extracted
-  text; the templates only use the snapshots. Storage Management also
-  serves the researcher's own paper for the tracked paper's project
-  (`GET /internal/papers/{id}/research-paper`), so a later stage can judge
-  a change against what the researcher is writing; nothing reads it yet.
+  Detection and the rules read only the snapshots. Impact reads the
+  paper's stored PDF, the report's documents and, once a change is
+  meaningful, the researcher's own paper for the tracked paper's project
+  (`GET /internal/papers/{id}/research-paper`).
 - **Structured signal layer** (no reasoning, cheap): citation-neighbourhood
   metrics computed from OpenAlex reference/citation data, GROBID on the
   PDF stored in Storage Management (COI/funding text, verbatim, never

@@ -1093,6 +1093,42 @@ description in `backend/pyproject.toml` names Gemini.
   `gemini-flash-latest` was often `503` ("high demand") on 2026-09-28. The
   `live` test fails on either; run it again later.
 
+### Research Evaluation: impact after investigation (S5)
+
+**Status: done, verified (PASS).** `impact/llm.py` also changed:
+`make_client` passes the timeout, and `gemini_configured(settings)` is
+what the lifespan checks.
+
+- **`impact/run.py`:** `assess_reports(sm, context, report_ids)` → the
+  ids assessed, one report at a time, never raising. `assess_report` reads
+  the report (`read_report`), skips it unless it's `investigated`, then
+  `gather_inputs`, `assess` and `store_evaluation`. `PaperGone` and
+  `ReportGone` are skips; any other exception is logged with `_cause` and
+  the report stays `investigated`. `ImpactContext(llm)` carries the model
+  (its name is `llm.model`).
+- **`main.py`:** `investigate_then_assess(sm, investigation, impact,
+  papers)` is the nudge's background task: `investigate_papers`, then
+  `assess_reports` on the ids it returns, or one log line when `impact`
+  is None. The `impact_context` dependency reads `app.state.impact`, which
+  the lifespan sets to `ImpactContext(GeminiLlm(make_client(config),
+  config.gemini_model))` when the key is set, else None.
+- **Setting:** `IMPACT_LLM_TIMEOUT_SECONDS` (default 120, more than 0) in
+  `config.py` and `.env.example`; the SDK takes milliseconds. A timed-out
+  call raises `httpx.ReadTimeout` (checked against the real SDK).
+- **Gotcha: `_cause`'s default branch logs `str(exc)`** for exception types
+  it doesn't list, like investigation's. No known one carries a response
+  body on impact's path (the SDK's `UnknownApiResponseError` does, but
+  only when streaming, which impact doesn't).
+- **Known gap:** the Gemini client isn't closed at shutdown.
+- **Tests:** `tests/research_evaluation/impact/test_run.py` (through the
+  endpoint against the stub, with a fake model: assessed, `none`, no key,
+  a failure at each step, the `PUT` failing or `409`, the logs, the reply
+  unchanged, the status skip) and `test_config.py`. The test app's
+  `impact_context` is overridden by the `impact` fixture
+  (`tests/research_evaluation/conftest.py`): None unless a test sets
+  `impact.context`. `tests/conftest.py` keeps `GEMINI_API_KEY`,
+  `GEMINI_MODEL` and `IMPACT_LLM_TIMEOUT_SECONDS` out of settings tests.
+
 ## Open questions
 
 None left.

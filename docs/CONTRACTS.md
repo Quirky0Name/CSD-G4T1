@@ -912,12 +912,22 @@ background:
    `POST /internal/documents` (Storage Management downloads the PDF of a
    new version or current copy before answering, so this call has a long
    timeout, `INVESTIGATION_PDF_TIMEOUT_SECONDS`);
-3. `PATCH /internal/papers/{id}/reports/{reportId}` to `investigated`.
+3. `PATCH /internal/papers/{id}/reports/{reportId}` to `investigated`;
+4. **impact** ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)), on the ids of
+   the reports investigation finished, one after another: read the report
+   (`GET /internal/reports/{reportId}`; one that isn't `investigated` is
+   skipped), the paper's newest snapshot and stored PDF and the document
+   PDFs, ask Gemini what changed and how severe it is, and only if it's
+   meaningful read the researcher's draft
+   (`GET /internal/papers/{id}/research-paper`) and ask how it affects the
+   draft and what to do; then
+   `PUT /internal/reports/{reportId}/evaluation`, which marks it
+   `assessed`. It doesn't run when `GEMINI_API_KEY` isn't set: the reports
+   stay `investigated`.
 
 Nothing in it changes the reply, and Updating never waits for it. A
-failure is logged and leaves the report `investigating`; nothing retries
-it yet. The finished reports' ids are what impact (a later plan) will
-evaluate.
+failure is logged and leaves the report `investigating` (investigation)
+or `investigated` (impact, with nothing stored); nothing retries it yet.
 
 ### `POST /evaluate/background-info`
 

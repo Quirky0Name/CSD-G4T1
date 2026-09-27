@@ -17,7 +17,13 @@ from common.service_token import ServiceTokenAuth
 from research_evaluation.auth import require_service_token
 from research_evaluation.config import ResearchEvaluationSettings
 from research_evaluation.evaluate import EvaluationResult, evaluate_papers
-from research_evaluation.investigation.run import InvestigationContext, investigate_papers
+from research_evaluation.impact.llm import GeminiLlm, gemini_configured, make_client
+from research_evaluation.impact.run import ImpactContext, assess_reports
+from research_evaluation.investigation.run import (
+    InvestigationContext,
+    PaperChanges,
+    investigate_papers,
+)
 from research_evaluation.storage import SERVICE_SUBJECT, sm_client
 
 # Updating waits for the evaluation, within its own 20 s timeout
@@ -29,6 +35,7 @@ class ChangesNudge(BaseModel):
 
 
 router = APIRouter()
+log = logging.getLogger(__name__)
 
 
 def snapshot_window(request: Request) -> int:
@@ -43,22 +50,48 @@ def investigation_context(request: Request) -> InvestigationContext:
     return request.app.state.investigation
 
 
+def impact_context(request: Request) -> ImpactContext | None:
+    """The model impact runs with, made at startup; None when GEMINI_API_KEY isn't set (tests
+    override this)."""
+    return request.app.state.impact
+
+
+async def investigate_then_assess(
+    sm: httpx.AsyncClient,
+    investigation: InvestigationContext,
+    impact: ImpactContext | None,
+    papers: list[PaperChanges],
+) -> None:
+    """The background task after a nudge: investigation, then impact on the reports it
+    finished (the handoff is their ids). Without a Gemini key the reports stay investigated."""
+    report_ids = await investigate_papers(sm, investigation, papers)
+    if not report_ids:
+        return
+    if impact is None:
+        log.info("GEMINI_API_KEY is not set: reports %s stay investigated", report_ids)
+        return
+    await assess_reports(sm, impact, report_ids)
+
+
 @router.post("/evaluate/changes", status_code=202, dependencies=[Depends(require_service_token)])
 async def evaluate_changes(
     nudge: ChangesNudge,
     sm: Annotated[httpx.AsyncClient, Depends(sm_client)],
     window: Annotated[int, Depends(snapshot_window)],
     investigation: Annotated[InvestigationContext, Depends(investigation_context)],
+    impact: Annotated[ImpactContext | None, Depends(impact_context)],
     background: BackgroundTasks,
 ) -> EvaluationResult:
     """202 once every paper's alerts are stored
     503 if any paper failed, so Updating keeps
     its `nudge_pending` flag and re-sends the ids on its next poll.
     Either way, the papers evaluated without failure are investigated after the reply is sent,
-    so Updating never waits for investigation."""
+    then their finished reports assessed, so Updating never waits for either."""
     evaluation = await evaluate_papers(sm, nudge.paper_ids, window)
     if evaluation.to_investigate:
-        background.add_task(investigate_papers, sm, investigation, evaluation.to_investigate)
+        background.add_task(
+            investigate_then_assess, sm, investigation, impact, evaluation.to_investigate
+        )
     result = evaluation.result
     if result.failed_paper_ids:
         return JSONResponse(
@@ -97,6 +130,11 @@ def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
                 external=external,
                 crossref_mailto=config.crossref_mailto,
                 pdf_timeout=config.investigation_pdf_timeout_seconds,
+            )
+            app.state.impact = (
+                ImpactContext(GeminiLlm(make_client(config), config.gemini_model))
+                if gemini_configured(config)
+                else None
             )
             yield
 

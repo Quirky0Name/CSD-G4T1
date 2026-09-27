@@ -43,10 +43,19 @@ class Llm(Protocol):
     ) -> Answer[T]: ...
 
 
+def gemini_configured(settings: ResearchEvaluationSettings) -> bool:
+    return settings.gemini_api_key is not None and bool(settings.gemini_api_key.get_secret_value())
+
+
 def make_client(settings: ResearchEvaluationSettings) -> genai.Client:
-    if settings.gemini_api_key is None or not settings.gemini_api_key.get_secret_value():
+    """A Gemini client whose calls give up after IMPACT_LLM_TIMEOUT_SECONDS."""
+    if not gemini_configured(settings):
         raise GeminiNotConfiguredError("GEMINI_API_KEY is not set")
-    return genai.Client(api_key=settings.gemini_api_key.get_secret_value())
+    return genai.Client(
+        api_key=settings.gemini_api_key.get_secret_value(),
+        # the SDK takes milliseconds
+        http_options=types.HttpOptions(timeout=int(settings.impact_llm_timeout_seconds * 1000)),
+    )
 
 
 def to_parts(parts: list[Part]) -> list[types.Part]:

@@ -5,6 +5,37 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-28 — Impact runs right after investigation, on the reports it finished
+
+The plan is [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S5.
+
+### Team decisions
+
+- **The nudge's background task is investigation, then impact** on the
+  ids investigation returns, one report after another. Nothing in it
+  changes the nudge's reply, and Updating never waits for it.
+- **Impact only assesses an `investigated` report.** It reads the report
+  first and skips any other status before fetching a PDF or calling
+  Gemini, so a repeated or stale id costs one read.
+- **Without `GEMINI_API_KEY` impact doesn't run** (one log line); the
+  reports stay `investigated`. The service still starts without the key.
+- **A report whose assessment fails isn't retried** (like investigation):
+  a Gemini error or timeout, an answer that doesn't fit its schema, or
+  Storage Management failing leaves it `investigated`, with nothing
+  stored, and the next report is still assessed. Picking such reports up
+  again is for a later sprint (or the manual trigger, S6).
+- **Each Gemini call has its own timeout,** `IMPACT_LLM_TIMEOUT_SECONDS`
+  (default 120), passed to the SDK, which makes one attempt per call (no
+  hidden retries).
+
+### Also settled while building it
+
+- Failures are logged with the report id and a cause (the status code from
+  Storage Management or Gemini, the exception class), never response
+  bodies, prompts or the draft's text.
+
+---
+
 ## 2026-09-28 — Impact asks Gemini three questions, reading the PDFs itself
 
 The plan is [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S4.
