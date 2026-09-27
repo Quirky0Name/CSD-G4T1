@@ -3,6 +3,7 @@ package com.g4t1.storage.paper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,11 @@ public class PaperController {
 
     public PaperController(PaperService papers) {
         this.papers = papers;
+    }
+
+    @GetMapping
+    public PaperListResponse list(@AuthenticationPrincipal UUID userId) {
+        return new PaperListResponse(papers.listForOwner(userId));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
