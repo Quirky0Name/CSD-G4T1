@@ -4,13 +4,14 @@ RE's individual configs independent of common/config.py whihc is for all backend
 missing/invalid variables -> start up fails
 """
 
-from pydantic import Field, SecretBytes, field_validator
+from pydantic import Field, SecretBytes, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from common.service_token import decode_jwt_secret
 
 DEFAULT_SM_BASE_URL = "http://localhost:8081"
 DEFAULT_SNAPSHOT_WINDOW = 5
+DEFAULT_GEMINI_MODEL = "gemini-flash-latest"
 
 
 class ResearchEvaluationSettings(BaseSettings):
@@ -29,6 +30,10 @@ class ResearchEvaluationSettings(BaseSettings):
     # how long investigation waits for Storage Management to store a document, which includes
     # downloading its PDF (over 30 s per link); it runs after the nudge's reply
     investigation_pdf_timeout_seconds: float = Field(default=120, gt=0)
+    # impact's LLM (aistudio.google.com); optional so the service still starts without it,
+    # impact.llm refuses to build a client when it's missing
+    gemini_api_key: SecretStr | None = None
+    gemini_model: str = DEFAULT_GEMINI_MODEL
 
     @field_validator("jwt_secret", mode="before")
     @classmethod
