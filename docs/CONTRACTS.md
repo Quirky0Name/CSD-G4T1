@@ -55,6 +55,25 @@ project".
 
 Owned by: Storage Management. Consumed by: the frontend.
 
+### `GET /papers`
+
+User JWT required. The caller's tracked papers, **newest first** (by
+`created_at`). Never another user's.
+
+**Response `200`:**
+
+```json
+{"papers": [
+  {"id": "uuid", "folder_id": null, "doi": "10.xxxx/...", "openalex_id": "W...", "title": "...", "journal": "...", "issn": "0000-0000", "publication_year": 2020, "file_available": true, "created_at": "2026-09-24T08:00:00Z"}
+]}
+```
+
+Each paper has the same shape `POST /papers` returns. A user with no
+papers gets `{"papers": []}`. To show one project, filter on `folder_id`
+(`null` is the "no folder" project).
+
+Errors: `401` missing or bad token, `403` a service token.
+
 ### `POST /papers` (PDF upload)
 
 User JWT required; the caller becomes the paper's owner. Multipart form
@@ -67,7 +86,7 @@ disk, so Research Evaluation can read it later through
 
 **Response `201`:**
 ```json
-{"id": "uuid", "folder_id": "uuid", "doi": "10.xxxx/...", "openalex_id": "W...", "title": "...", "journal": "...", "issn": "0000-0000", "publication_year": 2020, "created_at": "2026-09-24T08:00:00Z"}
+{"id": "uuid", "folder_id": "uuid", "doi": "10.xxxx/...", "openalex_id": "W...", "title": "...", "journal": "...", "issn": "0000-0000", "publication_year": 2020, "file_available": true, "created_at": "2026-09-24T08:00:00Z"}
 ```
 
 Errors come back as problem details, with the reason in `detail`:
