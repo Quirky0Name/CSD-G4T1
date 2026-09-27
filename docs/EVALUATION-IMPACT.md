@@ -988,6 +988,51 @@ changed: it builds `ReportService` itself, whose constructor now takes a
   its `ReportEvaluation` model checks the same shape rule and answers
   `422`. Tests are in `test_stub_reports.py`.
 
+### Research Evaluation: what impact reads (S3)
+
+**Status: done, verified (PASS).**
+
+- **Where:** `backend/src/research_evaluation/storage.py`, next to
+  investigation's calls, on the same Storage Management client (service
+  token):
+  - `read_report(sm, report_id)` → `Report` (`paper_id`, `status`, its
+    `AlertInReport`s and `DocumentInReport`s, `crossref_record` as a dict);
+  - `paper_details(sm, paper_id)` → `PaperDetails` (`doi`, `title`,
+    `publication_year`, `journal`, author names) from the newest snapshot
+    (`history?last=1`); all empty when there's no snapshot. Its own model,
+    so detection's `Snapshot` is unchanged;
+  - `paper_pdf`, `draft_pdf` (by paper id) and `document_pdf` (by document
+    id) → bytes or `None`;
+  - `store_evaluation(sm, report_id, body)` → the report as stored.
+- **Errors:** `No paper <id>` raises `PaperGone` and `No report <id>`
+  raises the new `ReportGone` (both mean "gone", skip it). For the paper
+  PDF and the draft, **any other `404` is `None`** ("no file", "no draft",
+  "missing from disk"); every other error status is raised
+  (`httpx.HTTPStatusError`), a `409` from `store_evaluation` included.
+- **`impact/inputs.py`:** `gather_inputs(sm, report)` → `ReportInputs`
+  (`report`, `paper`, `paper_pdf`, `document_pdfs` as (document, bytes)
+  pairs, `missing` as `MissingPdf(pdf, why)`). It fetches a document's PDF
+  only when its `pdf_status` is `ok`, never a notice's, and records every
+  PDF it doesn't get. `label(document)` names a PDF ("current copy", "new
+  version <doi>") for the prompt and the result.
+- **Gotcha: `gather_inputs` never reads the draft.** `draft_pdf` is called
+  on its own, after the gate (S4), so a change that isn't meaningful never
+  touches it; a test counts zero `/research-paper` requests.
+- **Known gaps:** `document_pdf` treats every `404` as "no PDF", including
+  `No document <id>` (a report read a moment ago whose paper was then
+  deleted; `store_evaluation` then raises `ReportGone`). A `404` with no
+  JSON `detail` (a wrong base URL) also reads as "no file" rather than a
+  failure.
+- **The stub** serves `GET /internal/papers/{id}/pdf` and
+  `/research-paper` with the real `404` details, from bytes set with
+  `POST /dev/papers/{id}/pdf` and `/dev/papers/{id}/research-paper` (raw
+  body). It keeps one draft per paper, where the real service keys drafts
+  by owner and folder.
+- **Tests:** `backend/tests/research_evaluation/impact/test_inputs.py`
+  (against the stub, with `404`s injected through the conftest's
+  `FaultInjectingTransport`), and the stub's own in
+  `test_stub_reports.py`.
+
 ## Open questions
 
 None left.

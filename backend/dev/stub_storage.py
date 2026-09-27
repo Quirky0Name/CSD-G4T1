@@ -19,7 +19,7 @@ from typing import Annotated, Any, Literal
 from uuid import UUID, uuid4
 
 import jwt
-from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, model_validator
 
@@ -140,6 +140,10 @@ class Store:
     downloadable_pdfs: dict[str, str] = field(default_factory=dict)
     pdf_downloads: list[str] = field(default_factory=list)
     pdf_files: dict[int, bytes] = field(default_factory=dict)
+    # each paper's stored PDF, and the researcher's draft for its project (the stub keeps one per
+    # paper; the real service keys drafts by owner and folder)
+    paper_pdfs: dict[UUID, bytes] = field(default_factory=dict)
+    drafts: dict[UUID, bytes] = field(default_factory=dict)
 
     def add_snapshot(self, paper_id: UUID, snapshot: dict[str, Any]) -> dict[str, Any]:
         self.last_snapshot_id += 1
@@ -160,6 +164,8 @@ class Store:
         self.downloadable_pdfs.clear()
         self.pdf_downloads.clear()
         self.pdf_files.clear()
+        self.paper_pdfs.clear()
+        self.drafts.clear()
 
 
 def create_app(jwt_key: bytes | None = None) -> FastAPI:
@@ -197,6 +203,24 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
     def store_snapshot(paper_id: UUID, snapshot: dict[str, Any]) -> dict[str, Any]:
         find_paper(paper_id)
         return store.add_snapshot(paper_id, snapshot)
+
+    @internal.get("/papers/{paper_id}/pdf")
+    def paper_pdf(paper_id: UUID) -> Response:
+        """The paper's stored PDF, with Storage Management's 404 details."""
+        find_paper(paper_id)
+        content = store.paper_pdfs.get(paper_id)
+        if content is None:
+            raise HTTPException(404, f"Paper {paper_id} has no stored PDF")
+        return Response(content, media_type="application/pdf")
+
+    @internal.get("/papers/{paper_id}/research-paper")
+    def research_paper(paper_id: UUID) -> Response:
+        """The researcher's draft for the paper's project, with Storage Management's 404 details."""
+        find_paper(paper_id)
+        content = store.drafts.get(paper_id)
+        if content is None:
+            raise HTTPException(404, f"No research paper in the project of paper {paper_id}")
+        return Response(content, media_type="application/pdf")
 
     @internal.get("/papers/{paper_id}/background-info/history")
     def history(
@@ -445,6 +469,18 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
         if before:
             store.add_snapshot(paper.id, before.model_dump(mode="json"))
         return paper
+
+    @dev.post("/papers/{paper_id}/pdf", status_code=204)
+    async def set_paper_pdf(paper_id: UUID, request: Request) -> None:
+        """Stub-only: the request body becomes the paper's stored PDF."""
+        find_paper(paper_id)
+        store.paper_pdfs[paper_id] = await request.body()
+
+    @dev.post("/papers/{paper_id}/research-paper", status_code=204)
+    async def set_research_paper(paper_id: UUID, request: Request) -> None:
+        """Stub-only: the request body becomes the draft for the paper's project."""
+        find_paper(paper_id)
+        store.drafts[paper_id] = await request.body()
 
     @dev.post("/pdfs", status_code=204)
     def make_pdf_downloadable(pdf: DownloadablePdf) -> None:
