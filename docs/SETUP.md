@@ -17,16 +17,6 @@ bottom.
 
 ## Software
 
-Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
-0.12.5, git are all installed.
-
-- **Docker daemon is stopped and disabled, and your user isn't in the
-  `docker` group.** Run:
-  ```
-  sudo systemctl enable --now docker.socket
-  sudo usermod -aG docker $USER
-  ```
-  then log out and back in for the group change to take effect.
 - **No separate Python install needed.** uv downloads the pinned 3.13
   itself on `uv sync`; your system Python (3.14) is untouched.
 - Optional, saves time later: `docker pull grobid/grobid:0.9.1-crf`
@@ -77,9 +67,9 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
 
 ## Scaffolding only (no keys needed)
 
-To just bring up the skeleton and confirm it boots (Updating needs `JWT_SECRET`
-and `DATABASE_URL` in `backend/.env` to start, and Research Evaluation needs
-`JWT_SECRET`):
+To just bring up the skeleton and confirm it boots (both apps need only
+`JWT_SECRET` in `backend/.env`; the compose file sets Updating's
+`DATABASE_URL`):
 
 ```
 cd backend
@@ -90,6 +80,51 @@ This starts GROBID, Postgres, and both FastAPI apps. The containerised
 Updating reaches Storage Management on the host at
 `host.docker.internal:8081`. See `ARCHITECTURE.md` and the plan for the full
 build order.
+
+## Running the whole stack in Docker
+
+The two compose files together run every service but the frontend:
+`backend/docker-compose.dev.yml` (GROBID, Postgres, Research Evaluation,
+Updating) and `storage/docker-compose.yml` (Storage Management and its own
+Postgres). Storage Management needs the same `JWT_SECRET` in `storage/.env`
+(see [LOCAL_STORAGE_DB.md](LOCAL_STORAGE_DB.md)).
+
+```
+cd backend && docker compose -f docker-compose.dev.yml up -d --build
+cd ../storage && docker compose up -d --build
+```
+
+| Service | Port |
+|---|---|
+| Research Evaluation | 8000 |
+| Updating | 8001 |
+| GROBID | 8070 |
+| Storage Management | 8081 |
+| Postgres (Updating) | 5432 |
+| Postgres (Storage Management) | 5433 |
+
+To see a poll go through them, track a paper in Storage Management, then poll
+from Updating. There's no User Management yet, so make a user token yourself:
+any user id as the subject, signed with `JWT_SECRET`. From `backend/`:
+
+```
+TOKEN=$(uv run python -c "import base64, uuid, jwt; from dotenv import dotenv_values; print(jwt.encode({'sub': str(uuid.uuid4())}, base64.b64decode(dotenv_values('.env')['JWT_SECRET']), algorithm='HS256'))")
+curl -X POST localhost:8081/papers -H "Authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' -d '{"doi": "10.1371/journal.pmed.0020124"}'
+curl -X POST localhost:8001/run-poll
+```
+
+- Storage Management only tracks a DOI whose open-access PDF it can
+  download, and many publishers block it (ScienceDirect, and JBC behind a
+  Cloudflare check, answer `403`), so tracking those fails with `422`. PLOS
+  papers, like the one above, download fine.
+- The poll lists the paper under `stored`. A paper's first snapshot has
+  nothing to compare against, so `nudged` stays empty. Once a change is
+  found, the real Research Evaluation rejects the nudge, since Updating
+  sends no service token yet (see the next section).
+- `docker compose -f docker-compose.dev.yml down` in `backend/` and
+  `docker compose down` in `storage/` stop everything and keep the data;
+  `down -v` also wipes the databases and Storage Management's stored PDFs.
 
 ## Running Updating locally (stub Storage Management and Research Evaluation)
 
