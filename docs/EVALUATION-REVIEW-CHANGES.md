@@ -119,7 +119,8 @@ In Storage Management's Postgres, created by a Flyway migration (S1).
 ### `alert_notes` table (database)
 
 The researcher's log of notes on an alert (S10). Migration
-`V4__create_alert_notes.sql`.
+`V5__create_alert_notes.sql` (V4 until 2026-09-27, when it was renumbered;
+see DECISIONS.md, "Alert notes migration renumbered to V5").
 
 | Column | Type | In the API? | Why it exists |
 |---|---|---|---|
@@ -220,7 +221,7 @@ follows the `paper/` package:
 | `AlertNote`, `AlertNoteRepository` | The entity and repository for `alert_notes` (S10). | `Alert`, `AlertRepository` |
 | `NewNoteRequest` | The body of `POST /alerts/{id}/notes`, with `@NotBlank` and `@Size(max = 2000)` on `text`. | `StatusChangeRequest` |
 | `AlertNoteResponse`, `AlertNoteListResponse` | One note as JSON, and the `{"notes": [...]}` wrapper. | `AlertResponse`, `AlertListResponse` |
-| `V4__create_alert_notes.sql` | Creates `alert_notes`. | `V3__create_alerts.sql` |
+| `V5__create_alert_notes.sql` | Creates `alert_notes`. | `V3__create_alerts.sql` |
 
 Each part of the HTTP request is handled in a different place:
 
@@ -691,7 +692,7 @@ history of status changes was considered and not wanted (DECISIONS.md,
 "2026-09-26 — Researchers can keep a log of notes on an alert").
 
 - **Goal:**
-  - Migration `V4__create_alert_notes.sql` creates `alert_notes` (see
+  - Migration `V5__create_alert_notes.sql` creates `alert_notes` (see
     "`alert_notes` table (database)").
   - `POST /alerts/{id}/notes` (user JWT) with `{"text": "..."}` stores a
     note and answers `201` with `{"text", "created_at"}`.
@@ -705,7 +706,7 @@ history of status changes was considered and not wanted (DECISIONS.md,
   - Notes are append-only, separate from the status (adding one never
     changes `status` or `status_changed_at`), and have no author column.
 - **Files:**
-  - `storage/src/main/resources/db/migration/V4__create_alert_notes.sql`
+  - `storage/src/main/resources/db/migration/V5__create_alert_notes.sql`
   - `storage/.../alert/`: `AlertNote.java`, `AlertNoteRepository.java`,
     `NewNoteRequest.java`, `AlertNoteResponse.java`,
     `AlertNoteListResponse.java` (new); `AlertService.java`,
@@ -877,7 +878,7 @@ idempotently. Left for later:
 1. **Storage Management gains an `alerts` table and four endpoints**
    (Amir, Storage Management). The table is migration
    `V3__create_alerts.sql`; the number no longer needs agreeing (see S1).
-   S10 adds the `alert_notes` table (`V4__create_alert_notes.sql`) and
+   S10 adds the `alert_notes` table (`V5__create_alert_notes.sql`) and
    `POST`/`GET /alerts/{id}/notes`.
 2. **`POST /evaluate/changes` requires a service token, and replies after
    evaluating** (Zhuo En, Updating). Updating's nudge (cg-43, merged into

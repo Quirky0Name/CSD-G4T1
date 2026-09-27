@@ -1,194 +1,458 @@
 # Investigating a detected change (plan)
 
 **Status: plan, awaiting approval.** Work happens on
-`feat/eval-investigation`. Background on how each change shows up in real
-life, and what can be fetched for it, is `docs/RE-changes-explained.md` on
-`feat/eval-impact` (sections 5.2 and 5.3), which isn't merged.
+`feat/eval-investigation`. The research behind it (every way a change shows
+up in real life, with real examples, and what can be fetched for it) is
+[RE-changes-explained.md](RE-changes-explained.md); the case codes below
+(R1, C6, …) are its.
 
 ## The goal
 
-When Research Evaluation stores a **new** alert, fetch what the change
-actually is and store it in Storage Management, so the later impact step
-has something to read:
+When a nudge stores new alerts for a paper, group them into one **report**,
+fetch what the changes actually are, and store it in the report in Storage
+Management, so the later impact step has something to read:
 
-- **the notice, if there is one:** its Crossref record (title, type, date,
-  which articles it says it updates), its text when it's open access, and
-  its PDF when one can be downloaded;
+- **the notice, if there is one:** its Crossref record (title, date, which
+  articles it says it updates) and its text when it's open access;
 - **the new paper, if there is one:**
   - a newer version under another DOI (a Crossref `new_version` or
     `new_edition` entry, whose notice DOI *is* the new version), or
-  - the paper's own DOI as it reads now, for changes made in place (a
-    correction, a retraction watermark, JAMA's retract-and-replace at the
-    same DOI). It only counts as new when its PDF differs from the one
-    Storage Management already holds.
+  - the paper's own DOI as it can be downloaded now (the "current copy"),
+    for changes made in place: a correction, a retraction watermark, JAMA's
+    retract-and-replace at the same DOI.
 
-Investigation only fetches and stores facts. It doesn't judge them.
+Investigation fetches and stores facts. It doesn't judge them, and it
+doesn't decide whether the current copy differs from the stored paper (see
+"No 'is it new' verdict").
 
-## Two new packages
+## Two packages
 
 ```
 backend/src/research_evaluation/
-  investigation/   this plan: fetch the notice and the new paper, store them in SM
-  impact/          later plan: an LLM judges whether the change matters, how it
-                   affects the researcher, and what to do
+  investigation/   this plan: open a report for the paper's new alerts, fetch the
+                   notices and the new paper, store them in the report
+  impact/          later plan: an LLM judges the report's alerts together: whether
+                   they matter, how they affect the researcher, what to do
 ```
 
-`impact/` isn't created by this plan.
+`impact/` isn't created by this plan. It will work on **one report at a
+time**: all the alerts the report groups, and its documents, together, and
+write its evaluation into the report (the `evaluation` and
+`recommendation` columns this plan reserves). A report is where
+conclusions about how alerts relate belong ("this
+retraction notice is about a different article", "this correction lifts the
+earlier EoC"), which a field on one alert can't hold. Whether impact also
+reads the paper's earlier reports for context is its plan's call: the
+Lancet's correction, EoC and retraction arrived on different polls a week
+apart (E5), so they're in three reports.
 
 ```
-nudge ─▶ detection ─▶ key check ─▶ rules ─▶ store alert ─▶ 202
-                                                  │
-                                                  └─▶ (after the 202) investigation ─▶ store documents
-                                                                           later:  impact ─▶ revise the alert
+nudge ─▶ detection ─▶ key check ─▶ rules ─▶ store alerts ─▶ 202
+             │
+             └─ detected changes ─▶ (after the 202) investigation, per paper:
+                                      open a report for the new alerts ─▶ store its documents
+                                      ─▶ returns the ids of the paper's `investigated` reports
+                                    later: impact(report_id) for each ─▶ write its evaluation
 ```
 
-## What already exists (the searches asked for)
+**The handoff between investigation and impact is a report id.** The
+conductor (the background task in S6) runs investigation for a paper, gets
+back the ids of the paper's reports that are `investigated` (ready, not
+yet `assessed`), and calls impact on each. Impact reads everything else
+from Storage Management (`GET` the report: its alerts, its documents and
+their links), never from investigation's objects in memory, and marks the
+report `assessed` when done. So the two packages don't import each other,
+and either can be re-run on its own. The ids include reports left
+`investigated` by an earlier run whose impact didn't finish, so nothing
+waits forever. This plan returns the ids; the impact plan adds the call.
+
+## What already exists
+
+### How a notice is found today (nothing is scraped)
+
+1. **Updating** calls `api.crossref.org/works/{paper_doi}` on every poll and
+   copies each `updated-by` entry into the snapshot's `crossref_updates`:
+   `{notice_doi, type, label, source, date, record_id}`
+   (`updating/snapshot.py`, `_crossref_updates`). The publisher registers a
+   notice with `update-to: <paper DOI>`, and Crossref shows the reverse link
+   on the paper as `updated-by`; since 2023 Retraction Watch's records are
+   merged in too. Every snapshot holds the paper's whole list, not only the
+   new entries.
+2. **Storage Management** keeps the list as sent, in
+   `background_metadata.crossref_updates` (text, never looked inside), and
+   serves it back through
+   `GET /internal/papers/{id}/background-info/history`.
+3. **Detection** (`changes.py`) compares consecutive snapshots' lists and
+   returns `Change` objects that already carry `notice_doi`, `notice_type`,
+   `notice_label` and `notice_date`, after merging duplicate sources, one
+   notice filed under several types, and the retraction flag with a
+   retraction notice.
+
+So investigation starts from the `Change` objects. It never re-reads
+`crossref_updates` or repeats detection. What the snapshot **doesn't** hold
+is anything about the notice itself (its title, its `update-to`, its text):
+that's what investigation fetches, with `notice_doi`.
+
+Facts that shape the design:
+- **Change keys.** A retraction's key is always `retraction` (one retraction
+  alert per paper); a notice's other types are keyed by notice DOI (one
+  alert per notice); a DOAJ delisting by snapshot id. Within one pair of
+  snapshots the first retraction notice listed wins; across polls, the
+  first retraction stored wins. So a retraction alert can have no notice DOI
+  (OpenAlex's flag came first) or a wrong one (R3, R5), and today a later,
+  better notice produces no new alert. S7 changes that for a retraction
+  alert with no notice.
+- **`201` from `POST /internal/papers/{id}/alerts`** means Storage
+  Management inserted the alert during this call, so this nudge created it.
+  The change itself can be older (the window covers nudges that failed), and
+  its `detected_at` is that snapshot's time. Since the key check, a `200`
+  mostly means another nudge for the same paper stored it first.
+- **The snapshot endpoints aren't in the Java service on this branch.**
+  Amir's `origin/feat/storage-snapshot-endpoints` (CG-68) builds them, but
+  it isn't merged. Until then the flow runs against the stub
+  (`backend/dev/stub_storage.py`).
 
 ### Updating's lookups by DOI: the overlap
 
 | Code | What it fetches by DOI | Overlap with investigation |
 |---|---|---|
-| `updating/sources.py` `fetch_crossref` | `api.crossref.org/works/{doi}` with the `mailto` polite pool; returns `CrossrefWork` or `NOT_FOUND` / `ERROR` | **Same endpoint.** But `CrossrefWork` keeps only `DOI` and `updated-by`. Investigation needs `title`, `type`, `published`, `container-title`, `update-to` and `relation`. |
-| `updating/sources.py` `fetch_openalex` | `api.openalex.org/works/doi:{doi}`: retraction flag, journal, DOAJ, authors | None. Investigation doesn't need OpenAlex (Storage Management's PDF client already uses its PDF links). |
-| Updating's snapshots (via Storage Management) | each notice's DOI, type, label, date, `source`, `record_id`, and the paper's own `doi` | **This is where investigation's input comes from.** RE's `Snapshot` model drops the paper's `doi` (`extra="ignore"`), so it has to be kept (S5). |
+| `updating/sources.py` `fetch_crossref` | `api.crossref.org/works/{doi}` with the `mailto` polite pool; returns `CrossrefWork` or `NOT_FOUND` / `ERROR` | **Same endpoint and error handling (~15 lines).** But `CrossrefWork` keeps only `DOI` and `updated-by`; investigation needs `title`, `published`, `container-title`, `update-to` and `relation`, so the model is new either way. |
+| `updating/sources.py` `fetch_openalex` | retraction flag, journal, DOAJ, authors | None. |
+| RE's `Snapshot` model | — | Drops the paper's `doi` (`extra="ignore"`), which investigation needs (S5). |
 | `common/doi.py` `normalize_doi` | — | Reused as is. |
 
-Decision proposed: investigation gets its **own** small Crossref fetcher,
-following the same ok / not-found / error pattern and reading the same
-`CROSSREF_MAILTO`. Research Evaluation doesn't import from `updating/`
-(separate services that share an image), and widening Updating's
-`CrossrefWork` is Updating's code. Moving the shared request code into
-`common/` is a later refactor with Zhuo En, like `ServiceTokenAuth`.
+Decision proposed: investigation copies the ~15 lines of request code into
+its own Crossref fetcher, same pattern, same `CROSSREF_MAILTO`. Research
+Evaluation doesn't import from `updating/` (separate services that share an
+image), and `sources.py` is Zhuo En's. Moving the request into `common/` is
+a later refactor with him, like `ServiceTokenAuth`.
 
 ### Storage Management and storing papers
 
 - **One PDF per paper, no versions.** `papers.file_key` holds the key;
-  `LocalFileStore.save(bytes)` writes `<uuid>.pdf` under `UPLOAD_DIR`. It
-  has no `read`. Uploads keep their PDF, and tracking by DOI downloads an
-  open-access copy with `OpenAccessPdfClient.download(doi)`: every OpenAlex
-  PDF link, then Semantic Scholar's, with a browser-like user agent,
-  redirects followed, only real PDFs up to 25 MB.
-- **`OpenAccessPdfClient.download(doi)` is exactly the "new paper" fetch**
-  (for the paper's own DOI, a new-version DOI, or a notice's DOI). It's
-  Java, inside Storage Management, with no endpoint.
-- **`GET /internal/papers/{id}/pdf` is in CONTRACTS.md but not built**, in
-  Java or in the stub. Nothing can read a stored PDF yet.
-- **`background_text`** ("raw text for week-13 LLM input") is in
-  ARCHITECTURE §2's schema list but not built.
-- **No endpoint lets another service store a file or a document.** Research
+  `LocalFileStore.save(bytes)` writes `<uuid>.pdf` under `UPLOAD_DIR`, and
+  has no `read`. Uploads keep their PDF; tracking by DOI downloads one with
+  `OpenAccessPdfClient.download(doi)` (every OpenAlex PDF link, then
+  Semantic Scholar's; browser-like user agent; redirects followed; only real
+  PDFs up to 25 MB).
+- **`OpenAccessPdfClient.download(doi)` is the "new paper" download**, for
+  the paper's own DOI or a new version's. It's Java, with no endpoint, and
+  doesn't say which link it used.
+- **`GET /internal/papers/{id}/pdf` is in CONTRACTS.md but not built.**
+- **`background_text`** is in ARCHITECTURE §2's schema list but not built.
+- **No endpoint lets another service store a document or file.** Research
   Evaluation keeps no database, so everything investigation fetches needs a
   new home in Storage Management (S1, S2).
-- **Blocker: Storage Management doesn't start, on `main` or here.** Two
-  migrations are both version 4 (`V4__create_alert_notes.sql` and
-  `V4__create_background_metadata.sql`), and Flyway stops with "Found more
-  than one migration with version 4", so every Java test fails. S0 fixes
-  it.
+- **Storage Management didn't start** (fixed by S0): two migrations were
+  both version 4 (`V4__create_alert_notes.sql` and
+  `V4__create_background_metadata.sql`), so Flyway stopped with "Found
+  more than one migration with version 4" and every Java test failed.
+  Alert notes is now V5. V6 is taken by `feat/storage-user-research-paper`,
+  so this plan's migration is V7.
+
+## Real cases: what investigation gets
+
+From RE-changes-explained.md, checked against the plan. "Current copy" is
+the paper's own DOI downloaded when the report is made.
+
+| Case | Stored in the report | Left for impact |
+|---|---|---|
+| R1 standard retraction notice (IJAA, Lancet, PLOS ONE) | the notice's Crossref record; its text when open access (PLOS: yes; IJAA, Lancet: no); the current copy | what the notice says |
+| R2 same notice typed `retraction` (Retraction Watch) and `erratum` (publisher) | one notice document | — |
+| R3 the "notice" is the paper itself (IJAA's 2020 entry) | only the current copy | that there's no real notice |
+| R5 a notice about a different article (Lancet ← `…31174-0`) | the notice's record, with `update_to_includes_paper: false` | discounting it |
+| OpenAlex's flag and the notice in the same nudge's window | both changes have the key `retraction`; the notice comes from the second and is stored in the report | — |
+| OpenAlex's flag in one nudge, the notice in a later one | the `retraction` alert is replaced with the notice's details and treated as new (S7), so the next report takes it and fetches the notice | — |
+| A wrong retraction notice first, the real one later | nothing: the alert already has a notice, so it isn't replaced (see "Later sprints") | — |
+| R4 retract and replace | the notice; the current copy (JAMA replaces at the same DOI). A replacement DOI named only in the notice's text isn't followed | whether the current version is the corrected one |
+| R6 flag only, no notice | the current copy | — |
+| R8 reinstatement (arrives as `addendum`) | the notice's record and text | linking it to the earlier retraction, which is in an earlier report |
+| E1 expression of concern | the notice's record and text | what it doubts |
+| E4 EoC lifted ("Correction and removal of expression of concern") | the notice, whose title and text say so | that the concern is over |
+| E5 correction, EoC, retraction on different polls (Lancet) | three reports, one alert each | reading them together, if impact looks at earlier reports |
+| C1 corrected in place (Lancet, Scientific Reports) | the notice; the current copy and where it came from | whether the content changed, by comparing text |
+| C2 the notice carries the fix (PLOS ONE) | the notice's text | — |
+| C4 one notice for several articles | the notice; `update-to` lists this paper among others | — |
+| C6 new version (F1000Research v2, Cochrane `.pub4`) | the new version's record, text and PDF | comparing versions |
+| `withdrawal`, `removal` (often self-referencing) | the notice; the current copy, which may now be the withdrawal statement | the stored PDF may be the only copy of the original |
+| DOAJ delisting | an alert in the report, no documents | — |
+| E2, E3, C5, R7: no Crossref entry, or tracked after the fact | nothing: detection never sees them | — |
+
+**Notice text is only there for open-access notices in PubMed Central**
+(PLOS, Scientific Reports, RSC, PNAS). The demo papers' notices (Elsevier,
+The Lancet, JAMA) get their Crossref record only. Notice PDFs are left out:
+publisher links give `403`, and the IJAA notice's only open-access PDF link
+(PMC) returns a bot-check page.
 
 ## Design
 
+### What a report is
+
+- **One report per paper per nudge that stored new alerts.** It groups
+  every alert of the paper that isn't in a report yet: in practice, the
+  alerts this nudge created (`201`), all from changes in the snapshot
+  window. An alert belongs to one report at a time; the only way it moves
+  is S7 (a notice-less retraction alert replaced by its notice, which the
+  next report takes).
+- **Storage Management does the grouping**, in one transaction, when
+  Research Evaluation asks it to open a report for the paper. So two
+  nudges racing can't put an alert in two reports, and alerts left over
+  from a crash (stored, but the report never opened) join the paper's next
+  report. Alerts stored before reports existed join the paper's first one.
+- **A report holds its documents** (what investigation fetched) and,
+  later, **the LLM's evaluation** (what impact writes). A document is
+  linked to the alerts it was fetched for: a notice or new version to its
+  one alert, the current copy to every alert of the report that needed it
+  (the current copy is fetched once per report: the paper as it could be
+  downloaded when the report was made). An alert can have several
+  documents, and a DOAJ delisting has none.
+- **Status:** `investigating` until every document is stored, then
+  `investigated`, then `assessed` once impact has written its evaluation.
+  A report left `investigating` by a crash is resumed on the next nudge for
+  the paper: missing documents are fetched and stored, and a stored
+  document whose PDF is still `pending` is sent again so its PDF gets
+  downloaded, as long as the report's changes are still in the window;
+  otherwise it's closed with what it has.
+- **Not decided by the researcher's status.** Acknowledging or dismissing
+  stays on alerts and has no effect on reports: status is the researcher's
+  to-do state, not the pipeline's progress. Whether the researcher will act
+  on reports too is for the impact and frontend plans.
+
 ### Who fetches what
 
-| What | Fetched by | Why |
+| What | Fetched by | How |
 |---|---|---|
-| Crossref record of a DOI | Research Evaluation (`investigation/crossref.py`) | a JSON call, like Updating's |
-| Open-access text (Europe PMC) | Research Evaluation (`investigation/europepmc.py`) | the only source that gave notice **text** in the live check (PLOS, Scientific Reports, RSC, PNAS); publisher pages and PMC PDFs are bot-blocked |
-| PDF of a DOI | **Storage Management**, with the existing `OpenAccessPdfClient`, when Research Evaluation asks | reuses the download code instead of copying it to Python; the bytes never travel between services; Storage Management can compare them with the stored PDF itself |
+| Crossref record of a DOI | Research Evaluation (`investigation/crossref.py`) | `GET api.crossref.org/works/{doi}` |
+| Open-access text | Research Evaluation (`investigation/europepmc.py`) | Europe PMC `search?query=DOI:"{doi}"` (keep the result whose DOI matches; read `pmcid`, `isOpenAccess`), then `{pmcid}/fullTextXML` |
+| PDF of a new version or the current copy | **Storage Management**, with the existing `OpenAccessPdfClient`, when Research Evaluation stores the document | OpenAlex `pdf_url`s, then Semantic Scholar, keeping the first real PDF |
 
-Research Evaluation's external calls go only to `api.crossref.org` and
+For a notice, step by step:
+1. **Updating** (already built) reads the paper's Crossref record
+   (`updated-by`) on every poll, so the notice's DOI is in the snapshot's
+   `crossref_updates`, and detection puts it on the `Change`.
+2. **S3** takes that DOI to Crossref again, this time for the notice's
+   own record: its title, date, journal, and `update-to` (which articles
+   it says it's about). Crossref has no body text for notices.
+3. **S4** takes the same DOI to Europe PMC for the notice's text, when
+   it's open access in PubMed Central. It's the only text source.
+4. **S5** runs S3 and S4 at the same time and packs their results into
+   one document; **S6** sends it to Storage Management, which creates the
+   row (and, for a new version or the current copy, downloads the PDF).
+
+S3 and S4 only call their external API and return a result or a failure
+status; they never call Storage Management, so they're tested with
+recorded API responses alone.
+
+**Storage Management downloads the PDF when the document is stored.**
+`POST /internal/documents` creates the row and, for a new version or the
+current copy, downloads the PDF straight away if the row doesn't have it
+yet, then returns the full row. Sending a document that's already stored
+returns it as it is, downloading its PDF first only if that's still
+`pending`. The download code stays in Java (`OpenAccessPdfClient`), and
+the PDF bytes aren't sent back: impact reads them later with
+`GET /internal/documents/{id}/pdf`, which only reads.
+
+Research Evaluation's own external calls go only to `api.crossref.org` and
 `www.ebi.ac.uk`, with fixed URLs whose only input is a DOI, on their own
 HTTP client with no auth. The Storage Management client (which carries the
 service token) is never used for them.
 
-### What gets fetched for each change
+### What gets fetched for each alert in a report
 
-Each fetched thing is a **document** with a role: `notice`, `new_version`
-or `current_version`.
+Each fetched thing is a **document** of one kind: `notice`, `new_version`
+or `current_version`. Documents are planned from the detected `Change`
+objects whose key is one of the report's alerts.
 
-| Change | `notice` | `new_version` | `current_version` (paper's own DOI) |
+| Change | `notice` | `new_version` | current copy (once per report) |
 |---|---|---|---|
 | Retraction with a notice DOI | ✓ | — | ✓ |
 | Retraction from OpenAlex's flag only | — | — | ✓ |
 | Expression of concern | ✓ | — | — (content doesn't change) |
 | Correction, erratum | ✓ | — | ✓ (often corrected in place) |
 | `other`, type `new_version` / `new_edition` | — | ✓ (the notice DOI) | — |
-| `other`, any other type (withdrawal, removal, …) | ✓ | — | ✓ |
+| `other`, any other type | ✓ | — | ✓ |
 | DOAJ delisting | — | — | — |
 
-- For every document: its Crossref record, its Europe PMC text, and its
-  PDF through Storage Management. Each part records its own status, so a
-  failure is stored, never raised.
-- **A `current_version` PDF identical to the stored one** (same SHA-256)
-  isn't stored again; its status is `unchanged`. That's how "the new paper,
-  if any" is decided for in-place changes.
-- **A notice whose DOI is the paper's own DOI** (seen on IJAA) becomes one
-  `current_version` document, not two.
-- A replacement DOI that only the notice's *text* names ("Retraction and
-  replacement of: …") isn't resolved: Crossref has no link to it. The text
-  is stored, and impact can read it.
+- A `notice` gets its Crossref record and text. A `new_version` and the
+  current copy get their Crossref record, text and PDF. Each part keeps its
+  own status, so a failure is stored, never raised.
+- **`update_to_includes_paper`** (notices only): whether the notice's
+  Crossref `update-to` lists this paper's DOI. It catches R5 without
+  judging anything.
+- **A notice whose DOI is the paper's own DOI** (R3) needs no notice
+  document: the current copy covers it.
+- Detection can give two changes with one key (the retraction flag in one
+  pair, the notice in a later pair of the same window); both are used, so
+  the notice is still fetched.
 
 ### When it runs: after the `202`
 
-The PDF download can take over 30 s per link, and Updating's nudge timeout
-is 20 s. So `POST /evaluate/changes` stores the alerts and replies as
-today, and investigation runs afterwards as a FastAPI background task, for
-the alerts that came back `201` (new). This is what EVALUATION-REVIEW-CHANGES.md
-("Later stories") already planned for the LLM steps.
+A PDF download can take over 30 s per link, and Updating's nudge timeout is
+20 s. So `POST /evaluate/changes` stores the alerts and replies as today,
+and investigation runs afterwards as a FastAPI background task, for the
+papers evaluated without failure. Nothing it does changes the reply. This
+is what EVALUATION-REVIEW-CHANGES.md ("Later stories") already planned for
+the LLM steps.
 
-The cost: nothing retries a failed investigation. A failed fetch is still
-stored with its status, but if Research Evaluation crashes midway, the
-missing documents are never fetched. A retry (e.g. "alerts with no
-documents" on the next nudge) is left for later.
+### Storage Management: `reports`, `report_documents`, `alert_documents`, `alerts.report_id`
 
-### Storage Management: `alert_documents` (new table)
+`reports` (new):
 
 | Column | Type | Why |
 |---|---|---|
 | `id` | bigint, PK | |
-| `alert_id` | bigint, FK → `alerts`, on delete cascade | the change it was fetched for; ownership follows the alert's paper |
-| `role` | varchar (enum) | `notice` / `new_version` / `current_version` |
+| `paper_id` | uuid, FK → `papers`, on delete cascade | |
+| `status` | varchar (enum) | `investigating` / `investigated` / `assessed` |
+| `created_at`, `investigated_at` | timestamptz | |
+| `evaluation` | text, nullable | the LLM's written evaluation of the report's alerts together, including how they relate |
+| `recommendation` | text, nullable | what the researcher should do |
+| `evaluated_at` | timestamptz, nullable | when impact wrote them |
+
+The three evaluation columns are reserved in this plan's migration, so a
+report is the evaluation's home from the start, but nothing writes them
+yet: impact's plan adds the endpoint that fills them and sets `assessed`.
+Per-alert judgments (is the change real, what it affects), which the
+research says to keep apart from the rule-based severity, are for the
+impact plan.
+
+`alerts` gains `report_id` (bigint, nullable, FK → `reports`): the report
+that grouped it. It isn't in the alert API yet.
+
+`report_documents` (new):
+
+| Column | Type | Why |
+|---|---|---|
+| `id` | bigint, PK | |
+| `report_id` | bigint, FK → `reports`, on delete cascade | |
+| `kind` | varchar (enum) | `notice` / `new_version` / `current_version` |
 | `doi` | varchar | the DOI fetched |
 | `crossref_status` | varchar | `ok` / `not_found` / `error` |
-| `crossref_record` | text, nullable | the record as Research Evaluation sent it (JSON); Storage Management never looks inside, like the snapshot's `crossref_updates` |
+| `crossref_record` | text, nullable | the record as Research Evaluation sent it (JSON); never looked inside, like the snapshot's `crossref_updates` |
+| `update_to_includes_paper` | boolean, nullable | notices only; null when there's no record |
 | `text_status` | varchar | `ok` / `not_indexed` / `not_open_access` / `error` |
 | `text` | text, nullable | plain text, capped |
 | `text_truncated` | boolean | |
-| `pdf_status` | varchar | `pending` / `ok` / `unchanged` / `not_found` / `error` |
-| `file_key` | varchar, nullable | the stored PDF, in the same `LocalFileStore` |
-| `sha256` | varchar, nullable | of the PDF |
+| `pdf_status` | varchar | `skipped` (notices) / `pending` / `ok` / `not_found` |
+| `file_key`, `sha256`, `pdf_source_url` | varchar, nullable | the stored PDF, its hash, and the link it came from |
 | `created_at`, `pdf_fetched_at` | timestamptz | |
 
-Unique (`alert_id`, `role`, `doi`), so a repeat stores nothing twice.
+- **`kind` is kept** even though the links say which alerts a document
+  serves: Storage Management needs it (a notice gets no PDF) and treats
+  change keys as opaque, so it shouldn't work the kind out from strings
+  like `other:new_version:10.12688/…`.
+- **Unique (`report_id`, `doi`).** Within one report a DOI is only ever
+  one kind (the paper's own DOI is always the current copy, and a new
+  version's DOI is never also a notice). Planning (S5) already fetches
+  each DOI once per report even when several alerts need it, and a resumed
+  report only fetches what's missing (S6); the constraint is the backstop,
+  so two nudges racing on one report store nothing twice. Across reports
+  the current copy is fetched again, which is intended: it's the paper at
+  a different time.
 
-Endpoints (service JWT, under `/internal/**`):
-- `POST /internal/alerts/{alertId}/documents`: store one document's
-  Crossref record and text. `201` new; `200` with the stored one,
-  unchanged; `404` unknown alert; `400` bad body.
-- `POST /internal/alerts/{alertId}/documents/{documentId}/pdf`: Storage
-  Management downloads the document DOI's open-access PDF, compares it with
-  the paper's stored PDF for `current_version`, stores it, and returns the
-  document. Repeating it after `ok` / `unchanged` downloads nothing.
-- `GET /internal/alerts/{alertId}/documents`: `{"documents": [...]}`, for
-  impact later and for tests.
+`alert_documents` (new): `alert_id` and `document_id`, both FKs with
+cascade, primary key on both. It links each document to the alerts it was
+fetched for, which must be alerts of the same report.
 
-Reading a stored PDF back (this one, or the paper's
-`GET /internal/papers/{id}/pdf`) is left for the impact plan.
+Endpoints (service JWT, under `/internal/**`). The report endpoints are
+under the paper, so an unknown paper is `404` with `detail` `No paper <id>`,
+like the other internal endpoints. The document endpoints are flat: a
+document id, or the `report_id` in the body, already identifies the report
+and paper. Reports:
+- `POST /internal/papers/{id}/reports`: opens a report grouping every
+  alert of the paper not in a report yet. `201` with the report and its
+  alerts; `204` when there's nothing to group.
+- `GET /internal/papers/{id}/reports?status=`: the paper's reports, each
+  with its alerts' change keys (Research Evaluation asks for
+  `investigating` ones, to resume them).
+- `GET /internal/papers/{id}/reports/{reportId}`: one report with its
+  alerts, its documents (each with the change keys of its alerts) and its
+  evaluation fields (null until impact exists).
+- `PATCH /internal/papers/{id}/reports/{reportId}`: `{"status":
+  "investigated"}`. Setting `assessed` is left to impact's endpoint.
+
+Documents (both write and read the `report_documents` table):
+- `POST /internal/documents`: body `report_id`, `kind`, `doi`,
+  `change_keys` (the alerts it's for; empty is allowed), `crossref_status`,
+  `crossref_record`, `update_to_includes_paper`, `text_status`, `text`,
+  `text_truncated`.
+  - **No row for that DOI in the report:** creates it and links it to the
+    alerts. A `notice` gets `pdf_status` `skipped`. A `new_version` or
+    `current_version` is saved as `pending` first, then its PDF is
+    downloaded with `OpenAccessPdfClient` and stored (`ok`, with
+    `file_key`, `sha256`, `pdf_source_url`, `pdf_fetched_at`), or recorded
+    as `not_found`. `201` with the full row.
+  - **Row already there:** the body is ignored and nothing is overwritten.
+    If the row's PDF is still `pending` (a crash between saving and
+    downloading), it's downloaded now. `200` with the full row as stored.
+  - **Both answers are the entire row as stored in the database**, read
+    back after any download: every `report_documents` field (including
+    `id`, `pdf_status`, `sha256`, `pdf_source_url`, the timestamps) plus the
+    linked change keys; the PDF bytes aren't included.
+  - **Research Evaluation uses the returned row as the document**, not what
+    it sent, whether or not the two differ. Nothing compares them for now;
+    whether a difference matters is left to a later sprint (see "Later
+    sprints").
+  - `not_found` isn't retried, like every other failed fetch in this plan.
+  - The row is saved before the download, not in the same transaction, so
+    a slow download doesn't hold the database open.
+  - Errors: `404` with `detail` `No report <id>`; `400` for a bad body or
+    a change key that isn't one of the report's alerts.
+  - It can take as long as the download (over 30 s per link), so Research
+    Evaluation calls it with a long timeout, after the `202`.
+- `GET /internal/documents/{documentId}/pdf`: the stored PDF, as
+  `application/pdf`. It only reads, never downloads: `404` when the
+  document has no stored PDF (`not_found`, `pending`, or a notice) or the
+  id is unknown (`detail` `No document <id>`). It isn't keyed by DOI: one
+  DOI can have several stored copies (one per report for the current copy,
+  and one per user tracking the paper), and a DOI's `/` doesn't fit in a
+  path. For impact, later.
+
+The paper's own stored PDF (`GET /internal/papers/{id}/pdf`) and a frontend
+`GET /papers/{id}/reports` are left for the impact plan.
+
+### No "is it new" verdict
+
+The first draft stored a current copy only when its SHA-256 differed from
+the stored PDF. That doesn't work:
+- the two files rarely come from the same place: an upload is the user's
+  publisher copy, and DOI tracking keeps whichever open-access link answered
+  first (often a PMC, preprint or repository copy);
+- many publishers stamp the download date or IP into the PDF, so the same
+  version hashes differently on every download;
+- repository copies (author manuscripts) never get in-place corrections
+  (C1), so the corrected version may not be downloadable at all.
+
+So investigation stores the current copy with its `sha256` and
+`pdf_source_url` as facts. An equal hash means it's certainly the same
+file; a different hash means nothing on its own. Whether the content
+changed is a text comparison, left to impact. A later sprint will use an
+LLM to judge whether a copy is similar enough to be the same version, and
+delete it if so or keep it if not (see "Later sprints").
 
 ## Scope
 
-In scope: fixing the migration clash (S0), storing documents in Storage
-Management (S1, S2), the `investigation/` package (S3–S5), and running it
-after each nudge (S6), with the stub Storage Management kept in step.
+In scope: fixing the migration clash (S0), reports and their documents in
+Storage Management (S1, S2), the `investigation/` package (S3–S5), and
+running it after each nudge (S6), and a late retraction notice replacing a
+notice-less retraction alert (S7), with the stub Storage Management kept in
+step.
 
 Out of scope:
-- **`impact/`**: judging the documents, and revising the alert.
-- **Reading documents or PDFs back for an LLM**, PDF text extraction
-  (GROBID full text), and `GET /internal/papers/{id}/pdf`.
-- **Retrying a failed investigation.**
-- **Publisher pages, Crossref Labs / Retraction Watch reasons, Wayback
+- **`impact/`:** judging a report, writing its evaluation (and the
+  endpoint for it), per-alert judgments, comparing versions, reading
+  earlier reports for context, and anything the frontend shows.
+- **The paper's own stored PDF** (`GET /internal/papers/{id}/pdf`), and PDF
+  text extraction (GROBID full text).
+- **Retrying a failed fetch** (see "Later sprints").
+- **A retraction notice replacing a wrong earlier one** (see "Later
+  sprints"); a notice replacing a notice-less retraction alert is S7.
+- **Following a replacement DOI named only in a notice's text** (R4), and
+  **comparing a newly fetched document with the stored row**: both in
+  "Later sprints".
+- **Notice PDFs, publisher pages, Retraction Watch reasons, the Wayback
   Machine.**
-- **Changes Updating doesn't nudge on** (EVALUATION-REVIEW-CHANGES.md,
-  "Later stories").
-- **The frontend.**
+- **Changes detection never sees** (E2, E3, C5, R7), and changes Updating
+  doesn't nudge on (EVALUATION-REVIEW-CHANGES.md, "Later stories").
 
 ## Subtasks
 
@@ -205,93 +469,130 @@ Fixtures for external APIs are real responses, recorded from the live API.
 
 ### S0: Storage Management starts again (migration clash)
 
+**Status: done, verified (PASS).** The code is commit `9c1e474`, merged
+through PR #23 (`fix/storage-flyway`); `./mvnw test` passes (102 tests).
+The doc deltas below are applied.
+
 - **Goal:** `V4__create_alert_notes.sql` is renamed to
   `V5__create_alert_notes.sql`, contents unchanged. `background_metadata`
   keeps V4: it was merged first (PR #19, before #21), and Amir's
-  `feat/storage-snapshot-endpoints` builds on it. `./mvnw test` passes.
-  - A local database that already ran alert notes as V4 fails Flyway's
-    validation and has to be reset (LOCAL_STORAGE_DB.md, "Resetting your
-    local database").
+  `feat/storage-snapshot-endpoints` builds on it. `./mvnw test` passes. A
+  local database that already ran alert notes as V4 fails Flyway's
+  validation and has to be reset.
 - **Files:** `storage/src/main/resources/db/migration/V5__create_alert_notes.sql` (renamed)
 - **Verification:** `./mvnw test` is green (it's red now, from the
-  context-load test on); the migration list has unique versions.
+  context-load test on); migration versions are unique.
 - **Doc deltas:**
-  - **DECISIONS:** a 2026-09-27 entry: why alert notes moved to V5 rather
-    than background_metadata, and the reset needed.
-  - **LOCAL_STORAGE_DB:** a note under "Resetting your local database"
-    about the V4 clash.
-  - **EVALUATION-REVIEW-CHANGES** and anywhere else naming
+  - **DECISIONS:** a 2026-09-27 entry: alert notes moved to V5, why not
+    `background_metadata`, and the reset needed.
+  - **LOCAL_STORAGE_DB:** a note under "Resetting your local database".
+  - **EVALUATION-REVIEW-CHANGES** and any other doc naming
     `V4__create_alert_notes.sql`: the new name.
 
-### S1: Storage Management stores investigation documents
+### S1: Storage Management stores reports and their documents
 
-- **Goal:** the `alert_documents` table (`V6__create_alert_documents.sql`),
-  `POST /internal/alerts/{alertId}/documents` and
-  `GET /internal/alerts/{alertId}/documents`, as in "Design". A new
-  document starts with `pdf_status` `pending`. The stub Storage Management
-  gets the same two endpoints.
+- **Goal:** `V7__create_reports.sql` creates `reports` (with the reserved
+  evaluation columns), `report_documents` and `alert_documents`, and adds
+  `alerts.report_id`; the four report endpoints and `POST
+  /internal/documents` work as in "Design", except that the `POST` doesn't
+  download PDFs yet (S2 adds that): a new document stays `skipped`
+  (notice) or `pending`. Opening a report groups the paper's unreported
+  alerts in one transaction. The stub Storage Management gets the same
+  endpoints. V7, not V6: `feat/storage-user-research-paper` already uses
+  V6 (`V6__create_research_papers.sql`), and a V7 that lands before V6
+  still applies (Flyway accepts the gap, as it did for V2).
 - **Files:**
-  - `storage/src/main/resources/db/migration/V6__create_alert_documents.sql`
-  - `storage/src/main/java/com/g4t1/storage/alert/document/`: `AlertDocument`,
-    `AlertDocumentRepository`, `AlertDocumentService`,
-    `InternalAlertDocumentController`, `NewAlertDocumentRequest`,
-    `AlertDocumentResponse`, `AlertDocumentListResponse`, `DocumentRole`,
-    and status enums (with `LowercaseEnumConverter`)
-  - `storage/src/test/java/com/g4t1/storage/alert/document/InternalAlertDocumentTest.java`
-  - `backend/dev/stub_storage.py`
+  - `storage/src/main/resources/db/migration/V7__create_reports.sql`
+  - `storage/src/main/java/com/g4t1/storage/report/`: `Report`,
+    `ReportDocument` (with its alert links), `ReportRepository`,
+    `ReportDocumentRepository`,
+    `ReportService`, `ReportDocumentService`, `InternalReportController`,
+    `InternalDocumentController`, the request and response records,
+    `ReportStatus`, `DocumentKind` and the document status enums
+  - `storage/src/main/java/com/g4t1/storage/alert/Alert.java`,
+    `AlertRepository.java` (`report_id`, and finding a paper's unreported
+    alerts)
+  - `storage/src/test/java/com/g4t1/storage/report/InternalReportTest.java`
+  - `backend/dev/stub_storage.py`, and a stub test
 - **Verification:**
-  - a stored document matches the request, and `crossref_record` comes back
-    byte-for-byte as sent;
-  - a repeat returns `200`, keeps the first document and adds no row;
-  - the same DOI under another role, or another alert, is a separate
-    document;
-  - the list returns only that alert's documents;
-  - deleting the paper deletes its alerts' documents;
-  - `404` unknown alert, `400` missing role or unknown status, `401`,
-    `403`;
-  - the stub behaves the same (a small pytest against the stub).
+  - opening a report groups exactly the paper's unreported alerts, not
+    other papers'; a second open with nothing new gives `204`; an alert is
+    never in two reports, including two opens racing (as
+    `AlertServiceRaceTest` does);
+  - `POST /internal/documents` returns the entire stored row (every
+    column plus the linked change keys), matching the request, with
+    `crossref_record` as sent; the same DOI again in that report returns
+    `200` with the stored row, unchanged even when the new body differs,
+    and adds no row; a change key outside the report gives `400`; an unknown
+    `report_id` gives `404` (`No report <id>`);
+  - one document linked to several alerts lists all their keys; an alert
+    with several documents; a document with no alerts;
+  - listing by status, reading one report with its alerts, documents and
+    evaluation fields (null), and the status change; `assessed` can't be
+    set through the `PATCH`;
+  - deleting the paper deletes its reports, documents and links;
+  - the existing alert tests still pass;
+  - `404` unknown paper or report, `401`, `403`;
+  - the stub behaves the same.
 - **Doc deltas:**
-  - **CONTRACTS:** both endpoints, in "Storage Management ↔ Research
+  - **CONTRACTS:** the endpoints, in "Storage Management ↔ Research
     Evaluation / Updating".
-  - **ARCHITECTURE §2:** `alert_documents` in the schema and endpoint
-    lists.
-  - **DECISIONS:** investigation results live in Storage Management, per
-    alert, and why.
+  - **ARCHITECTURE §2:** `reports`, `report_documents`, `alert_documents`
+    and `alerts.report_id`, and the endpoints.
+  - **DECISIONS:** a report per paper per nudge that stored new alerts,
+    grouped by Storage Management, holding its documents and the LLM's
+    evaluation, and why (impact judges alerts together; cross-alert
+    conclusions need a home; one current copy per report; Research
+    Evaluation keeps no database). The evaluation columns are reserved now,
+    before impact exists. Also that researcher status stays on alerts.
+  - **README:** a row for this doc and for RE-changes-explained.md.
 
-### S2: Storage Management fetches a document's PDF
+### S2: Storage Management downloads a document's PDF when it's stored
 
-- **Goal:** `POST /internal/alerts/{alertId}/documents/{documentId}/pdf`
-  as in "Design":
-  - downloads with `OpenAccessPdfClient.download(doi)`; none gives
-    `not_found`;
-  - for `current_version`, a PDF with the same SHA-256 as the paper's
-    stored file gives `unchanged` and stores no file;
-  - otherwise stores it with `LocalFileStore` and records `file_key` and
-    `sha256`;
-  - an already `ok` / `unchanged` document isn't downloaded again;
-  - `LocalFileStore` gains `read(key)`.
-  - The stub gets the endpoint with a scripted result (no real download).
-- **Files:** `alert/document/` (service and controller),
-  `file/LocalFileStore.java`, a test class with a mocked
-  `OpenAccessPdfClient`, `backend/dev/stub_storage.py`
-- **Verification:** each status (`ok`, `unchanged`, `not_found`, and a
-  download that throws); `unchanged` only for `current_version`; a changed
-  PDF is stored and readable back; no second download after `ok`; a paper
-  with no stored file never gives `unchanged`; `404` for an unknown alert
-  or a document of another alert; auth outcomes.
+- **Goal:**
+  - `POST /internal/documents` downloads the PDF as in "Design": for a new
+    `new_version` or `current_version` row after saving it as `pending`,
+    and for a stored row still `pending`; `ok` or `not_found` is recorded
+    and the full row returned. A `notice`, or a row already `ok` or
+    `not_found`, is never downloaded.
+  - `GET /internal/documents/{documentId}/pdf` sends the stored PDF and
+    never downloads.
+  - `OpenAccessPdfClient` gains a method that also returns the link the
+    PDF came from; `download(doi)` keeps its signature, so `PaperService`
+    is unchanged. `LocalFileStore` gains `read(key)`.
+  - The stub gets both with a scripted download result (no real download).
+- **Files:** `report/` (document service and controller),
+  `metadata/OpenAccessPdfClient.java`, `file/LocalFileStore.java`; a test
+  class with a mocked `OpenAccessPdfClient`; `OpenAccessPdfClientTest`
+  (the source URL); `backend/dev/stub_storage.py`
+- **Verification:**
+  - a new `current_version` or `new_version` is downloaded once and
+    returned `ok` with `sha256`, `pdf_source_url` and `pdf_fetched_at`;
+    no downloadable PDF returns `not_found`;
+  - a `notice` is never downloaded (`skipped`);
+  - sending a stored `ok` or `not_found` row again downloads nothing; a
+    stored `pending` row is downloaded then;
+  - a failing download leaves the saved row (`pending` or `not_found`), not
+    a half-written one;
+  - `GET .../pdf` sends the stored bytes with no download; `404` for a
+    `pending`, `not_found` or notice document and for an unknown id
+    (`No document <id>`); a non-numeric id; auth outcomes;
+  - `PaperTrackDoiTest` still passes.
 - **Doc deltas:**
-  - **CONTRACTS:** the endpoint.
-  - **DECISIONS:** Storage Management downloads PDFs for Research
-    Evaluation (reuse of `OpenAccessPdfClient`), and "new" means a
-    different SHA-256.
-  - **ARCHITECTURE §2:** file storage now holds investigation PDFs too.
+  - **CONTRACTS:** the download in `POST /internal/documents`, and
+    `GET /internal/documents/{id}/pdf`.
+  - **DECISIONS:** Storage Management downloads the PDF when Research
+    Evaluation stores the document and returns the row (the user's call,
+    2026-09-27), reusing `OpenAccessPdfClient`; the read endpoint never
+    downloads; a `not_found` isn't retried; no "is it new" verdict, and why.
+  - **ARCHITECTURE §2:** file storage now holds report documents' PDFs too.
 
 ### S3: Crossref records by DOI (Research Evaluation)
 
 - **Goal:** `investigation/crossref.py`: `fetch_record(http, doi, mailto)`
-  returns a `CrossrefRecord` (title, type, published date, journal,
-  `update_to` entries, `relation`) or `NOT_FOUND` / `ERROR`, never an
-  exception. Log lines carry only the DOI and a status or exception class.
+  returns a `CrossrefRecord` (title, published date, journal, `update_to`
+  entries, `relation`) or `NOT_FOUND` / `ERROR`, never an exception. Log
+  lines carry only the DOI and a status or exception class.
   `investigation/http.py` holds the status enum shared with S4. Settings
   gain `crossref_mailto` from `CROSSREF_MAILTO`, default empty.
 - **Files:** `backend/src/research_evaluation/investigation/__init__.py`,
@@ -301,112 +602,293 @@ Fixtures for external APIs are real responses, recorded from the live API.
   IJAA `10.1016/j.ijantimicag.2024.107416`, the Lancet EoC `…31290-3`, the
   Lancet retraction-and-republication `…31528-2`, F1000Research v2
   `10.12688/f1000research.187739.2`)
-- **Verification:** IJAA's notice has its title and `update_to` pointing
-  back at the paper; `…31528-2` lists two updated articles; F1000Research
-  v2 has `new_version` and `has-version`; `404` → `NOT_FOUND`; `500`,
-  timeout, bad JSON and a `200` that isn't a work → `ERROR`; DOIs with
-  parentheses encoded like Updating's; `mailto` only when set; no
+- **Verification:** IJAA's notice has its title and an `update_to` naming
+  the paper; `…31528-2` names the Lancet commentary, not the Lancet paper;
+  F1000Research v2 has a `new_version` `update_to`; `404` → `NOT_FOUND`;
+  `500`, timeout, bad JSON and a `200` that isn't a work → `ERROR`; DOIs
+  with parentheses encoded like Updating's; `mailto` only when set; no
   `Authorization` header; the setting's default and env var; one `live`
   test.
 - **Doc deltas:**
   - **SETUP:** Research Evaluation also reads `CROSSREF_MAILTO`.
-  - **DECISIONS:** RE's own fetcher rather than importing Updating's;
-    investigation fetches deterministically, not via LLM tool calls.
-  - **README:** a row for this doc.
+  - **DECISIONS:** Research Evaluation's own fetcher rather than importing
+    Updating's; investigation fetches deterministically, not through LLM
+    tool calls.
 
 ### S4: Open-access text from Europe PMC (Research Evaluation)
 
 - **Goal:** `investigation/europepmc.py`: `fetch_text(http, doi)` searches
   Europe PMC by DOI, keeps only the result whose DOI matches, and for an
   open-access result with a PMCID fetches `{PMCID}/fullTextXML` and returns
-  plain text (title, abstract, body, captions; no reference list), capped
-  at 60,000 characters with a `truncated` flag. Otherwise the reason:
+  plain text (title, abstract, body, captions; no reference list), capped at
+  60,000 characters with a `truncated` flag. Otherwise the reason:
   `not_indexed`, `not_open_access` or `error`.
 - **Files:** `investigation/europepmc.py`; `test_europepmc.py`;
-  `backend/tests/support.py` (XML fixture loader);
-  `backend/tests/fixtures/europepmc/` (search results for a Scientific
-  Reports Author Correction, IJAA's notice and a no-match search; full
+  `backend/tests/support.py` (an XML fixture loader);
+  `backend/tests/fixtures/europepmc/` (search results for the Scientific
+  Reports Author Correction, IJAA's notice and a no-match search; the full
   text of PMC11906582 and PMC10836678)
-- **Verification:** known sentences present, reference list absent; each
-  reason; the cap; the DOI quoted safely in the query; no `Authorization`
-  header; one `live` test.
+- **Verification:** known sentences present and the reference list absent;
+  each reason; the cap; the DOI quoted safely in the query; no
+  `Authorization` header; one `live` test.
 - **Doc deltas:** **DECISIONS:** Europe PMC is the only text source, and
   fetched text is data for impact, never instructions.
 
-### S5: Deciding and fetching the documents for one change (Research Evaluation)
+### S5: Planning and fetching a report's documents (Research Evaluation)
 
-- **Goal:** `investigation/investigate.py`: `plan_documents(change,
-  paper_doi)` returns the (role, DOI) pairs from the table in "What gets
-  fetched for each change", and `fetch_document(http, doi, mailto)` runs
-  S3 and S4 concurrently and returns the body for S1's endpoint. RE's
-  `Snapshot` keeps `doi`.
+- **Goal:** `investigation/investigate.py`:
+  - `plan_documents(changes, report_keys, paper_doi)` turns the detected
+    changes whose key is one of the report's alerts into planned documents
+    (kind, DOI, the change keys it's for), following "What gets fetched for
+    each alert in a report": each DOI once, with every alert that needs it
+    (so one current copy per report); no notice for a self-referencing one;
+    no current copy without a paper DOI; both changes used when two share a
+    key.
+  - `fetch_document(http, planned, paper_doi, mailto)` runs S3 and S4
+    concurrently and returns the body for `POST /internal/documents`, including
+    `update_to_includes_paper` for a notice.
+  - RE's `Snapshot` keeps `doi`.
 - **Files:** `investigation/investigate.py`, `__init__.py`;
   `research_evaluation/changes.py` (`Snapshot.doi`);
   `tests/research_evaluation/investigation/test_investigate.py`
-- **Verification:** every row of the table, including the self-referencing
-  notice and a missing paper DOI (no `current_version`); a Crossref failure
-  still tries Europe PMC and vice versa; a total outage gives statuses, no
-  exception; the existing detection tests still pass.
+- **Verification:**
+  - every row of the table;
+  - a report of three alerts (retraction, EoC, correction) plans one
+    current copy, for the retraction and the correction only;
+  - a flag-only retraction and its notice in later pairs of one window plan
+    the notice for `retraction`;
+  - IJAA's self-referencing entry plans no notice;
+  - changes whose key isn't in the report plan nothing;
+  - `update_to_includes_paper` is true for IJAA's notice and false for
+    `…31174-0` on the Lancet paper;
+  - a Crossref failure still tries Europe PMC and the other way round; a
+    total outage gives statuses and no exception;
+  - the existing detection tests still pass.
 - **Doc deltas:** this doc's codebase context only.
 
 ### S6: Investigation runs after each nudge
 
 - **Goal:**
-  - `evaluate_papers` also returns the alerts that came back `201`, with
-    their change and paper DOI. `POST /evaluate/changes` replies exactly as
-    today, then a background task, for each of those alerts: plans its
-    documents, fetches and stores each one (S1), then asks Storage
-    Management for its PDF (S2) with a longer per-request timeout
-    (`INVESTIGATION_PDF_TIMEOUT_SECONDS`, default 120).
-  - Any failure is logged with the alert id and cause and never affects
-    the nudge's reply or the other alerts.
+  - `evaluate_papers` also returns, for each paper evaluated without
+    failure, its detected changes (all of them, before the key check) and
+    its DOI. `POST /evaluate/changes` replies exactly as today.
+  - Then a background task, per paper with detected changes:
+    1. opens a report (S1); `204` means no new alerts;
+    2. lists the paper's `investigating` reports (the new one, and any left
+       by a crash);
+    3. for each: reads its stored documents (`GET` the report), plans its
+       documents (S5), fetches and sends each one not stored yet with
+       `POST /internal/documents` (Storage Management downloads its PDF
+       then), sends again each stored one whose PDF is still `pending`
+       (its stored fields as the body; the download happens then), and
+       marks the report `investigated`. The `POST`s use a longer
+       per-request timeout (`INVESTIGATION_PDF_TIMEOUT_SECONDS`, default
+       120), since they wait for the download. Research Evaluation takes
+       the row each `POST` returns as the document, whether or not it
+       differs from what was sent (see "Later sprints").
+    4. returns the ids of the paper's `investigated` reports: the ones it
+       just finished, plus any left `investigated` by an earlier run (the
+       per-paper listing with `?status=investigated`). The background task
+       collects them per paper; the impact plan adds the call to impact on
+       each. No impact placeholder is added in the meantime (DECISIONS.md,
+       2026-09-27, "No separate LLM step for `other` changes": a
+       placeholder that does nothing was removed once already).
+  - Any failure is logged with the paper and report ids and the cause,
+    leaves the report `investigating`, and never affects the reply or the
+    other papers.
   - External calls use their own `httpx.AsyncClient`, created at startup,
     with no auth.
 - **Files:** `research_evaluation/evaluate.py`, `main.py`, `storage.py`,
   `config.py`, `investigation/run.py`; `backend/.env.example`;
   `tests/research_evaluation/conftest.py`, `test_evaluate.py`,
   `test_config.py`, `investigation/test_run.py`
-- **Verification:** against the stub with external calls mocked:
-  - a new alert gets its documents and PDF requests;
-  - a re-nudge (`200` alerts, or skipped by the key check) makes no
-    external calls;
-  - Crossref, Europe PMC or Storage Management failing during
-    investigation still gives the same `202` and stored alerts;
-  - external requests carry no `Authorization`; SM requests still do;
-  - the timeout setting's default, override and rejection of 0 or less;
+- **Verification:** against the stub, with external calls mocked:
+  - a nudge with new alerts gives one report per paper, grouping all of
+    them, with one `POST /internal/documents` per planned document, marked
+    `investigated`;
+  - a stored document still `pending` is sent again on resume, and a stored
+    `ok` one isn't;
+  - when the stored row differs from what was just fetched, the returned
+    (stored) row is the one used, and nothing is overwritten;
+  - a re-nudge with nothing new opens no report and makes no external
+    calls;
+  - alerts stored by a nudge whose report never opened join the next
+    report;
+  - a report left `investigating` is resumed on the next nudge;
+  - investigation returns exactly the paper's `investigated` report ids
+    (new and left over), never an `investigating` or `assessed` one, and
+    returns none when a report couldn't be finished;
+  - Crossref, Europe PMC or Storage Management failing during investigation
+    still gives the same `202` and stored alerts;
+  - external requests carry no `Authorization`; Storage Management requests
+    still do;
+  - the timeout setting's default, override, and rejection of 0 or less;
   - every existing test passes.
 - **Doc deltas:**
-  - **CONTRACTS:** the `/evaluate/changes` flow: investigation after the
-    reply.
-  - **ARCHITECTURE §3:** the stages now include investigation.
+  - **CONTRACTS:** the `/evaluate/changes` flow: a report opened and
+    investigated after the reply.
+  - **ARCHITECTURE §3:** the stages now include investigation and reports,
+    and the handoff to impact is a report id.
   - **SETUP:** `INVESTIGATION_PDF_TIMEOUT_SECONDS`.
-  - **DECISIONS:** investigation runs after the `202`, only for new
-    alerts, with no retry yet, and why.
+  - **DECISIONS:** investigation runs after the `202`; how a report is
+    resumed; no retry of a failed fetch; investigation returns report ids
+    and the conductor will hand them to impact, which reads everything from
+    Storage Management (the user's call, 2026-09-27), so the two stay
+    independent.
   - **EVALUATION-REVIEW-CHANGES:** "Later stories" points here.
+
+### S7: A late retraction notice replaces a notice-less retraction alert
+
+A retraction's change key is always `retraction` (one retraction alert per
+paper), unlike every other type, which is keyed by notice DOI. So when
+OpenAlex's flag stored the `retraction` alert first, the real notice
+arriving on a later poll has the same key, the key check skips it, and it
+never reaches a report. It's the only change type with this gap.
+
+- **Goal:**
+  - **Research Evaluation:** the key check lets through a `retraction`
+    change that has a notice DOI, even when `retraction` is already stored,
+    and stores it as usual (rules, then `POST /internal/papers/{id}/alerts`).
+    Within one history, a `retraction` change with a notice DOI is used
+    over one without (the earliest such), so a flag and its notice in one
+    window give one `POST`, with the notice.
+  - **Storage Management** (`POST /internal/papers/{id}/alerts`), for a
+    stored `retraction` alert:
+    - **it has no notice DOI and the request has one:** the row is
+      replaced with the request's fields (severity, description,
+      recommendation, `notice_doi`, `detected_at`, `snapshot_id`,
+      `previous_snapshot_id`) and treated as a new alert: `status` back to
+      `new`, `status_changed_at` cleared, `report_id` cleared so the next
+      report takes it. The id stays, so its notes stay. `201`, like a new
+      alert.
+    - **anything else:** `200` with the stored alert, unchanged, as today.
+  - So S6 opens a report for it and fetches its notice. The earlier report
+    no longer lists it; the documents fetched for it then (e.g. the current
+    copy) stay in that report.
+  - Every later nudge whose window still has that notice sends it again and
+    gets `200`.
+  - The stub Storage Management does the same.
+- **Files:**
+  - `storage/src/main/java/com/g4t1/storage/alert/AlertService.java`,
+    `Alert.java` (replacing a row)
+  - `storage/src/test/java/com/g4t1/storage/alert/InternalAlertTest.java`
+  - `backend/src/research_evaluation/evaluate.py`,
+    `backend/dev/stub_storage.py`
+  - `backend/tests/research_evaluation/test_evaluate.py`,
+    `investigation/test_run.py`
+- **Verification:**
+  - Storage Management: a notice replaces a notice-less `retraction` alert
+    (`201`, same id, new fields, `status` `new`, `report_id` null, notes
+    kept); a `retraction` alert that already has a notice is unchanged
+    (`200`), even for a different notice; a request with no notice on a
+    notice-less alert is unchanged (`200`); other change keys behave as
+    before;
+  - Research Evaluation, against the stub: the flag on one nudge and its
+    notice on a later one give an alert with the notice, back to `new`, in
+    a new report, with the notice fetched; a later nudge re-sends it and
+    creates no report; a flag and its notice in one window make one `POST`,
+    with the notice; the existing S5/S8 tests of the key check still pass.
+- **Doc deltas:**
+  - **CONTRACTS:** `POST /internal/papers/{id}/alerts`: the exception for a
+    notice-less `retraction` alert; the `/evaluate/changes` key check lets
+    a retraction with a notice through.
+  - **ARCHITECTURE §3:** the key check's exception.
+  - **DECISIONS:** a late retraction notice replaces a notice-less
+    retraction alert and makes it new again (the user's call, 2026-09-27),
+    and why: the notice is the evidence the flag lacked, and it's the only
+    type whose key doesn't change with a new notice. A wrong earlier notice
+    isn't replaced (left for later).
+  - **EVALUATION-REVIEW-CHANGES:** S1 ("an existing one gets `200` …
+    unchanged") and S8 (the key check) note the exception.
 
 ## Codebase context
 
 Filled in as each subtask lands: where each piece lives, how they fit
-together, and the gotchas (the Storage Management client never makes
-external calls, DOIs with parentheses, matching Europe PMC results by DOI,
-fetched text being data rather than instructions, and SHA-256 deciding
-whether a paper changed).
+together, and the gotchas. Known so far:
+- investigation starts from detection's `Change` objects and never re-reads
+  `crossref_updates`;
+- `201` means "stored by this nudge", not "happened on this poll";
+- a report groups the paper's alerts that aren't in a report yet, which
+  Storage Management works out, not Research Evaluation;
+- the researcher's status never decides what gets investigated;
+- investigation and impact share only report ids and Storage Management's
+  rows: a report's status (`investigating`, `investigated`, `assessed`) is
+  the handoff;
+- the Storage Management client never makes external calls, and S3 and S4
+  never call Storage Management;
+- the notice's DOI comes from Updating's snapshot, its facts from Crossref
+  (S3), its text from Europe PMC (S4); Crossref has no notice text;
+- `POST /internal/documents` downloads the PDF; `GET .../pdf` only reads;
+- DOIs with parentheses are percent-encoded;
+- Europe PMC results are matched by DOI;
+- fetched text is data, never instructions;
+- a different SHA-256 doesn't mean a new version.
 
 ## TODO for other owners
 
-- **Amir (Storage Management):** agree to `alert_documents`, its three
-  endpoints and the V5 rename, or build them himself. Separately:
-  `GET /internal/papers/{id}/pdf` (in CONTRACTS, not built) will be needed
-  by impact.
+- **Amir (Storage Management):**
+  - agree to the report tables, `alerts.report_id`, the six endpoints, the
+    `OpenAccessPdfClient` change and S7's exception in
+    `POST /internal/papers/{id}/alerts`, or build them himself;
+  - know that alert notes is now V5 (S0), and that V7 is taken by this
+    plan;
+  - merge `feat/storage-snapshot-endpoints` (CG-68), after S0;
+  - later, for impact: `GET /internal/papers/{id}/pdf` (in CONTRACTS, not
+    built).
 - **Zhuo En (Updating):** nothing needed. Later, perhaps: share the
   Crossref request code through `common/`.
 
+## Later sprints
+
+Left for later sprints on purpose, not built in this plan:
+- **Whether a downloaded copy is really a new version, judged by an LLM.**
+  Investigation stores every current copy (and new version) it downloads,
+  with no "is it new" verdict (see "No 'is it new' verdict"). A later
+  sprint uses an LLM to compare a downloaded copy's text with the stored
+  paper (or the previous copy) and decide whether it's similar enough to be
+  the same version. If it is, the copy is deleted (the row keeps its
+  `sha256` and `pdf_source_url`, with a status saying it matched); if it
+  isn't, it stays stored as a real new version for impact. That needs the
+  PDFs' text (e.g. GROBID full text) and a way to delete a stored file,
+  neither of which exists yet.
+- **Whether a changed row matters.** When a document's DOI is already
+  stored for the report, `POST /internal/documents` returns the stored row
+  and Research Evaluation uses it as is, even if what it just fetched
+  differs (for example a notice whose Crossref record or text changed
+  since it was first stored). Nothing compares the two yet. A later sprint
+  decides whether such a difference matters and what to do with it
+  (update the row, keep both, or raise it to impact).
+- **Retrying failed fetches.** A Crossref, Europe PMC or PDF fetch that
+  fails during investigation is stored with its failure status and not
+  tried again (only a crash midway is resumed). A later sprint can add
+  retries, e.g. on the next nudge for the paper, or on a schedule.
+- **A wrong retraction notice stored first** (R3's self-referencing entry,
+  R5's notice about another article). S7 only replaces a `retraction`
+  alert with no notice, so a real notice arriving after a wrong one still
+  makes no new alert. A later sprint could replace it too, e.g. when the
+  stored notice's `update_to_includes_paper` is false.
+- **DOIs named in a notice's text** (R4's replacement: "Retraction and
+  replacement of: …"): pull them out with a DOI pattern when there's text,
+  and fetch them as new versions. Only open-access notices have text, so it
+  wouldn't help JAMA or Elsevier.
+
 ## Open questions
 
-- **Storage Management downloads the PDFs** (recommended above), or
-  Research Evaluation downloads them in Python and uploads the bytes?
-- **Investigation after the `202`**, with no retry for now: acceptable?
-- **The V5 rename** needs anyone who ran alert notes as V4 locally to
-  reset their database. Tell the team, or would you rather rename
-  `background_metadata` instead?
-- **Defaults:** a 60,000-character text cap and a 120 s PDF timeout.
+None left.
+
+Settled (the user's calls, 2026-09-27):
+- **A retraction notice that arrives after a notice-less `retraction`
+  alert replaces it** (S7): Storage Management replaces the row with the
+  notice's details and treats it as a new alert, so the next report takes
+  it and its notice is fetched. Only retractions need this: every other
+  type is keyed by notice DOI, so a new notice is always a new alert. (A
+  notice relabelled later, e.g. `erratum` to `correction`, makes no new
+  alert either, but its DOI was already fetched with its first alert.)
+- **Research Evaluation replies `202` once detection has run and the
+  alerts are stored, without waiting for investigation.** The `202` is its
+  reply to Updating's nudge (`POST /evaluate/changes`); a `503` makes
+  Updating re-send the nudge on its next poll. Investigation runs in the
+  background afterwards, so its PDF downloads never count against
+  Updating's 20 s timeout, and nothing it does changes the reply.
+- A 60,000-character cap on fetched text (S4) and a 120 s timeout on each
+  `POST /internal/documents` (S6).
