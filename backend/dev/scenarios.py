@@ -42,7 +42,7 @@ class Scenario(StrEnum):
 
 
 def load_fixture(source: str, name: str) -> dict:
-    return json.loads((FIXTURES / source / f"{name}.json").read_text())
+    return json.loads((FIXTURES / source / f"{name}.json").read_text(encoding="utf-8"))
 
 
 def author_batch(name: str) -> list[OpenAlexAuthor]:
