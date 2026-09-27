@@ -216,6 +216,82 @@ Errors, as problem details: `400` an id that isn't a number; `401`
 missing or bad token; `403` a service token; `404` as for
 `POST /alerts/{id}/notes`.
 
+### `GET /papers/{id}/reports`
+
+User JWT required, and only the paper's owner sees its reports. A report
+groups the alerts one nudge stored for the paper and holds what Research
+Evaluation's investigation fetched about them (its **documents**: each
+change's notice, a newer version, the paper's current copy) and, later,
+impact's evaluation of those alerts together (see "Reports
+(investigation)" below and
+[EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md)). Returns every
+report of the paper, whatever its status, **newest first** (by
+`created_at`, then `id`).
+
+**Response `200`:**
+
+```json
+{"reports": [
+  {
+    "id": 3, "paper_id": "uuid", "status": "investigated",
+    "created_at": "2026-09-27T08:00:00Z", "investigated_at": "2026-09-27T08:00:40Z",
+    "evaluation": null, "recommendation": null, "evaluated_at": null,
+    "alerts": [
+      {"id": 7, "paper_id": "uuid", "change_type": "retraction", "severity": "high",
+       "description": "...", "recommendation": "...", "notice_doi": "10.xxxx/notice",
+       "detected_at": "2026-09-24T12:00:00Z", "status": "new", "status_changed_at": null}
+    ],
+    "documents": [
+      {"id": 12, "kind": "notice", "doi": "10.xxxx/notice",
+       "crossref_status": "ok", "crossref_record": {"title": "Retraction notice to ...", "...": "..."},
+       "update_to_includes_paper": true,
+       "text_status": "not_open_access", "text": null, "text_truncated": false,
+       "pdf_status": "skipped", "pdf_source_url": null,
+       "created_at": "2026-09-27T08:00:01Z", "pdf_fetched_at": null},
+      {"id": 13, "kind": "current_version", "doi": "10.xxxx/paper", "...": "...",
+       "pdf_status": "ok", "pdf_source_url": "https://...", "pdf_fetched_at": "2026-09-27T08:00:30Z"}
+    ]
+  }
+]}
+```
+
+A paper with no reports gives `{"reports": []}`. Alerts are grouped into a
+report in the background, right after they're stored, so a new alert can
+be in `GET /papers/{id}/alerts` a moment before it's in a report.
+
+| Report field | Meaning |
+|---|---|
+| `status` | `investigating` (its documents are being fetched, or fetching stopped midway; nothing resumes it yet), `investigated` (fetching finished) or `assessed` (impact wrote its evaluation; nothing sets it yet) |
+| `created_at`, `investigated_at` | when the report was opened, and when fetching finished (null until then) |
+| `evaluation`, `recommendation`, `evaluated_at` | impact's evaluation of the report's alerts together, what the researcher should do, and when it was written. Null until impact exists |
+| `alerts` | the report's alerts, in the same shape and order as `GET /papers/{id}/alerts` (newest first, then most severe), **dismissed ones included**, with their status. They're the same alerts, acted on with `PATCH /alerts/{id}` and `/alerts/{id}/notes`. Can be empty: when a retraction notice arrives after a retraction alert that had none, the alert moves to the paper's next report (see `POST /internal/papers/{id}/alerts`), and the earlier report keeps its documents |
+| `documents` | what investigation fetched, oldest first (the order it stored them) |
+
+| Document field | Meaning |
+|---|---|
+| `kind` | `notice` (the Crossref notice of a change: a retraction, correction, expression of concern, …), `new_version` (a newer version of the paper under another DOI) or `current_version` (the paper's own DOI, fetched again when the report was made) |
+| `doi` | the DOI fetched |
+| `crossref_status`, `crossref_record` | `ok`, `not_found` or `error`, and the DOI's Crossref record as Research Evaluation stored it (`doi`, `title`, `published`, `journal`, `update_to`, `relation`), null when there's none |
+| `update_to_includes_paper` | notices only: whether the notice's Crossref `update-to` names this paper; null otherwise. `true` doesn't prove the notice is about this paper (EVALUATION-INVESTIGATION.md, R5) |
+| `text_status`, `text`, `text_truncated` | `ok`, `not_indexed`, `not_open_access` or `error`; the open-access plain text from Europe PMC when `ok` (at most 60,000 characters, `text_truncated` when cut), otherwise null. It's written by the notice's publisher: show it as text, never as HTML |
+| `pdf_status` | `skipped` (a notice; notices get no PDF), `pending` (no PDF yet: still downloading, or a download interrupted by a crash), `ok` (Storage Management stored a copy) or `not_found` (no open-access PDF could be downloaded) |
+| `pdf_source_url` | when `ok`, the open-access link the PDF was downloaded from, which the frontend can link to; otherwise null |
+| `created_at`, `pdf_fetched_at` | when the document was stored, and when its PDF was (null unless `ok`) |
+
+**Documents aren't linked to alerts.** A `notice` or `new_version` belongs
+to the report's alert whose `notice_doi` is its `doi`; the
+`current_version` is about the whole report. A document can match no
+alert (two retraction notices in one nudge's window, when the retraction
+alert carries only one): show it with the report.
+
+`file_key`, `sha256` and `report_id` are stored but not returned. The
+frontend has no endpoint to download a document's stored PDF.
+
+Errors, as problem details: `400` an id that isn't a UUID; `401` missing
+or bad token; `403` a service token; `404` no paper with that id **or** a
+paper that belongs to another user (both `No paper <id>`, as for
+`GET /papers/{id}/alerts`).
+
 ### `POST /papers` (track by DOI)
 
 Same endpoint, sent as JSON instead of multipart, for a paper you don't
@@ -513,7 +589,9 @@ Research Evaluation's investigation fetched for them (its **documents**)
 and, later, impact's evaluation. The plan is in
 [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md). Every
 endpoint below is service-JWT only (`401` missing or bad token, `403` a
-user token). A report's owner and project are its paper's.
+user token). A report's owner and project are its paper's. The frontend
+reads a paper's reports through `GET /papers/{id}/reports` (in "Frontend ↔
+Storage Management"), never these.
 
 #### `POST /internal/papers/{id}/reports`
 

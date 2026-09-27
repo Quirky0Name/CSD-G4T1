@@ -5,6 +5,59 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-28 — The frontend reads a paper's reports
+
+The contract is `GET /papers/{id}/reports` in CONTRACTS.md; where the code
+lives is [STORAGE-USER-REPORTS.md](STORAGE-USER-REPORTS.md).
+
+### Team decisions
+
+- **One endpoint per paper returns its reports with their alerts and
+  documents inside** (the story owner's call). The investigation plan left
+  a frontend reports endpoint to the impact plan, but reports and their
+  documents already exist, so the frontend can show what was fetched about
+  each change now. One call per paper, like the alert list.
+- **Built before impact.** `evaluation`, `recommendation` and
+  `evaluated_at` are in the response already and stay null until impact
+  writes them, so the shape doesn't change when it does.
+- **Alerts in the alert API's shape and order.** A report's alerts look
+  exactly like `GET /papers/{id}/alerts`'s, so the frontend reuses its
+  alert type and acts on them with the same endpoints. `change_key`, which
+  only Research Evaluation needs, stays hidden, as in the alert list.
+- **Every report, whatever its status, with every alert it grouped,
+  dismissed ones included.** A report is what impact judges together;
+  hiding a dismissed alert would show the evaluation without part of what
+  it judged, and the researcher's status never decides reports
+  (2026-09-27). A report whose alerts all moved to a later report (a late
+  retraction notice) is still listed, with no alerts: its documents, and
+  later its evaluation, are still what happened.
+- **Documents as stored, without Storage Management's and impact's
+  columns:** `file_key` (a path on Storage Management's disk; papers show
+  only `file_available` for the same reason), `sha256` (a fact for impact's
+  comparison) and `report_id` (the document is inside its report). Text is
+  sent in full, at most 60,000 characters per document.
+
+### Rejected
+
+- **A list without text, plus an endpoint for one report.** Two calls and
+  a second contract to save at most a few hundred KB per paper. It can be
+  added if lists get heavy.
+- **Hiding dismissed alerts, or an `include_dismissed` flag like the alert
+  list's.** See above: a report is shown whole.
+- **A frontend endpoint for a document's stored PDF, for now.**
+  `pdf_source_url` is the open-access link the PDF came from, which the
+  frontend can link to. Add one if the frontend needs Storage Management's
+  own copy (e.g. the link stops working).
+
+### Also settled while building it
+
+- A request makes four queries however many reports the paper has: the
+  paper (ownership), its reports, all their alerts, all their documents.
+- `AlertResponse.from` and `AlertService.LIST_ORDER` are now public, so
+  reports reuse the alert API's shape and order instead of copying them.
+
+---
+
 ## 2026-09-27 — A late retraction notice replaces a notice-less retraction alert
 
 The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md), S7.

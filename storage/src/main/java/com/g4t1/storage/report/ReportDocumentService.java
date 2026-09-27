@@ -13,8 +13,11 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ReportDocumentService {
@@ -118,11 +121,24 @@ public class ReportDocumentService {
         return documents.findByReportIdOrderByIdAsc(reportId).stream().map(this::toResponse).toList();
     }
 
+    // the documents of several reports as the researcher sees them, by report id, each list oldest first
+    Map<Long, List<UserDocumentResponse>> forOwnerByReport(Collection<Long> reportIds) {
+        return documents.findByReportIdInOrderByIdAsc(reportIds).stream()
+                .collect(Collectors.groupingBy(ReportDocument::getReportId,
+                        Collectors.mapping(this::toUserResponse, Collectors.toList())));
+    }
+
     private ReportDocumentResponse toResponse(ReportDocument d) {
         return new ReportDocumentResponse(d.getId(), d.getReportId(), d.getKind(), d.getDoi(),
                 d.getCrossrefStatus(), toNode(d.getCrossrefRecord()), d.getUpdateToIncludesPaper(),
                 d.getTextStatus(), d.getText(), d.isTextTruncated(), d.getPdfStatus(), d.getFileKey(),
                 d.getSha256(), d.getPdfSourceUrl(), d.getCreatedAt(), d.getPdfFetchedAt());
+    }
+
+    private UserDocumentResponse toUserResponse(ReportDocument d) {
+        return new UserDocumentResponse(d.getId(), d.getKind(), d.getDoi(), d.getCrossrefStatus(),
+                toNode(d.getCrossrefRecord()), d.getUpdateToIncludesPaper(), d.getTextStatus(), d.getText(),
+                d.isTextTruncated(), d.getPdfStatus(), d.getPdfSourceUrl(), d.getCreatedAt(), d.getPdfFetchedAt());
     }
 
     // a JSON null is stored as SQL null, not the text "null"

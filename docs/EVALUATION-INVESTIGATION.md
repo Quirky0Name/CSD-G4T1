@@ -430,8 +430,10 @@ Documents (both write and read the `report_documents` table):
   and one per user tracking the paper), and a DOI's `/` doesn't fit in a
   path. For impact, later.
 
-A frontend `GET /papers/{id}/reports` is left for the impact plan. Impact
-also reads the tracked paper's stored PDF (`GET /internal/papers/{id}/pdf`)
+A frontend `GET /papers/{id}/reports` was left for the impact plan; it's
+now built ahead of impact, with each report's alerts and documents and
+the evaluation fields null until impact fills them
+([STORAGE-USER-REPORTS.md](STORAGE-USER-REPORTS.md)). Impact also reads the tracked paper's stored PDF (`GET /internal/papers/{id}/pdf`)
 and the researcher's draft (`GET /internal/papers/{id}/research-paper`),
 both already built.
 
