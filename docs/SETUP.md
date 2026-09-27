@@ -11,6 +11,7 @@ bottom.
 |---|---|---|
 | **Semantic Scholar** | abstract/TL;DR/snippet lookups; open-access PDF links when Storage Management tracks a paper by DOI | Request a key through their API-key request form **first** — approval can take days. Keyless calls work meanwhile but hit frequent 429s. Header: `x-api-key`. |
 | **DeepSeek** | claims + stance LLM calls | Create an account at platform.deepseek.com, top up a few USD (covers development and the demo many times over — calls cost well under 1¢ each), create an API key. |
+| **Gemini** | impact's LLM calls (Research Evaluation) | Sign in at aistudio.google.com with a Google account and click "Get API key"; the free tier is enough for development. |
 | **OpenAlex** | retraction status, citation counts, authors, journal/DOAJ-membership flag (fetched by Updating and Storage Management), citation-neighbourhood metrics (Research Evaluation) | Create a free account and key. This is the only key you need to request for Updating. A key is now required for the full $1/day free-usage budget (keyless calls get 1/10 of that). Passed as the `api_key` query param. Storage Management and Updating share that budget if they use the same key, so Updating fetches each DOI once per poll. |
 | **Crossref** | retraction/correction notices, canonical metadata (Updating, Storage Management), and each notice's own record (Research Evaluation's investigation) | No key needed. Pick a contact email for the `mailto` polite-pool parameter (`CROSSREF_MAILTO`) — improves rate limits, doesn't require registration. |
 | **GROBID** | DOI and title from uploaded PDFs (Storage Management); COI/funding text and full text for the claims LLM prompt, from the PDFs Storage Management keeps (Research Evaluation) | No key — self-hosted via Docker. |
@@ -65,6 +66,8 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
 | `LLM_API_KEY` | platform.deepseek.com |
 | `LLM_MODEL` | `deepseek-flash` (default) |
 | `LLM_BASE_URL` | `https://api.deepseek.com` |
+| `GEMINI_API_KEY` | aistudio.google.com → Get API key; Research Evaluation's impact LLM (the service starts without it, impact can't run) |
+| `GEMINI_MODEL` | `gemini-flash-latest` (default) |
 | `CROSSREF_MAILTO` | any team contact email; read by Updating and by Research Evaluation (investigation's Crossref lookups), default empty (no `mailto` sent) |
 | `JWT_SECRET` | `openssl rand -base64 32`; the same value in every service (base64, 32+ bytes) |
 | `DATABASE_URL` | local Postgres in sprint 1 (`postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` for the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres; Supabase session-pooler connection string once hosted |
