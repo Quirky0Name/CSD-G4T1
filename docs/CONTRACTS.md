@@ -320,6 +320,12 @@ poll (see "Poll job").
 ```
 
 **Response `201`:** the same body plus `snapshot_id` and `paper_id`.
+`crossref_updates`, `authors` and `source_status` come back exactly as
+sent; Storage Management doesn't look inside them.
+
+Errors: `400` a missing `doi`, `fetched_at` or `source_status`, `401`
+missing or bad token, `403` a user token, `404` an unknown paper, with
+`detail` exactly `No paper <id>`.
 
 ### `GET /internal/papers/{id}/background-info/history?after_id=&last=&limit=`
 
@@ -339,9 +345,8 @@ Query parameters, all optional and applied in this order:
 - `limit`: at most this many, from the oldest.
 
 With none of them it returns the whole history; there's no default page
-size, which would silently hide snapshots. Until the Java endpoint
-implements `last`, it would ignore it and return everything, which gives
-the same alerts, just with more to read. A paper Storage Management doesn't know gets `404`
+size, which would silently hide snapshots. Each row has every snapshot
+field, nulls written out. A `last` or `limit` below 1 is a `400`. A paper Storage Management doesn't know gets `404`
 with `detail` exactly `No paper <id>`, the same as
 `POST /internal/papers/{id}/alerts`. Research Evaluation relies on that
 text to tell a missing paper (skipped) from a missing route (a failure).
