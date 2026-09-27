@@ -152,7 +152,8 @@ Owns all Postgres and file persistence.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
   `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /alerts/{id}/notes`,
   `POST/GET/DELETE /research-paper`, `POST/GET /internal/papers/{id}/background-info`,
-  `GET /internal/papers/{id}/pdf`, `POST /internal/papers/{id}/alerts`,
+  `GET /internal/papers/{id}/pdf`, `GET /internal/papers/{id}/research-paper`,
+  `POST /internal/papers/{id}/alerts`,
   `GET /internal/papers/{id}/alerts/change-keys`.
 - **DB hosting:** Supabase free tier.
 
@@ -202,7 +203,10 @@ journal and author fields moved to Updating (Section 4).
      detection.
 
   So far the evaluation doesn't read the paper's PDF, notes or extracted
-  text; the templates only use the snapshots.
+  text; the templates only use the snapshots. Storage Management also
+  serves the researcher's own paper for the tracked paper's project
+  (`GET /internal/papers/{id}/research-paper`), so a later stage can judge
+  a change against what the researcher is writing; nothing reads it yet.
 - **Structured signal layer** (no reasoning, cheap): citation-neighbourhood
   metrics computed from OpenAlex reference/citation data, GROBID on the
   PDF stored in Storage Management (COI/funding text, verbatim, never

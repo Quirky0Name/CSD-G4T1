@@ -1,15 +1,16 @@
 # The researcher's own paper, one per project
 
-**Status:** the researcher's upload, GET and DELETE are built. Research
-Evaluation's read (`GET /internal/papers/{id}/research-paper`) is next on
-`feat/storage-user-research-paper`.
+**Status: built** on `feat/storage-user-research-paper`: the researcher's
+upload, GET and DELETE, and Research Evaluation's read. Nothing in Research
+Evaluation calls the read yet (see "TODO for other owners").
 
 Storage Management keeps the researcher's own paper (the draft they're
 writing) for each of their projects, so Research Evaluation can judge what a
 change in a tracked paper means for what the researcher is writing. It's a
 PDF, stored the same way as a tracked paper's: the file on local disk, its
 key in Postgres. The contract is in CONTRACTS.md ("Folders and projects",
-`POST`, `GET` and `DELETE /research-paper`) and the reasoning in
+`POST`, `GET` and `DELETE /research-paper`,
+`GET /internal/papers/{id}/research-paper`) and the reasoning in
 DECISIONS.md ("2026-09-27 — The researcher's own paper, one per project").
 
 | Endpoint | Who | Does |
@@ -17,9 +18,12 @@ DECISIONS.md ("2026-09-27 — The researcher's own paper, one per project").
 | `POST /research-paper` (multipart `file`, `folder_id`) | the researcher (user JWT) | stores the project's research paper, or replaces it: `201` new, `200` replaced |
 | `GET /research-paper?folder_id=` | the researcher | `{id, folder_id, filename, uploaded_at}`, or `404` |
 | `DELETE /research-paper?folder_id=` | the researcher | deletes the row and the PDF: `204`, or `404` |
+| `GET /internal/papers/{id}/research-paper` | Research Evaluation (service JWT) | the PDF of the research paper in that tracked paper's project, or `404` |
 
-The owner always comes from the JWT's `sub`, never from the request, and
-`folder_id` left out (or `""`) means the "no folder" project.
+On the researcher's endpoints the owner always comes from the JWT's
+`sub`, never from the request, and `folder_id` left out (or `""`) means the
+"no folder" project. On the internal one, the owner and folder come from
+the tracked paper.
 
 ## Folders and projects
 
@@ -51,6 +55,7 @@ All in `storage/`:
 | Repository | `research/ResearchPaperRepository.java` |
 | Upload, replace, read, delete | `research/ResearchPaperService.java` |
 | `POST`, `GET`, `DELETE /research-paper` | `research/ResearchPaperController.java` |
+| `GET /internal/papers/{id}/research-paper` | `research/InternalResearchPaperController.java` |
 | Response body | `research/ResearchPaperResponse.java` |
 | PDF files on disk | `file/LocalFileStore.java` (shared with tracked papers) |
 | PDF check | `file/Pdfs.java` (shared) |
@@ -119,6 +124,37 @@ reads its metadata yet.
   upload removes the upload's new file, and an upload that waits on a
   delete finds no row and starts a new research paper, with a new `id`.
 
+## How Research Evaluation reads it
+
+Research Evaluation is nudged with paper ids, one per user's tracked paper
+(several users tracking one DOI are several paper ids, each evaluated on
+its own, each with its own alerts). For a paper id it wants the draft of
+the user who'll get the alert, from the project that paper is in:
+
+```
+nudge: paper_ids ──> GET /internal/papers/{id}/research-paper ──> PDF bytes
+                          │
+                          ├─ papers row: owner_id, folder_id (null = no folder)
+                          └─ research_papers row for (owner_id, folder_id) ──> file_key ──> disk
+```
+
+`InternalResearchPaperController` → `ResearchPaperService.pdfForPaper`:
+
+1. Load the tracked paper. None: `404` `No paper <id>`, the exact text
+   Research Evaluation's client (`backend/src/research_evaluation/storage.py`,
+   `_raise_for_status`) reads as "the paper is gone".
+2. Look up the research paper for the paper's owner and folder (no lock).
+   None: `404` `No research paper in the project of paper <id>`, a
+   different text on purpose, so it isn't mistaken for a deleted paper.
+3. Read the file. If it isn't there, look the row up once more: a re-upload
+   may have swapped the file in between, and the row then has the new key.
+   Still missing: `404` `The research paper for paper <id> is missing from
+   disk`, logged as a warning.
+
+Errors are problem details (`application/problem+json`) even when the
+request sends `Accept: application/pdf`, so the `detail` is always there
+to read.
+
 ## Gotchas
 
 - **Needs Postgres 15 or later** for `unique nulls not distinct`. The local
@@ -144,6 +180,13 @@ reads its metadata yet.
 
 ## TODO for other owners
 
+- **Research Evaluation:** nothing calls
+  `GET /internal/papers/{id}/research-paper` yet. When a stage needs the
+  draft, add a call next to the others in
+  `backend/src/research_evaluation/storage.py` (service token, like the
+  snapshot and alert calls). Treat a `404` whose `detail` isn't
+  `No paper <id>` as "no draft", not as a failure: most projects won't have
+  one. The dev stub (`backend/dev/stub_storage.py`) doesn't serve it.
 - **User Management / frontend:** once folders exist, send their real
   ids. The upload is `multipart/form-data` with `file` and an optional
   `folder_id`; leave `folder_id` out for the "no folder" project. Show a

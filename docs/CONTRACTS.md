@@ -360,6 +360,29 @@ now on has one (uploads keep theirs, DOI tracking downloads an
 open-access copy or refuses the paper; see DECISIONS.md, 2026-09-26), so
 the `404` is only for papers added before that.
 
+### `GET /internal/papers/{id}/research-paper`
+
+Service-JWT only. Returns, as `application/pdf`, the researcher's own
+paper (the draft they uploaded with `POST /research-paper`) for the
+project the tracked paper is in: the paper's owner plus its `folder_id`,
+or the owner's "no folder" project when the paper has no folder (see
+"Folders and projects"). Research Evaluation evaluates one user's paper at
+a time, so this is the draft whose author gets the alert. It's always the
+project's current upload.
+
+Errors, as problem details (also when the request asks for
+`Accept: application/pdf`): `400` an id that isn't a UUID; `401` missing
+or bad token; `403` a user token; `404` with one of:
+
+| `detail` | Meaning |
+|---|---|
+| `No paper <id>` | no tracked paper with that id, exactly as on the other internal endpoints |
+| `No research paper in the project of paper <id>` | the paper exists, but its project has no research paper (yet) |
+| `The research paper for paper <id> is missing from disk` | the row points at a file that isn't there (e.g. a local database and upload folder reset separately) |
+
+Only the first means the paper is gone; the other two mean there's no
+draft to read.
+
 ### `POST /internal/papers/{id}/alerts`
 
 Service-JWT only. Stores one alert: a change Research Evaluation detected

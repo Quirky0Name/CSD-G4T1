@@ -1,6 +1,8 @@
 package com.g4t1.storage.research;
 
 import com.g4t1.storage.file.LocalFileStore;
+import com.g4t1.storage.paper.Paper;
+import com.g4t1.storage.paper.PaperRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.mock.web.MockMultipartFile;
@@ -19,17 +21,18 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Two first uploads to one project race past the lookup; the database's unique constraint
-// rejects the second insert. Hard to time through HTTP, so the repository is scripted here.
+// Races that are hard to time through HTTP, so the repositories and file store are scripted here:
+// two first uploads to one project, and a re-upload landing while Research Evaluation reads the PDF.
 class ResearchPaperServiceRaceTest {
 
     private static final MockMultipartFile DRAFT = new MockMultipartFile(
             "file", "draft-v2.pdf", "application/pdf", "%PDF-1.7 draft".getBytes(StandardCharsets.US_ASCII));
 
     private final ResearchPaperRepository researchPapers = mock(ResearchPaperRepository.class);
+    private final PaperRepository papers = mock(PaperRepository.class);
     private final LocalFileStore files = mock(LocalFileStore.class);
     private final ResearchPaperService service = new ResearchPaperService(
-            researchPapers, files, mock(PlatformTransactionManager.class), DataSize.ofKilobytes(1));
+            researchPapers, papers, files, mock(PlatformTransactionManager.class), DataSize.ofKilobytes(1));
 
     private final UUID owner = UUID.randomUUID();
     private final UUID folder = UUID.randomUUID();
@@ -62,5 +65,21 @@ class ResearchPaperServiceRaceTest {
 
         assertThatThrownBy(() -> service.upload(owner, folder, DRAFT)).isSameAs(error);
         verify(files).delete("new.pdf");
+    }
+
+    @Test
+    void aReUploadBetweenReadingTheRowAndTheFileReadsTheNewFile() {
+        UUID paperId = UUID.randomUUID();
+        Paper tracked = new Paper(owner);
+        tracked.setFolderId(folder);
+        byte[] newest = "%PDF-1.7 newest".getBytes(StandardCharsets.US_ASCII);
+        when(papers.findById(paperId)).thenReturn(Optional.of(tracked));
+        when(researchPapers.findByOwnerIdAndFolderId(owner, folder))
+                .thenReturn(Optional.of(new ResearchPaper(owner, folder, "old.pdf", "draft.pdf")))
+                .thenReturn(Optional.of(new ResearchPaper(owner, folder, "new.pdf", "draft-v2.pdf")));
+        when(files.read("old.pdf")).thenReturn(Optional.empty());
+        when(files.read("new.pdf")).thenReturn(Optional.of(newest));
+
+        assertThat(service.pdfForPaper(paperId)).isEqualTo(newest);
     }
 }

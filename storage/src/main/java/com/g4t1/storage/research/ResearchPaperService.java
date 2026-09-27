@@ -2,6 +2,10 @@ package com.g4t1.storage.research;
 
 import com.g4t1.storage.file.LocalFileStore;
 import com.g4t1.storage.file.Pdfs;
+import com.g4t1.storage.paper.Paper;
+import com.g4t1.storage.paper.PaperRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -13,20 +17,25 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class ResearchPaperService {
 
+    private static final Logger log = LoggerFactory.getLogger(ResearchPaperService.class);
+
     private final ResearchPaperRepository researchPapers;
+    private final PaperRepository papers;
     private final LocalFileStore files;
     private final TransactionTemplate tx;
     private final DataSize maxPdfSize;
 
-    public ResearchPaperService(ResearchPaperRepository researchPapers, LocalFileStore files,
+    public ResearchPaperService(ResearchPaperRepository researchPapers, PaperRepository papers, LocalFileStore files,
                                 PlatformTransactionManager transactionManager,
                                 @Value("${storage.max-pdf-size}") DataSize maxPdfSize) {
         this.researchPapers = researchPapers;
+        this.papers = papers;
         this.files = files;
         this.tx = new TransactionTemplate(transactionManager);
         this.maxPdfSize = maxPdfSize;
@@ -83,6 +92,33 @@ public class ResearchPaperService {
             return current.getFileKey();
         });
         files.delete(key);
+    }
+
+    /**
+     * The PDF of the research paper in a tracked paper's project: the paper's owner plus its folder, or
+     * the owner's "no folder" project when it has none. For Research Evaluation, which evaluates one
+     * user's paper at a time. An unknown paper is the same "No paper" 404 as the other internal endpoints.
+     */
+    public byte[] pdfForPaper(UUID paperId) {
+        Paper paper = papers.findById(paperId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId));
+        Optional<byte[]> pdf = currentPdf(paperId, paper);
+        if (pdf.isEmpty()) {
+            // a re-upload can delete the file between reading the row and reading the file; the row now has the new one
+            pdf = currentPdf(paperId, paper);
+        }
+        return pdf.orElseThrow(() -> {
+            log.warn("The research paper for paper {} points at a file that isn't on disk", paperId);
+            return new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "The research paper for paper " + paperId + " is missing from disk");
+        });
+    }
+
+    private Optional<byte[]> currentPdf(UUID paperId, Paper paper) {
+        ResearchPaper researchPaper = researchPapers.findByOwnerIdAndFolderId(paper.getOwnerId(), paper.getFolderId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "No research paper in the project of paper " + paperId));
+        return files.read(researchPaper.getFileKey());
     }
 
     private static ResponseStatusException noResearchPaper(UUID folderId) {

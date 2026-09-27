@@ -28,6 +28,10 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 - **One research paper per project; the newest upload replaces it.** The
   row keeps its id, and the old PDF is deleted from disk. A change should
   be judged against the draft as it is now.
+- **Research Evaluation reads it by tracked paper id**
+  (`GET /internal/papers/{id}/research-paper`), not by folder. It's nudged
+  with paper ids, and Storage Management already knows each paper's owner
+  and folder, so one call gets the right draft.
 - **A tracked paper is in exactly one project**, its owner plus its
   `folder_id`. A user can track a DOI only once, so it can't be in two of
   their folders. Several users tracking one DOI each have their own paper
@@ -46,6 +50,11 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
   already uses null, and two spellings of "no folder" would have to be
   kept in step.
 - **Keeping every version of the draft.** Nothing needs the older ones.
+- **Research Evaluation reading by owner and folder**
+  (`?owner_id=&folder_id=`), or adding `folder_id` to `GET /internal/papers`
+  for it. Research Evaluation only has paper ids, so it would first have to
+  look up each paper's owner and folder, and that list is every tracked
+  paper of every user, meant for Updating's poll.
 - **Finding a paper's projects by its DOI across users.** Each user's row
   is evaluated on its own, so this would hand Research Evaluation other
   users' drafts while it evaluates one user's alert.
@@ -65,6 +74,10 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
   replaced, and if both find no row, the database rejects one insert and
   that upload retries as a replace. The old file is deleted only after the
   row points at the new one; a failed write deletes the new file instead.
+- The internal read's "no research paper" `404` has its own `detail`, not
+  `No paper <id>`, which Research Evaluation reads as the paper being gone.
+  If a re-upload deletes the file between reading the row and reading the
+  file, the read looks the row up once more.
 
 ---
 
