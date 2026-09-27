@@ -54,6 +54,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private void authenticate(Claims claims) {
+        // without a sub there's nobody to act as; UUID.fromString(null) would otherwise escape as a 500
+        if (claims.getSubject() == null) {
+            throw new JwtException("token has no sub");
+        }
         Object principal;
         String role;
         if ("service".equals(claims.get("role", String.class))) {

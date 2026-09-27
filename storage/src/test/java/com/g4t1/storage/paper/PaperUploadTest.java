@@ -16,6 +16,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -110,6 +111,18 @@ class PaperUploadTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.doi").isEmpty())
                 .andExpect(jsonPath("$.title").value("paper.pdf"));
+    }
+
+    @Test
+    void uploadStillSavesWhenCrossRefIsDown() throws Exception {
+        when(grobid.extractHeader(any())).thenReturn(Optional.of(new PdfHeader("10.1016/ABC.123", "Header title")));
+        when(metadata.lookup("10.1016/abc.123")).thenThrow(new ResourceAccessException("connect timed out"));
+
+        mvc.perform(multipart("/papers").file(pdf(PDF)).header(HttpHeaders.AUTHORIZATION, TestTokens.user(user)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.doi").value("10.1016/abc.123"))
+                .andExpect(jsonPath("$.title").value("Header title"))
+                .andExpect(jsonPath("$.file_available").value(true));
     }
 
     @Test
