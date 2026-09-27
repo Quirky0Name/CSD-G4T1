@@ -84,7 +84,7 @@ JWT paths above are wired up but not backed by real logins.
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
 | User Management | Spring Boot (backend) + React (Vite, frontend) | `users`, `folders`; auth | `frontend/` |
-| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`; Postgres + every tracked paper's PDF on local disk | `storage/` |
+| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `research_papers`; Postgres + every tracked paper's PDF and each project's research paper on local disk | `storage/` |
 | Research Evaluation | Python | Change evaluation (severity, impact, recommendation), read from Storage Management when nudged by Updating; COI text, citation-neighbourhood metrics, LLM reasoning (claims + stance, week 7) | `backend/` |
 | Updating | Python (shares the `backend/` project with Research Evaluation) | Crossref/OpenAlex status, journal and author fetching; sending snapshots to Storage Management; nudging Research Evaluation when a snapshot changed; the polling scheduler and its small polling state (`tracked_papers`) | `backend/` |
 | Deployment | Docker + a public cloud target | Containerisation, environment config, CI | (cross-cutting) |
@@ -111,7 +111,10 @@ touch the `users` or `folders` tables directly.
   `GET/POST/PUT/DELETE /folders...`
 
 Cross-service note: a folder's papers live in Storage Management via a
-bare `folder_id` reference — no enforced FK across services.
+bare `folder_id` reference — no enforced FK across services. A folder is
+one research project. `folder_id` null means no folder, and everything a
+user keeps outside folders counts as one more project of theirs (see
+CONTRACTS.md, "Folders and projects").
 
 ## Section 2 — Storage Management
 
@@ -135,15 +138,22 @@ Owns all Postgres and file persistence.
   `change_key`, so a re-sent nudge can't store a change twice; deleted
   with its paper), `alert_notes` (the researcher's append-only log of
   notes on an alert, e.g. what they did about it; deleted with its
-  alert).
+  alert), `research_papers` (the researcher's own paper for each project:
+  one per folder, plus one for the user's "no folder" project; a new
+  upload replaces it, see
+  [STORAGE-USER-RESEARCH-PAPER.md](STORAGE-USER-RESEARCH-PAPER.md)).
 - **File storage:** every tracked paper's PDF is kept, so Research
   Evaluation has the paper itself to read when it evaluates a change.
   PDF bytes never go in Postgres: they're on local disk for now, and
   Postgres holds only the file's key. Research Evaluation reads a PDF
   through `GET /internal/papers/{id}/pdf`, never from the disk directly.
+  Each project's research paper is stored the same way, in the same
+  folder.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
-  `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /alerts/{id}/notes`, `POST/GET /internal/papers/{id}/background-info`,
-  `GET /internal/papers/{id}/pdf`, `POST /internal/papers/{id}/alerts`,
+  `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /alerts/{id}/notes`,
+  `POST/GET/DELETE /research-paper`, `POST/GET /internal/papers/{id}/background-info`,
+  `GET /internal/papers/{id}/pdf`, `GET /internal/papers/{id}/research-paper`,
+  `POST /internal/papers/{id}/alerts`,
   `GET /internal/papers/{id}/alerts/change-keys`.
 - **DB hosting:** Supabase free tier.
 
@@ -193,7 +203,10 @@ journal and author fields moved to Updating (Section 4).
      detection.
 
   So far the evaluation doesn't read the paper's PDF, notes or extracted
-  text; the templates only use the snapshots.
+  text; the templates only use the snapshots. Storage Management also
+  serves the researcher's own paper for the tracked paper's project
+  (`GET /internal/papers/{id}/research-paper`), so a later stage can judge
+  a change against what the researcher is writing; nothing reads it yet.
 - **Structured signal layer** (no reasoning, cheap): citation-neighbourhood
   metrics computed from OpenAlex reference/citation data, GROBID on the
   PDF stored in Storage Management (COI/funding text, verbatim, never

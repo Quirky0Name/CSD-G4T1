@@ -31,6 +31,26 @@ This is the single source of truth for every interface between services.
   `POST /run-poll` will take the user's JWT once User Management exists
   (CG-99).
 
+## Folders and projects
+
+A folder is one research project. Folders belong to User Management; other
+services hold only a bare `folder_id` (uuid), with no FK and no check that
+the folder exists or belongs to the caller.
+
+- **`folder_id` null means no folder**, and everything a user keeps
+  outside folders is one more project of theirs: their "no folder"
+  project. Stored rows and responses always show no folder as `null`,
+  never as a sentinel id. As input, leaving `folder_id` out means no
+  folder, and so does `""`.
+- **Storage Management keys a project by owner and `folder_id`**, since it
+  can't check who owns a folder id. The same `folder_id` sent by two users
+  is two projects.
+- **A tracked paper is in exactly one project:** its owner plus its
+  `folder_id`.
+
+See DECISIONS.md, "2026-09-27 — The researcher's own paper, one per
+project".
+
 ## Frontend ↔ Storage Management
 
 Owned by: Storage Management. Consumed by: the frontend.
@@ -199,6 +219,60 @@ no paper with that DOI, or no open-access PDF could be downloaded for it
 (pick a different paper), `503` CrossRef couldn't be reached (nothing is
 saved, try again).
 
+### `POST /research-paper`
+
+User JWT required; the caller is the owner. Uploads the researcher's own
+paper (the draft they're writing) for one of their projects, so Research
+Evaluation can judge a change in a tracked paper against it. Multipart form
+with `file` (a PDF, 25 MB max) and an optional `folder_id` (uuid; left out
+or `""` means the "no folder" project, see "Folders and projects"). The PDF
+is kept on Storage Management's local disk like a tracked paper's. Nothing
+is read out of it (no GROBID or CrossRef).
+
+**A project has one research paper.** Uploading to a project that already
+has one replaces it: the `id` stays the same, `filename` and `uploaded_at`
+become the new upload's, and the old PDF is deleted.
+
+**Response `201`** for the project's first research paper, **`200`** when
+it replaced one:
+
+```json
+{"id": "uuid", "folder_id": "uuid", "filename": "my-draft.pdf", "uploaded_at": "2026-09-27T08:00:00Z"}
+```
+
+`folder_id` is `null` for the "no folder" project. `filename` is the name
+the file was uploaded with.
+
+Errors, as problem details: `400` not a PDF, no `file`, or a `folder_id`
+that isn't a UUID; `401` missing or bad token; `403` a service token; `413`
+over 25 MB. A refused upload changes nothing: the project keeps the
+research paper it had.
+
+### `GET /research-paper?folder_id=`
+
+User JWT required. The caller's research paper for one of their projects;
+leave `folder_id` out (or send `""`) for the "no folder" project.
+
+**Response `200`:** the same body as the upload's, for the current
+upload.
+
+Errors, as problem details: `400` a `folder_id` that isn't a UUID; `401`
+missing or bad token; `403` a service token; `404` the project has no
+research paper (`detail`: `No research paper in folder <id>`, or `No
+research paper outside folders`). Another user's research paper is never
+returned: the same `folder_id` under another owner is another project.
+
+### `DELETE /research-paper?folder_id=`
+
+User JWT required. Deletes the caller's research paper for one of their
+projects and its PDF; leave `folder_id` out (or send `""`) for the "no
+folder" project. Uploading to the project again afterwards starts a new
+research paper, with a new `id`.
+
+**Response `204`**, no body.
+
+Errors: as for `GET /research-paper`. A `404` deletes nothing.
+
 ## Storage Management ↔ Research Evaluation / Updating
 
 Owned by: Storage Management. Consumed by: Research Evaluation (reads
@@ -285,6 +359,29 @@ with that id, or the paper has no stored PDF. Every paper tracked from
 now on has one (uploads keep theirs, DOI tracking downloads an
 open-access copy or refuses the paper; see DECISIONS.md, 2026-09-26), so
 the `404` is only for papers added before that.
+
+### `GET /internal/papers/{id}/research-paper`
+
+Service-JWT only. Returns, as `application/pdf`, the researcher's own
+paper (the draft they uploaded with `POST /research-paper`) for the
+project the tracked paper is in: the paper's owner plus its `folder_id`,
+or the owner's "no folder" project when the paper has no folder (see
+"Folders and projects"). Research Evaluation evaluates one user's paper at
+a time, so this is the draft whose author gets the alert. It's always the
+project's current upload.
+
+Errors, as problem details (also when the request asks for
+`Accept: application/pdf`): `400` an id that isn't a UUID; `401` missing
+or bad token; `403` a user token; `404` with one of:
+
+| `detail` | Meaning |
+|---|---|
+| `No paper <id>` | no tracked paper with that id, exactly as on the other internal endpoints |
+| `No research paper in the project of paper <id>` | the paper exists, but its project has no research paper (yet) |
+| `The research paper for paper <id> is missing from disk` | the row points at a file that isn't there (e.g. a local database and upload folder reset separately) |
+
+Only the first means the paper is gone; the other two mean there's no
+draft to read.
 
 ### `POST /internal/papers/{id}/alerts`
 
