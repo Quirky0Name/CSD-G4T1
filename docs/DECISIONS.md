@@ -5,6 +5,49 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-27 — Research Evaluation reads tracked papers' PDFs
+
+### Team decisions
+
+- **`GET /internal/papers/{id}/pdf` is built**, as CONTRACTS.md has
+  described it since "2026-09-25 — Storage keeps every tracked paper's
+  PDF". Storage Management already kept every tracked paper's PDF, but
+  nothing served it, so Research Evaluation had no way to read the paper
+  itself.
+- **Its three `404`s have different `detail`s**: `No paper <id>`, `Paper
+  <id> has no stored PDF`, and `The PDF for paper <id> is missing from
+  disk`. Research Evaluation skips a paper only on `No paper <id>`, so
+  "no file" must not look like "no paper".
+- **No single-paper details endpoint for Research Evaluation**
+  (`GET /internal/papers/{id}`) for now. The snapshots it already reads
+  carry the DOI, OpenAlex id, title, year, journal, ISSN-L, publisher and
+  authors, and they're fresher than `papers`, whose title is set once at
+  ingest and goes stale (2026-09-24). What only `papers` has (owner,
+  folder, ISSN, when tracking started, whether there's a file) Research
+  Evaluation doesn't need: it gets the researcher's own paper by paper id,
+  and a `404` from `/pdf` already says there's no file.
+
+### Rejected
+
+- **`GET /internal/papers/{id}` with the paper's stored details.** Another
+  interface to keep in step with `papers` for data Research Evaluation
+  reads fresher from the snapshots. Revisit if a stage needs the owner,
+  the folder or the ingest-time metadata.
+
+### Also found while building it
+
+- **The snapshot endpoints never reached `main`.** `POST
+  /internal/papers/{id}/background-info` and `GET .../history` are built
+  on `feat/storage-snapshot-endpoints` (CG-68), but PR #20 merged that
+  branch into `feat/storage-snapshot-table` after that branch was already
+  merged into `main` (PR #19). So on `main`, Updating and Research
+  Evaluation only get snapshots from the stub. Amir will merge it. Two
+  places it differs from this file: an unknown paper's `404` says `No
+  paper with id <id>` instead of `No paper <id>`, and `last=N` is ignored
+  (allowed for now, see the history endpoint).
+
+---
+
 ## 2026-09-27 — The researcher's own paper, one per project
 
 ### Team decisions

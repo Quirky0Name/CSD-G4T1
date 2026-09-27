@@ -359,11 +359,22 @@ evaluates a change and runs GROBID on it for COI/funding text. Research
 Evaluation always reads PDFs through this endpoint, never from Storage
 Management's disk.
 
-Errors: `401` missing or bad token, `403` a user token, `404` no paper
-with that id, or the paper has no stored PDF. Every paper tracked from
-now on has one (uploads keep theirs, DOI tracking downloads an
-open-access copy or refuses the paper; see DECISIONS.md, 2026-09-26), so
-the `404` is only for papers added before that.
+Any tracked paper, whoever owns it: uploads return the file as it was
+uploaded, DOI-tracked papers the open-access copy Storage Management
+downloaded when the paper was tracked. A tracked paper's PDF never
+changes.
+
+Errors, as problem details (also when the request asks for
+`Accept: application/pdf`): `400` an id that isn't a UUID; `401` missing
+or bad token; `403` a user token; `404` with one of:
+
+| `detail` | Meaning |
+|---|---|
+| `No paper <id>` | no tracked paper with that id, exactly as on the other internal endpoints |
+| `Paper <id> has no stored PDF` | the paper has no file. Every paper tracked since PDFs are kept has one (uploads keep theirs, DOI tracking downloads an open-access copy or refuses the paper; see DECISIONS.md, 2026-09-26), so this is only for papers added before that |
+| `The PDF for paper <id> is missing from disk` | the paper's row points at a file that isn't there (e.g. a local database and upload folder reset separately) |
+
+Only the first means the paper is gone.
 
 ### `GET /internal/papers/{id}/research-paper`
 
