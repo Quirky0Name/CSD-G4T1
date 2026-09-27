@@ -17,9 +17,10 @@ const SEVERITY_DOT_CLASS: Record<Severity, string> = {
 type CitedSourcesListProps = {
   papers: Paper[]
   alerts: Alert[]
+  onRefreshCheck: (paperId: string) => void
 }
 
-function CitedSourcesList({ papers, alerts }: CitedSourcesListProps) {
+function CitedSourcesList({ papers, alerts, onRefreshCheck }: CitedSourcesListProps) {
   const navigate = useNavigate()
 
   if (papers.length === 0) {
@@ -73,9 +74,8 @@ function CitedSourcesList({ papers, alerts }: CitedSourcesListProps) {
                     <MenuItem>
                       <button
                         type="button"
-                        disabled
-                        title="Not wired up yet"
-                        className="block w-full px-3 py-1 text-left text-sm/6 text-white disabled:cursor-not-allowed disabled:text-gray-500 data-focus:bg-white/5"
+                        onClick={() => onRefreshCheck(paper.id)}
+                        className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
                       >
                         Refresh check<span className="sr-only">, {title}</span>
                       </button>
