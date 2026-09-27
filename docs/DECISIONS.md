@@ -5,6 +5,80 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-27 — Reports group a nudge's new alerts and hold what investigation fetched
+
+The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md);
+this entry covers what S1 built in Storage Management.
+
+### Team decisions
+
+- **A report per paper per nudge that stored new alerts** (the story
+  owner's call). It groups every alert of the paper not in a report yet,
+  in practice the alerts that nudge created, and an alert belongs to one
+  report. Storage Management does the grouping when Research Evaluation
+  opens a report (`POST /internal/papers/{id}/reports`), in one
+  transaction, since only it knows which alerts are ungrouped.
+- **The report is where evaluation happens, not the alert.** Impact (a
+  later plan) judges a report's alerts together, because many real cases
+  only make sense together (RE-changes-explained.md: a correction, then an
+  EoC, then a retraction; a "correction" that lifts an EoC; a wrong
+  retraction notice next to the real one). A conclusion about how alerts
+  relate needs a home that a field on one alert can't give. So `reports`
+  reserves `evaluation`, `recommendation` and `evaluated_at` now, before
+  impact exists, and its status runs `investigating` → `investigated` →
+  `assessed`.
+- **Documents belong to the report, one per DOI** (`report_documents`,
+  unique on `report_id`, `doi`). The paper's current copy is fetched once
+  per report and shared by its alerts, rather than once per alert.
+  Research Evaluation keeps no database, so this is where investigation's
+  results live.
+- **No link table between documents and alerts** (the story owner's
+  call). A report reaches its alerts (`alerts.report_id`) and its
+  documents (`report_documents.report_id`) directly; a notice or new
+  version matches the alert whose `notice_doi` is its DOI, and the current
+  copy is for the whole report. Impact reads a whole report at once, so a
+  per-alert link would add a table for little.
+- **Researcher status stays on alerts** and never decides what gets
+  investigated: it's the researcher's to-do state, not the pipeline's
+  progress.
+- **A stored document is never overwritten.** Sending a DOI the report
+  already has returns the stored row unchanged, and Research Evaluation
+  uses the returned row (the story owner's call). Whether a difference
+  matters is left for a later sprint.
+- **Owner and project come from the paper**, as for alerts: no copied
+  `owner_id` or `folder_id` on reports.
+
+### Rejected
+
+- **One report per paper, rewritten each time.** Loses the history of how
+  the judgment changed, and two nudges racing would overwrite each other.
+- **Documents per alert.** The current copy would be downloaded once per
+  alert, identical each time.
+- **Keying documents by DOI alone, shared across reports and users.** The
+  current copy is the paper at a given time, so each report needs its own;
+  sharing across users is a later-sprint optimisation (the plan's "Later
+  sprints").
+
+### Also settled while building it
+
+- The migration is `V7__create_reports.sql` (V6 is `research_papers`).
+  `alerts.report_id` is `on delete set null`; reports and their documents
+  go with the paper by cascade.
+- Two opens racing: the grouping is one conditional update (`report_id is
+  null`), so on Postgres the second waits on the first's row locks and
+  then takes nothing; a report that took nothing is deleted and the answer
+  is `204`.
+- `Alert.reportId` is mapped read-only (`insertable = false, updatable =
+  false`). Hibernate writes every column when it saves an alert, so a
+  status change on an alert loaded before the grouping would otherwise
+  write `report_id` back to null and drop the alert out of its report.
+- `LowercaseEnumConverter` is now public, so the report enums store their
+  lowercase values the same way as the alert enums.
+- Storage Management compares document DOIs exactly; Research Evaluation
+  sends them normalised.
+
+---
+
 ## 2026-09-27 — Alert notes migration renumbered to V5
 
 ### Decision

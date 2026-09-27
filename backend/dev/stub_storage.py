@@ -13,12 +13,13 @@ Run it with:
 
 import os
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID, uuid4
 
 import jwt
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from common.doi import normalize_doi
@@ -48,8 +49,39 @@ class NewAlert(BaseModel):
     previous_snapshot_id: int
 
 
-# stored but, as in Storage Management, never returned by the API
-INTERNAL_ALERT_FIELDS = ("change_key", "snapshot_id", "previous_snapshot_id")
+class NewDocument(BaseModel):
+    """The body of `POST /internal/documents`; the real service answers 400 where this
+    stub's validation answers 422."""
+
+    report_id: int
+    kind: Literal["notice", "new_version", "current_version"]
+    doi: str = Field(min_length=1, max_length=255, pattern=r"\S")
+    crossref_status: Literal["ok", "not_found", "error"]
+    crossref_record: Any = None
+    update_to_includes_paper: bool | None = None
+    text_status: Literal["ok", "not_indexed", "not_open_access", "error"]
+    text: str | None = None
+    text_truncated: bool
+
+
+class ReportStatusChange(BaseModel):
+    status: Literal["investigating", "investigated", "assessed"]
+
+
+# stored but, as in Storage Management, never returned by the alert API
+INTERNAL_ALERT_FIELDS = ("change_key", "snapshot_id", "previous_snapshot_id", "report_id")
+# how a report shows its alerts: with the change key, which Research Evaluation matches on
+REPORT_ALERT_FIELDS = (
+    "id",
+    "change_type",
+    "change_key",
+    "severity",
+    "description",
+    "recommendation",
+    "notice_doi",
+    "detected_at",
+    "status",
+)
 
 
 @dataclass
@@ -60,6 +92,11 @@ class Store:
     # per paper, keyed by change_key: one alert per change, like the real unique constraint
     alerts: dict[UUID, dict[str, dict[str, Any]]] = field(default_factory=dict)
     last_alert_id: int = 0
+    reports: dict[int, dict[str, Any]] = field(default_factory=dict)
+    last_report_id: int = 0
+    # keyed by id; one per (report_id, doi), like the real unique constraint
+    documents: dict[int, dict[str, Any]] = field(default_factory=dict)
+    last_document_id: int = 0
 
     def add_snapshot(self, paper_id: UUID, snapshot: dict[str, Any]) -> dict[str, Any]:
         self.last_snapshot_id += 1
@@ -73,6 +110,10 @@ class Store:
         self.last_snapshot_id = 0
         self.alerts.clear()
         self.last_alert_id = 0
+        self.reports.clear()
+        self.last_report_id = 0
+        self.documents.clear()
+        self.last_document_id = 0
 
 
 def create_app(jwt_key: bytes | None = None) -> FastAPI:
@@ -143,6 +184,7 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
                 **alert.model_dump(mode="json"),
                 "status": "new",
                 "status_changed_at": None,
+                "report_id": None,
             }
             response.status_code = 201
         row = stored[alert.change_key]
@@ -153,6 +195,98 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
         """Every change key stored for the paper, sorted, as in Storage Management."""
         find_paper(paper_id)
         return {"change_keys": sorted(store.alerts.get(paper_id, {}))}
+
+    def report_view(report: dict[str, Any]) -> dict[str, Any]:
+        """A report with its alerts and documents, oldest first, as Storage Management returns it."""
+        paper_alerts = store.alerts.get(UUID(report["paper_id"]), {}).values()
+        grouped = sorted(
+            (a for a in paper_alerts if a["report_id"] == report["id"]), key=lambda a: a["id"]
+        )
+        documents = sorted(
+            (d for d in store.documents.values() if d["report_id"] == report["id"]),
+            key=lambda d: d["id"],
+        )
+        return {
+            **report,
+            "alerts": [{key: a[key] for key in REPORT_ALERT_FIELDS} for a in grouped],
+            "documents": documents,
+        }
+
+    def find_report(paper_id: UUID, report_id: int) -> dict[str, Any]:
+        find_paper(paper_id)
+        report = store.reports.get(report_id)
+        if report is None or report["paper_id"] != str(paper_id):
+            raise HTTPException(404, f"No report {report_id}")
+        return report
+
+    @internal.post("/papers/{paper_id}/reports")
+    def open_report(paper_id: UUID) -> Response:
+        """Groups every alert of the paper not in a report yet: 201 with the report, or 204
+        when there are none."""
+        find_paper(paper_id)
+        unreported = [a for a in store.alerts.get(paper_id, {}).values() if a["report_id"] is None]
+        if not unreported:
+            return Response(status_code=204)
+        store.last_report_id += 1
+        report = {
+            "id": store.last_report_id,
+            "paper_id": str(paper_id),
+            "status": "investigating",
+            "created_at": datetime.now(UTC).isoformat(),
+            "investigated_at": None,
+            "evaluation": None,
+            "recommendation": None,
+            "evaluated_at": None,
+        }
+        store.reports[report["id"]] = report
+        for alert in unreported:
+            alert["report_id"] = report["id"]
+        return JSONResponse(report_view(report), status_code=201)
+
+    @internal.get("/papers/{paper_id}/reports/{report_id}")
+    def read_report(paper_id: UUID, report_id: int) -> dict[str, Any]:
+        return report_view(find_report(paper_id, report_id))
+
+    @internal.patch("/papers/{paper_id}/reports/{report_id}")
+    def change_report_status(
+        paper_id: UUID, report_id: int, change: ReportStatusChange
+    ) -> dict[str, Any]:
+        """Only "investigated" can be set; setting it again keeps the first time."""
+        if change.status != "investigated":
+            raise HTTPException(400, "status must be investigated")
+        report = find_report(paper_id, report_id)
+        if report["status"] == "assessed":
+            raise HTTPException(409, f"Report {report_id} is already assessed")
+        if report["status"] == "investigating":
+            report["status"] = "investigated"
+            report["investigated_at"] = datetime.now(UTC).isoformat()
+        return report_view(report)
+
+    @internal.post("/documents")
+    def store_document(document: NewDocument, response: Response) -> dict[str, Any]:
+        """Idempotent on (report_id, doi): 201 with the new row, or 200 with the stored one,
+        unchanged whatever the body says. Downloads nothing (Storage Management's PDF download
+        is S2 of docs/EVALUATION-INVESTIGATION.md)."""
+        if document.report_id not in store.reports:
+            raise HTTPException(404, f"No report {document.report_id}")
+        for stored in store.documents.values():
+            if stored["report_id"] == document.report_id and stored["doi"] == document.doi:
+                response.status_code = 200
+                return stored
+        store.last_document_id += 1
+        row = {
+            "id": store.last_document_id,
+            **document.model_dump(mode="json"),
+            "pdf_status": "skipped" if document.kind == "notice" else "pending",
+            "file_key": None,
+            "sha256": None,
+            "pdf_source_url": None,
+            "created_at": datetime.now(UTC).isoformat(),
+            "pdf_fetched_at": None,
+        }
+        store.documents[row["id"]] = row
+        response.status_code = 201
+        return row
 
     dev = APIRouter(prefix="/dev")
 

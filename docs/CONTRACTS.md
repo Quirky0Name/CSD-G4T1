@@ -277,8 +277,8 @@ Errors: as for `GET /research-paper`. A `404` deletes nothing.
 
 Owned by: Storage Management. Consumed by: Research Evaluation (reads
 the snapshots, paper data and stored PDFs of the papers Updating tells
-it about, and stores the alerts it evaluates), Updating (calls these on
-every poll).
+it about, stores the alerts it evaluates, and the reports and documents
+its investigation fetches), Updating (calls these on every poll).
 
 ### `GET /internal/papers`
 
@@ -475,6 +475,127 @@ sorted, but callers should treat the list as a set.
 Errors, as problem details: `400` an id that isn't a UUID; `401` missing
 or bad token; `403` a user token; `404` no paper with that id, with
 `detail` exactly `No paper <id>`, as on the other internal endpoints.
+
+### Reports (investigation)
+
+A report groups the alerts one nudge stored for a paper, and holds what
+Research Evaluation's investigation fetched for them (its **documents**)
+and, later, impact's evaluation. The plan is in
+[EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md). Every
+endpoint below is service-JWT only (`401` missing or bad token, `403` a
+user token). A report's owner and project are its paper's.
+
+#### `POST /internal/papers/{id}/reports`
+
+Opens a report grouping **every alert of the paper that isn't in a report
+yet**: in practice the ones the latest nudge stored, plus any left
+ungrouped by a crash. Storage Management does the grouping in one
+transaction, so an alert is never in two reports, even when two opens
+race. No body.
+
+**Response `201`:** the new report, as `GET` below returns it, with
+`documents` empty. **`204`**, no body, when the paper has no alert
+outside a report.
+
+Errors, as problem details: `400` an id that isn't a UUID; `404` with
+`detail` exactly `No paper <id>`.
+
+#### `GET /internal/papers/{id}/reports/{reportId}`
+
+**Response `200`:**
+
+```json
+{
+  "id": 3, "paper_id": "uuid", "status": "investigating",
+  "created_at": "2026-09-27T08:00:00Z", "investigated_at": null,
+  "evaluation": null, "recommendation": null, "evaluated_at": null,
+  "alerts": [
+    {"id": 7, "change_type": "retraction", "change_key": "retraction", "severity": "high",
+     "description": "...", "recommendation": "...", "notice_doi": "10.xxxx/...",
+     "detected_at": "2026-09-24T12:00:00Z", "status": "new"}
+  ],
+  "documents": [{"id": 12, "report_id": 3, "kind": "notice", "...": "the document row, see below"}]
+}
+```
+
+- `status`: `investigating` (just opened), `investigated` (investigation
+  done) or `assessed` (impact done; nothing sets it yet).
+- `evaluation`, `recommendation`, `evaluated_at`: impact's, null until a
+  later plan writes them.
+- `alerts`, oldest first, carry their `change_key` (unlike the frontend's
+  alert API): Research Evaluation matches them to its detected changes by
+  it.
+- `documents`, oldest first. They aren't linked to alerts: a `notice` or
+  `new_version` belongs to the alert whose `notice_doi` is its `doi`, and
+  the `current_version` is for the whole report.
+
+Errors, as problem details: `400` an id that isn't a UUID or a report id
+that isn't a number; `404` with `detail` `No paper <id>`, or
+`No report <reportId>` for an unknown report or one of another paper.
+
+#### `PATCH /internal/papers/{id}/reports/{reportId}`
+
+**Request:** `{"status": "investigated"}`. Only `investigated` can be set
+here. Setting it again changes nothing, so `investigated_at` keeps the
+first time.
+
+**Response `200`:** the report, as `GET` returns it.
+
+Errors, as problem details: `400` any other or a missing `status`; `404`
+as for `GET`; `409` a report that's already `assessed`.
+
+### `POST /internal/documents`
+
+Stores what investigation fetched for **one DOI of a report**: its
+Crossref record and its open-access text. Flat, since `report_id` already
+names the report and, through it, the paper. A DOI is stored once per
+report (unique on `report_id`, `doi`).
+
+**Request:**
+
+```json
+{
+  "report_id": 3, "kind": "notice", "doi": "10.xxxx/...",
+  "crossref_status": "ok", "crossref_record": {"title": "Retraction notice to ...", "...": "..."},
+  "update_to_includes_paper": true,
+  "text_status": "not_open_access", "text": null, "text_truncated": false
+}
+```
+
+| Field | Rules |
+|---|---|
+| `report_id` | required |
+| `kind` | required: `notice`, `new_version` or `current_version`, exact lowercase |
+| `doi` | required, not blank, at most 255 characters. Research Evaluation sends it normalised; Storage Management compares it exactly |
+| `crossref_status` | required: `ok`, `not_found` or `error` |
+| `crossref_record` | optional JSON, stored and returned exactly as sent; Storage Management never looks inside |
+| `update_to_includes_paper` | optional: for a notice, whether its Crossref `update-to` names the paper |
+| `text_status` | required: `ok`, `not_indexed`, `not_open_access` or `error` |
+| `text` | optional |
+| `text_truncated` | required |
+
+**Response `201`** with the new row, or **`200`** with the row already
+stored for that DOI in the report, **unchanged whatever the new body
+says**. Both are the entire row as stored, nulls written out:
+
+```json
+{
+  "id": 12, "report_id": 3, "kind": "notice", "doi": "10.xxxx/...",
+  "crossref_status": "ok", "crossref_record": {"...": "..."}, "update_to_includes_paper": true,
+  "text_status": "not_open_access", "text": null, "text_truncated": false,
+  "pdf_status": "skipped", "file_key": null, "sha256": null, "pdf_source_url": null,
+  "created_at": "2026-09-27T08:00:01Z", "pdf_fetched_at": null
+}
+```
+
+`pdf_status` is `skipped` for a notice (notices get no PDF) and `pending`
+for a `new_version` or `current_version`. Downloading their PDF when the
+row is created is S2 of the plan; until then they stay `pending`.
+Research Evaluation uses the returned row as the document, not what it
+sent.
+
+Errors, as problem details: `400` a missing or blank required field or an
+unknown enum value; `404` with `detail` `No report <report_id>`.
 
 ### Snapshot fields
 

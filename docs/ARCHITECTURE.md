@@ -141,7 +141,16 @@ Owns all Postgres and file persistence.
   alert), `research_papers` (the researcher's own paper for each project:
   one per folder, plus one for the user's "no folder" project; a new
   upload replaces it, see
-  [STORAGE-USER-RESEARCH-PAPER.md](STORAGE-USER-RESEARCH-PAPER.md)).
+  [STORAGE-USER-RESEARCH-PAPER.md](STORAGE-USER-RESEARCH-PAPER.md)),
+  `reports` (one per paper per nudge that stored new alerts: it groups
+  those alerts through `alerts.report_id`, has a status, `investigating`
+  → `investigated` → `assessed`, and reserves the columns impact's
+  evaluation will fill; deleted with its paper), `report_documents` (what
+  Research Evaluation's investigation fetched for one DOI of a report: a
+  notice, a new version or the paper's current copy, with its Crossref
+  record, open-access text and PDF status; one per DOI per report; deleted
+  with its report). See
+  [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md).
 - **File storage:** every tracked paper's PDF is kept, so Research
   Evaluation has the paper itself to read when it evaluates a change.
   PDF bytes never go in Postgres: they're on local disk for now, and
@@ -154,7 +163,10 @@ Owns all Postgres and file persistence.
   `POST/GET/DELETE /research-paper`, `POST/GET /internal/papers/{id}/background-info`,
   `GET /internal/papers/{id}/pdf`, `GET /internal/papers/{id}/research-paper`,
   `POST /internal/papers/{id}/alerts`,
-  `GET /internal/papers/{id}/alerts/change-keys`.
+  `GET /internal/papers/{id}/alerts/change-keys`,
+  `POST /internal/papers/{id}/reports`,
+  `GET/PATCH /internal/papers/{id}/reports/{reportId}`,
+  `POST /internal/documents`.
 - **DB hosting:** Supabase free tier.
 
 ## Section 3 — Research Evaluation
