@@ -1,8 +1,24 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import type { Alert, AlertStatus, Paper, Severity } from '../api'
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
+import { EllipsisVerticalIcon } from '@heroicons/react/20/solid'
+import {
+  addAlertNote,
+  errorMessage,
+  listAlertNotes,
+  setAlertStatus,
+  type Alert,
+  type AlertNote,
+  type AlertStatus,
+  type Paper,
+  type Severity,
+} from '../api'
 import { ALERT_STATUS_LABEL, CHANGE_TYPE_LABEL, SEVERITY_LABEL, compareAlerts, formatDateTime } from '../format'
 import { useTracking } from '../tracking'
+import { useToast } from './Toasts'
+
+// docs/CONTRACTS.md, POST /alerts/{id}/notes: "1 to 2000 characters".
+const ALERT_NOTE_MAX_LENGTH = 2000
 
 const SEVERITY_STYLES: Record<Severity, string> = {
   high: 'bg-red-400/10 text-red-400 inset-ring-red-400/20',
@@ -67,10 +83,21 @@ function AlertRows({
   expandedId: number | null
   onToggle: (id: number) => void
 }) {
+  const { refresh } = useTracking()
+  const showToast = useToast()
   const paperTitle = new Map(papers.map((paper) => [paper.id, paper.title ?? 'Untitled paper']))
   const rows = alerts
     .filter((alert) => !paperFilter || alert.paper_id === paperFilter)
     .toSorted(compareAlerts)
+
+  const changeStatus = async (alertId: number, status: Exclude<AlertStatus, 'new'>) => {
+    try {
+      await setAlertStatus(alertId, status)
+      await refresh()
+    } catch (err) {
+      showToast({ tone: 'error', message: errorMessage(err) })
+    }
+  }
 
   if (rows.length === 0) {
     return <p className="text-sm/6 text-gray-400">No alerts to review.</p>
@@ -129,6 +156,37 @@ function AlertRows({
                 {expandedId === alert.id ? 'Hide details' : 'View details'}
                 <span className="sr-only">, {CHANGE_TYPE_LABEL[alert.change_type]}</span>
               </button>
+
+              <Menu as="div" className="relative">
+                <MenuButton className="relative block text-gray-400 hover:text-white">
+                  <span className="absolute -inset-2.5" />
+                  <span className="sr-only">Open options</span>
+                  <EllipsisVerticalIcon aria-hidden="true" className="size-5" />
+                </MenuButton>
+                <MenuItems
+                  transition
+                  className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-gray-800 py-2 shadow-lg outline outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
+                >
+                  <MenuItem>
+                    <button
+                      type="button"
+                      onClick={() => void changeStatus(alert.id, 'acknowledged')}
+                      className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
+                    >
+                      Acknowledge<span className="sr-only">, {CHANGE_TYPE_LABEL[alert.change_type]}</span>
+                    </button>
+                  </MenuItem>
+                  <MenuItem>
+                    <button
+                      type="button"
+                      onClick={() => void changeStatus(alert.id, 'dismissed')}
+                      className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
+                    >
+                      Dismiss<span className="sr-only">, {CHANGE_TYPE_LABEL[alert.change_type]}</span>
+                    </button>
+                  </MenuItem>
+                </MenuItems>
+              </Menu>
             </div>
           </div>
 
@@ -136,10 +194,99 @@ function AlertRows({
             <div className="mt-4 border-t border-white/10 pt-4 text-sm/6">
               <p className="font-semibold text-white">Recommendation</p>
               <p className="mt-1 text-gray-400">{alert.recommendation}</p>
+              <AlertNotes alertId={alert.id} />
             </div>
           )}
         </li>
       ))}
     </ul>
+  )
+}
+
+function AlertNotes({ alertId }: { alertId: number }) {
+  const [notes, setNotes] = useState<AlertNote[] | null>(null)
+  const [notesError, setNotesError] = useState<string | null>(null)
+  const [text, setText] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  // AlertNotes is only rendered for the currently expanded alert (below),
+  // so a mount is always exactly one alertId for its whole lifetime — no
+  // reset-on-change needed, just the one fetch.
+  useEffect(() => {
+    let active = true
+    listAlertNotes(alertId)
+      .then((result) => {
+        if (active) setNotes(result)
+      })
+      .catch((err: unknown) => {
+        if (active) setNotesError(errorMessage(err))
+      })
+    return () => {
+      active = false
+    }
+  }, [alertId])
+
+  const trimmed = text.trim()
+  const canSubmit = trimmed.length > 0 && trimmed.length <= ALERT_NOTE_MAX_LENGTH && !submitting
+
+  const handleSubmit = async () => {
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      const note = await addAlertNote(alertId, trimmed)
+      setNotes((current) => [note, ...(current ?? [])])
+      setText('')
+    } catch (err) {
+      setSubmitError(errorMessage(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="mt-4 border-t border-white/10 pt-4">
+      <p className="font-semibold text-white">Notes</p>
+      {notesError && <p className="mt-1 text-red-400">{notesError}</p>}
+      {notes === null && !notesError && <p className="mt-1 text-gray-400">Loading notes…</p>}
+      {notes && notes.length === 0 && <p className="mt-1 text-gray-400">No notes yet.</p>}
+      {notes && notes.length > 0 && (
+        <ul className="mt-2 space-y-2">
+          {notes.map((note, index) => (
+            // AlertNote has no id (docs/CONTRACTS.md); notes can't be
+            // edited or deleted, so position + created_at is a stable key.
+            <li key={`${index}-${note.created_at}`} className="rounded-md bg-gray-900/60 px-3 py-2 text-gray-300">
+              <p>{note.text}</p>
+              <p className="mt-1 text-xs text-gray-500">{formatDateTime(note.created_at)}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="mt-3">
+        <textarea
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          rows={2}
+          maxLength={ALERT_NOTE_MAX_LENGTH}
+          placeholder="What did you do about this?"
+          className="block w-full rounded-md border border-white/15 bg-gray-950/60 px-3 py-2 text-white placeholder:text-gray-500 outline-none focus:border-indigo-400"
+        />
+        {submitError && <p className="mt-1 text-red-400">{submitError}</p>}
+        <div className="mt-2 flex items-center justify-between">
+          <p className="text-xs text-gray-500">
+            {trimmed.length}/{ALERT_NOTE_MAX_LENGTH}
+          </p>
+          <button
+            type="button"
+            disabled={!canSubmit}
+            onClick={() => void handleSubmit()}
+            className="rounded-md bg-indigo-500 px-3 py-1.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {submitting ? 'Adding…' : 'Add note'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
