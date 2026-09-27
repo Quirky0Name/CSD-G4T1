@@ -2,9 +2,11 @@
 
 from uuid import uuid4
 
+import jwt
+from support import TEST_JWT_KEY
 from updating_support import RUN_POLL, poll_runs, trigger_poll
 
-from dev.scenarios import DOIS
+from dev.scenarios import DOIS, Scenario
 from updating.models import PollTrigger
 
 
@@ -65,3 +67,22 @@ async def test_a_bad_paper_id_is_422(updating_client):
     response = await updating_client.post(RUN_POLL, params={"paper_id": "nope"})
 
     assert response.status_code == 422
+
+
+async def test_the_nudge_carries_updatings_service_token(updating_client, sm, re, sources):
+    """The app's own `re` client (built in the lifespan) signs the nudge; the stub rejects any
+    request without a valid service token."""
+    sources.serve("ijaa")
+    paper = await sm.seed_scenario(Scenario.OPENALEX_RETRACTION)
+
+    summary = await trigger_poll(updating_client, paper)
+
+    assert summary["nudged"] == [str(paper)] and summary["nudge_error"] is None
+    assert await re.received() == [[paper]]
+    [nudge] = re.nudges()
+    scheme, token = nudge.headers["Authorization"].split(" ")
+    assert scheme == "Bearer"
+    claims = jwt.decode(token, TEST_JWT_KEY, algorithms=["HS256"], options={"require": ["exp", "sub"]})
+    assert claims["sub"] == "svc:updating"
+    assert claims["role"] == "service"
+    assert claims["exp"] > claims["iat"]

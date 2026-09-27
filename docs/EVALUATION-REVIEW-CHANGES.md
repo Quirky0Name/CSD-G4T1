@@ -893,8 +893,9 @@ idempotently. Left for later:
 2. **`POST /evaluate/changes` requires a service token, and replies after
    evaluating** (Zhuo En, Updating). Updating's nudge (cg-43, merged into
    this branch) has to send its service token (any `role=service` token is
-   accepted; Updating's is `svc:updating`), which it doesn't yet (see "TODO
-   for other owners"), and allow for the evaluation time within its HTTP
+   accepted; Updating's is `svc:updating`), which it now does for every
+   request to Research Evaluation (see "TODO for other owners"), and allow
+   for the evaluation time within its HTTP
    timeout: each Storage Management call has a 10-second timeout on
    Research Evaluation's side, and papers are evaluated one after another.
    A timed-out nudge is re-sent, which is safe.
@@ -915,7 +916,12 @@ idempotently. Left for later:
   nudge; and `404` with `detail` exactly `No paper <id>` for an unknown
   paper.
 
-- [ ] **Zhuo En (Updating): send a service token with the nudge.** The
+- [x] **Zhuo En (Updating): send a service token with the nudge.** Done
+  on 2026-09-28 (`fix/updating-jwt-to-re`): the `re` client in
+  `updating/main.py` now carries the same service-token auth as the `sm`
+  client, so every request to Research Evaluation is signed, and the
+  Research Evaluation stub checks the token (DECISIONS.md, "2026-09-28 —
+  Updating signs every request to Research Evaluation"). What it was: the
   nudge on `main` (cg-43) calls `POST /evaluate/changes` with no token:
   the `re` client in `updating/main.py` has no `auth`, unlike the `sm`
   client. Research Evaluation now requires a service token, so every
@@ -929,9 +935,8 @@ idempotently. Left for later:
   `main` was merged into this branch (2026-09-26), the branch has both, so
   Updating's nudge only reaches a stored alert once this item is done.
   **Left to Zhuo En, not fixed in this branch** (the story owner's call,
-  2026-09-26), since it's Updating's code. Until then, run Updating
-  against the Research Evaluation stub (`backend/dev/stub_research_evaluation.py`,
-  see SETUP.md), which doesn't check tokens.
+  2026-09-26), since it's Updating's code. Until then, Updating ran
+  against the Research Evaluation stub, which didn't check tokens.
 - [ ] **Zhuo En (Updating): use the shared `ServiceTokenAuth` and delete
   Updating's copy.** `common/service_token.py` now has
   `ServiceTokenAuth(key, subject)`, the same logic as the class in

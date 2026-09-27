@@ -135,12 +135,13 @@ curl -X POST localhost:8001/run-poll
 The real Storage Management now has the `/internal/**` endpoints Updating
 calls (CG-68). Until you run it, `backend/dev/stub_storage.py` stands in
 for them: in memory, checking the service token the way the real service
-does. Research Evaluation's
-`POST /evaluate/changes` requires a service token, which Updating's nudge doesn't
-send yet (see [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md), "TODO
-for other owners"), so `backend/dev/stub_research_evaluation.py` stands in for it:
-it accepts Updating's nudges without checking a token and records them. Without it, every change logs a failed nudge (the paper stays pending
-and is re-sent next poll). Run Updating as **one process**
+does. Updating signs every request to Research Evaluation with its service
+token, as Research Evaluation's `POST /evaluate/changes` requires, so it can nudge
+the real service. To run Updating on its own, `backend/dev/stub_research_evaluation.py`
+stands in for Research Evaluation: it checks the service token the same way (so it
+reads `JWT_SECRET` too) and records the nudges. Without either, every change logs a
+failed nudge (the paper stays pending and is re-sent next poll). Run Updating as
+**one process**
 (one uvicorn worker); the scheduler doesn't coordinate across processes.
 
 ```
@@ -158,8 +159,8 @@ reset the timer).
 # terminal 1: the stub on 8081 (it reads JWT_SECRET from the environment)
 uv run --env-file .env uvicorn dev.stub_storage:create_app --factory --port 8081
 
-# terminal 2: the Research Evaluation stub on 8000
-uv run uvicorn dev.stub_research_evaluation:create_app --factory --port 8000
+# terminal 2: the Research Evaluation stub on 8000 (it reads JWT_SECRET from the environment too)
+uv run --env-file .env uvicorn dev.stub_research_evaluation:create_app --factory --port 8000
 
 # terminal 3: Updating on 8001
 uv run uvicorn updating.main:app --port 8001

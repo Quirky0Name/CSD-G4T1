@@ -64,13 +64,16 @@ class FakeSources:
 
 
 class FaultInjectingTransport(httpx.AsyncBaseTransport):
-    """Makes Storage Management fail for the requests whose path ends with a given suffix."""
+    """Makes a stub fail for the requests whose path ends with a given suffix, and records every
+    request it's sent (headers included)."""
 
     def __init__(self, inner: httpx.AsyncBaseTransport) -> None:
         self._inner = inner
         self.faults: dict[str, int | Exception] = {}
+        self.sent: list[httpx.Request] = []
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        self.sent.append(request)
         for suffix, fault in self.faults.items():
             if request.url.path.endswith(suffix):
                 if isinstance(fault, Exception):
@@ -112,11 +115,18 @@ class StubSm:
 
 
 class StubRe:
-    """The stub Research Evaluation app plus the ways a test pokes at it."""
+    """The stub Research Evaluation app plus the ways a test pokes at it. The stub checks the
+    service token like the real service; `client` carries one, as Updating's `re` client does."""
 
     def __init__(self) -> None:
-        self.transport = FaultInjectingTransport(httpx.ASGITransport(app=create_stub_re_app()))
-        self.client = httpx.AsyncClient(transport=self.transport, base_url="http://stub-re")
+        self.transport = FaultInjectingTransport(httpx.ASGITransport(app=create_stub_re_app(TEST_JWT_KEY)))
+        self.client = httpx.AsyncClient(
+            transport=self.transport, base_url="http://stub-re", auth=ServiceTokenAuth(TEST_JWT_KEY)
+        )
+
+    def nudges(self) -> list[httpx.Request]:
+        """Every nudge request that reached the stub's transport, whole (headers included)."""
+        return [r for r in self.transport.sent if r.url.path == "/evaluate/changes"]
 
     async def received(self) -> list[list[UUID]]:
         """The paper ids of each nudge that arrived, in order."""
