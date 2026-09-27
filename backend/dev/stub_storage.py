@@ -11,6 +11,7 @@ Run it with:
     uv run --env-file .env uvicorn dev.stub_storage:create_app --factory --port 8081
 """
 
+import hashlib
 import os
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -68,6 +69,18 @@ class ReportStatusChange(BaseModel):
     status: Literal["investigating", "investigated", "assessed"]
 
 
+class DownloadablePdf(BaseModel):
+    """Stub-only: a DOI whose PDF the stub's scripted download finds."""
+
+    doi: str
+    source_url: str
+
+
+def stub_pdf(doi: str) -> bytes:
+    """The bytes the stub "downloads" for a DOI."""
+    return f"%PDF-1.7 stub copy of {doi}".encode()
+
+
 # stored but, as in Storage Management, never returned by the alert API
 INTERNAL_ALERT_FIELDS = ("change_key", "snapshot_id", "previous_snapshot_id", "report_id")
 # how a report shows its alerts: with the change key, which Research Evaluation matches on
@@ -97,6 +110,10 @@ class Store:
     # keyed by id; one per (report_id, doi), like the real unique constraint
     documents: dict[int, dict[str, Any]] = field(default_factory=dict)
     last_document_id: int = 0
+    # the stub's scripted PDF downloads: DOI -> the link it "comes from"; any other DOI isn't found
+    downloadable_pdfs: dict[str, str] = field(default_factory=dict)
+    pdf_downloads: list[str] = field(default_factory=list)
+    pdf_files: dict[int, bytes] = field(default_factory=dict)
 
     def add_snapshot(self, paper_id: UUID, snapshot: dict[str, Any]) -> dict[str, Any]:
         self.last_snapshot_id += 1
@@ -114,6 +131,9 @@ class Store:
         self.last_report_id = 0
         self.documents.clear()
         self.last_document_id = 0
+        self.downloadable_pdfs.clear()
+        self.pdf_downloads.clear()
+        self.pdf_files.clear()
 
 
 def create_app(jwt_key: bytes | None = None) -> FastAPI:
@@ -265,8 +285,9 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
     @internal.post("/documents")
     def store_document(document: NewDocument, response: Response) -> dict[str, Any]:
         """Idempotent on (report_id, doi): 201 with the new row, or 200 with the stored one,
-        unchanged whatever the body says. Downloads nothing (Storage Management's PDF download
-        is S2 of docs/EVALUATION-INVESTIGATION.md)."""
+        unchanged whatever the body says and downloading nothing. A new new_version or
+        current_version row gets its PDF "downloaded" first: the scripted `/dev/pdfs` result
+        for its DOI, or not_found."""
         if document.report_id not in store.reports:
             raise HTTPException(404, f"No report {document.report_id}")
         for stored in store.documents.values():
@@ -285,8 +306,36 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
             "pdf_fetched_at": None,
         }
         store.documents[row["id"]] = row
+        if row["pdf_status"] == "pending":
+            download_pdf(row)
         response.status_code = 201
         return row
+
+    def download_pdf(row: dict[str, Any]) -> None:
+        store.pdf_downloads.append(row["doi"])
+        source_url = store.downloadable_pdfs.get(row["doi"])
+        if source_url is None:
+            row["pdf_status"] = "not_found"
+            return
+        content = stub_pdf(row["doi"])
+        store.pdf_files[row["id"]] = content
+        row.update(
+            pdf_status="ok",
+            file_key=f"stub-{row['id']}.pdf",
+            sha256=hashlib.sha256(content).hexdigest(),
+            pdf_source_url=source_url,
+            pdf_fetched_at=datetime.now(UTC).isoformat(),
+        )
+
+    @internal.get("/documents/{document_id}/pdf")
+    def document_pdf(document_id: int) -> Response:
+        """The stored PDF; only reads, never downloads."""
+        row = store.documents.get(document_id)
+        if row is None:
+            raise HTTPException(404, f"No document {document_id}")
+        if row["pdf_status"] != "ok":
+            raise HTTPException(404, f"Document {document_id} has no stored PDF")
+        return Response(store.pdf_files[document_id], media_type="application/pdf")
 
     dev = APIRouter(prefix="/dev")
 
@@ -310,6 +359,16 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
         if before:
             store.add_snapshot(paper.id, before.model_dump(mode="json"))
         return paper
+
+    @dev.post("/pdfs", status_code=204)
+    def make_pdf_downloadable(pdf: DownloadablePdf) -> None:
+        """Stub-only: from now on, a new document with this DOI "downloads" a PDF from source_url."""
+        store.downloadable_pdfs[pdf.doi] = pdf.source_url
+
+    @dev.get("/pdf-downloads")
+    def pdf_downloads() -> list[str]:
+        """Stub-only: the DOI of every download attempted, in order."""
+        return store.pdf_downloads
 
     @dev.post("/reset", status_code=204)
     def reset() -> None:

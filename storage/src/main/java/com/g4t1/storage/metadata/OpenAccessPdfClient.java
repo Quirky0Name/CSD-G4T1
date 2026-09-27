@@ -57,13 +57,21 @@ public class OpenAccessPdfClient {
     }
 
     public Optional<byte[]> download(String doi) {
+        return downloadWithSource(doi).map(DownloadedPdf::bytes);
+    }
+
+    // the same download, plus the link that worked, so a stored copy can say where it came from
+    public Optional<DownloadedPdf> downloadWithSource(String doi) {
         for (String url : candidateUrls(doi)) {
             Optional<byte[]> pdf = fetchPdf(url);
             if (pdf.isPresent()) {
-                return pdf;
+                return Optional.of(new DownloadedPdf(pdf.get(), url));
             }
         }
         return Optional.empty();
+    }
+
+    public record DownloadedPdf(byte[] bytes, String sourceUrl) {
     }
 
     private List<String> candidateUrls(String doi) {

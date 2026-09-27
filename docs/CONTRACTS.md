@@ -588,14 +588,41 @@ says**. Both are the entire row as stored, nulls written out:
 }
 ```
 
-`pdf_status` is `skipped` for a notice (notices get no PDF) and `pending`
-for a `new_version` or `current_version`. Downloading their PDF when the
-row is created is S2 of the plan; until then they stay `pending`.
-Research Evaluation uses the returned row as the document, not what it
-sent.
+**The PDF is downloaded only when the row is created.** A notice is
+stored with `pdf_status` `skipped` (notices get no PDF). A `new_version`
+or `current_version` is saved as `pending`, then Storage Management
+downloads the DOI's open-access PDF (every OpenAlex PDF link, then
+Semantic Scholar's, the first that is really a PDF under 25 MB) and
+records either `ok`, with `file_key`, `sha256` (hex), `pdf_source_url`
+(the link that worked) and `pdf_fetched_at`, or `not_found`. The `201`
+answers after the download, so the request can take as long as it
+(over 30 s per link); Research Evaluation calls it with a long timeout.
+
+**A row that's already there is never downloaded again**, whatever its
+`pdf_status`: `ok`, `not_found`, or `pending` (left by a crash between
+saving and downloading, or still downloading for a request that's racing
+this one). It comes back as stored. Research Evaluation uses the returned
+row as the document, not what it sent.
 
 Errors, as problem details: `400` a missing or blank required field or an
 unknown enum value; `404` with `detail` `No report <report_id>`.
+
+### `GET /internal/documents/{id}/pdf`
+
+Service-JWT only. The document's stored PDF, as `application/pdf`, for
+impact later. **It only reads; it never downloads.**
+
+Errors, as problem details: `400` an id that isn't a number; `401`
+missing or bad token; `403` a user token; `404` with one of:
+
+| `detail` | Meaning |
+|---|---|
+| `No document <id>` | no document with that id |
+| `Document <id> has no stored PDF` | a notice, or a PDF that's `pending` or `not_found` |
+| `The PDF for document <id> is missing from disk` | the row points at a file that isn't there (e.g. a local database and upload folder reset separately) |
+
+It isn't keyed by DOI: one DOI can have several stored copies (one per
+report for the current copy, and one per user tracking the paper).
 
 ### Snapshot fields
 

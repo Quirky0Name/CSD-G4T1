@@ -1,6 +1,7 @@
 package com.g4t1.storage.report;
 
 import com.g4t1.storage.TestTokens;
+import com.g4t1.storage.metadata.OpenAccessPdfClient;
 import com.g4t1.storage.paper.Paper;
 import com.g4t1.storage.paper.PaperRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +15,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import tools.jackson.databind.JsonNode;
@@ -27,11 +29,12 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// POST /internal/documents (S1: stores the row; downloading PDFs is S2)
+// POST /internal/documents: storing the row (ReportDocumentPdfTest covers the PDF download and read)
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -58,6 +61,10 @@ class InternalDocumentTest {
 
     @Autowired
     ReportDocumentRepository documents;
+
+    // never the real download in tests; it returns nothing unless a test says otherwise
+    @MockitoBean
+    OpenAccessPdfClient openAccess;
 
     private long reportId;
 
@@ -107,15 +114,17 @@ class InternalDocumentTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"new_version", "current_version"})
-    void aNewVersionOrTheCurrentCopyStartsPending(String kind) throws Exception {
+    void aNewVersionOrTheCurrentCopyGetsItsPdfLookedUp(String kind) throws Exception {
         Map<String, Object> body = body();
         body.put("kind", kind);
         body.put("update_to_includes_paper", null);
 
+        // the mocked download finds nothing here; ReportDocumentPdfTest covers the downloads
         store(body)
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.kind").value(kind))
-                .andExpect(jsonPath("$.pdf_status").value("pending"));
+                .andExpect(jsonPath("$.pdf_status").value("not_found"));
+        verify(openAccess).downloadWithSource("10.1016/j.ijantimicag.2024.107416");
     }
 
     @Test

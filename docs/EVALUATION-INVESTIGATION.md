@@ -576,6 +576,8 @@ the grouping would otherwise write `report_id` back to null.
 
 ### S2: Storage Management downloads a document's PDF when it's stored
 
+**Status: done, verified (PASS).**
+
 - **Goal:**
   - `POST /internal/documents` downloads the PDF as in "Design", **only
     when it creates the row**: a new `new_version` or `current_version`
@@ -888,6 +890,39 @@ to `alert/` and following its layout:
   where it answers `400` for a bad body, timestamps ending `+00:00` rather
   than `Z`, and no locking between concurrent opens. Its tests are
   `backend/tests/research_evaluation/test_stub_reports.py`.
+
+### Storage Management: downloading a document's PDF (S2)
+
+- **Where:** `ReportDocumentService.store` saves the row, then, if it's
+  `pending` (a new version or the current copy), calls `downloadPdf`:
+  `OpenAccessPdfClient.downloadWithSource(doi)` → `LocalFileStore.save` →
+  `ReportDocument.recordPdf` (or `recordNoPdf`) → save. `storedPdf` backs
+  `GET /internal/documents/{id}/pdf` in `InternalDocumentController`.
+- **`OpenAccessPdfClient.downloadWithSource`** returns a `DownloadedPdf`
+  (bytes + the link that worked). `download(doi)` delegates to it, so
+  DOI tracking (`PaperService`) is unchanged.
+- **Gotcha: only the request that creates the row downloads.** A stored
+  row, whatever its `pdf_status`, is returned untouched. So a row left
+  `pending` by a crash stays `pending`, and a request that loses the
+  insert race can get the winner's row while it's still `pending`
+  (mid-download). Research Evaluation should treat `pending` as "no PDF".
+- **`pdf_fetched_at`** is set only when a PDF is stored (`ok`), not for
+  `not_found`.
+- **`store` isn't `@Transactional`:** each repository call is its own
+  transaction, so the download holds none open. If the row update fails
+  after the file is written, the file is deleted.
+- **Tests:** `ReportDocumentPdfTest` (download once, not found, notice
+  never, no re-download for `ok` / `not_found` / `pending`, a throwing
+  download leaves the row `pending`, the read endpoint and its three
+  404s); `InternalDocumentTest` and `ReportDocumentPdfTest` mock
+  `OpenAccessPdfClient` with `@MockitoBean`, so no test touches the
+  network; `ReportDocumentServiceRaceTest` checks the race loser downloads
+  nothing.
+- **The stub:** `POST /dev/pdfs {"doi", "source_url"}` makes a DOI
+  downloadable (anything else is `not_found`); `GET /dev/pdf-downloads`
+  lists every download attempted; `GET /internal/documents/{id}/pdf`
+  serves `stub_pdf(doi)`. It answers `422` for a non-numeric id where the
+  real service answers `400`.
 
 ### Known so far (for the later subtasks)
 

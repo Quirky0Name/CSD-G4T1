@@ -1,6 +1,7 @@
 """The stub Storage Management's reports and documents behave like the real ones
 (docs/EVALUATION-INVESTIGATION.md, S1), so Research Evaluation can be tested against it."""
 
+import hashlib
 from uuid import uuid4
 
 import httpx
@@ -9,7 +10,7 @@ import pytest
 from support import TEST_JWT_KEY
 
 from common.service_token import mint_service_token
-from dev.stub_storage import create_app
+from dev.stub_storage import create_app, stub_pdf
 
 
 @pytest.fixture
@@ -181,7 +182,8 @@ async def test_only_investigated_can_be_set(client, status, code):
 
 @pytest.mark.parametrize(
     ("kind", "pdf_status"),
-    [("notice", "skipped"), ("new_version", "pending"), ("current_version", "pending")],
+    # with no scripted PDF, a new version or current copy's download finds nothing
+    [("notice", "skipped"), ("new_version", "not_found"), ("current_version", "not_found")],
 )
 async def test_a_new_document_is_the_whole_row(client, kind, pdf_status):
     paper = await add_paper(client)
@@ -266,3 +268,88 @@ async def test_the_new_endpoints_need_a_service_token(client):
             "/internal/documents", json=document(1), headers={"Authorization": "Bearer nope"}
         )
     ).status_code == 401
+
+
+async def report_for_new_paper(client) -> dict:
+    paper = await add_paper(client)
+    await add_alert(client, paper, "retraction")
+    return await open_report(client, paper)
+
+
+@pytest.mark.parametrize("kind", ["new_version", "current_version"])
+async def test_a_new_row_downloads_its_scripted_pdf_once(client, kind):
+    doi = "10.1016/j.ijantimicag.2020.105949"
+    await client.post("/dev/pdfs", json={"doi": doi, "source_url": "https://pmc.example/main.pdf"})
+    report = await report_for_new_paper(client)
+
+    row = (
+        await client.post("/internal/documents", json=document(report["id"], kind=kind, doi=doi))
+    ).json()
+
+    assert row["pdf_status"] == "ok"
+    assert row["pdf_source_url"] == "https://pmc.example/main.pdf"
+    assert row["file_key"] and row["pdf_fetched_at"]
+    assert row["sha256"] == hashlib.sha256(stub_pdf(doi)).hexdigest()
+    assert (await client.get("/dev/pdf-downloads")).json() == [doi]
+
+
+async def test_a_notice_is_never_downloaded(client):
+    report = await report_for_new_paper(client)
+
+    await client.post("/internal/documents", json=document(report["id"], kind="notice"))
+
+    assert (await client.get("/dev/pdf-downloads")).json() == []
+
+
+@pytest.mark.parametrize("scripted", [True, False])
+async def test_sending_a_stored_row_again_downloads_nothing(client, scripted):
+    doi = "10.1016/j.ijantimicag.2020.105949"
+    if scripted:
+        await client.post(
+            "/dev/pdfs", json={"doi": doi, "source_url": "https://pmc.example/main.pdf"}
+        )
+    report = await report_for_new_paper(client)
+    body = document(report["id"], kind="current_version", doi=doi)
+
+    first = await client.post("/internal/documents", json=body)
+    again = await client.post("/internal/documents", json=body)
+
+    assert (first.status_code, again.status_code) == (201, 200)
+    assert again.json() == first.json()
+    assert (await client.get("/dev/pdf-downloads")).json() == [doi]
+
+
+async def test_the_stored_pdf_is_read_back_without_downloading(client):
+    doi = "10.1016/j.ijantimicag.2020.105949"
+    await client.post("/dev/pdfs", json={"doi": doi, "source_url": "https://pmc.example/main.pdf"})
+    report = await report_for_new_paper(client)
+    row = (
+        await client.post(
+            "/internal/documents", json=document(report["id"], kind="current_version", doi=doi)
+        )
+    ).json()
+
+    response = await client.get(f"/internal/documents/{row['id']}/pdf")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content == stub_pdf(doi)
+    assert (await client.get("/dev/pdf-downloads")).json() == [doi]
+
+
+async def test_reading_a_pdf_that_isnt_stored_is_404(client):
+    report = await report_for_new_paper(client)
+    notice = (await client.post("/internal/documents", json=document(report["id"]))).json()
+    not_found = (
+        await client.post(
+            "/internal/documents", json=document(report["id"], kind="current_version", doi="10.1/x")
+        )
+    ).json()
+
+    for row in (notice, not_found):
+        response = await client.get(f"/internal/documents/{row['id']}/pdf")
+        assert response.status_code == 404
+        assert response.json()["detail"] == f"Document {row['id']} has no stored PDF"
+    unknown = await client.get("/internal/documents/999/pdf")
+    assert unknown.status_code == 404
+    assert unknown.json()["detail"] == "No document 999"

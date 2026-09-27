@@ -157,7 +157,10 @@ Owns all Postgres and file persistence.
   Postgres holds only the file's key. Research Evaluation reads a PDF
   through `GET /internal/papers/{id}/pdf`, never from the disk directly.
   Each project's research paper is stored the same way, in the same
-  folder.
+  folder, and so are report documents' PDFs: Storage Management downloads
+  a new version's or the paper's current copy when investigation stores
+  the document (`POST /internal/documents`), and serves it back through
+  `GET /internal/documents/{id}/pdf`.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
   `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /alerts/{id}/notes`,
   `POST/GET/DELETE /research-paper`, `POST/GET /internal/papers/{id}/background-info`,
@@ -166,7 +169,7 @@ Owns all Postgres and file persistence.
   `GET /internal/papers/{id}/alerts/change-keys`,
   `POST /internal/papers/{id}/reports`,
   `GET/PATCH /internal/papers/{id}/reports/{reportId}`,
-  `POST /internal/documents`.
+  `POST /internal/documents`, `GET /internal/documents/{id}/pdf`.
 - **DB hosting:** Supabase free tier.
 
 ## Section 3 — Research Evaluation

@@ -5,6 +5,55 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-27 — Storage Management downloads a document's PDF when it's stored
+
+### Team decisions
+
+- **Storage Management downloads the PDF, when investigation stores the
+  document** (the story owner's call). `POST /internal/documents` saves a
+  new version's or the current copy's row, then downloads its open-access
+  PDF with the existing `OpenAccessPdfClient` and records `ok` or
+  `not_found`. The download code stays in Java instead of being copied to
+  Python, and PDFs stay where every other PDF is stored.
+- **Only when it creates the row** (the story owner's call). A row that's
+  already stored is returned as it is and never downloaded again, whatever
+  its `pdf_status`. So a failed download isn't retried, and a row left
+  `pending` by a crash stays `pending`; retrying is for a later sprint.
+- **`GET /internal/documents/{id}/pdf` only reads.** Impact reads a stored
+  PDF with it; it never triggers a download.
+- **No "is it new" verdict.** A current copy is always stored, with its
+  `sha256` and the link it came from (`pdf_source_url`) as facts. Comparing
+  hashes with the paper's stored PDF can't tell a new version: the two
+  rarely come from the same place (an upload is the user's publisher copy,
+  DOI tracking keeps whichever open-access link answered first), many
+  publishers stamp the download date into the PDF, and repository copies
+  never get in-place corrections. An equal hash means the same file; a
+  different one means nothing on its own. A later sprint will judge
+  similarity with an LLM (EVALUATION-INVESTIGATION.md, "Later sprints").
+
+### Rejected
+
+- **Research Evaluation downloading in Python and uploading the bytes.**
+  It copies the OpenAlex and Semantic Scholar link lookup and the PDF
+  checks, and still needs an endpoint to store the file.
+- **One endpoint that downloads on first read** (`GET .../pdf` downloading
+  when nothing is stored). Considered first; storing and downloading in
+  one `POST` means investigation needs no second call, and reads stay
+  free of side effects.
+
+### Also settled while building it
+
+- `OpenAccessPdfClient.downloadWithSource(doi)` returns the bytes and the
+  link that worked; `download(doi)` delegates to it, so `PaperService` is
+  unchanged.
+- The row is saved as `pending` before the download, outside any
+  transaction, so a slow download holds none open. If saving the updated
+  row fails after the file is written, the file is deleted.
+- In a race for one DOI, only the request whose insert wins downloads; the
+  other gets the winner's row as stored, which can still be `pending`.
+
+---
+
 ## 2026-09-27 — Reports group a nudge's new alerts and hold what investigation fetched
 
 The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md);

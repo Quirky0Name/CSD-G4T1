@@ -81,6 +81,20 @@ public class ReportDocument {
         this.createdAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
     }
 
+    // the download worked: the file is stored under fileKey
+    void recordPdf(String fileKey, String sha256, String sourceUrl) {
+        this.pdfStatus = PdfStatus.OK;
+        this.fileKey = fileKey;
+        this.sha256 = sha256;
+        this.pdfSourceUrl = sourceUrl;
+        this.pdfFetchedAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
+    }
+
+    // no link gave a real PDF; never tried again
+    void recordNoPdf() {
+        this.pdfStatus = PdfStatus.NOT_FOUND;
+    }
+
     public Long getId() {
         return id;
     }
