@@ -16,8 +16,9 @@ import java.util.UUID;
 @Service
 public class AlertService {
 
-    // newest first; within one detection time, Severity's declared order (high first), then the newer id
-    private static final Comparator<Alert> LIST_ORDER = Comparator
+    // newest first; within one detection time, Severity's declared order (high first), then the newer id.
+    // Public so the frontend's reports list their alerts in the same order
+    public static final Comparator<Alert> LIST_ORDER = Comparator
             .comparing(Alert::getDetectedAt, Comparator.reverseOrder())
             .thenComparing(Alert::getSeverity)
             .thenComparing(Alert::getId, Comparator.reverseOrder());

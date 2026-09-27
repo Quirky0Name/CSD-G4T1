@@ -167,6 +167,15 @@ above) and every call here needs the demo user token. Updating is
        backend. Re-fetch the alerts every minute or so and show a toast
        for any alert id you haven't seen before whose `status` is `new`.
 
+A paper's reports: `GET /papers/{id}/reports`, newest first, as
+`{"reports": [...]}`. Each report groups the alerts one check stored for
+the paper (in the same shape as `GET /papers/{id}/alerts`, dismissed ones
+included) with the documents Research Evaluation fetched about them: each
+change's notice (its Crossref record and, if open access, its text) and
+the paper's current copy or a newer version (with `pdf_source_url`, the
+open-access link its PDF came from). A notice belongs to the alert whose
+`notice_doi` is its `doi`. See CONTRACTS.md for every field.
+
 Your own research paper (the draft) for a project:
 `POST /research-paper` (multipart `file`, optional `folder_id`) to upload
 or replace it, and `GET` / `DELETE /research-paper?folder_id=` to read or
