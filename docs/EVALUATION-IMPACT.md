@@ -508,6 +508,48 @@ already assessed", the first evaluation is kept). It's one conditional
 update (`where status = 'investigated'`), so two writes racing can't both
 land.
 
+### One write, at the end, and what the status can't say yet
+
+**Impact writes the report once, only when it's finished with it:**
+after step 3, or after step 1 when the change severity is `none` (it
+decided not to go further). Nothing is written between steps, and a
+failure at any step writes nothing. So a report is never half-assessed,
+and `assessed` always means a complete evaluation:
+
+| The report | Means |
+|---|---|
+| `assessed`, `change_severity` `none` | stopped at the gate: the change isn't meaningful; only `change_summary` and `change_severity` are set |
+| `assessed`, any other severity | done: every field is set |
+| `investigated` | not assessed: see the gap below |
+
+**The gap (to do): no status says impact is running or has failed.**
+While impact works on a report (up to three Gemini calls, which can take a
+minute), and after it fails, the report is `investigated`, exactly as
+before impact started. From the report alone, a reader such as the
+frontend can't tell these apart:
+- impact hasn't reached it yet (it runs right after investigation);
+- impact is running now;
+- impact failed (Gemini error, timeout, quota) and won't retry;
+- impact is off (`GEMINI_API_KEY` isn't set).
+
+**To add** (not built; see "Later sprints"): a status for it, so the
+frontend can show "evaluating…" or "couldn't evaluate" instead of waiting
+forever:
+- an `assessing` status, set when impact starts on a report (a `PATCH`,
+  like investigation's `investigated`), with the evaluation `PUT`
+  accepting `assessing` as well as `investigated`;
+- a way to mark a run that stopped without an evaluation: a status such as
+  `assessment_failed`, or `investigated` again plus a short cause column,
+  so a retry (or the manual trigger, S6) can pick it up;
+- a rule for an `assessing` report a crash left behind (like a report left
+  `investigating` today), e.g. treated as failed after a time limit.
+
+`ReportStatus` gains the values (the `status` column is `varchar(16)`, so
+the values need no migration, but a cause column would), the `PATCH` and
+the flat `PUT` accept them, and CONTRACTS and the frontend's report body
+(`STORAGE-USER-REPORTS.md`) list them. Whatever is added, the single write
+at the end stays: it's what keeps "`assessed` means complete" true.
+
 ### Failures
 
 - **Gemini isn't configured** (`GEMINI_API_KEY` empty): impact doesn't run;
@@ -1170,6 +1212,10 @@ The story owner's calls, 2026-09-28:
 
 ## Later sprints
 
+- **A status for impact in progress or failed** (`assessing`, and
+  `assessment_failed` or a cause), so an `investigated` report no longer
+  hides whether impact is pending, running, failed or off. See "One write,
+  at the end, and what the status can't say yet".
 - **Retrying and re-assessing.** A report whose impact failed stays
   `investigated`; a later sprint finds such reports and runs impact again,
   and re-assesses a paper's reports when its project's draft changes.
