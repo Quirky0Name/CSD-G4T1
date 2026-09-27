@@ -35,7 +35,7 @@ REST, trusting a single JWT issued at login. See
 | Updating | Python | `backend/` |
 
 Research Evaluation and Updating share one Python project in `backend/`
-(two FastAPI apps, one image) — see `backend/` for details.
+(two FastAPI apps, a Dockerfile each) — see `backend/` for details.
 
 ## Status
 

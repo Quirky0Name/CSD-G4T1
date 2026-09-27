@@ -28,7 +28,9 @@ services:
       retries: 15
 
   research-evaluation:
-    build: .
+    build:
+      context: .
+      dockerfile: research-evaluation.Dockerfile
     command: ["uvicorn", "research_evaluation.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     env_file:
       - .env
@@ -47,7 +49,9 @@ services:
       - grobid
 
   updating:
-    build: .
+    build:
+      context: .
+      dockerfile: updating.Dockerfile
     command: ["uvicorn", "updating.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
     env_file:
       - .env
