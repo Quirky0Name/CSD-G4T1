@@ -11,6 +11,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -40,6 +41,29 @@ class AlertServiceRaceTest {
 
         assertThat(stored.created()).isFalse();
         assertThat(stored.alert().description()).isEqualTo("A correction was published.");
+    }
+
+    @Test
+    void theLoserOfARaceToAddARetractionNoticeGetsTheWinnersAlert() {
+        NewAlertRequest withNotice = new NewAlertRequest(ChangeType.RETRACTION, "retraction", Severity.HIGH,
+                "Retracted, see the notice.", "Stop citing it.", "10.1/notice",
+                Instant.parse("2026-09-25T12:00:00Z"), 47L, 46L);
+        Alert noticeless = mock(Alert.class);
+        when(noticeless.getId()).thenReturn(7L);
+        when(noticeless.getChangeType()).thenReturn(ChangeType.RETRACTION);
+        when(noticeless.getNoticeDoi()).thenReturn(null);
+        Alert winners = new Alert(paperId, withNotice);
+        when(papers.existsById(paperId)).thenReturn(true);
+        when(alerts.findByPaperIdAndChangeKey(paperId, "retraction")).thenReturn(Optional.of(noticeless));
+        // the other request replaced it between this one's read and its update
+        when(alerts.replaceNoticelessRetraction(anyLong(), any(), any(), any(), any(), any(), anyLong(), anyLong(),
+                any())).thenReturn(0);
+        when(alerts.findById(7L)).thenReturn(Optional.of(winners));
+
+        AlertService.StoredAlert stored = service.store(paperId, withNotice);
+
+        assertThat(stored.created()).isFalse();
+        assertThat(stored.alert().noticeDoi()).isEqualTo("10.1/notice");
     }
 
     @Test

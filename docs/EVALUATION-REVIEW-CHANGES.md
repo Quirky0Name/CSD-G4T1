@@ -181,7 +181,9 @@ Storage Management, for Research Evaluation (service JWT):
 - `POST /internal/papers/{id}/alerts` stores one alert. It's idempotent on
   (`paper_id`, `change_key`): a new alert gets `201`, and an existing one
   gets `200` with the stored alert, unchanged (the researcher's status is
-  kept).
+  kept). One exception since 2026-09-27: a retraction notice for a
+  `retraction` alert stored without one replaces it and makes it new
+  (`201`) (EVALUATION-INVESTIGATION.md, S7).
 
 Research Evaluation, for Updating (service JWT):
 - `POST /evaluate/changes` with `{"paper_ids": [...]}`. It answers `202`
@@ -604,7 +606,10 @@ DECISIONS.md ("2026-09-26 — Only changes not stored yet are evaluated"):
 the key lookup is skipped when detection finds nothing; a change key that
 appears in two pairs of one history is evaluated once, keeping the earlier
 pair's change; a "No paper" `404` from the lookup skips the paper, like
-the other Storage Management calls.
+the other Storage Management calls. **Changed on 2026-09-27**
+(EVALUATION-INVESTIGATION.md, S7): a retraction with a notice is sent even
+when `retraction` is stored, and within one history it's used over the
+flag's notice-less change, whichever pair came first.
 
 - **Goal:**
   - `evaluate_paper` fetches the paper's stored change keys once, after

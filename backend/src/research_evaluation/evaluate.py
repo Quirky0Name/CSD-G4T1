@@ -110,16 +110,34 @@ async def evaluate_paper(
     # get old change keys
     evaluated = await stored_change_keys(sm, paper_id)
     created = 0
-    for change in detected:
-        # stored on an earlier nudge or already handled in this history 
-        if change.change_key in evaluated:
-            continue
-        evaluated.add(change.change_key)
+    for change in _to_store(detected, evaluated):
         assessment = assess(change)
         if await store_alert(sm, paper_id, _alert(change, assessment)):
             created += 1
     paper_doi = history[-1].doi if history else None
     return created, PaperChanges(paper_id=paper_id, paper_doi=paper_doi, changes=detected)
+
+
+def _to_store(detected: list[Change], stored_keys: set[str]) -> list[Change]:
+    """The changes to assess and store, one per change key: those whose key isn't stored yet
+    (stored on an earlier nudge), plus a retraction that has a notice even when `retraction` is
+    stored. A retraction's key never changes with a new notice, so this is how a notice that
+    arrives after OpenAlex's flag reaches Storage Management, which replaces a notice-less
+    retraction alert with it (201) and changes nothing otherwise (200). Within the history, a
+    retraction with a notice is used over one without (the earliest such)."""
+    chosen: dict[str, Change] = {}
+    for change in detected:
+        key = change.change_key
+        if key in stored_keys and not _brings_retraction_notice(change):
+            continue
+        current = chosen.get(key)
+        if current is None or (_brings_retraction_notice(change) and not _brings_retraction_notice(current)):
+            chosen[key] = change
+    return list(chosen.values())
+
+
+def _brings_retraction_notice(change: Change) -> bool:
+    return change.change_type is ChangeType.RETRACTION and change.notice_doi is not None
 
 
 def _alert(change: Change, assessment: Assessment) -> dict:

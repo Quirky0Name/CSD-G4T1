@@ -5,6 +5,59 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-27 — A late retraction notice replaces a notice-less retraction alert
+
+The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md), S7.
+
+### Team decisions
+
+- **When a retraction notice arrives after the paper's `retraction` alert
+  was stored without one** (OpenAlex's flag came first), Storage
+  Management replaces the row with the notice's details and treats it as a
+  new alert: `status` back to `new`, out of its report so the next report
+  takes it, answered `201` (the story owner's call). So the notice gets
+  investigated like any other.
+- **Why only retractions:** a retraction's change key is always
+  `retraction` (one retraction alert per paper), so a later notice has the
+  same key and would otherwise be skipped by the key check forever. Every
+  other type is keyed by notice DOI, so a new notice is always a new alert.
+  The notice is the evidence the flag lacked, so the researcher should see
+  the alert again.
+- **Research Evaluation sends a retraction with a notice even when
+  `retraction` is stored,** and Storage Management decides (replace, or
+  `200` unchanged). Only Storage Management knows whether the stored alert
+  has a notice.
+- **Within one history the notice wins:** when the flag and its notice are
+  in two pairs of one window, the change with the notice is the one sent,
+  so the result is the same as when they arrive on separate nudges. This
+  changes the S8 rule "keep the earlier pair's change" for retractions
+  (EVALUATION-REVIEW-CHANGES.md, S8), and its test now expects the notice
+  and the later detection time.
+
+### Rejected
+
+- **Letting an alert belong to two reports** (a link table instead of
+  `alerts.report_id`) so the late notice could join a report without the
+  alert changing. More schema and more rules, for the one alert type that
+  needs it.
+- **Replacing a wrong notice too** (R3's self-referencing entry, R5's
+  notice about another article): Storage Management can't tell a wrong
+  notice from a right one. Left for a later sprint.
+
+### Also settled while building it
+
+- The replacement is one conditional update (`where id = … and notice_doi
+  is null`), so of two notices racing, one replaces and the other gets
+  `200` with the result. The row keeps its `id`, so its notes stay; the
+  documents fetched for it in its earlier report stay in that report.
+- A retraction with a notice is re-sent on every nudge while it's in the
+  window, and re-assessed by the rules each time; Storage Management
+  answers `200`. That's cheap, and the LLM (impact) works on reports, not
+  alerts, so the "never re-evaluate a stored change" property still holds
+  where it matters.
+
+---
+
 ## 2026-09-27 — Investigation runs after the nudge's reply
 
 The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md), S6.

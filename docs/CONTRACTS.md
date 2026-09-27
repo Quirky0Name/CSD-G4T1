@@ -450,6 +450,17 @@ shows it:
 `change_key`, the snapshot ids and the row's `created_at` are stored but
 never returned.
 
+**The one exception to "unchanged": a late retraction notice.** When the
+stored alert is a `retraction` with no `notice_doi` (OpenAlex's flag came
+first) and the request is a `retraction` with a `notice_doi`, the row is
+replaced with the request's `severity`, `description`, `recommendation`,
+`notice_doi`, `detected_at` and snapshot ids, and treated as a new alert:
+`status` goes back to `new`, `status_changed_at` is cleared, and it leaves
+its report so the paper's next report takes it. Its `id` stays, so the
+researcher's notes on it stay. The answer is `201`, like a new alert. A
+`retraction` that already has a notice is never replaced (`200`). See
+EVALUATION-INVESTIGATION.md, S7.
+
 Errors, as problem details: `400` a missing or blank required field, an
 unknown `change_type` or `severity`, or a `detected_at` that isn't a
 timestamp; `401` missing or bad token; `403` a user token; `404` no paper
@@ -718,8 +729,12 @@ changes already have an alert (`GET /internal/papers/{id}/alerts/change-keys`,
 skipped when nothing was detected) and evaluates only the new ones
 (severity, description, recommendation), storing each as an alert in
 Storage Management. A change already stored, or one that appears in two
-pairs of the same history (e.g. the retraction flag on one poll and the
-retraction notice on a later one), is evaluated once. Reading the paper's non-updatable data (notes,
+pairs of the same history, is evaluated once. The exception is a
+retraction with a notice: its key, `retraction`, never changes, so it's
+sent even when `retraction` is stored, and Storage Management replaces a
+notice-less retraction alert with it (`201`) or changes nothing (`200`).
+When the retraction flag and its notice appear in two pairs of one
+history, the change with the notice is the one sent. Reading the paper's non-updatable data (notes,
 extracted text, and the stored PDF from `GET /internal/papers/{id}/pdf`)
 is for later stories. Updating never calls this on a poll with no changes.
 

@@ -393,3 +393,45 @@ async def test_only_storage_management_requests_carry_the_token_and_documents_ge
     others = [r for r in sm.transport.sent if r.url.path != "/internal/documents"]
     assert {r.extensions["timeout"]["read"] for r in others} == {sm.client.timeout.read}
     assert sm.client.timeout.read != settings.investigation_pdf_timeout_seconds
+
+
+async def test_a_late_retraction_notice_moves_its_alert_into_a_new_report_and_is_fetched(
+    client, sm, external
+):
+    external.crossref[RETRACTION_NOTICE] = "ijaa_notice"
+    paper = await changed_paper(sm, is_retracted=True)
+    await nudge(client, [paper])
+    [first_report] = await report_ids(sm, paper)
+    await sm.add_snapshot(
+        paper,
+        3,
+        is_retracted=True,
+        crossref_updates=[notice(RETRACTION_NOTICE, "retraction", source="retraction-watch")],
+    )
+
+    assert (await nudge(client, [paper])).status_code == 202
+
+    [second_report] = await report_ids(sm, paper)
+    assert second_report != first_report
+    report = await read_report(sm, paper, second_report)
+    assert [a["change_key"] for a in report["alerts"]] == ["retraction"]
+    assert [a["notice_doi"] for a in report["alerts"]] == [RETRACTION_NOTICE]
+    assert ("notice", RETRACTION_NOTICE) in {(d["kind"], d["doi"]) for d in report["documents"]}
+    # the earlier report keeps its documents but no longer lists the alert
+    earlier = await read_report(sm, paper, first_report)
+    assert earlier["alerts"] == []
+    assert [d["kind"] for d in earlier["documents"]] == ["current_version"]
+
+
+async def test_a_re_sent_notice_opens_no_report(client, sm):
+    paper = await changed_paper(
+        sm,
+        is_retracted=True,
+        crossref_updates=[notice(RETRACTION_NOTICE, "retraction", source="retraction-watch")],
+    )
+    await nudge(client, [paper])
+
+    await nudge(client, [paper])
+
+    assert len(await report_ids(sm, paper)) == 1
+    assert sm.calls("POST", f"/papers/{paper}/reports") == 2  # the second answered 204

@@ -314,7 +314,8 @@ async def test_only_a_new_change_among_stored_ones_is_evaluated_and_stored(clien
 
 
 async def test_the_same_change_in_two_pairs_of_one_history_is_evaluated_once(client, sm, assessed):
-    # the OpenAlex flag on day 2, then the Crossref notice on day 3: both are the key `retraction`
+    # the OpenAlex flag on day 2, then the Crossref notice on day 3: both are the key `retraction`,
+    # and the one with the notice is used, as when they arrive on separate nudges
     paper = await sm.add_paper()
     await sm.add_snapshot(paper, 1)
     await sm.add_snapshot(paper, 2, is_retracted=True)
@@ -326,7 +327,56 @@ async def test_the_same_change_in_two_pairs_of_one_history_is_evaluated_once(cli
     assert assessed == ["retraction"]
     assert sm.calls("POST", "/alerts") == 1
     [alert] = await sm.alerts(paper)
-    assert alert["detected_at"] == day(2)
+    assert alert["notice_doi"] == "10.1/r"
+    assert alert["detected_at"] == day(3)
+
+
+async def test_a_retraction_notice_after_the_flag_replaces_the_noticeless_alert(client, sm):
+    paper = await sm.add_paper()
+    await sm.add_snapshot(paper, 1)
+    await sm.add_snapshot(paper, 2, is_retracted=True)
+    await nudge(client, [paper])
+    [flag_alert] = await sm.alerts(paper)
+    assert flag_alert["notice_doi"] is None
+    await sm.add_snapshot(paper, 3, is_retracted=True, crossref_updates=[notice("10.1/r", "retraction")])
+
+    response = await nudge(client, [paper])
+
+    assert response.json()["alerts_created"] == 1  # replaced, and treated as new
+    [alert] = await sm.alerts(paper)
+    assert alert["id"] == flag_alert["id"]
+    assert alert["notice_doi"] == "10.1/r"
+    assert alert["detected_at"] == day(3)
+    assert alert["status"] == "new"
+
+
+async def test_a_later_nudge_re_sends_the_notice_and_changes_nothing(client, sm, assessed):
+    paper = await sm.add_paper()
+    await sm.add_snapshot(paper, 1)
+    await sm.add_snapshot(paper, 2, is_retracted=True, crossref_updates=[notice("10.1/r", "retraction")])
+    await nudge(client, [paper])
+    stores_before = sm.calls("POST", "/alerts")
+    [before] = await sm.alerts(paper)
+
+    response = await nudge(client, [paper])
+
+    assert response.json()["alerts_created"] == 0
+    assert sm.calls("POST", "/alerts") == stores_before + 1  # re-sent, answered 200
+    assert await sm.alerts(paper) == [before]
+
+
+async def test_a_flag_alone_is_never_re_sent(client, sm, assessed):
+    paper = await sm.add_paper()
+    await sm.add_snapshot(paper, 1)
+    await sm.add_snapshot(paper, 2, is_retracted=True)
+    await nudge(client, [paper])
+    assessed.clear()
+    stores_before = sm.calls("POST", "/alerts")
+
+    await nudge(client, [paper])
+
+    assert assessed == []
+    assert sm.calls("POST", "/alerts") == stores_before
 
 
 async def test_the_stored_keys_are_read_once_per_paper(client, sm):

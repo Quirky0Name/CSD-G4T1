@@ -802,6 +802,12 @@ new behaviour is tested in `investigation/test_run.py`.
 
 ### S7: A late retraction notice replaces a notice-less retraction alert
 
+**Status: done, verified (PASS).** It changes S8's "keep the earlier
+pair's change" for retractions (the change with the notice is sent), and
+that test was updated on purpose. The replacement lives in
+`AlertRepository` (a bulk update, since `Alert.reportId` is read-only), not
+`Alert.java`.
+
 A retraction's change key is always `retraction` (one retraction alert per
 paper), unlike every other type, which is keyed by notice DOI. So when
 OpenAlex's flag stored the `retraction` alert first, the real notice
@@ -850,7 +856,11 @@ never reaches a report. It's the only change type with this gap.
     notice on a later one give an alert with the notice, back to `new`, in
     a new report, with the notice fetched; a later nudge re-sends it and
     creates no report; a flag and its notice in one window make one `POST`,
-    with the notice; the existing S5/S8 tests of the key check still pass.
+    with the notice; the existing S5/S8 tests of the key check still pass,
+    except `test_the_same_change_in_two_pairs_of_one_history_is_evaluated_once`,
+    which this subtask changes on purpose (it now expects the notice and the
+    later detection time; DECISIONS.md, "A late retraction notice replaces
+    a notice-less retraction alert").
 - **Doc deltas:**
   - **CONTRACTS:** `POST /internal/papers/{id}/alerts`: the exception for a
     notice-less `retraction` alert; the `/evaluate/changes` key check lets
@@ -1108,6 +1118,33 @@ to `alert/` and following its layout:
   and timeout checks.
 - **Setting:** `INVESTIGATION_PDF_TIMEOUT_SECONDS` (default 120, more than
   0), in `.env.example` and SETUP.md.
+
+### A late retraction notice replaces a notice-less alert (S7)
+
+- **Storage Management:** `AlertService.store` checks, for an existing
+  alert, `addsNoticeToRetraction` (stored `retraction` without a notice,
+  request `retraction` with one) and then
+  `AlertRepository.replaceNoticelessRetraction`, a JPQL update conditional
+  on `notice_doi is null` that sets the request's assessment, `detected_at`
+  and snapshot ids, `status = new`, and clears `status_changed_at` and
+  `report_id`. It returns `201` with the re-read row; a lost race (0 rows
+  updated) returns `200` with the row as it is now.
+- **Gotcha:** `Alert.reportId` is read-only in JPA (S1), so it can only be
+  cleared by a bulk update like this one, never by saving the entity.
+- **Research Evaluation:** `evaluate._to_store(detected, stored_keys)`
+  picks one change per key to assess and store: keys not stored yet, plus
+  a retraction with a notice even when `retraction` is stored; within the
+  history, a retraction with a notice beats one without. The replaced alert
+  then joins the next report through S6 as usual, and its notice is planned
+  and fetched.
+- **The stub** does the same replacement in `store_alert`.
+- **Tests:** `InternalAlertTest` (the replacement, a notice already there,
+  a notice-less request, a second late notice, only retractions),
+  `AlertServiceRaceTest` (a lost replacement race), `test_evaluate.py` (the
+  replacement end to end, re-sending, a flag alone never re-sent, and the
+  same-window case, updated), `investigation/test_run.py` (the alert moves
+  to a new report and its notice is fetched; a re-sent notice opens no
+  report).
 
 ### Known so far (for the later subtasks)
 

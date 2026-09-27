@@ -202,7 +202,12 @@ journal and author fields moved to Updating (Section 4).
   already have an alert and evaluates only the new changes. So a change
   is never evaluated twice, which matters once evaluation calls an LLM,
   and Storage Management still stores each change once (by its change
-  key) if two nudges ever overlap.
+  key) if two nudges ever overlap. The one exception is a retraction with
+  a notice, which is sent even when `retraction` is stored: a notice that
+  arrives after OpenAlex's flag replaces the notice-less alert in Storage
+  Management and makes it new, so its notice gets investigated
+  (EVALUATION-INVESTIGATION.md, S7). The rules re-run for it on each
+  nudge, which is cheap; the LLM works on reports, not alerts.
 - **Change evaluation runs in stages** (the plans are
   [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md) and
   [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md)):

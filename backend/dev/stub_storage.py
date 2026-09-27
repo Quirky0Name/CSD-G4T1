@@ -191,10 +191,39 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
     @internal.post("/papers/{paper_id}/alerts")
     def store_alert(paper_id: UUID, alert: NewAlert, response: Response) -> dict[str, Any]:
         """Idempotent on (paper_id, change_key): 201 for a new alert, 200 with the stored one
-        unchanged."""
+        unchanged. The exception, as in Storage Management: a retraction notice for a
+        retraction alert stored without one replaces it and makes it new (201), keeping its
+        id and leaving its report."""
         find_paper(paper_id)
         stored = store.alerts.setdefault(paper_id, {})
-        if alert.change_key in stored:
+        existing = stored.get(alert.change_key)
+        if (
+            existing is not None
+            and existing["change_type"] == "retraction"
+            and existing["notice_doi"] is None
+            and alert.change_type == "retraction"
+            and alert.notice_doi
+        ):
+            replacement = alert.model_dump(mode="json")
+            existing.update(
+                {
+                    field: replacement[field]
+                    for field in (
+                        "severity",
+                        "description",
+                        "recommendation",
+                        "notice_doi",
+                        "detected_at",
+                        "snapshot_id",
+                        "previous_snapshot_id",
+                    )
+                },
+                status="new",
+                status_changed_at=None,
+                report_id=None,
+            )
+            response.status_code = 201
+        elif existing is not None:
             response.status_code = 200
         else:
             store.last_alert_id += 1
