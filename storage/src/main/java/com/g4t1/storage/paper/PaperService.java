@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -125,6 +126,11 @@ public class PaperService {
             return new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "The PDF for paper " + paperId + " is missing from disk");
         });
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaperResponse> listForOwner(UUID ownerId) {
+        return papers.findByOwnerIdOrderByCreatedAtDesc(ownerId).stream().map(PaperResponse::from).toList();
     }
 
     private void rejectDuplicate(UUID ownerId, String doi) {

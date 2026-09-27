@@ -5,6 +5,7 @@ import com.g4t1.storage.grobid.GrobidClient;
 import com.g4t1.storage.metadata.MetadataClient;
 import com.g4t1.storage.paper.Paper;
 import com.g4t1.storage.paper.PaperRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,6 +76,12 @@ class SnapshotTest {
         Paper paper = new Paper(UUID.randomUUID());
         paper.setDoi("10.1016/s0140-6736(20)31180-6");
         paperId = papers.save(paper).getId();
+    }
+
+    // snapshots reference papers with no cascade, so leftovers would break papers.deleteAll() in later test classes
+    @AfterEach
+    void tearDown() {
+        snapshots.deleteAll();
     }
 
     @Test
