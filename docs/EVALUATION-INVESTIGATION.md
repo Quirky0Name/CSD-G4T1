@@ -171,7 +171,7 @@ the paper's own DOI downloaded when the report is made.
 | R1 standard retraction notice (IJAA, Lancet, PLOS ONE) | the notice's Crossref record; its text when open access (PLOS: yes; IJAA, Lancet: no); the current copy | what the notice says |
 | R2 same notice typed `retraction` (Retraction Watch) and `erratum` (publisher) | one notice document | — |
 | R3 the "notice" is the paper itself (IJAA's 2020 entry) | only the current copy | that there's no real notice |
-| R5 a notice about a different article (Lancet ← `…31174-0`) | the notice's record, with `update_to_includes_paper: false` | discounting it |
+| R5 a notice about a different article (Lancet ← `…31174-0`) | the record, whose title is "RETRACTED: Chloroquine or hydroxychloroquine…" (another article); `update_to_includes_paper` is **true**, since that record's own `update-to` lists the Lancet paper | recognising it's another article, from its title |
 | OpenAlex's flag and the notice in the same nudge's window | both changes have the key `retraction`; the notice comes from the second and is stored in the report | — |
 | OpenAlex's flag in one nudge, the notice in a later one | the `retraction` alert is replaced with the notice's details and treated as new (S7), so the next report takes it and fetches the notice | — |
 | A wrong retraction notice first, the real one later | nothing: the alert already has a notice, so it isn't replaced (see "Later sprints") | — |
@@ -286,8 +286,11 @@ objects whose key is one of the report's alerts.
   current copy get their Crossref record, text and PDF. Each part keeps its
   own status, so a failure is stored, never raised.
 - **`update_to_includes_paper`** (notices only): whether the notice's
-  Crossref `update-to` lists this paper's DOI. It catches R5 without
-  judging anything.
+  Crossref `update-to` lists this paper's DOI, a fact stored without
+  judging it. It does **not** catch R5 on the Lancet paper: the retracted
+  commentary `…31174-0` lists the Lancet paper in its own `update-to` as a
+  `retraction`, so the flag is true there, and only its title ("RETRACTED:
+  <another article>") shows it isn't the paper's notice.
 - **A notice whose DOI is the paper's own DOI** (R3) needs no notice
   document: the current copy covers it.
 - Detection can give two changes with one key (the retraction flag in one
@@ -681,6 +684,12 @@ tested end to end.
 
 ### S5: Planning and fetching a report's documents (Research Evaluation)
 
+**Status: done, verified (PASS).** One correction to the plan, in
+DECISIONS.md ("Investigation fetches notices itself…", Also settled):
+`update_to_includes_paper` is true for `…31174-0` on the Lancet paper, so
+it doesn't catch R5. `investigation/__init__.py` wasn't changed: the
+functions are imported from `investigate.py` directly.
+
 - **Goal:** `investigation/investigate.py`:
   - `plan_documents(changes, report_keys, paper_doi)` turns the detected
     changes whose key is one of the report's alerts into planned documents
@@ -705,8 +714,10 @@ tested end to end.
     the notice;
   - IJAA's self-referencing entry plans no notice;
   - changes whose key isn't in the report plan nothing;
-  - `update_to_includes_paper` is true for IJAA's notice and false for
-    `…31174-0` on the Lancet paper;
+  - `update_to_includes_paper` is true for IJAA's notice on IJAA, false for
+    a notice checked against a paper it doesn't name, and **true** for
+    `…31174-0` on the Lancet paper (corrected from the recorded response:
+    the plan first said false; see "Real cases", R5);
   - a Crossref failure still tries Europe PMC and the other way round; a
     total outage gives statuses and no exception;
   - the existing detection tests still pass.
@@ -1008,6 +1019,47 @@ to `alert/` and following its layout:
   IJAA's notice and a no-match DOI; full text of PMC11906582 and
   PMC10836678), loaded with `support.load_xml_fixture`; one `live` test.
 
+### Research Evaluation: planning and fetching a report's documents (S5)
+
+- **Where:** `backend/src/research_evaluation/investigation/investigate.py`.
+  `plan_documents(changes, report_keys, paper_doi)` → `PlannedDocument`s
+  (`kind`, `doi`); `fetch_document(http, planned, paper_doi, mailto)` →
+  `FetchedDocument`, whose `body(report_id)` is exactly what
+  `POST /internal/documents` takes. `DocumentKind` has the same values as
+  Storage Management's `kind`.
+- **The plan** follows "What gets fetched for each alert in a report":
+  - only changes whose `change_key` is one of the report's alerts count,
+    and all of them do, so a retraction flag and its notice in one window
+    (two changes, one key) give the notice;
+  - a notice per change with a `notice_doi`, or a `new_version` for an
+    `other` of type `new_version` / `new_edition`; each DOI once
+    (normalised), in the order first seen;
+  - then one `current_version` (the paper's DOI) if any change is a
+    retraction, correction, erratum or other `other`, or if a notice's DOI
+    is the paper's own (IJAA's self-referencing retraction entry, R3; or a
+    small publisher's self-referencing new edition), which then gets no
+    notice document of its own;
+  - no current copy without a paper DOI; nothing for a DOAJ delisting or
+    an EoC on its own.
+- **The paper's DOI** comes from the snapshots: RE's `Snapshot` now keeps
+  `doi` (Updating's normalised DOI, already in Storage Management's rows).
+- **`fetch_document`** runs `fetch_record` and `fetch_text` with
+  `asyncio.gather(..., return_exceptions=True)`: one failing never stops
+  the other, and a fetcher that raises anyway (the known gaps in S3 and S4)
+  counts as that source's `error`; cancellation still propagates.
+  `update_to_includes_paper` is set only for a notice with a Crossref
+  record and a paper DOI (`CrossrefRecord.updates`), otherwise null.
+- **Gotcha: `update_to_includes_paper` doesn't catch R5.** The recorded
+  `…31174-0` (a retracted Lancet commentary, which Elsevier links onto the
+  Lancet paper) lists the Lancet paper in its own `update-to`, so the flag
+  is true; its title, "RETRACTED: …", is what tells it apart.
+- **Tests:** `backend/tests/research_evaluation/investigation/test_investigate.py`
+  (every row of the table, the Lancet's first report, flag plus notice,
+  IJAA's self-reference, keys outside the report, no paper DOI, one DOI
+  once, the real IJAA and Lancet records, failures on either side, a total
+  outage, a raising fetcher, and the exact body); the Lancet commentary's
+  record is `backend/tests/fixtures/crossref/lancet_commentary.json`.
+
 ### Known so far (for the later subtasks)
 
 - investigation starts from detection's `Change` objects and never re-reads
@@ -1088,7 +1140,8 @@ Left for later sprints on purpose, not built in this plan:
   R5's notice about another article). S7 only replaces a `retraction`
   alert with no notice, so a real notice arriving after a wrong one still
   makes no new alert. A later sprint could replace it too, e.g. when the
-  stored notice's `update_to_includes_paper` is false.
+  stored notice's `update_to_includes_paper` is false or its title shows
+  it's another article (the flag alone misses R5; see "Real cases").
 - **DOIs named in a notice's text** (R4's replacement: "Retraction and
   replacement of: …"): pull them out with a DOI pattern when there's text,
   and fetch them as new versions. Only open-access notices have text, so it

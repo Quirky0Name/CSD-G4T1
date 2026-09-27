@@ -60,6 +60,18 @@ The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md).
   table captions, one block per paragraph, without the reference list,
   capped at 60,000 characters (`truncated` set when cut; the story
   owner's call). Table cells are left out.
+- **`update_to_includes_paper` doesn't catch a notice about another
+  article (R5), contrary to the plan.** The retracted Lancet commentary
+  (`…31174-0`), which Elsevier links onto the Lancet paper as a
+  "retraction", lists the Lancet paper in its own Crossref `update-to`, so
+  the flag is true for it. It's kept as a fact; the record's title
+  ("RETRACTED: <another article>") is what shows it isn't the paper's
+  notice, and judging that is impact's job.
+- A report plans each DOI once, and fetches the paper's current copy once
+  per report when any of its changes can alter the paper (a retraction,
+  correction, erratum or `other` other than a new version) or a notice's
+  DOI is the paper's own. A Crossref record and a text lookup run side by
+  side per document; one failing never stops the other.
 
 ---
 

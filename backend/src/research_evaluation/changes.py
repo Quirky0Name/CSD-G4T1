@@ -56,6 +56,8 @@ class Snapshot(_Payload):
 
     snapshot_id: int
     fetched_at: datetime
+    # the paper's DOI (normalised by Updating); investigation fetches the paper's current copy with it
+    doi: str | None = None
     is_retracted: bool | None = None
     crossref_updates: list[CrossrefUpdate] | None = None
     in_doaj: bool | None = None
