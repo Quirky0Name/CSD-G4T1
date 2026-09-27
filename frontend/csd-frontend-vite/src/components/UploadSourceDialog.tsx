@@ -1,6 +1,9 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { ArrowUpTrayIcon, DocumentTextIcon, XMarkIcon } from '@heroicons/react/20/solid'
-import { useEffect, useState, type DragEvent, type ChangeEvent } from 'react'
+import { useState, type DragEvent, type ChangeEvent } from 'react'
+import { errorMessage, trackPaperByDoi, uploadPaperPdf } from '../api'
+import { useTracking } from '../tracking'
+import { useToast } from './Toasts'
 
 type UploadSourceDialogProps = {
   open: boolean
@@ -8,22 +11,30 @@ type UploadSourceDialogProps = {
 }
 
 function UploadSourceDialog({ open, onClose }: UploadSourceDialogProps) {
+  const { refresh } = useTracking()
+  const showToast = useToast()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [doi, setDoi] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!open) {
-      setSelectedFile(null)
-      setIsDragging(false)
-      setDoi('')
-    }
-  }, [open])
+  // Reset on close, rather than in an effect watching `open`: this only
+  // ever needs to run in response to the close itself.
+  const handleClose = () => {
+    setSelectedFile(null)
+    setIsDragging(false)
+    setDoi('')
+    setSubmitting(false)
+    setError(null)
+    onClose()
+  }
 
   const acceptFile = (file: File | undefined) => {
     if (file?.type === 'application/pdf' || file?.name.toLowerCase().endsWith('.pdf')) {
       setSelectedFile(file)
       setDoi('')
+      setError(null)
     }
   }
 
@@ -39,15 +50,32 @@ function UploadSourceDialog({ open, onClose }: UploadSourceDialogProps) {
 
   const handleDoiChange = (event: ChangeEvent<HTMLInputElement>) => {
     setDoi(event.target.value)
+    setError(null)
     if (event.target.value.trim().length > 0) {
       setSelectedFile(null)
     }
   }
 
-  const canImport = selectedFile !== null || doi.trim().length > 0
+  const canImport = (selectedFile !== null || doi.trim().length > 0) && !submitting
+
+  const handleImport = async () => {
+    setSubmitting(true)
+    setError(null)
+    try {
+      const paper = selectedFile
+        ? await uploadPaperPdf(selectedFile)
+        : await trackPaperByDoi(doi.trim())
+      await refresh()
+      showToast({ tone: 'success', message: `Now tracking "${paper.title ?? paper.doi ?? 'this paper'}".` })
+      handleClose()
+    } catch (err) {
+      setError(errorMessage(err))
+      setSubmitting(false)
+    }
+  }
 
   return (
-    <Dialog open={open} onClose={onClose} className="relative z-50">
+    <Dialog open={open} onClose={handleClose} className="relative z-50">
       <DialogBackdrop className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
       <div className="fixed inset-0 flex items-center justify-center p-4 sm:p-6">
         <DialogPanel className="w-full max-w-xl rounded-2xl border border-white/10 bg-gray-900 p-6 text-gray-100 shadow-2xl sm:p-8">
@@ -60,7 +88,7 @@ function UploadSourceDialog({ open, onClose }: UploadSourceDialogProps) {
             </div>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="rounded-md p-1 text-gray-400 hover:bg-white/5 hover:text-white"
             >
               <span className="sr-only">Close upload dialog</span>
@@ -132,21 +160,28 @@ function UploadSourceDialog({ open, onClose }: UploadSourceDialogProps) {
             />
           </div>
 
+          {error && (
+            <p className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">
+              {error}
+            </p>
+          )}
+
           <div className="mt-8 flex justify-end gap-3">
             <button
               type="button"
-              onClick={onClose}
-              className="rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-xs inset-ring inset-ring-white/10 hover:bg-white/20"
+              onClick={handleClose}
+              disabled={submitting}
+              className="rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-xs inset-ring inset-ring-white/10 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="button"
               disabled={!canImport}
-              onClick={onClose}
+              onClick={() => void handleImport()}
               className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Import
+              {submitting ? 'Importing…' : 'Import'}
             </button>
           </div>
         </DialogPanel>
