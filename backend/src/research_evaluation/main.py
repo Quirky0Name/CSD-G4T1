@@ -1,6 +1,7 @@
 """
 create app
-handle POST /evaluate/changes for Updatigns nudge"""
+handle POST /evaluate/changes for Updatigns nudge
+handle POST /evaluate/reports, assessing reports by id on request"""
 
 import logging
 from collections.abc import AsyncIterator
@@ -9,9 +10,9 @@ from typing import Annotated
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, FastAPI, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, StrictInt
 
 from common.service_token import ServiceTokenAuth
 from research_evaluation.auth import require_service_token
@@ -32,6 +33,15 @@ HTTP_TIMEOUT_SECONDS = 10
 
 class ChangesNudge(BaseModel):
     paper_ids: list[UUID]
+
+
+class ReportsRequest(BaseModel):
+    # strict: "5" or 5.0 is a bad request, not report 5
+    report_ids: list[StrictInt] = Field(min_length=1)
+
+
+class AcceptedReports(BaseModel):
+    report_ids: list[int]
 
 
 router = APIRouter()
@@ -99,6 +109,26 @@ async def evaluate_changes(
             content={"detail": "Evaluation failed; the nudge was not accepted", **result.model_dump(mode="json")},
         )
     return result
+
+
+@router.post(
+    "/evaluate/reports", status_code=202, dependencies=[Depends(require_service_token)]
+)
+async def evaluate_reports(
+    request: ReportsRequest,
+    sm: Annotated[httpx.AsyncClient, Depends(sm_client)],
+    impact: Annotated[ImpactContext | None, Depends(impact_context)],
+    background: BackgroundTasks,
+) -> AcceptedReports:
+    """Assesses reports on request, by id: to re-run a report whose impact failed, or to assess
+    the demo's reports ahead of time. 202 with the ids accepted (each once, in order) and impact
+    runs in the background; only `investigated` reports are assessed, the rest are skipped.
+    503 when GEMINI_API_KEY isn't set, and nothing runs."""
+    if impact is None:
+        raise HTTPException(503, "Gemini isn't configured")
+    report_ids = list(dict.fromkeys(request.report_ids))
+    background.add_task(assess_reports, sm, impact, report_ids)
+    return AcceptedReports(report_ids=report_ids)
 
 
 def configure_logging() -> None:

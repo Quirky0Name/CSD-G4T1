@@ -5,6 +5,32 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-28 — Reports can be assessed by id on request
+
+The plan is [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S6.
+
+### Team decisions
+
+- **A manual trigger, `POST /evaluate/reports {"report_ids": [...]}`**
+  (the story owner's call), so a report whose impact failed can be run
+  again, and the demo's reports can be assessed ahead of time. Until now
+  Research Evaluation was called only by Updating's nudge (2026-09-26);
+  this is the one other way in, service token only, like the nudge.
+- **It replies `202` and assesses in the background,** like
+  investigation: three Gemini calls per report can take a minute. The
+  reply lists the ids accepted, each once.
+- **Only `investigated` reports are assessed** (the same `assess_reports`
+  as after a nudge), so a wrong, repeated or already-assessed id costs one
+  read and no Gemini call. It answers `503` when `GEMINI_API_KEY` isn't
+  set, rather than accepting ids it can't assess.
+
+### Also settled while building it
+
+- Ids must be JSON integers (`"5"`, `5.0` and `true` are `422`), so a
+  caller's typo isn't silently read as another report.
+
+---
+
 ## 2026-09-28 — Impact runs right after investigation, on the reports it finished
 
 The plan is [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S5.

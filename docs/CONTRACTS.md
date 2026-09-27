@@ -781,13 +781,16 @@ Rules:
 
 ## Research Evaluation
 
-Called only by Updating, with the nudge (`POST /evaluate/changes`) when
-papers changed. Research Evaluation in turn calls Storage Management: it
-reads snapshots (and later the PDF, notes and text) and stores alerts.
-Storage Management never calls Research Evaluation, and neither does the
-frontend: alerts reach the frontend through Storage Management. See
+Called by Updating, with the nudge (`POST /evaluate/changes`) when
+papers changed, and, by hand with a service token, to assess reports by id
+(`POST /evaluate/reports`, below). Research Evaluation in turn calls
+Storage Management: it reads snapshots, reports, PDFs and the researcher's
+draft, and stores alerts, report documents and evaluations. Storage
+Management never calls Research Evaluation, and neither does the frontend:
+alerts and reports reach the frontend through Storage Management. See
 DECISIONS.md, "2026-09-26 — Research Evaluation is called only by
-Updating's nudge".
+Updating's nudge", and "2026-09-28 — Reports can be assessed by id on
+request".
 
 The other three endpoints below (`/evaluate/background-info`,
 `/evaluate/citation-neighbourhood`, `/evaluate/stance`) are **under
@@ -928,6 +931,36 @@ background:
 Nothing in it changes the reply, and Updating never waits for it. A
 failure is logged and leaves the report `investigating` (investigation)
 or `investigated` (impact, with nothing stored); nothing retries it yet.
+
+### `POST /evaluate/reports`
+
+Runs impact ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)) on reports by
+id, on request: to re-run a report whose impact failed, or to assess the
+demo's reports ahead of time. Service JWT only: `401` for a missing, bad
+or expired token, `403` for a user token.
+
+**Request:**
+
+```json
+{"report_ids": [3, 4]}
+```
+
+At least one id, each a JSON integer (`"5"` or `5.0` is rejected).
+
+**Response `202`:** the ids accepted, each once, in the order sent; impact
+runs on them in the background, one after another, after the reply.
+
+```json
+{"report_ids": [3, 4]}
+```
+
+Only an `investigated` report is assessed; an `investigating` or
+`assessed` report, or an unknown id, is skipped (logged) before any PDF is
+fetched or Gemini called. A report that fails stays `investigated`.
+
+Errors: `503` with `detail` `Gemini isn't configured` when
+`GEMINI_API_KEY` isn't set (nothing runs); `422` a body that isn't that
+shape.
 
 ### `POST /evaluate/background-info`
 

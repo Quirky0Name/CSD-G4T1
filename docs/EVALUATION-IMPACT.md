@@ -1,7 +1,8 @@
 # Judging a report's impact on the researcher (plan)
 
-**Status: approved 2026-09-28, in progress.** Work happens on
-`feat/eval-impact`.
+**Status: done (S0–S6), 2026-09-28, each subtask verified.** Work
+happened on `feat/eval-impact`; see "Codebase context" for what was built
+and where.
 It picks up where [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md)
 stops: investigation returns the ids of the reports it finished, and this
 plan judges each one with Gemini and writes the result into the report in
@@ -1128,6 +1129,27 @@ what the lifespan checks.
   (`tests/research_evaluation/conftest.py`): None unless a test sets
   `impact.context`. `tests/conftest.py` keeps `GEMINI_API_KEY`,
   `GEMINI_MODEL` and `IMPACT_LLM_TIMEOUT_SECONDS` out of settings tests.
+
+### Research Evaluation: assessing reports on request (S6)
+
+**Status: done, verified (PASS).**
+
+- **Where:** `main.py`, `evaluate_reports` (`POST /evaluate/reports`):
+  `ReportsRequest` (`report_ids: list[StrictInt]`, at least one) in,
+  `AcceptedReports` out. It checks the service token
+  (`require_service_token`, before the body), answers `503` when
+  `impact_context` is None, removes duplicates in order, and adds
+  `assess_reports(sm, impact, ids)` as a background task.
+- **Gotcha: the reply comes before the assessment.** A `202` says the ids
+  were accepted, not assessed; read the report
+  (`GET /internal/reports/{id}`) to see whether it became `assessed`. A
+  skipped or failed report is only in Research Evaluation's log.
+- **Known gaps:** ids aren't limited to 64 bits (a huge one is accepted,
+  and its read fails and is logged); unknown body fields are ignored, as
+  on `/evaluate/changes`.
+- **Tests:** `tests/research_evaluation/impact/test_trigger.py` (against
+  the stub with a fake model: two reports assessed, duplicates and skips,
+  no key `503`, auth, bad bodies).
 
 ## Open questions
 

@@ -266,7 +266,9 @@ journal and author fields moved to Updating (Section 4).
   new copies and the researcher's draft as PDFs directly
   ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)).
 - **Endpoints (internal):** `POST /evaluate/changes`, called only by
-  Updating's nudge. `POST /evaluate/background-info`,
+  Updating's nudge. `POST /evaluate/reports`, service token, to assess
+  reports by id on request (re-running a failed one, or warming the demo).
+  `POST /evaluate/background-info`,
   `POST /evaluate/citation-neighbourhood` and `POST /evaluate/stance` are
   under review: likely internal steps of Research Evaluation's evaluation
   rather than endpoints (see CONTRACTS.md).
