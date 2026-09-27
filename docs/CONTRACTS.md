@@ -772,10 +772,12 @@ the UI, don't present it as a probability.
 
 ## Updating
 
-Not called by the frontend. Updating records snapshots only, never
-changes: it has no change list or researcher actions (those are Research
-Evaluation's). It calls Storage Management (`/internal/**`) and Research
-Evaluation (`/evaluate/changes`).
+Called by the frontend only for `POST /run-poll`, through the Vite proxy
+(docs/LOCAL_STORAGE_DB.md, "Calling it from the frontend"). Otherwise
+Updating records snapshots only, never changes: it has no change list or
+researcher actions (those are Research Evaluation's). It calls Storage
+Management (`/internal/**`) and Research Evaluation
+(`/evaluate/changes`).
 
 ### Poll job
 

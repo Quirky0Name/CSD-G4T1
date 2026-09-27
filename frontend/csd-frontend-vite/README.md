@@ -1,75 +1,58 @@
-# React + TypeScript + Vite
+# CSD-G4T1 frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript + Vite, talking to Storage Management and Updating.
+See [docs/CONTRACTS.md](../../docs/CONTRACTS.md) for the full API and
+[docs/LOCAL_STORAGE_DB.md](../../docs/LOCAL_STORAGE_DB.md) for the
+endpoint-by-feature list this frontend was built against.
 
-Currently, two official plugins are available:
+## Running against the services
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Neither service sends CORS headers, so in dev this app talks to them
+through Vite's proxy (`vite.config.ts`): `/api` forwards to Storage
+Management, `/updating` to Updating. Both need to be running:
 
-## React Compiler
+- Storage Management on `localhost:8081` — see
+  [docs/LOCAL_STORAGE_DB.md](../../docs/LOCAL_STORAGE_DB.md), "Running
+  locally".
+- Updating on `localhost:8001` — see the repo root
+  [SETUP.md](../../docs/SETUP.md), pointed at that same Storage
+  Management (`SM_BASE_URL=http://localhost:8081`).
+- Both need the same `JWT_SECRET`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Copy `.env.example` to `.env.local` (gitignored) and set
+`VITE_DEMO_TOKEN` to a user token for that `JWT_SECRET`. There's no login
+yet (docs/CONTRACTS.md, "Auth"), so every request in this app uses that
+one demo user.
 
-## Expanding the ESLint configuration
+On Linux/macOS, from `backend/`, with `JWT_SECRET` set to the same value
+Storage Management is running with:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```sh
+uv run python -c "
+import base64, os, time
+import jwt
+print(jwt.encode(
+    {'sub': '11111111-1111-1111-1111-111111111111', 'exp': int(time.time()) + 30 * 86400},
+    base64.b64decode(os.environ['JWT_SECRET']),
+    algorithm='HS256',
+))
+"
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+(On Windows, use the PowerShell snippet in
+[docs/LOCAL_STORAGE_DB.md](../../docs/LOCAL_STORAGE_DB.md), "Getting a
+token".) The token lasts 30 days; change `sub` for a different demo
+user. Updating's `POST /run-poll` takes no token in sprint 1.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Then:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```sh
+npm install
+npm run dev
 ```
+
+## Scripts
+
+- `npm run dev` — Vite dev server with the proxy above.
+- `npm run build` — typecheck (`tsc -b`) then build.
+- `npm run lint` — ESLint.
