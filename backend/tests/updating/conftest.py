@@ -10,6 +10,7 @@ from pydantic import SecretStr
 from support import TEST_JWT_KEY, TEST_JWT_SECRET, load_fixture
 from updating_support import record_run
 
+from common.service_token import ServiceTokenAuth
 from dev.scenarios import DOIS, Scenario
 from dev.stub_research_evaluation import create_app as create_stub_re_app
 from dev.stub_storage import create_app as create_stub_app
@@ -20,7 +21,7 @@ from updating.models import PollTrigger
 from updating.poll import PollDeps
 from updating.snapshot import Snapshot, author_ids
 from updating.sources import OPENALEX_AUTHORS_URL, OpenAlexWork
-from updating.storage import ServiceTokenAuth, SnapshotId, post_snapshot
+from updating.storage import SERVICE_SUBJECT, SnapshotId, post_snapshot
 
 
 class FakeSources:
@@ -88,7 +89,7 @@ class StubSm:
     def __init__(self) -> None:
         self.transport = FaultInjectingTransport(httpx.ASGITransport(app=create_stub_app(TEST_JWT_KEY)))
         self.client = httpx.AsyncClient(
-            transport=self.transport, base_url="http://stub", auth=ServiceTokenAuth(TEST_JWT_KEY)
+            transport=self.transport, base_url="http://stub", auth=ServiceTokenAuth(TEST_JWT_KEY, SERVICE_SUBJECT)
         )
 
     async def add_paper(self, doi: str | None, paper_id: UUID | None = None) -> UUID:
@@ -121,7 +122,7 @@ class StubRe:
     def __init__(self) -> None:
         self.transport = FaultInjectingTransport(httpx.ASGITransport(app=create_stub_re_app(TEST_JWT_KEY)))
         self.client = httpx.AsyncClient(
-            transport=self.transport, base_url="http://stub-re", auth=ServiceTokenAuth(TEST_JWT_KEY)
+            transport=self.transport, base_url="http://stub-re", auth=ServiceTokenAuth(TEST_JWT_KEY, SERVICE_SUBJECT)
         )
 
     def nudges(self) -> list[httpx.Request]:

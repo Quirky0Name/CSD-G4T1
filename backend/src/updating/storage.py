@@ -1,10 +1,10 @@
 """Client for Storage Management's `/internal/**` endpoints (docs/CONTRACTS.md).
 
-The `httpx.AsyncClient` passed in carries the base URL and `ServiceTokenAuth`. Calls
+The `httpx.AsyncClient` passed in carries the base URL and the shared `ServiceTokenAuth`
+(common/service_token.py) with `SERVICE_SUBJECT`. Calls
 raise `httpx.HTTPStatusError` on a non-2xx and `ValueError` on a body that doesn't
 parse; the poll job decides what each means."""
 
-from collections.abc import Generator
 from typing import NewType
 from uuid import UUID
 
@@ -12,7 +12,6 @@ import httpx
 from pydantic import BaseModel, ConfigDict, TypeAdapter
 
 from common.doi import Doi
-from common.service_token import mint_service_token
 from updating.snapshot import Snapshot
 
 PaperId = NewType("PaperId", UUID)
@@ -22,15 +21,8 @@ SnapshotId = NewType("SnapshotId", int)
 HISTORY_PAGE_SIZE = 100
 
 
-class ServiceTokenAuth(httpx.Auth):
-    """Signs every request with a fresh short-lived service token."""
-
-    def __init__(self, key: bytes) -> None:
-        self._key = key
-
-    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response]:
-        request.headers["Authorization"] = f"Bearer {mint_service_token(self._key, 'svc:updating')}"
-        yield request
+# the `sub` of Updating's service tokens, to Storage Management and to Research Evaluation
+SERVICE_SUBJECT = "svc:updating"
 
 
 class SmPaper(BaseModel):

@@ -86,3 +86,20 @@ async def test_the_nudge_carries_updatings_service_token(updating_client, sm, re
     assert claims["sub"] == "svc:updating"
     assert claims["role"] == "service"
     assert claims["exp"] > claims["iat"]
+
+
+async def test_every_request_to_either_service_carries_updatings_service_token(
+    updating_client, sm, re, sources
+):
+    sources.serve("ijaa")
+    paper = await sm.seed_scenario(Scenario.OPENALEX_RETRACTION)
+    sm.transport.sent.clear()  # the test's own seeding
+
+    await trigger_poll(updating_client, paper)
+
+    requests = sm.transport.sent + re.transport.sent
+    assert any(r.url.path.startswith("/internal/") for r in requests) and re.nudges()
+    for request in requests:
+        scheme, token = request.headers["Authorization"].split(" ")
+        claims = jwt.decode(token, TEST_JWT_KEY, algorithms=["HS256"], options={"require": ["exp", "sub"]})
+        assert (scheme, claims["sub"], claims["role"]) == ("Bearer", "svc:updating", "service")

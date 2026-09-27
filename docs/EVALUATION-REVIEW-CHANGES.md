@@ -937,13 +937,12 @@ idempotently. Left for later:
   **Left to Zhuo En, not fixed in this branch** (the story owner's call,
   2026-09-26), since it's Updating's code. Until then, Updating ran
   against the Research Evaluation stub, which didn't check tokens.
-- [ ] **Zhuo En (Updating): use the shared `ServiceTokenAuth` and delete
-  Updating's copy.** `common/service_token.py` now has
-  `ServiceTokenAuth(key, subject)`, the same logic as the class in
-  `updating/storage.py` but with the subject as a parameter.
-  `ServiceTokenAuth(key, "svc:updating")` from `common` behaves exactly
-  like Updating's, so Updating can import it and delete its own class.
-  This can be done together with the item above.
+- [x] **Zhuo En (Updating): use the shared `ServiceTokenAuth` and delete
+  Updating's copy.** Done on 2026-09-28, with the item above: both of
+  Updating's clients use `common.service_token.ServiceTokenAuth(key,
+  SERVICE_SUBJECT)`, with `SERVICE_SUBJECT = "svc:updating"` in
+  `updating/storage.py`, and Updating's own class is gone. The header and
+  claims are unchanged.
 
 ## Open questions
 
