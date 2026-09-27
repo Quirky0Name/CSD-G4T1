@@ -1,9 +1,10 @@
 # Storage Management
 
-> **Ran Storage Management locally before 2026-09-26?** Reset your local
+> **Ran Storage Management locally before 2026-09-27?** Reset your local
 > database once: `docker rm -f storage-db`, then run the `docker run` below
-> again and empty your upload folder. The migrations were tidied, and an
-> old database won't start without the reset. See
+> again and empty your upload folder. The migrations were tidied (V2
+> removed on 2026-09-26, alert notes moved from V4 to V5 on 2026-09-27),
+> and an old database won't start without the reset. See
 > [Resetting your local database](#resetting-your-local-database).
 
 ## Running locally
@@ -46,9 +47,17 @@ then run the `docker run` above again, and empty your upload folder too
 (see below). The same reset fixes any other migration error on a local
 database.
 
+On 2026-09-27 alert notes moved from `V4__create_alert_notes.sql` to
+`V5__create_alert_notes.sql`, because two migrations were both V4 and
+Flyway wouldn't start (DECISIONS.md, "Alert notes migration renumbered to
+V5"). If your local database ran alert notes as V4, Flyway's validation
+fails at startup; the same reset fixes it.
+
 **Migration rule.** Never edit or delete a migration once it's on `main`,
 always add a new, higher-numbered one. Numbers can have gaps (there's no
-V2); Flyway only cares that they go up.
+V2); Flyway only cares that they go up. Pick a number no other open branch
+uses: two branches that each add the same number break `main` once both
+are merged, which is the one case where a migration had to be renamed.
 
 ## PDFs
 

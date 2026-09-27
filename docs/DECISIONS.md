@@ -5,6 +5,41 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-27 — Alert notes migration renumbered to V5
+
+### Decision
+
+- **`V4__create_alert_notes.sql` is renamed to
+  `V5__create_alert_notes.sql`**, contents unchanged (commit `9c1e474`,
+  PR #23). `V4__create_background_metadata.sql` keeps V4.
+- **The next numbers are taken:** V6 by `feat/storage-user-research-paper`
+  (`V6__create_research_papers.sql`), and V7 by the investigation plan's
+  reports migration (EVALUATION-INVESTIGATION.md, S1).
+
+### Why
+
+- `background_metadata` (PR #19) and `alert_notes` (PR #21) were each
+  written as V4 on their own branches, and both reached `main`. Flyway
+  refuses to start with two migrations of one version ("Found more than one
+  migration with version 4"), so Storage Management didn't start on `main`
+  and every Java test failed, from the context-load test on.
+- **It breaks the migration rule** (never edit or delete a migration once
+  it's on `main`, LOCAL_STORAGE_DB.md). No new migration can fix two files
+  with one version: one of them has to change.
+- **Alert notes moves, not `background_metadata`:** `background_metadata`
+  was merged first, so more local databases have it as V4, and Amir's
+  `feat/storage-snapshot-endpoints` builds on it.
+
+### Consequences
+
+- A local database that already ran alert notes as V4 won't start (Flyway's
+  validation fails on the applied V4), and needs the one-time reset in
+  LOCAL_STORAGE_DB.md.
+- A branch adding a migration now checks the numbers used on other open
+  branches, not only on `main`.
+
+---
+
 ## 2026-09-27 — No separate LLM step for `other` changes
 
 ### Decision
@@ -74,7 +109,9 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ### Consequences
 
-- `alert_notes` is migration `V4__create_alert_notes.sql`. Like the alert
+- `alert_notes` is migration `V4__create_alert_notes.sql` (renamed to
+  `V5__create_alert_notes.sql` on 2026-09-27, see "Alert notes migration
+  renumbered to V5"). Like the alert
   endpoints, it's Storage Management code written for this story, so Amir
   reviews it.
 
