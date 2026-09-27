@@ -9,4 +9,7 @@ import java.util.UUID;
 public interface SnapshotRepository extends JpaRepository<Snapshot, Long> {
 
     List<Snapshot> findByPaperIdAndSnapshotIdGreaterThanOrderBySnapshotIdAsc(UUID paperId, long afterId, Limit limit);
+
+    // newest first, for history's `last`; the service flips them back to oldest first
+    List<Snapshot> findByPaperIdAndSnapshotIdGreaterThanOrderBySnapshotIdDesc(UUID paperId, long afterId, Limit limit);
 }
