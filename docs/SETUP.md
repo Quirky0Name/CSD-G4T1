@@ -12,7 +12,7 @@ bottom.
 | **Semantic Scholar** | abstract/TL;DR/snippet lookups; open-access PDF links when Storage Management tracks a paper by DOI | Request a key through their API-key request form **first** — approval can take days. Keyless calls work meanwhile but hit frequent 429s. Header: `x-api-key`. |
 | **DeepSeek** | claims + stance LLM calls | Create an account at platform.deepseek.com, top up a few USD (covers development and the demo many times over — calls cost well under 1¢ each), create an API key. |
 | **OpenAlex** | retraction status, citation counts, authors, journal/DOAJ-membership flag (fetched by Updating and Storage Management), citation-neighbourhood metrics (Research Evaluation) | Create a free account and key. This is the only key you need to request for Updating. A key is now required for the full $1/day free-usage budget (keyless calls get 1/10 of that). Passed as the `api_key` query param. Storage Management and Updating share that budget if they use the same key, so Updating fetches each DOI once per poll. |
-| **Crossref** | retraction/correction notices, canonical metadata (Updating, Storage Management) | No key needed. Pick a contact email for the `mailto` polite-pool parameter (`CROSSREF_MAILTO`) — improves rate limits, doesn't require registration. |
+| **Crossref** | retraction/correction notices, canonical metadata (Updating, Storage Management), and each notice's own record (Research Evaluation's investigation) | No key needed. Pick a contact email for the `mailto` polite-pool parameter (`CROSSREF_MAILTO`) — improves rate limits, doesn't require registration. |
 | **GROBID** | DOI and title from uploaded PDFs (Storage Management); COI/funding text and full text for the claims LLM prompt, from the PDFs Storage Management keeps (Research Evaluation) | No key — self-hosted via Docker. |
 
 ## Software
@@ -65,7 +65,7 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
 | `LLM_API_KEY` | platform.deepseek.com |
 | `LLM_MODEL` | `deepseek-flash` (default) |
 | `LLM_BASE_URL` | `https://api.deepseek.com` |
-| `CROSSREF_MAILTO` | any team contact email |
+| `CROSSREF_MAILTO` | any team contact email; read by Updating and by Research Evaluation (investigation's Crossref lookups), default empty (no `mailto` sent) |
 | `JWT_SECRET` | `openssl rand -base64 32`; the same value in every service (base64, 32+ bytes) |
 | `DATABASE_URL` | local Postgres in sprint 1 (`postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` for the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres; Supabase session-pooler connection string once hosted |
 | `SM_BASE_URL` | Storage Management's running URL (`http://localhost:8081`); the stub in `backend/dev/` listens on the same port |
@@ -185,6 +185,6 @@ Tests need no keys, Docker or Postgres (they use SQLite and the stub):
 
 ```
 uv run pytest             # everything except live
-uv run pytest -m live     # also hits the real Crossref/OpenAlex APIs, to catch drift
+uv run pytest -m live     # only the tests that hit the real Crossref/OpenAlex APIs, to catch drift
 uv run ruff check
 ```

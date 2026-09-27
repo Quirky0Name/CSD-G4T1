@@ -5,6 +5,46 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-27 — Investigation fetches notices itself, deterministically
+
+The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md).
+
+### Team decisions
+
+- **Investigation fetches deterministically, before any LLM step,** instead
+  of an LLM calling fetch tools (the earlier idea in
+  EVALUATION-REVIEW-CHANGES.md, "Later stories"). For each new change, fixed
+  code decides which DOIs to fetch and fetches them: the notice's own
+  Crossref record now, its open-access text next. Why: cost, time and
+  tests are predictable, and nothing an LLM reads (a notice's text can say
+  anything) can steer what gets fetched. Impact (a later plan) only reads
+  what investigation stored.
+- **Research Evaluation has its own Crossref fetcher**
+  (`research_evaluation/investigation/crossref.py`) rather than importing
+  Updating's `fetch_crossref`. The request is the same (URL, `mailto`
+  polite pool, ok / not found / error, about 15 lines), but the two are
+  separate services that happen to share an image, `sources.py` is
+  Updating's code, and the fields differ: Updating keeps a paper's
+  `updated-by`, investigation keeps a notice's title, date, journal,
+  `update-to` and `relation`. Sharing the request through `common/` is a
+  later refactor with Updating's owner, like `ServiceTokenAuth`.
+- **Research Evaluation reads `CROSSREF_MAILTO` too,** the variable
+  Updating already uses; empty sends no `mailto`.
+
+### Also settled while building it
+
+- A fetch never raises: a 404 is `not_found`, and any other status, a
+  transport failure or a body that isn't a readable work (including a
+  blank DOI) is `error`. Relation ids that aren't DOIs, aren't text or are
+  blank are skipped rather than failing the record. Log lines carry only
+  the DOI and a status code or exception class.
+- The recorded `…31528-2` ("Retraction and republication") record names
+  the Lancet commentary (`…31174-0`) as `retraction` and `erratum`, and
+  the Lancet paper (`…31180-6`) as `erratum` too; the plan first said it
+  didn't name the Lancet paper.
+
+---
+
 ## 2026-09-27 — Storage Management downloads a document's PDF when it's stored
 
 ### Team decisions

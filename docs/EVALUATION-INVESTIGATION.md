@@ -623,6 +623,10 @@ the grouping would otherwise write `report_id` back to null.
 
 ### S3: Crossref records by DOI (Research Evaluation)
 
+**Status: done, verified (PASS).** One correction to the plan, in
+DECISIONS.md ("Investigation fetches notices itself…", Also settled): the
+recorded `…31528-2` record also names the Lancet paper, as an `erratum`.
+
 - **Goal:** `investigation/crossref.py`: `fetch_record(http, doi, mailto)`
   returns a `CrossrefRecord` (title, published date, journal, `update_to`
   entries, `relation`) or `NOT_FOUND` / `ERROR`, never an exception. Log
@@ -637,7 +641,10 @@ the grouping would otherwise write `report_id` back to null.
   Lancet retraction-and-republication `…31528-2`, F1000Research v2
   `10.12688/f1000research.187739.2`)
 - **Verification:** IJAA's notice has its title and an `update_to` naming
-  the paper; `…31528-2` names the Lancet commentary, not the Lancet paper;
+  the paper; `…31528-2` names the Lancet commentary (`…31174-0`) as
+  `retraction` and `erratum`, and the Lancet paper (`…31180-6`) only as
+  `erratum` (corrected from the recorded response: the plan first said it
+  didn't name the Lancet paper at all);
   F1000Research v2 has a `new_version` `update_to`; `404` → `NOT_FOUND`;
   `500`, timeout, bad JSON and a `200` that isn't a work → `ERROR`; DOIs
   with parentheses encoded like Updating's; `mailto` only when set; no
@@ -923,6 +930,40 @@ to `alert/` and following its layout:
   lists every download attempted; `GET /internal/documents/{id}/pdf`
   serves `stub_pdf(doi)`. It answers `422` for a non-numeric id where the
   real service answers `400`.
+
+### Research Evaluation: Crossref records (S3)
+
+- **Where:** `backend/src/research_evaluation/investigation/`.
+  `http.py` has `FetchStatus` (`ok` / `not_found` / `error`, the values
+  Storage Management stores as `crossref_status`) and `get()`, the one GET
+  every fetcher makes: 200 → the response, 404 → `NOT_FOUND`, anything else
+  or a transport failure → `ERROR`, logged with the source, DOI and status
+  or exception class only. `crossref.py` has `fetch_record(http, doi,
+  mailto)` → `CrossrefRecord` or a `FetchStatus`.
+- **`CrossrefRecord`** keeps `doi`, `title`, `published` (partial dates
+  stay partial, e.g. `2020-06`, as in Updating's snapshots), `journal`,
+  `update_to` (DOI normalised, `type`, `label`, `source`, `date`) and
+  `relation` (type → DOIs). `model_dump(mode="json")` is what goes to
+  Storage Management as `crossref_record`. `record.updates(doi)` says
+  whether `update_to` names a DOI (normalised); S5 uses it for
+  `update_to_includes_paper`.
+- **Gotcha: it never raises.** Everything read from the body is inside one
+  `try`: a body that isn't a work, a blank DOI or an odd shape is `ERROR`;
+  a relation item that isn't a text DOI is skipped. S5 runs S3 and S4 side
+  by side and relies on this. Known gaps, shared with Updating's
+  `fetch_crossref`: a body nested absurdly deep makes `response.json()`
+  raise `RecursionError`, and a DOI with a lone surrogate makes `quote()`
+  raise; neither happens with real Crossref data.
+- **Same request as Updating's `fetch_crossref`:** the DOI is
+  percent-encoded with `quote(doi, safe="/")` (so `(20)` becomes `%2820%29`),
+  `mailto` is sent only when `CROSSREF_MAILTO` is set, and no
+  `Authorization` header is ever sent.
+- **Setting:** `ResearchEvaluationSettings.crossref_mailto`, from
+  `CROSSREF_MAILTO`, default empty.
+- **Tests:** `backend/tests/research_evaluation/investigation/test_crossref.py`,
+  against four recorded records in `backend/tests/fixtures/crossref/`
+  (`ijaa_notice`, `lancet_eoc`, `lancet_republication`, `f1000_v2`); one
+  `live` test fetches IJAA's notice (`pytest -m live`).
 
 ### Known so far (for the later subtasks)
 

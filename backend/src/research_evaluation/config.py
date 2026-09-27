@@ -24,6 +24,8 @@ class ResearchEvaluationSettings(BaseSettings):
     # how many of the newest snapshots each evaluation compares (N snapshots = N - 1 pairs);
     # a change is missed if its nudge keeps failing for more than N - 2 polls in a row
     evaluation_snapshot_window: int = Field(default=DEFAULT_SNAPSHOT_WINDOW, ge=2)
+    # sent to Crossref as `mailto` (its polite pool) by investigation; the same variable Updating reads
+    crossref_mailto: str = ""
 
     @field_validator("jwt_secret", mode="before")
     @classmethod

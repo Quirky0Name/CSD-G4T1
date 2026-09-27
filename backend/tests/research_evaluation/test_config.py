@@ -19,6 +19,15 @@ def test_defaults_and_decoded_secret():
     assert settings.evaluation_snapshot_window == 5
 
 
+def test_crossref_mailto_defaults_to_empty_and_comes_from_the_environment(monkeypatch):
+    assert ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET).crossref_mailto == ""
+
+    monkeypatch.setenv("CROSSREF_MAILTO", "team@example.org")
+
+    settings = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+    assert settings.crossref_mailto == "team@example.org"
+
+
 def test_the_snapshot_window_comes_from_the_environment(monkeypatch):
     monkeypatch.setenv("EVALUATION_SNAPSHOT_WINDOW", "30")
 
