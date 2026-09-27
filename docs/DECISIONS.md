@@ -5,6 +5,36 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-28 — Research Evaluation and Updating get a Dockerfile each
+
+### Team decisions
+
+- **`backend/Dockerfile` is split into `research-evaluation.Dockerfile`
+  and `updating.Dockerfile`**, each starting its own app on its own port.
+  This replaces the "one image" half of "Updating's stack: Python"
+  (2026-09-18) and matches ARCHITECTURE.md's "one Dockerfile per
+  service". Compose, CI and the VM no longer override the command to
+  pick which app a container runs.
+- **Both images still carry both apps' code and dependencies.** They
+  install the same `pyproject.toml` and `uv.lock`. Giving each image only
+  its own app would mean splitting the Python project.
+- **Builds fail when `uv.lock` is out of date** (`uv sync --locked`),
+  and uv's image is pinned to a version. The old file fell back to an
+  unlocked `uv sync`, which resolved new versions instead.
+- **Updating's container runs as a non-root user**, since it keeps
+  nothing on disk. Research Evaluation's still runs as root: compose
+  mounts a cache volume at `/app/cache`, which a non-root user can't
+  write to unless the image first creates that directory and gives it
+  to that user.
+
+### Rejected
+
+- **One Dockerfile with a build stage per app** (`--target updating`).
+  No duplicated install steps, but both services' builds would still
+  change through the same file.
+
+---
+
 ## 2026-09-27 — Research Evaluation reads tracked papers' PDFs
 
 ### Team decisions
