@@ -5,6 +5,48 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-27 — Investigation runs after the nudge's reply
+
+The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md), S6.
+
+### Team decisions
+
+- **Research Evaluation replies to the nudge once detection has run and
+  the alerts are stored, without waiting for investigation** (the story
+  owner's call). Investigation then runs as a background task, per paper
+  evaluated without failure: open a report, fetch and store its documents,
+  mark it `investigated`. A PDF download can take over 30 s per link and
+  Updating's nudge timeout is 20 s, so waiting would turn slow publishers
+  into failed nudges. Nothing investigation does changes the reply.
+- **The same per-paper loop, in two halves.** Evaluation keeps each
+  paper's detected changes (all of them, before the key check) and its DOI
+  for the second half, which matches the report's alerts to them by
+  change key; nothing is re-read.
+- **A report left `investigating` isn't resumed, and a failed fetch isn't
+  retried** (the story owner's call). A crash or a Storage Management
+  failure midway leaves the report as it is; the next nudge opens a new
+  report only for new alerts. Retrying is for a later sprint.
+- **The handoff to impact is a report id** (the story owner's call).
+  Investigation returns the ids of the reports it finished in the run;
+  impact (a later plan) takes an id and reads the report, its alerts and
+  documents from Storage Management, never investigation's objects. So
+  neither package imports the other, and each can be re-run on its own. No
+  impact placeholder is added meanwhile.
+
+### Also settled while building it
+
+- Investigation has its own HTTP client for Crossref and Europe PMC, made
+  at startup with no base URL and no auth, so the service token can't
+  reach an outside host; only `POST /internal/documents` gets the longer
+  `INVESTIGATION_PDF_TIMEOUT_SECONDS` (default 120), every other Storage
+  Management call keeps the usual 10 s.
+- The papers are investigated one after another, and a report's documents
+  one at a time, each document's Crossref and text lookups side by side.
+- When a nudge answers `503` (some paper failed), the papers that were
+  evaluated are still investigated.
+
+---
+
 ## 2026-09-27 — Investigation fetches notices itself, deterministically
 
 The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md).

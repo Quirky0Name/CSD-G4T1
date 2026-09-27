@@ -28,6 +28,24 @@ def test_crossref_mailto_defaults_to_empty_and_comes_from_the_environment(monkey
     assert settings.crossref_mailto == "team@example.org"
 
 
+def test_the_investigation_pdf_timeout_defaults_to_120_and_comes_from_the_environment(monkeypatch):
+    default = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+    assert default.investigation_pdf_timeout_seconds == 120
+
+    monkeypatch.setenv("INVESTIGATION_PDF_TIMEOUT_SECONDS", "45.5")
+
+    settings = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+    assert settings.investigation_pdf_timeout_seconds == 45.5
+
+
+@pytest.mark.parametrize("timeout", ["0", "-1", "soon"])
+def test_an_investigation_pdf_timeout_of_zero_or_less_or_not_a_number_fails(monkeypatch, timeout):
+    monkeypatch.setenv("INVESTIGATION_PDF_TIMEOUT_SECONDS", timeout)
+
+    with pytest.raises(ValidationError, match="investigation_pdf_timeout_seconds"):
+        ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+
+
 def test_the_snapshot_window_comes_from_the_environment(monkeypatch):
     monkeypatch.setenv("EVALUATION_SNAPSHOT_WINDOW", "30")
 
@@ -61,6 +79,23 @@ def test_startup_stores_the_snapshot_window(tmp_path, monkeypatch):
 
     with TestClient(app):
         assert app.state.snapshot_window == 7
+
+
+def test_startup_makes_investigation_its_own_client_without_auth(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
+    monkeypatch.setenv("CROSSREF_MAILTO", "team@example.org")
+    monkeypatch.setenv("INVESTIGATION_PDF_TIMEOUT_SECONDS", "90")
+    app = create_app()
+
+    with TestClient(app):
+        investigation = app.state.investigation
+        # Crossref and Europe PMC only: never the service token, never Storage Management's URL
+        assert investigation.external is not app.state.sm
+        assert investigation.external.auth is None
+        assert str(investigation.external.base_url) == ""
+        assert investigation.crossref_mailto == "team@example.org"
+        assert investigation.pdf_timeout == 90
 
 
 def test_settings_come_from_the_environment(monkeypatch):

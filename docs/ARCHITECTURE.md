@@ -203,22 +203,34 @@ journal and author fields moved to Updating (Section 4).
   is never evaluated twice, which matters once evaluation calls an LLM,
   and Storage Management still stores each change once (by its change
   key) if two nudges ever overlap.
-- **Change evaluation runs in three stages** (the plan is in
-  [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md)):
+- **Change evaluation runs in stages** (the plans are
+  [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md) and
+  [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md)):
   1. **Detection** (`changes.py`): compare two consecutive snapshots and
      list the changes, by the classification table in CONTRACTS.md.
      Deterministic, so whether a paper was retracted never depends on an
      LLM.
   2. **Rule-based assessment** (`rules.py`): every change gets a severity,
      description and recommendation from fixed templates, so every alert
-     is complete.
-  3. **LLM evaluation** (not built yet): judges what each new change
-     means and how it affects the researcher, revising the stage-2
-     assessment rather than replacing detection. It covers every kind of
-     change, `other` included; there's no separate LLM step that first
-     classifies `other` changes and then evaluates them (DECISIONS.md,
-     2026-09-27). Until it exists, an `other` change keeps its rule-based
-     text.
+     is complete. The nudge is answered here.
+  3. **Investigation** (`investigation/`, after the reply, in the
+     background): per paper, Storage Management opens a **report** grouping
+     the paper's alerts that aren't in a report yet (in practice, the ones
+     that nudge stored, plus any a crash left ungrouped); Research
+     Evaluation fetches each
+     change's notice (Crossref record, Europe PMC open-access text), a new
+     version, and the paper's current copy, and stores them as the
+     report's documents; Storage Management downloads the PDFs. It fetches
+     facts and judges nothing.
+  4. **Impact** (`impact/`, not built yet): an LLM judges a report's
+     alerts together, from its documents, and writes its evaluation into
+     the report. It covers every kind of change, `other` included; there's
+     no separate LLM step that first classifies `other` changes
+     (DECISIONS.md, 2026-09-27). **The handoff is a report id:**
+     investigation returns the ids of the reports it finished, and impact
+     reads everything else from Storage Management, so the two stay
+     independent. Until impact exists, an `other` change keeps its
+     rule-based text.
 
   So far the evaluation doesn't read the paper's PDF, notes or extracted
   text; the templates only use the snapshots. Storage Management also

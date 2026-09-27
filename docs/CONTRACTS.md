@@ -801,6 +801,26 @@ dismisses them through Storage Management, never by calling Research
 Evaluation (see DECISIONS.md, "2026-09-25 — Alerts: stored in Storage
 Management, evaluated in stages").
 
+**Investigation runs after the reply**
+([EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md)). Once the
+`202` (or `503`) has been sent, Research Evaluation goes through each
+paper evaluated without failure that had changes in its window, in the
+background:
+
+1. `POST /internal/papers/{id}/reports`: open a report for the paper's
+   alerts not in one yet (`204`: nothing new, stop);
+2. plan the documents those alerts need, and for each, fetch its Crossref
+   record (`api.crossref.org`) and open-access text (Europe PMC), then
+   `POST /internal/documents` (Storage Management downloads the PDF of a
+   new version or current copy before answering, so this call has a long
+   timeout, `INVESTIGATION_PDF_TIMEOUT_SECONDS`);
+3. `PATCH /internal/papers/{id}/reports/{reportId}` to `investigated`.
+
+Nothing in it changes the reply, and Updating never waits for it. A
+failure is logged and leaves the report `investigating`; nothing retries
+it yet. The finished reports' ids are what impact (a later plan) will
+evaluate.
+
 ### `POST /evaluate/background-info`
 
 > **Sprint 1 ownership change:** Updating now fetches and snapshots the

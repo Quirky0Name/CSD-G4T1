@@ -26,6 +26,9 @@ class ResearchEvaluationSettings(BaseSettings):
     evaluation_snapshot_window: int = Field(default=DEFAULT_SNAPSHOT_WINDOW, ge=2)
     # sent to Crossref as `mailto` (its polite pool) by investigation; the same variable Updating reads
     crossref_mailto: str = ""
+    # how long investigation waits for Storage Management to store a document, which includes
+    # downloading its PDF (over 30 s per link); it runs after the nudge's reply
+    investigation_pdf_timeout_seconds: float = Field(default=120, gt=0)
 
     @field_validator("jwt_secret", mode="before")
     @classmethod

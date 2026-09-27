@@ -6,7 +6,10 @@ It then asks Storage Management which change keys already have an alert, and run
 (rules.py) and storing only for the new ones, so a change is never evaluated twice, which
 matters once the later LLM evaluation (insight) runs on them. It keeps no
 state of its own: the window covers changes whose nudge failed on earlier polls (up to
-N - 2 failed nudges in a row), and the stored keys say what's already done."""
+N - 2 failed nudges in a row), and the stored keys say what's already done.
+
+It also hands back, for each paper evaluated without failure, everything detection found and
+the paper's DOI, so investigation can run after the reply (investigation/run.py)."""
 
 import logging
 from datetime import datetime
@@ -17,6 +20,7 @@ import httpx
 from pydantic import BaseModel, ValidationError
 
 from research_evaluation.changes import Change, ChangeType, find_changes
+from research_evaluation.investigation.run import PaperChanges
 from research_evaluation.rules import Assessment, Severity, assess
 from research_evaluation.storage import PaperGone, snapshot_history, store_alert, stored_change_keys
 
@@ -43,16 +47,28 @@ class EvaluationResult(BaseModel):
     failed_paper_ids: list[UUID]
 
 
-async def evaluate_papers(sm: httpx.AsyncClient, paper_ids: list[UUID], snapshot_window: int) -> EvaluationResult:
+class Evaluation(BaseModel):
+    """The reply to Updating, and what investigation needs afterwards: each paper evaluated
+    without failure that had changes in its window."""
+
+    result: EvaluationResult
+    to_investigate: list[PaperChanges]
+
+
+async def evaluate_papers(sm: httpx.AsyncClient, paper_ids: list[UUID], snapshot_window: int) -> Evaluation:
     """eval all papers
     saved failed to reply Updating"""
     created = 0
     skipped: list[UUID] = []
     failed: list[UUID] = []
+    to_investigate: list[PaperChanges] = []
     # a repeated id is evaluated once
-    for paper_id in dict.fromkeys(paper_ids):  
+    for paper_id in dict.fromkeys(paper_ids):
         try:
-            created += await evaluate_paper(sm, paper_id, snapshot_window)
+            new_alerts, changes = await evaluate_paper(sm, paper_id, snapshot_window)
+            created += new_alerts
+            if changes is not None:
+                to_investigate.append(changes)
         except PaperGone:
             log.info("skipping paper %s: Storage Management has no such paper", paper_id)
             skipped.append(paper_id)
@@ -62,10 +78,15 @@ async def evaluate_papers(sm: httpx.AsyncClient, paper_ids: list[UUID], snapshot
         except Exception:
             log.exception("evaluating paper %s failed unexpectedly", paper_id)
             failed.append(paper_id)
-    return EvaluationResult(alerts_created=created, skipped_paper_ids=skipped, failed_paper_ids=failed)
+    return Evaluation(
+        result=EvaluationResult(alerts_created=created, skipped_paper_ids=skipped, failed_paper_ids=failed),
+        to_investigate=to_investigate,
+    )
 
 
-async def evaluate_paper(sm: httpx.AsyncClient, paper_id: UUID, snapshot_window: int) -> int:
+async def evaluate_paper(
+    sm: httpx.AsyncClient, paper_id: UUID, snapshot_window: int
+) -> tuple[int, PaperChanges | None]:
     """
     1. detect changes (classified) - compare only N newest snapshots
         a. get all alerts for that paper to see if RE has already evaluated that change
@@ -74,16 +95,18 @@ async def evaluate_paper(sm: httpx.AsyncClient, paper_id: UUID, snapshot_window:
     
     
     store each new change as an alert in SM
-    returns how many alerts were new
+    returns how many alerts were new, and the paper's detected changes (all of them, for
+    investigation after the reply), or None when there were none
     """
+    history = await snapshot_history(sm, paper_id, last=snapshot_window)
     detected = [
         change
-        for previous, current in pairwise(await snapshot_history(sm, paper_id, last=snapshot_window))
+        for previous, current in pairwise(history)
         for change in find_changes(previous, current)
     ]
     # nothing to evaluate, so no need to ask SM what's stored
     if not detected:
-        return 0  
+        return 0, None
     # get old change keys
     evaluated = await stored_change_keys(sm, paper_id)
     created = 0
@@ -95,7 +118,8 @@ async def evaluate_paper(sm: httpx.AsyncClient, paper_id: UUID, snapshot_window:
         assessment = assess(change)
         if await store_alert(sm, paper_id, _alert(change, assessment)):
             created += 1
-    return created
+    paper_doi = history[-1].doi if history else None
+    return created, PaperChanges(paper_id=paper_id, paper_doi=paper_doi, changes=detected)
 
 
 def _alert(change: Change, assessment: Assessment) -> dict:

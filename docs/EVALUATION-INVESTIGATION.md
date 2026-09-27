@@ -725,6 +725,11 @@ functions are imported from `investigate.py` directly.
 
 ### S6: Investigation runs after each nudge
 
+**Status: done, verified (PASS).** Only papers with changes in their window
+are investigated (as CONTRACTS.md says), so alerts a crash left ungrouped
+wait for the paper's next change. `test_evaluate.py` wasn't changed: the
+new behaviour is tested in `investigation/test_run.py`.
+
 - **Goal:** the same per-paper loop as today, in two halves, because the
   `202` doesn't wait for investigation (the user's call):
   ```
@@ -1059,6 +1064,50 @@ to `alert/` and following its layout:
   once, the real IJAA and Lancet records, failures on either side, a total
   outage, a raising fetcher, and the exact body); the Lancet commentary's
   record is `backend/tests/fixtures/crossref/lancet_commentary.json`.
+
+### Research Evaluation: investigation after each nudge (S6)
+
+- **Where:** `backend/src/research_evaluation/investigation/run.py`:
+  `investigate_papers(sm, context, papers)` → ids of the reports finished;
+  `investigate_paper` (open, investigate, mark investigated, or `None`);
+  `investigate_report` (plan, then fetch and store each document, returning
+  the rows Storage Management stored). `InvestigationContext` carries the
+  external client, `crossref_mailto` and `pdf_timeout`; `PaperChanges`
+  carries a paper's id, DOI and detected changes.
+- **Wiring:** `evaluate.evaluate_papers` now returns an `Evaluation`: the
+  reply (`result`, unchanged) and `to_investigate` (each paper evaluated
+  without failure that had changes; its DOI is the newest snapshot's).
+  `main.evaluate_changes` adds `investigate_papers` as a FastAPI background
+  task when there's anything to investigate, then replies `202` or `503` as
+  before; FastAPI attaches the task to a returned `JSONResponse` too, so a
+  `503` still investigates the papers that succeeded.
+- **Clients:** the lifespan makes a second `httpx.AsyncClient` for
+  Crossref and Europe PMC (no base URL, no auth) and stores the context in
+  `app.state.investigation`, read by the `investigation_context`
+  dependency. `store_document` passes `timeout=pdf_timeout` per request;
+  every other Storage Management call keeps the client's 10 s.
+- **Storage Management calls** (`storage.py`): `open_report` (201 →
+  `OpenedReport` with its alerts' change keys, 204 → `None`),
+  `store_document` (the stored row), `mark_investigated`. A `No paper`
+  404 skips the paper, like the other calls.
+- **Gotcha: a background task must never raise.** `investigate_paper`
+  catches everything, logs the paper and report ids and the cause, and
+  leaves the report `investigating`. Nothing resumes it: the next nudge
+  opens a report only for new alerts (see "Later sprints"). Known gap:
+  `run._cause` has no `ValidationError` case (unlike `evaluate._cause`), so
+  an unreadable report from Storage Management is logged with pydantic's
+  message, which quotes part of the response body.
+- **Tests:** `backend/tests/research_evaluation/investigation/test_run.py`,
+  through the real endpoint against the stub. ASGITransport finishes the
+  background task before the nudge's response returns, so a test can check
+  the report right after `nudge()`. `conftest.ExternalApis` fakes Crossref
+  and Europe PMC with an `httpx.MockTransport` (Crossref knows only the
+  DOIs a test gives it; Europe PMC finds nothing; `failure` breaks both),
+  and every Research Evaluation test uses it, so none reaches the network.
+  `FaultInjectingTransport.sent` keeps whole requests, for the auth header
+  and timeout checks.
+- **Setting:** `INVESTIGATION_PDF_TIMEOUT_SECONDS` (default 120, more than
+  0), in `.env.example` and SETUP.md.
 
 ### Known so far (for the later subtasks)
 

@@ -746,6 +746,14 @@ history of status changes was considered and not wanted (DECISIONS.md,
 Not built in this story. They plug into the stages in S4 and S5 without
 changing detection or storage.
 
+**Investigation is now built** (EVALUATION-INVESTIGATION.md): after the
+nudge's reply, each paper's new alerts are grouped into a report in
+Storage Management, and each change's notice, new version and the paper's
+current copy are fetched deterministically into it (Crossref, Europe PMC,
+PDFs downloaded by Storage Management), replacing the LLM fetch tools
+sketched below. The LLM step below is now **impact**: it takes a report id
+and judges the report's alerts together from those documents.
+
 ### LLM evaluation of changes (stage 3)
 
 First planned as an LLM step for `other` changes only, replacing the body

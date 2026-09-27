@@ -74,6 +74,7 @@ Checked on this machine (2026-09-18): Docker 29.8, Docker Compose 5.5, uv
 | `POLL_INTERVAL_HOURS` | `24` (default) |
 | `CACHE_MAX_ENTRIES` | `5000` (default) |
 | `EVALUATION_SNAPSHOT_WINDOW` | `5` (default), at least `2`: how many of a paper's newest snapshots Research Evaluation compares on each nudge. A change is missed if its nudge keeps failing for more than N − 2 polls in a row; raise it (e.g. `30`) before deployment |
+| `INVESTIGATION_PDF_TIMEOUT_SECONDS` | `120` (default), more than `0`: how long Research Evaluation's investigation waits for Storage Management to store a document, which includes downloading its PDF. Investigation runs after the nudge's reply, so this never delays Updating |
 
 ## Scaffolding only (no keys needed)
 
