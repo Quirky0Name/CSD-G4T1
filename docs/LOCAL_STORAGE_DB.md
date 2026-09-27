@@ -6,6 +6,30 @@
 > old database won't start without the reset. See
 > [Resetting your local database](#resetting-your-local-database).
 
+## Running with Docker (quickest)
+
+`storage/docker-compose.yml` runs Storage Management and its own Postgres
+in containers, with nothing else to install. Put `JWT_SECRET=...` (the
+same value as `backend/.env`) in `storage/.env`, which is gitignored, then
+from `storage/`:
+
+```
+docker compose up --build
+```
+
+- Storage Management is on `localhost:8081`; its Postgres is on host port
+  5433, so it doesn't clash with the backend's on 5432.
+- GROBID isn't started here: it uses the one `backend/docker-compose.dev.yml`
+  runs on 8070 (`docker compose up grobid` in `backend/` for just that).
+  Without GROBID, uploads still save, just without a DOI.
+- Stored PDFs and the database live in Docker volumes, so they survive
+  restarts. `docker compose down -v` wipes both together, which is also
+  the reset if a migration error ever stops it starting.
+- `CROSSREF_MAILTO`, `OPENALEX_API_KEY` and `S2_API_KEY` are optional and
+  also go in `storage/.env`.
+
+The steps below run it without Docker for Storage Management itself.
+
 ## Running locally
 
 Start Postgres:

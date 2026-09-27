@@ -1,0 +1,47 @@
+# Storage Management and its own Postgres. GROBID isn't here: backend/docker-compose.dev.yml
+# already runs it on 8070, so this uses that one instead of starting a second.
+# Needs JWT_SECRET in storage/.env (gitignored), the same value as backend/.env.
+services:
+  storage-db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: storage
+      POSTGRES_USER: storage
+      POSTGRES_PASSWORD: storage
+    # 5433 on the host, since backend's Postgres already takes 5432
+    ports:
+      - "5433:5432"
+    volumes:
+      - storage_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U storage -d storage"]
+      interval: 5s
+      retries: 10
+
+  storage:
+    build: .
+    depends_on:
+      storage-db:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://storage-db:5432/storage
+      SPRING_DATASOURCE_USERNAME: storage
+      SPRING_DATASOURCE_PASSWORD: storage
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in storage/.env}
+      GROBID_URL: ${GROBID_URL:-http://host.docker.internal:8070}
+      CROSSREF_MAILTO: ${CROSSREF_MAILTO:-}
+      OPENALEX_API_KEY: ${OPENALEX_API_KEY:-}
+      S2_API_KEY: ${S2_API_KEY:-}
+      UPLOAD_DIR: /data/uploads
+    # a volume, so stored PDFs survive the container being recreated
+    volumes:
+      - storage_uploads:/data/uploads
+    # Linux needs this for host.docker.internal; Docker Desktop has it already
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  storage_db:
+  storage_uploads:
