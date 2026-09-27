@@ -155,14 +155,11 @@ Out of scope:
   rule-based assessor (see S4).
 - **The snapshot history endpoint in the real Storage Management.**
   `GET /internal/papers/{id}/background-info/history` (and the
-  `background_metadata` table behind it) is Storage Management's, but it
-  isn't built in Java yet (CG-68). Only the Python stub
-  (`backend/dev/stub_storage.py`) has it, so Research Evaluation is
-  developed and tested against the stub, like Updating. Research
-  Evaluation calls whatever runs at `SM_BASE_URL`: against the real
-  Storage Management today, the history read gets a bare `404` and every
-  nudge answers `503`, until the endpoint exists. No Research Evaluation
-  change is needed then. See "TODO for other owners".
+  `background_metadata` table behind it) is Storage Management's, built
+  in CG-68, including `last`. Research Evaluation is developed and tested
+  against the Python stub (`backend/dev/stub_storage.py`), like Updating,
+  and calls whatever runs at `SM_BASE_URL`, so it works against either
+  with no change. See "TODO for other owners".
 
 ## API
 
@@ -638,8 +635,8 @@ the other Storage Management calls.
     snapshots, still oldest first, and runs detection on those. The key
     check (S8) and everything after it are unchanged.
   - The history endpoint gains a `last=N` query parameter. Research
-    Evaluation sends it; the stub implements it. No Java code: the Java
-    endpoint isn't built yet (CG-68, see "TODO for other owners").
+    Evaluation sends it; the stub and the Java endpoint (CG-68) both
+    implement it.
 - **The limit it sets:** a change is found as long as a nudge gets through
   within N − 2 failed nudges in a row. With N = 5 and the default 24-hour
   poll, that's about 3 days of failures; after that the change is lost.
@@ -877,7 +874,10 @@ idempotently. Left for later:
 
 ## TODO for other owners
 
-- [ ] **Amir (Storage Management, CG-68): build the snapshot endpoints.**
+- [x] **Amir (Storage Management, CG-68): build the snapshot endpoints.**
+  Done: both endpoints are in Java with `last` and the exact `404`
+  detail, so Research Evaluation's storage calls now work against the
+  real Storage Management too.
   `POST /internal/papers/{id}/background-info` and
   `GET /internal/papers/{id}/background-info/history`, with the
   `background_metadata` table, as in CONTRACTS.md. Research Evaluation
@@ -886,9 +886,7 @@ idempotently. Left for later:
   parameter (only the newest N, still oldest first; applied after
   `after_id` and before `limit`), which Research Evaluation sends on every
   nudge; and `404` with `detail` exactly `No paper <id>` for an unknown
-  paper. If `last` were left out, Spring would ignore it and return the
-  whole history: the same alerts, but the window would have no effect.
-  Until the endpoint exists, the whole flow only works against the stub.
+  paper.
 
 - [ ] **Zhuo En (Updating): send a service token with the nudge.** The
   nudge on `main` (cg-43) calls `POST /evaluate/changes` with no token:
