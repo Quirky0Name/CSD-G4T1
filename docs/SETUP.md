@@ -124,8 +124,8 @@ curl -X POST localhost:8001/run-poll
   papers, like the one above, download fine.
 - The poll lists the paper under `stored`. A paper's first snapshot has
   nothing to compare against, so `nudged` stays empty. Once a change is
-  found, the real Research Evaluation rejects the nudge, since Updating
-  sends no service token yet (see the next section).
+  found, Updating nudges the real Research Evaluation with its service
+  token and the paper is listed under `nudged`.
 - `docker compose -f docker-compose.dev.yml down` in `backend/` and
   `docker compose down` in `storage/` stop everything and keep the data;
   `down -v` also wipes the databases and Storage Management's stored PDFs.
