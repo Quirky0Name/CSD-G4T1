@@ -172,6 +172,7 @@ Owns all Postgres and file persistence.
   `GET /internal/papers/{id}/alerts/change-keys`,
   `POST /internal/papers/{id}/reports`,
   `GET/PATCH /internal/papers/{id}/reports/{reportId}`,
+  `GET /internal/reports/{reportId}`, `PUT /internal/reports/{reportId}/evaluation`,
   `POST /internal/documents`, `GET /internal/documents/{id}/pdf`.
 - **DB hosting:** Supabase free tier.
 

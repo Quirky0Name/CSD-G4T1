@@ -5,6 +5,64 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-28 — A report's impact evaluation is stored once, through report-id endpoints
+
+The plan is [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S1 and S2.
+
+### Team decisions
+
+- **Impact reads and writes a report by its id alone**
+  (`GET /internal/reports/{reportId}`,
+  `PUT /internal/reports/{reportId}/evaluation`). The handoff from
+  investigation is a bare report id (2026-09-27), and the nested endpoints
+  need the paper id too. The report names its paper (`paper_id`), so
+  impact gets everything else from it. Flat like the document endpoints;
+  the nested ones stay for investigation.
+- **The evaluation is written once, and only on an `investigated`
+  report** (the story owner's call). An `investigating` report isn't
+  ready (its documents may be missing) and an `assessed` one keeps its
+  first evaluation, like a stored document: both are `409`. Re-assessing
+  (a new draft, a better prompt) is for a later sprint. It's one
+  conditional update on the status, so two writes at once can't both land.
+- **"Is the change meaningful?" is the change severity**, `none` / `low`
+  / `medium` / `high`, with `none` meaning not meaningful. There's no
+  separate yes/no that could disagree with it. When it's `none`, only the
+  summary and the severity are stored (the story owner's call): impact
+  stops there, and `impact_level`, `evaluation` and `recommendation` must
+  be null. Otherwise all three are required. The report is `assessed`
+  either way.
+- **Two level columns, three texts, and the rest as JSON.** The change
+  severity and the impact level (what the frontend will sort and badge
+  by), the change summary, the evaluation and the recommendation are
+  columns; `assessment` holds impact's full answer (per-alert judgments,
+  how the draft uses the paper, the list of actions, the model) as JSON,
+  stored as sent like `crossref_record`, so its shape can change without a
+  migration. One enum, `AssessmentLevel`, serves both levels.
+- **Impact never changes alerts.** The alerts' rule-based severity (by
+  change type) stays as it was; the change severity and impact level are
+  impact's judgment, on the report. So whether a paper was retracted never
+  depends on an LLM.
+
+### Rejected
+
+- **A `change_meaningful` boolean next to the severity.** Two fields for
+  one answer, which could disagree.
+- **Overwriting an assessed report's evaluation.** Two impact runs could
+  race, and nothing needs it until re-assessment exists.
+- **Reading reports by paper and report id, with investigation handing
+  over both.** It changes the handoff the team settled on the day before.
+
+### Also settled while building it
+
+- The report of a deleted paper is gone with it (cascade), so the flat
+  `GET` answers `No report <id>` for it, not `No paper <id>`.
+- The migration is `V8__add_report_assessment.sql`. `feat/storage-reports-user-endpoint`
+  (the researcher's `GET /papers/{id}/reports`) has its own
+  `UserReportResponse` listing fields, so whichever branch merges second
+  adds the four new fields to it.
+
+---
+
 ## 2026-09-27 — A late retraction notice replaces a notice-less retraction alert
 
 The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md), S7.

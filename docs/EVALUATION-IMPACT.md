@@ -955,6 +955,39 @@ changed: it builds `ReportService` itself, whose constructor now takes a
   `UserReportResponse`, which lists fields itself; see the merge note in
   "Scope".
 
+### Storage Management: reading a report by id and storing its evaluation (S2)
+
+**Status: done, verified (PASS).**
+
+- **Where:** `report/InternalReportByIdController`
+  (`/internal/reports/{reportId}`: `GET`, and `PUT .../evaluation`) calls
+  `ReportService.get(long)` and `ReportService.recordEvaluation`. The body is
+  `ReportEvaluationRequest`.
+- **The write** checks the shape first (`checkShape`: with severity `none`
+  the other three must be null, otherwise all present and not blank; a
+  `400` either way), then runs `ReportRepository.recordEvaluation`, one
+  JPQL update `where id = :id and status = investigated` that also sets
+  `assessed` and `evaluated_at` (truncated to microseconds). It then reads
+  the report back: missing is `404`, and an update that took nothing is
+  `409`, "not investigated yet" for an `investigating` report and "already
+  assessed" otherwise.
+- **`assessment`** goes to text with the `JsonMapper` (a JSON null or a
+  missing one is SQL null) and back to an object in `toResponse`, like
+  `crossref_record`. It comes back equal as JSON, not byte for byte.
+- **Gotcha: enum parameters in the update go through the converters,** so
+  `status` is compared as the lowercase text stored. Binding the raw enum
+  name would match nothing.
+- **Tests:** `InternalReportEvaluationTest` (MockMvc on H2: flat equals
+  nested, `404`s, a full and a `none` evaluation, 14 bad bodies, both
+  `409`s with the first evaluation kept, the `PATCH` still `409`, paper
+  deletion, auth); `ReportServiceRaceTest` (a write that took nothing is a
+  `409` with the right detail). As with the grouping, the race safety
+  relies on Postgres re-checking the `where` after the row lock; no test
+  runs on Postgres.
+- **The stub** has both endpoints, with the same `404` and `409` details;
+  its `ReportEvaluation` model checks the same shape rule and answers
+  `422`. Tests are in `test_stub_reports.py`.
+
 ## Open questions
 
 None left.

@@ -550,9 +550,11 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
 ```
 
 - `status`: `investigating` (just opened), `investigated` (investigation
-  done) or `assessed` (impact done; nothing sets it yet).
+  done) or `assessed` (impact done, set by
+  `PUT /internal/reports/{reportId}/evaluation`).
 - Impact's fields, all null until the report is assessed
-  ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md); nothing writes them yet):
+  ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md); written by
+  `PUT /internal/reports/{reportId}/evaluation`, below):
   - `change_summary`: what changed in the paper, in a few sentences;
   - `change_severity`: `none`, `low`, `medium` or `high`, how serious the
     change is for anyone relying on the paper (`none` = not meaningful);
@@ -586,6 +588,55 @@ first time.
 
 Errors, as problem details: `400` any other or a missing `status`; `404`
 as for `GET`; `409` a report that's already `assessed`.
+
+#### `GET /internal/reports/{reportId}`
+
+The report by its id alone, for impact, which gets bare report ids from
+investigation. **Response `200`:** the same body as
+`GET /internal/papers/{id}/reports/{reportId}`, whose `paper_id` names the
+paper.
+
+Errors, as problem details: `400` a report id that isn't a number; `404`
+with `detail` `No report <reportId>`, also for a report whose paper was
+deleted (its reports went with it).
+
+#### `PUT /internal/reports/{reportId}/evaluation`
+
+Impact's evaluation of the report
+([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)), stored **once**, which
+marks the report `assessed`.
+
+**Request:**
+
+```json
+{
+  "change_summary": "The paper was retracted because …",
+  "change_severity": "high",
+  "impact_level": "medium",
+  "evaluation": "Your Discussion cites it as …",
+  "recommendation": "Replace the citation in the Discussion.",
+  "assessment": {"prompt_version": 1, "...": "impact's full answer"}
+}
+```
+
+| Field | Rules |
+|---|---|
+| `change_summary` | required, not blank |
+| `change_severity` | required: `none`, `low`, `medium` or `high`, exact lowercase. `none` means the change isn't meaningful |
+| `impact_level` | `none`, `low`, `medium` or `high`: required unless `change_severity` is `none`, and must be null (or left out) when it is |
+| `evaluation`, `recommendation` | not blank: required unless `change_severity` is `none`, and must be null (or left out) when it is |
+| `assessment` | optional JSON, stored and returned exactly as sent; Storage Management never looks inside |
+
+**Response `200`:** the report, as `GET` returns it, with `status`
+`assessed`, `evaluated_at` set and the fields as sent (the unsent ones
+null).
+
+Only an `investigated` report accepts it, in one conditional update, so of
+two writes at once one lands. Errors, as problem details: `400` a body
+that breaks the rules above, or a report id that isn't a number; `404`
+with `detail` `No report <reportId>`; `409` with `detail` `Report <id> is
+not investigated yet` (still `investigating`) or `Report <id> is already
+assessed` (the first evaluation is kept, unchanged).
 
 ### `POST /internal/documents`
 

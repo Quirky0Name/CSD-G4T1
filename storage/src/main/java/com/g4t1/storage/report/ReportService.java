@@ -6,8 +6,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -59,6 +62,56 @@ public class ReportService {
     }
 
     /**
+     * The report by its id alone, for impact, which only has report ids. A report of a deleted paper
+     * went with it, so it's the same "No report" 404 as an unknown one.
+     */
+    @Transactional(readOnly = true)
+    public ReportResponse get(long reportId) {
+        return toResponse(reports.findById(reportId).orElseThrow(() -> noReport(reportId)));
+    }
+
+    /**
+     * Stores impact's evaluation and marks the report assessed, once, and only for an investigated
+     * report: an investigating one isn't ready, and an assessed one keeps its first evaluation. When
+     * the change isn't meaningful (severity none) only the summary and severity are stored and the rest
+     * must be left out; otherwise impact_level, evaluation and recommendation are all required.
+     */
+    @Transactional
+    public ReportResponse recordEvaluation(long reportId, ReportEvaluationRequest request) {
+        checkShape(request);
+        JsonNode assessment = request.assessment();
+        int updated = reports.recordEvaluation(reportId, request.changeSummary(), request.changeSeverity(),
+                request.impactLevel(), request.evaluation(), request.recommendation(),
+                assessment == null || assessment.isNull() ? null : json.writeValueAsString(assessment),
+                Instant.now().truncatedTo(ChronoUnit.MICROS), ReportStatus.ASSESSED, ReportStatus.INVESTIGATED);
+        Report report = reports.findById(reportId).orElseThrow(() -> noReport(reportId));
+        if (updated == 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, report.getStatus() == ReportStatus.INVESTIGATING
+                    ? "Report " + reportId + " is not investigated yet"
+                    : "Report " + reportId + " is already assessed");
+        }
+        return toResponse(report);
+    }
+
+    private static void checkShape(ReportEvaluationRequest request) {
+        boolean meaningful = request.changeSeverity() != AssessmentLevel.NONE;
+        if (!meaningful && (request.impactLevel() != null || request.evaluation() != null
+                || request.recommendation() != null)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "impact_level, evaluation and recommendation must be null when change_severity is none");
+        }
+        if (meaningful && (request.impactLevel() == null || isBlank(request.evaluation())
+                || isBlank(request.recommendation()))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "impact_level, evaluation and recommendation are required unless change_severity is none");
+        }
+    }
+
+    private static boolean isBlank(String text) {
+        return text == null || text.isBlank();
+    }
+
+    /**
      * Investigation marks a report done. Only "investigated" can be set here; impact will set
      * "assessed" through its own endpoint. Marking it again changes nothing, so investigated_at keeps
      * the first time.
@@ -82,7 +135,11 @@ public class ReportService {
         requirePaper(paperId);
         return reports.findById(reportId)
                 .filter(report -> report.getPaperId().equals(paperId))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No report " + reportId));
+                .orElseThrow(() -> noReport(reportId));
+    }
+
+    private static ResponseStatusException noReport(long reportId) {
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "No report " + reportId);
     }
 
     // the same "No paper" 404 as the other internal endpoints, which Research Evaluation reads as the paper being gone

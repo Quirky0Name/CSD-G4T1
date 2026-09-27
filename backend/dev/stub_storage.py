@@ -21,7 +21,7 @@ from uuid import UUID, uuid4
 import jwt
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query, Response
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from common.doi import normalize_doi
 from common.service_token import decode_jwt_secret
@@ -67,6 +67,32 @@ class NewDocument(BaseModel):
 
 class ReportStatusChange(BaseModel):
     status: Literal["investigating", "investigated", "assessed"]
+
+
+Level = Literal["none", "low", "medium", "high"]
+
+
+class ReportEvaluation(BaseModel):
+    """The body of `PUT /internal/reports/{id}/evaluation`: impact's result. With change_severity
+    none only the summary goes in; otherwise impact_level, evaluation and recommendation are
+    required. The real service answers 400 where this stub's validation answers 422."""
+
+    change_summary: str = Field(min_length=1, pattern=r"\S")
+    change_severity: Level
+    impact_level: Level | None = None
+    evaluation: str | None = None
+    recommendation: str | None = None
+    assessment: Any = None
+
+    @model_validator(mode="after")
+    def _shape(self) -> "ReportEvaluation":
+        rest = (self.impact_level, self.evaluation, self.recommendation)
+        if self.change_severity == "none":
+            if any(value is not None for value in rest):
+                raise ValueError("impact_level, evaluation and recommendation must be null when change_severity is none")
+        elif self.impact_level is None or any(not (text and text.strip()) for text in rest[1:]):
+            raise ValueError("impact_level, evaluation and recommendation are required unless change_severity is none")
+        return self
 
 
 class DownloadablePdf(BaseModel):
@@ -314,6 +340,32 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
         if report["status"] == "investigating":
             report["status"] = "investigated"
             report["investigated_at"] = datetime.now(UTC).isoformat()
+        return report_view(report)
+
+    def find_report_by_id(report_id: int) -> dict[str, Any]:
+        """A report by its id alone; a deleted paper's reports went with it, as in Storage Management."""
+        report = store.reports.get(report_id)
+        if report is None or UUID(report["paper_id"]) not in store.papers:
+            raise HTTPException(404, f"No report {report_id}")
+        return report
+
+    @internal.get("/reports/{report_id}")
+    def read_report_by_id(report_id: int) -> dict[str, Any]:
+        return report_view(find_report_by_id(report_id))
+
+    @internal.put("/reports/{report_id}/evaluation")
+    def record_evaluation(report_id: int, evaluation: ReportEvaluation) -> dict[str, Any]:
+        """Stores impact's evaluation once, only on an investigated report, and marks it assessed."""
+        report = find_report_by_id(report_id)
+        if report["status"] == "investigating":
+            raise HTTPException(409, f"Report {report_id} is not investigated yet")
+        if report["status"] == "assessed":
+            raise HTTPException(409, f"Report {report_id} is already assessed")
+        report.update(
+            evaluation.model_dump(mode="json"),
+            status="assessed",
+            evaluated_at=datetime.now(UTC).isoformat(),
+        )
         return report_view(report)
 
     @internal.post("/documents")
