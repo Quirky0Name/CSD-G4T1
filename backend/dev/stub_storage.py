@@ -286,6 +286,11 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
             "evaluation": None,
             "recommendation": None,
             "evaluated_at": None,
+            # impact's fields (docs/EVALUATION-IMPACT.md), null until the report is assessed
+            "change_summary": None,
+            "change_severity": None,
+            "impact_level": None,
+            "assessment": None,
         }
         store.reports[report["id"]] = report
         for alert in unreported:

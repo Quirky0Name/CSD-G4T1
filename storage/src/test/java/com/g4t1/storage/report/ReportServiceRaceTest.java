@@ -3,6 +3,7 @@ package com.g4t1.storage.report;
 import com.g4t1.storage.alert.AlertRepository;
 import com.g4t1.storage.paper.PaperRepository;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +24,8 @@ class ReportServiceRaceTest {
     private final AlertRepository alerts = mock(AlertRepository.class);
     private final PaperRepository papers = mock(PaperRepository.class);
     private final ReportDocumentService documents = mock(ReportDocumentService.class);
-    private final ReportService service = new ReportService(reports, alerts, papers, documents);
+    private final ReportService service = new ReportService(reports, alerts, papers, documents,
+            JsonMapper.builder().build());
 
     private final UUID paperId = UUID.randomUUID();
     private final Report report = mock(Report.class);

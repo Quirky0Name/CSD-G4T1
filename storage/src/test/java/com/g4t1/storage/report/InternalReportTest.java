@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -76,6 +77,9 @@ class InternalReportTest {
     @Autowired
     ReportService reportService;
 
+    @Autowired
+    JdbcTemplate jdbc;
+
     private UUID paperId;
 
     @BeforeEach
@@ -104,6 +108,10 @@ class InternalReportTest {
                 .andExpect(jsonPath("$.evaluation").value(nullValue()))
                 .andExpect(jsonPath("$.recommendation").value(nullValue()))
                 .andExpect(jsonPath("$.evaluated_at").value(nullValue()))
+                .andExpect(jsonPath("$.change_summary").value(nullValue()))
+                .andExpect(jsonPath("$.change_severity").value(nullValue()))
+                .andExpect(jsonPath("$.impact_level").value(nullValue()))
+                .andExpect(jsonPath("$.assessment").value(nullValue()))
                 .andExpect(jsonPath("$.alerts[*].id").value(contains((int) retraction, (int) correction)))
                 .andExpect(jsonPath("$.alerts[*].change_key").value(contains("retraction", "correction:10.1/c")))
                 .andExpect(jsonPath("$.alerts[0].change_type").value("retraction"))
@@ -213,7 +221,32 @@ class InternalReportTest {
                 .andExpect(jsonPath("$.documents[0].pdf_status").value("skipped"))
                 .andExpect(jsonPath("$.evaluation").value(nullValue()))
                 .andExpect(jsonPath("$.recommendation").value(nullValue()))
-                .andExpect(jsonPath("$.evaluated_at").value(nullValue()));
+                .andExpect(jsonPath("$.evaluated_at").value(nullValue()))
+                .andExpect(jsonPath("$.change_summary").value(nullValue()))
+                .andExpect(jsonPath("$.change_severity").value(nullValue()))
+                .andExpect(jsonPath("$.impact_level").value(nullValue()))
+                .andExpect(jsonPath("$.assessment").value(nullValue()));
+    }
+
+    @Test
+    void aReportShowsItsStoredAssessmentFields() throws Exception {
+        alert(paperId, "retraction");
+        long reportId = openedReportId();
+        // nothing writes these yet (impact's endpoint comes later), so set the columns directly
+        jdbc.update("update reports set change_summary = ?, change_severity = 'medium', impact_level = 'high', "
+                        + "assessment = ? where id = ?",
+                "The paper was corrected.", "{\"change\":{\"severity\":\"medium\"},\"usage\":null}", reportId);
+
+        read(paperId, reportId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.change_summary").value("The paper was corrected."))
+                .andExpect(jsonPath("$.change_severity").value("medium"))
+                .andExpect(jsonPath("$.impact_level").value("high"))
+                .andExpect(jsonPath("$.assessment.change.severity").value("medium"))
+                .andExpect(jsonPath("$.assessment.usage").value(nullValue()));
+        Report report = reports.findById(reportId).orElseThrow();
+        assertThat(report.getChangeSeverity()).isEqualTo(AssessmentLevel.MEDIUM);
+        assertThat(report.getImpactLevel()).isEqualTo(AssessmentLevel.HIGH);
     }
 
     @Test

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -17,13 +18,15 @@ public class ReportService {
     private final AlertRepository alerts;
     private final PaperRepository papers;
     private final ReportDocumentService documents;
+    private final JsonMapper json;
 
     public ReportService(ReportRepository reports, AlertRepository alerts, PaperRepository papers,
-                         ReportDocumentService documents) {
+                         ReportDocumentService documents, JsonMapper json) {
         this.reports = reports;
         this.alerts = alerts;
         this.papers = papers;
         this.documents = documents;
+        this.json = json;
     }
 
     /**
@@ -92,7 +95,8 @@ public class ReportService {
     private ReportResponse toResponse(Report report) {
         return new ReportResponse(report.getId(), report.getPaperId(), report.getStatus(), report.getCreatedAt(),
                 report.getInvestigatedAt(), report.getEvaluation(), report.getRecommendation(),
-                report.getEvaluatedAt(),
+                report.getEvaluatedAt(), report.getChangeSummary(), report.getChangeSeverity(),
+                report.getImpactLevel(), report.getAssessment() == null ? null : json.readTree(report.getAssessment()),
                 alerts.findByReportIdOrderByIdAsc(report.getId()).stream().map(ReportAlertResponse::from).toList(),
                 documents.forReport(report.getId()));
     }

@@ -920,6 +920,41 @@ tests use a fake that returns fixed answers and records what it was sent.
 Filled in as each subtask lands: where each piece lives, how they fit
 together, and the gotchas.
 
+### Storage Management: the report's impact fields (S1)
+
+**Status: done, verified (PASS).** `ReportServiceRaceTest.java` also
+changed: it builds `ReportService` itself, whose constructor now takes a
+`JsonMapper`.
+
+- **The migration** is `V8__add_report_assessment.sql`: four nullable
+  columns on `reports`, next to V7's `evaluation`, `recommendation` and
+  `evaluated_at`.
+- **`report/AssessmentLevel`** (`NONE`, `LOW`, `MEDIUM`, `HIGH`) is the one
+  enum for both levels (`change_severity`, `impact_level`): lowercase in
+  JSON (`@JsonValue` / `@JsonCreator`) and in the database (its
+  `Converter`, a `LowercaseEnumConverter`), like `ReportStatus`.
+- **`Report`** maps the columns with getters only; nothing in the code
+  writes them yet (S2 adds the write). `assessment` is plain text holding
+  JSON.
+- **`ReportResponse`** has the four fields, always written out.
+  `ReportService.toResponse` turns `assessment` into a `JsonNode` with the
+  injected `JsonMapper` (null stays null), so it comes back as an object,
+  not a string, as `crossref_record` does in `ReportDocumentService`. Every
+  internal report body (open, nested `GET`, `PATCH`) goes through
+  `toResponse`.
+- **Tests:** `InternalReportTest` checks the four fields are present and
+  null on an opened and a read report, and
+  `aReportShowsItsStoredAssessmentFields` writes the columns with
+  `JdbcTemplate` (no endpoint writes them yet) and reads them back through
+  the API. `AssessmentLevelTest` covers the enum's JSON and database
+  values.
+- **The stub** (`backend/dev/stub_storage.py`) opens reports with the four
+  fields null; `test_stub_reports.py` checks them.
+- **Gotcha: the frontend's report body is separate.**
+  `feat/storage-reports-user-endpoint` (`e01d1dc`) has its own
+  `UserReportResponse`, which lists fields itself; see the merge note in
+  "Scope".
+
 ## Open questions
 
 None left.

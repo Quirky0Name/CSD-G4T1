@@ -539,6 +539,7 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
   "id": 3, "paper_id": "uuid", "status": "investigating",
   "created_at": "2026-09-27T08:00:00Z", "investigated_at": null,
   "evaluation": null, "recommendation": null, "evaluated_at": null,
+  "change_summary": null, "change_severity": null, "impact_level": null, "assessment": null,
   "alerts": [
     {"id": 7, "change_type": "retraction", "change_key": "retraction", "severity": "high",
      "description": "...", "recommendation": "...", "notice_doi": "10.xxxx/...",
@@ -550,8 +551,20 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
 
 - `status`: `investigating` (just opened), `investigated` (investigation
   done) or `assessed` (impact done; nothing sets it yet).
-- `evaluation`, `recommendation`, `evaluated_at`: impact's, null until a
-  later plan writes them.
+- Impact's fields, all null until the report is assessed
+  ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md); nothing writes them yet):
+  - `change_summary`: what changed in the paper, in a few sentences;
+  - `change_severity`: `none`, `low`, `medium` or `high`, how serious the
+    change is for anyone relying on the paper (`none` = not meaningful);
+  - `impact_level`: `none`, `low`, `medium` or `high`, how much the
+    researcher's draft is affected;
+  - `evaluation`: how the change affects the researcher; `recommendation`:
+    what to do; `evaluated_at`: when impact wrote them;
+  - `assessment`: impact's full answer as a JSON object, returned exactly as
+    Research Evaluation sent it.
+
+  Unlike the alerts' `severity`, which is fixed by change type, these are
+  impact's judgment.
 - `alerts`, oldest first, carry their `change_key` (unlike the frontend's
   alert API): Research Evaluation matches them to its detected changes by
   it.

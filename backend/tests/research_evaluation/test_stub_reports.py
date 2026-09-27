@@ -87,6 +87,9 @@ async def test_opening_groups_only_the_papers_unreported_alerts(client):
         and report["recommendation"] is None
         and report["evaluated_at"] is None
     )
+    # impact's fields, present and null
+    for field in ("change_summary", "change_severity", "impact_level", "assessment"):
+        assert field in report and report[field] is None
     assert [a["id"] for a in report["alerts"]] == [retraction["id"], correction["id"]]
     assert [a["change_key"] for a in report["alerts"]] == ["retraction", "correction:10.1/c"]
     assert report["documents"] == []
@@ -133,6 +136,8 @@ async def test_reading_a_report_gives_its_alerts_and_documents(client):
     assert read.status_code == 200
     assert read.json()["documents"] == [stored]
     assert [a["change_key"] for a in read.json()["alerts"]] == ["retraction"]
+    for field in ("change_summary", "change_severity", "impact_level", "assessment"):
+        assert field in read.json() and read.json()[field] is None
 
 
 async def test_an_unknown_report_or_another_papers_report_is_no_report_404(client):

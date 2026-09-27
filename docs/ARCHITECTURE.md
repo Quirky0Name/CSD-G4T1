@@ -144,8 +144,11 @@ Owns all Postgres and file persistence.
   [STORAGE-USER-RESEARCH-PAPER.md](STORAGE-USER-RESEARCH-PAPER.md)),
   `reports` (one per paper per nudge that stored new alerts: it groups
   those alerts through `alerts.report_id`, has a status, `investigating`
-  → `investigated` → `assessed`, and reserves the columns impact's
-  evaluation will fill; deleted with its paper), `report_documents` (what
+  → `investigated` → `assessed`, and has the columns impact's
+  evaluation fills: the change's summary and severity, the impact level
+  on the researcher's draft, the evaluation and recommendation, and the
+  full assessment as JSON, see
+  [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md); deleted with its paper), `report_documents` (what
   Research Evaluation's investigation fetched for one DOI of a report: a
   notice, a new version or the paper's current copy, with its Crossref
   record, open-access text and PDF status; one per DOI per report; deleted

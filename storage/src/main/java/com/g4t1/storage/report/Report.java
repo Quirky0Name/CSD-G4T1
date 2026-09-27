@@ -34,10 +34,17 @@ public class Report {
 
     private Instant investigatedAt;
 
-    // written by impact (a later plan); nothing sets them yet
+    // written by impact (docs/EVALUATION-IMPACT.md); null until the report is assessed
     private String evaluation;
     private String recommendation;
     private Instant evaluatedAt;
+    private String changeSummary;
+    @Convert(converter = AssessmentLevel.Converter.class)
+    private AssessmentLevel changeSeverity;
+    @Convert(converter = AssessmentLevel.Converter.class)
+    private AssessmentLevel impactLevel;
+    // JSON text, as Research Evaluation sent it
+    private String assessment;
 
     protected Report() {
     }
@@ -83,5 +90,21 @@ public class Report {
 
     public Instant getEvaluatedAt() {
         return evaluatedAt;
+    }
+
+    public String getChangeSummary() {
+        return changeSummary;
+    }
+
+    public AssessmentLevel getChangeSeverity() {
+        return changeSeverity;
+    }
+
+    public AssessmentLevel getImpactLevel() {
+        return impactLevel;
+    }
+
+    public String getAssessment() {
+        return assessment;
     }
 }
