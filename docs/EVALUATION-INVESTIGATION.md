@@ -658,6 +658,10 @@ recorded `…31528-2` record also names the Lancet paper, as an `erratum`.
 
 ### S4: Open-access text from Europe PMC (Research Evaluation)
 
+**Status: done, verified (PASS).** One fixture added to the plan's list:
+the search for the PLOS ONE EoC (`search_plos_eoc.json`), so the EoC is
+tested end to end.
+
 - **Goal:** `investigation/europepmc.py`: `fetch_text(http, doi)` searches
   Europe PMC by DOI, keeps only the result whose DOI matches, and for an
   open-access result with a PMCID fetches `{PMCID}/fullTextXML` and returns
@@ -964,6 +968,45 @@ to `alert/` and following its layout:
   against four recorded records in `backend/tests/fixtures/crossref/`
   (`ijaa_notice`, `lancet_eoc`, `lancet_republication`, `f1000_v2`); one
   `live` test fetches IJAA's notice (`pytest -m live`).
+
+### Research Evaluation: open-access text (S4)
+
+- **Where:** `backend/src/research_evaluation/investigation/europepmc.py`:
+  `fetch_text(http, doi)` → `DocumentText(status, text, truncated)`, with
+  `TextStatus` `ok` / `not_indexed` / `not_open_access` / `error` (the
+  values Storage Management stores as `text_status`). Never raises.
+- **Two calls,** both through `http.get()`:
+  1. `GET .../europepmc/webservices/rest/search?query=DOI:"<doi>"&resultType=lite&format=json`.
+     The DOI is escaped inside the quotes (`\` and `"`). The result whose
+     `doi` matches (normalised) is used; none is `not_indexed`.
+  2. Only if it has a `pmcid` and `isOpenAccess` is `Y`:
+     `GET .../rest/<PMCID>/fullTextXML`. A `404` there is
+     `not_open_access`; unreadable XML or no text is `error`.
+- **`plain_text(xml)`** walks the JATS XML: `front/.../article-title`, each
+  `abstract`, then `body` and `floats-group`, one block per `title` / `p`
+  (blocks aren't walked inside, so a nested `p` isn't doubled), whitespace
+  collapsed, blocks joined by a blank line. `back` (the reference list) is
+  never read, and table cells aren't `p`s, so only table captions come
+  through. Parsed with the standard library's `ElementTree`.
+- **The cap** is `MAX_TEXT_CHARS` (60,000); longer text is cut and
+  `truncated` is set. Notices are far shorter; it bites on full articles.
+- **Gotcha:** "indexed" isn't "readable". IJAA's notice has a PMCID
+  (`PMC11718083`) but `isOpenAccess: N`, so it's `not_open_access`, and no
+  full-text request is made.
+- **Callers pass a normalised, non-blank DOI** (S5 does). The query sends
+  the DOI as given while the match compares it normalised, so a resolver
+  URL (`https://doi.org/…`) finds nothing; and a blank DOI would match a
+  search result that has no `doi`.
+- **Known gaps:** XML nested past about 1,000 levels makes `_blocks` raise
+  `RecursionError` (real JATS is far shallower; S3 has the same kind of
+  gap); the first result with a matching DOI is used, so a duplicate
+  record without a PMCID listed first would hide a readable one (none
+  seen).
+- **Tests:** `backend/tests/research_evaluation/investigation/test_europepmc.py`,
+  against recorded responses in `backend/tests/fixtures/europepmc/`
+  (searches for the Scientific Reports Author Correction, the PLOS ONE EoC,
+  IJAA's notice and a no-match DOI; full text of PMC11906582 and
+  PMC10836678), loaded with `support.load_xml_fixture`; one `live` test.
 
 ### Known so far (for the later subtasks)
 

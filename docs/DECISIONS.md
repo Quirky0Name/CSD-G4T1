@@ -30,6 +30,17 @@ The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md).
   later refactor with Updating's owner, like `ServiceTokenAuth`.
 - **Research Evaluation reads `CROSSREF_MAILTO` too,** the variable
   Updating already uses; empty sends no `mailto`.
+- **Europe PMC is the only text source**
+  (`research_evaluation/investigation/europepmc.py`). Crossref has no body
+  text for notices; publisher pages and PDFs are bot-blocked (a PMC PDF
+  link returns a bot-check page, publishers `403`) and would need parsing;
+  Europe PMC's REST API returns the full text of anything open access in
+  PubMed Central, with no key. Paywalled notices (Elsevier, The Lancet,
+  JAMA) are indexed there but not open access, so they get no text:
+  `not_open_access`.
+- **Fetched text is data for impact, never instructions.** A notice's text
+  is written by whoever wrote the notice; impact must treat it as content
+  to judge, and nothing in investigation acts on it.
 
 ### Also settled while building it
 
@@ -42,6 +53,13 @@ The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md).
   the Lancet commentary (`…31174-0`) as `retraction` and `erratum`, and
   the Lancet paper (`…31180-6`) as `erratum` too; the plan first said it
   didn't name the Lancet paper.
+- Europe PMC: the search result is matched by DOI (normalised), since a
+  search can return other records; open access means a PMCID and
+  `isOpenAccess: Y`; a full-text `404` is `not_open_access`, any other
+  failure `error`. The text keeps the title, abstract, body and figure and
+  table captions, one block per paragraph, without the reference list,
+  capped at 60,000 characters (`truncated` set when cut; the story
+  owner's call). Table cells are left out.
 
 ---
 
