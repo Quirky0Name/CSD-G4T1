@@ -13,3 +13,8 @@ TEST_JWT_KEY = base64.b64decode(TEST_JWT_SECRET)
 
 def load_fixture(source: str, name: str) -> dict:
     return json.loads((FIXTURES / source / f"{name}.json").read_text(encoding="utf-8"))
+
+
+def load_xml_fixture(source: str, name: str) -> bytes:
+    """Raw bytes, as the API sent them (the XML declares its own encoding)."""
+    return (FIXTURES / source / f"{name}.xml").read_bytes()

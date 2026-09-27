@@ -141,20 +141,35 @@ Owns all Postgres and file persistence.
   alert), `research_papers` (the researcher's own paper for each project:
   one per folder, plus one for the user's "no folder" project; a new
   upload replaces it, see
-  [STORAGE-USER-RESEARCH-PAPER.md](STORAGE-USER-RESEARCH-PAPER.md)).
+  [STORAGE-USER-RESEARCH-PAPER.md](STORAGE-USER-RESEARCH-PAPER.md)),
+  `reports` (one per paper per nudge that stored new alerts: it groups
+  those alerts through `alerts.report_id`, has a status, `investigating`
+  → `investigated` → `assessed`, and reserves the columns impact's
+  evaluation will fill; deleted with its paper), `report_documents` (what
+  Research Evaluation's investigation fetched for one DOI of a report: a
+  notice, a new version or the paper's current copy, with its Crossref
+  record, open-access text and PDF status; one per DOI per report; deleted
+  with its report). See
+  [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md).
 - **File storage:** every tracked paper's PDF is kept, so Research
   Evaluation has the paper itself to read when it evaluates a change.
   PDF bytes never go in Postgres: they're on local disk for now, and
   Postgres holds only the file's key. Research Evaluation reads a PDF
   through `GET /internal/papers/{id}/pdf`, never from the disk directly.
   Each project's research paper is stored the same way, in the same
-  folder.
+  folder, and so are report documents' PDFs: Storage Management downloads
+  a new version's or the paper's current copy when investigation stores
+  the document (`POST /internal/documents`), and serves it back through
+  `GET /internal/documents/{id}/pdf`.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
   `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /alerts/{id}/notes`,
   `POST/GET/DELETE /research-paper`, `POST/GET /internal/papers/{id}/background-info`,
   `GET /internal/papers/{id}/pdf`, `GET /internal/papers/{id}/research-paper`,
   `POST /internal/papers/{id}/alerts`,
-  `GET /internal/papers/{id}/alerts/change-keys`.
+  `GET /internal/papers/{id}/alerts/change-keys`,
+  `POST /internal/papers/{id}/reports`,
+  `GET/PATCH /internal/papers/{id}/reports/{reportId}`,
+  `POST /internal/documents`, `GET /internal/documents/{id}/pdf`.
 - **DB hosting:** Supabase free tier.
 
 ## Section 3 — Research Evaluation
@@ -187,20 +202,40 @@ journal and author fields moved to Updating (Section 4).
   already have an alert and evaluates only the new changes. So a change
   is never evaluated twice, which matters once evaluation calls an LLM,
   and Storage Management still stores each change once (by its change
-  key) if two nudges ever overlap.
-- **Change evaluation runs in three stages** (the plan is in
-  [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md)):
+  key) if two nudges ever overlap. The one exception is a retraction with
+  a notice, which is sent even when `retraction` is stored: a notice that
+  arrives after OpenAlex's flag replaces the notice-less alert in Storage
+  Management and makes it new, so its notice gets investigated
+  (EVALUATION-INVESTIGATION.md, S7). The rules re-run for it on each
+  nudge, which is cheap; the LLM works on reports, not alerts.
+- **Change evaluation runs in stages** (the plans are
+  [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md) and
+  [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md)):
   1. **Detection** (`changes.py`): compare two consecutive snapshots and
      list the changes, by the classification table in CONTRACTS.md.
      Deterministic, so whether a paper was retracted never depends on an
      LLM.
   2. **Rule-based assessment** (`rules.py`): every change gets a severity,
      description and recommendation from fixed templates, so every alert
-     is complete.
-  3. **LLM investigation** of the changes stage 1 can't classify (`other`):
-     a placeholder for now. Later stories (LLM meaningfulness, stance
-     checks) also revise the stage-2 assessment rather than replacing
-     detection.
+     is complete. The nudge is answered here.
+  3. **Investigation** (`investigation/`, after the reply, in the
+     background): per paper, Storage Management opens a **report** grouping
+     the paper's alerts that aren't in a report yet (in practice, the ones
+     that nudge stored, plus any a crash left ungrouped); Research
+     Evaluation fetches each
+     change's notice (Crossref record, Europe PMC open-access text), a new
+     version, and the paper's current copy, and stores them as the
+     report's documents; Storage Management downloads the PDFs. It fetches
+     facts and judges nothing.
+  4. **Impact** (`impact/`, not built yet): an LLM judges a report's
+     alerts together, from its documents, and writes its evaluation into
+     the report. It covers every kind of change, `other` included; there's
+     no separate LLM step that first classifies `other` changes
+     (DECISIONS.md, 2026-09-27). **The handoff is a report id:**
+     investigation returns the ids of the reports it finished, and impact
+     reads everything else from Storage Management, so the two stay
+     independent. Until impact exists, an `other` change keeps its
+     rule-based text.
 
   So far the evaluation doesn't read the paper's PDF, notes or extracted
   text; the templates only use the snapshots. Storage Management also

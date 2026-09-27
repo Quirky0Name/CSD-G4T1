@@ -4,12 +4,13 @@ import jakarta.persistence.AttributeConverter;
 
 import java.util.Locale;
 
-// stores an enum as its lowercase name, the same value the API uses (e.g. 'new', 'doaj_delisting')
-abstract class LowercaseEnumConverter<E extends Enum<E>> implements AttributeConverter<E, String> {
+// stores an enum as its lowercase name, the same value the API uses (e.g. 'new', 'doaj_delisting');
+// public so the report package's enums store theirs the same way
+public abstract class LowercaseEnumConverter<E extends Enum<E>> implements AttributeConverter<E, String> {
 
     private final Class<E> type;
 
-    LowercaseEnumConverter(Class<E> type) {
+    protected LowercaseEnumConverter(Class<E> type) {
         this.type = type;
     }
 

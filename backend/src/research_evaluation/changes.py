@@ -17,7 +17,7 @@ class ChangeType(StrEnum):
     ERRATUM = "erratum"
     EXPRESSION_OF_CONCERN = "expression_of_concern"
     DOAJ_DELISTING = "doaj_delisting"
-    OTHER = "other"  # a Crossref notice type we don't classify yet; stage 3 will investigate these
+    OTHER = "other"  # a Crossref notice type we don't classify yet; the later LLM evaluation (insight) will judge these
 
 
 # Crossref `updated-by` types with their own alert; any other type becomes OTHER
@@ -56,6 +56,8 @@ class Snapshot(_Payload):
 
     snapshot_id: int
     fetched_at: datetime
+    # the paper's DOI (normalised by Updating); investigation fetches the paper's current copy with it
+    doi: str | None = None
     is_retracted: bool | None = None
     crossref_updates: list[CrossrefUpdate] | None = None
     in_doaj: bool | None = None

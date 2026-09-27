@@ -3,13 +3,14 @@ from uuid import UUID
 import httpx
 import pytest
 from research_evaluation_support import snapshot_dict
-from support import TEST_JWT_KEY, TEST_JWT_SECRET
+from support import TEST_JWT_KEY, TEST_JWT_SECRET, load_fixture
 
 from common.service_token import ServiceTokenAuth
 from dev.stub_storage import create_app as create_stub_app
 from research_evaluation.auth import jwt_key
 from research_evaluation.config import DEFAULT_SNAPSHOT_WINDOW, ResearchEvaluationSettings
-from research_evaluation.main import create_app, snapshot_window
+from research_evaluation.investigation.run import InvestigationContext
+from research_evaluation.main import create_app, investigation_context, snapshot_window
 from research_evaluation.storage import SERVICE_SUBJECT, sm_client
 
 
@@ -22,10 +23,12 @@ class FaultInjectingTransport(httpx.AsyncBaseTransport):
         self._inner = inner
         self.faults: dict[str, int | httpx.Response | Exception] = {}
         self.requests: list[tuple[str, str, str]] = []  # (method, path, query string)
+        self.sent: list[httpx.Request] = []  # the same requests, whole (headers, timeout)
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
         if request.url.path.startswith("/internal/"):
             self.requests.append((request.method, request.url.path, str(request.url.params)))
+            self.sent.append(request)
         for suffix, fault in self.faults.items():
             if request.url.path.startswith("/internal/") and request.url.path.endswith(suffix):
                 if isinstance(fault, Exception):
@@ -69,11 +72,46 @@ class StubSm:
         return [query for m, path, query in self.transport.requests if m == method and path.endswith(suffix)]
 
 
+class ExternalApis:
+    """Crossref and Europe PMC as investigation reaches them, with no network: Crossref knows
+    only the DOIs given in `crossref` (DOI -> fixture name), and Europe PMC finds nothing.
+    `failure` makes every request fail that way. Every request is recorded."""
+
+    def __init__(self) -> None:
+        self.crossref: dict[str, str] = {}
+        self.failure: int | Exception | None = None
+        self.requests: list[httpx.Request] = []
+        self.client = httpx.AsyncClient(transport=httpx.MockTransport(self._handle))
+
+    def _handle(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        if isinstance(self.failure, Exception):
+            raise self.failure
+        if self.failure is not None:
+            return httpx.Response(self.failure)
+        if request.url.host == "api.crossref.org":
+            doi = request.url.path.removeprefix("/works/")
+            fixture = self.crossref.get(doi)
+            if fixture is None:
+                return httpx.Response(404, text="Resource not found.")
+            return httpx.Response(200, json=load_fixture("crossref", fixture))
+        if request.url.host == "www.ebi.ac.uk":
+            return httpx.Response(200, json=load_fixture("europepmc", "search_no_match"))
+        return httpx.Response(599, text="not an allowed host")
+
+
 @pytest.fixture
 async def sm():
     stub = StubSm()
     yield stub
     await stub.client.aclose()
+
+
+@pytest.fixture
+async def external():
+    apis = ExternalApis()
+    yield apis
+    await apis.client.aclose()
 
 
 @pytest.fixture
@@ -88,13 +126,17 @@ def settings(request) -> ResearchEvaluationSettings:
 
 
 @pytest.fixture
-async def client(sm, settings):
+async def client(sm, external, settings):
     """Research Evaluation, talking to the stub. The lifespan doesn't run under
-    ASGITransport, so the key, the Storage Management client and the snapshot window come in
-    as overrides."""
+    ASGITransport, so the key, the Storage Management client, the snapshot window and
+    investigation's context come in as overrides. Investigation runs as a background task,
+    which ASGITransport finishes before the nudge's response comes back."""
     app = create_app(settings)
     app.dependency_overrides[jwt_key] = lambda: TEST_JWT_KEY
     app.dependency_overrides[sm_client] = lambda: sm.client
     app.dependency_overrides[snapshot_window] = lambda: settings.evaluation_snapshot_window
+    app.dependency_overrides[investigation_context] = lambda: InvestigationContext(
+        external=external.client, crossref_mailto="", pdf_timeout=settings.investigation_pdf_timeout_seconds
+    )
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://re") as http:
         yield http
