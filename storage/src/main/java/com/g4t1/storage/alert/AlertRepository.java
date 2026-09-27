@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,6 +34,9 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     int assignUnreportedToReport(@Param("paperId") UUID paperId, @Param("reportId") long reportId);
 
     List<Alert> findByReportIdOrderByIdAsc(Long reportId);
+
+    // the alerts of several reports in one query, for the frontend's list of a paper's reports; unordered
+    List<Alert> findByReportIdIn(Collection<Long> reportIds);
 
     // A late retraction notice replaces a notice-less retraction alert and makes it new again: the
     // row keeps its id (and so its notes), leaves its report so the next one takes it, and gets the

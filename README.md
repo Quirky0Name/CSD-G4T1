@@ -24,6 +24,7 @@ REST, trusting a single JWT issued at login. See
 | [docs/RE-changes-explained.md](docs/RE-changes-explained.md) | Research behind investigation: every way each detected change shows up in real life, with real examples, and what can be fetched for it |
 | [docs/STORAGE-USER-RESEARCH-PAPER.md](docs/STORAGE-USER-RESEARCH-PAPER.md) | The researcher's own paper, one per project (folder, or "no folder"): how it's stored and replaced, where the code lives, and gotchas |
 | [docs/STORAGE-USER-TRACKED-PDF.md](docs/STORAGE-USER-TRACKED-PDF.md) | Tracked papers' stored PDFs: how both ingest paths keep them, how Research Evaluation reads them, and what else it can read from Storage Management |
+| [docs/STORAGE-USER-REPORTS.md](docs/STORAGE-USER-REPORTS.md) | A paper's reports for the frontend (`GET /papers/{id}/reports`): what's shown and hidden, how documents match alerts, where the code lives, and gotchas |
 
 ## Services
 
@@ -36,7 +37,7 @@ REST, trusting a single JWT issued at login. See
 | Updating | Python | `backend/` |
 
 Research Evaluation and Updating share one Python project in `backend/`
-(two FastAPI apps, one image) — see `backend/` for details.
+(two FastAPI apps, a Dockerfile each) — see `backend/` for details.
 
 ## Status
 

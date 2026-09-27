@@ -7,6 +7,9 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 
+import java.util.List;
+import java.util.UUID;
+
 public interface ReportRepository extends JpaRepository<Report, Long> {
 
     // Impact's evaluation, written once: conditional on the report still being investigated, so of two
@@ -27,4 +30,6 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
                          @Param("evaluatedAt") Instant evaluatedAt,
                          @Param("assessed") ReportStatus assessed,
                          @Param("investigated") ReportStatus investigated);
+    // newest first, for the frontend; the id breaks a tie in created_at
+    List<Report> findByPaperIdOrderByCreatedAtDescIdDesc(UUID paperId);
 }

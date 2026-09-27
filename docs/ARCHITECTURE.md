@@ -166,6 +166,7 @@ Owns all Postgres and file persistence.
   `GET /internal/documents/{id}/pdf`.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
   `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /alerts/{id}/notes`,
+  `GET /papers/{id}/reports` (the paper's reports with their alerts and documents, for the frontend),
   `POST/GET/DELETE /research-paper`, `POST/GET /internal/papers/{id}/background-info`,
   `GET /internal/papers/{id}/pdf`, `GET /internal/papers/{id}/research-paper`,
   `POST /internal/papers/{id}/alerts`,
@@ -347,7 +348,8 @@ internet.
 
 - **Containerisation:** one Dockerfile per service, composed via Docker
   Compose for local dev and as the deployable unit. Research Evaluation
-  and Updating share a single image (see `backend/`).
+  and Updating are built from the one Python project in `backend/`, with
+  `research-evaluation.Dockerfile` and `updating.Dockerfile`.
 - **Cloud target:** a single VM running the whole Compose stack.
 - **Data services:** Postgres via Supabase free tier; PDFs on the VM's
   local disk, mounted as a persistent volume so they survive redeploys.

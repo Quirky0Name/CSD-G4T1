@@ -1,6 +1,9 @@
 package com.g4t1.storage.report;
 
+import com.g4t1.storage.alert.Alert;
 import com.g4t1.storage.alert.AlertRepository;
+import com.g4t1.storage.alert.AlertResponse;
+import com.g4t1.storage.alert.AlertService;
 import com.g4t1.storage.paper.PaperRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -11,8 +14,11 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ReportService {
@@ -109,6 +115,36 @@ public class ReportService {
 
     private static boolean isBlank(String text) {
         return text == null || text.isBlank();
+    }
+    /*
+     * The paper's reports for its owner, newest first, whatever their status. Each has its alerts as
+     * the alert API shows them, in the alert list's order and dismissed ones included (a report is
+     * what impact judges together, and the researcher's status never decides reports), and its
+     * documents, oldest first. A report whose alerts all moved to a later one (a late retraction
+     * notice) is still listed, with none. A paper that doesn't exist and one that belongs to someone
+     * else are the same 404, as for alerts.
+     */
+    @Transactional(readOnly = true)
+    public List<UserReportResponse> listForOwner(UUID userId, UUID paperId) {
+        if (!papers.findById(paperId).map(paper -> paper.getOwnerId().equals(userId)).orElse(false)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
+        }
+        List<Report> found = reports.findByPaperIdOrderByCreatedAtDescIdDesc(paperId);
+        if (found.isEmpty()) {
+            return List.of();
+        }
+        // one query for all the reports' alerts and one for their documents, not one per report
+        List<Long> reportIds = found.stream().map(Report::getId).toList();
+        Map<Long, List<AlertResponse>> alertsByReport = alerts.findByReportIdIn(reportIds).stream()
+                .sorted(AlertService.LIST_ORDER)
+                .collect(Collectors.groupingBy(Alert::getReportId,
+                        Collectors.mapping(AlertResponse::from, Collectors.toList())));
+        Map<Long, List<UserDocumentResponse>> documentsByReport = documents.forOwnerByReport(reportIds);
+        return found.stream()
+                .map(report -> UserReportResponse.from(report,
+                        alertsByReport.getOrDefault(report.getId(), List.of()),
+                        documentsByReport.getOrDefault(report.getId(), List.of())))
+                .toList();
     }
 
     /**
