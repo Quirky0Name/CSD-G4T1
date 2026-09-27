@@ -10,6 +10,7 @@ import {
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import CitedSourcesList, { type CitedSource } from '../components/CitedSourcesList'
 import UploadSourceDialog from '../components/UploadSourceDialog'
+import UserPaper from '../components/UserPaper'
 
 const placeholderSources: CitedSource[] = [
   {
@@ -153,27 +154,29 @@ function CitationSources() {
         </div>
       </div>
 
+      <UserPaper />
+
       <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-white/10 pt-5">
+
+
         <span className="text-sm text-gray-400">Preview state</span>
         <button
           type="button"
           onClick={() => setShowPopulatedPreview(true)}
-          className={`rounded-md px-3 py-2 text-sm font-semibold ${
-            showPopulatedPreview
+          className={`rounded-md px-3 py-2 text-sm font-semibold ${showPopulatedPreview
               ? 'bg-white/10 text-white'
               : 'text-gray-400 hover:bg-white/5 hover:text-white'
-          }`}
+            }`}
         >
           Populated
         </button>
         <button
           type="button"
           onClick={() => setShowPopulatedPreview(false)}
-          className={`rounded-md px-3 py-2 text-sm font-semibold ${
-            !showPopulatedPreview
+          className={`rounded-md px-3 py-2 text-sm font-semibold ${!showPopulatedPreview
               ? 'bg-white/10 text-white'
               : 'text-gray-400 hover:bg-white/5 hover:text-white'
-          }`}
+            }`}
         >
           Empty
         </button>

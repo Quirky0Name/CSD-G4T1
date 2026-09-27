@@ -38,9 +38,11 @@ function CitedSourcesList({ sources }: CitedSourcesListProps) {
 
   return (
     <div className="mt-10">
+   
       <div className="mb-4 flex items-center justify-between gap-4">
         <h3 className="text-sm/6 font-semibold text-white">Cited sources</h3>
       </div>
+
 
       <ul role="list" className="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8">
         {sources.map((source) => (
@@ -98,13 +100,12 @@ function CitedSourcesList({ sources }: CitedSourcesListProps) {
                 <svg
                   viewBox="0 0 6 6"
                   aria-hidden="true"
-                  className={`size-1.5 ${
-                    source.severity === 'High'
-                      ? 'fill-red-400'
-                      : source.severity === 'Medium'
-                        ? 'fill-yellow-400'
-                        : 'fill-blue-400'
-                  }`}
+                  className={`size-1.5 ${source.severity === 'High'
+                    ? 'fill-red-400'
+                    : source.severity === 'Medium'
+                      ? 'fill-yellow-400'
+                      : 'fill-blue-400'
+                    }`}
                 >
                   <circle r={3} cx={3} cy={3} />
                 </svg>
