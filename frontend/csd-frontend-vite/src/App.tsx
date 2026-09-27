@@ -1,5 +1,7 @@
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
+import { ToastProvider } from './components/Toasts'
+import { TrackingProvider } from './tracking'
 import Alerts from './pages/Alerts'
 import CitationSources from './pages/CitationSources'
 import Folders from './pages/Folders'
@@ -18,13 +20,17 @@ function AppLayout() {
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Folders />} />
-          <Route path="/citation-sources" element={<CitationSources />} />
-          <Route path="/alerts" element={<Alerts />} />
-        </Route>
-      </Routes>
+      <ToastProvider>
+        <TrackingProvider>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Folders />} />
+              <Route path="/citation-sources" element={<CitationSources />} />
+              <Route path="/alerts" element={<Alerts />} />
+            </Route>
+          </Routes>
+        </TrackingProvider>
+      </ToastProvider>
     </BrowserRouter>
   )
 }
