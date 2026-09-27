@@ -31,6 +31,26 @@ This is the single source of truth for every interface between services.
   `POST /run-poll` will take the user's JWT once User Management exists
   (CG-99).
 
+## Folders and projects
+
+A folder is one research project. Folders belong to User Management; other
+services hold only a bare `folder_id` (uuid), with no FK and no check that
+the folder exists or belongs to the caller.
+
+- **`folder_id` null means no folder**, and everything a user keeps
+  outside folders is one more project of theirs: their "no folder"
+  project. Stored rows and responses always show no folder as `null`,
+  never as a sentinel id. As input, leaving `folder_id` out means no
+  folder, and so does `""`.
+- **Storage Management keys a project by owner and `folder_id`**, since it
+  can't check who owns a folder id. The same `folder_id` sent by two users
+  is two projects.
+- **A tracked paper is in exactly one project:** its owner plus its
+  `folder_id`.
+
+See DECISIONS.md, "2026-09-27 — The researcher's own paper, one per
+project".
+
 ## Frontend ↔ Storage Management
 
 Owned by: Storage Management. Consumed by: the frontend.
@@ -198,6 +218,35 @@ token, `409` you already track a paper with that DOI, `422` CrossRef has
 no paper with that DOI, or no open-access PDF could be downloaded for it
 (pick a different paper), `503` CrossRef couldn't be reached (nothing is
 saved, try again).
+
+### `POST /research-paper`
+
+User JWT required; the caller is the owner. Uploads the researcher's own
+paper (the draft they're writing) for one of their projects, so Research
+Evaluation can judge a change in a tracked paper against it. Multipart form
+with `file` (a PDF, 25 MB max) and an optional `folder_id` (uuid; left out
+or `""` means the "no folder" project, see "Folders and projects"). The PDF
+is kept on Storage Management's local disk like a tracked paper's. Nothing
+is read out of it (no GROBID or CrossRef).
+
+**A project has one research paper.** Uploading to a project that already
+has one replaces it: the `id` stays the same, `filename` and `uploaded_at`
+become the new upload's, and the old PDF is deleted.
+
+**Response `201`** for the project's first research paper, **`200`** when
+it replaced one:
+
+```json
+{"id": "uuid", "folder_id": "uuid", "filename": "my-draft.pdf", "uploaded_at": "2026-09-27T08:00:00Z"}
+```
+
+`folder_id` is `null` for the "no folder" project. `filename` is the name
+the file was uploaded with.
+
+Errors, as problem details: `400` not a PDF, no `file`, or a `folder_id`
+that isn't a UUID; `401` missing or bad token; `403` a service token; `413`
+over 25 MB. A refused upload changes nothing: the project keeps the
+research paper it had.
 
 ## Storage Management ↔ Research Evaluation / Updating
 

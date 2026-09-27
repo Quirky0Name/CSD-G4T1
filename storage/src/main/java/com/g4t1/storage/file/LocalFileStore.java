@@ -1,5 +1,7 @@
 package com.g4t1.storage.file;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +15,8 @@ import java.util.UUID;
 // should be a mounted volume so files survive a container restart.
 @Component
 public class LocalFileStore {
+
+    private static final Logger log = LoggerFactory.getLogger(LocalFileStore.class);
 
     private final Path root;
 
@@ -29,5 +33,14 @@ public class LocalFileStore {
             throw new UncheckedIOException("Could not store upload " + key, e);
         }
         return key;
+    }
+
+    // for files no row points at any more, so a failure only leaves a stray file behind
+    public void delete(String key) {
+        try {
+            Files.deleteIfExists(root.resolve(key));
+        } catch (IOException e) {
+            log.warn("Could not delete {}: {}", key, e.getMessage());
+        }
     }
 }
