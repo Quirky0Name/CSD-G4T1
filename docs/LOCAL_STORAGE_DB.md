@@ -29,6 +29,42 @@ docker compose up --build
 - `CROSSREF_MAILTO`, `OPENALEX_API_KEY` and `S2_API_KEY` are optional and
   also go in `storage/.env`.
 
+### Swagger and demo set-up (local testing only)
+
+Add `SPRING_PROFILES_ACTIVE=dev` to `storage/.env` and restart. That
+turns on:
+
+- **Swagger UI** at `http://localhost:8081/swagger-ui.html`. Click
+  **Authorize** and paste a user token (or a service token for the
+  `/internal` endpoints); every call from the page then sends it.
+- **`POST /dev/papers/{id}/undo-change?change=`** (`retraction`,
+  `correction`, `erratum` or `expression_of_concern`). It copies the
+  paper's latest snapshot with that change taken out (for a retraction,
+  `is_retracted` set back to false too), so the next poll, which fetches
+  the real data, finds the change again. The paper has to have been polled
+  once first, so there's real data to copy.
+- **`DELETE /dev/papers/{id}/history`**: removes the paper's snapshots,
+  alerts and reports, for rehearsing again. Research Evaluation never
+  raises the same change twice, so without this a second rehearsal
+  creates no alert.
+
+Both only work on your own papers. Without the dev profile none of this
+exists, so never set it in a deployed environment.
+
+To set up a paper that "changes" during the demo:
+
+1. Add the paper (`POST /papers`).
+2. Poll it once: Updating's `POST /run-poll?paper_id=<id>`. This stores
+   its real current data and never raises an alert (a first snapshot is
+   only a baseline).
+3. `POST /dev/papers/<id>/undo-change?change=retraction` (or
+   `correction`, and so on).
+4. Don't poll it again until the demo. On the day, `POST /run-poll` finds
+   the change, and Research Evaluation stores the alert.
+
+A paper that should show no change needs only steps 1 and 2. To rehearse
+again, `DELETE /dev/papers/<id>/history`, then start from step 2.
+
 The steps below run it without Docker for Storage Management itself.
 
 ## Running locally

@@ -35,6 +35,8 @@ services:
       OPENALEX_API_KEY: ${OPENALEX_API_KEY:-}
       S2_API_KEY: ${S2_API_KEY:-}
       UPLOAD_DIR: /data/uploads
+      # SPRING_PROFILES_ACTIVE=dev in storage/.env turns on Swagger and the /dev test endpoints
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
     # a volume, so stored PDFs survive the container being recreated
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
     volumes:
