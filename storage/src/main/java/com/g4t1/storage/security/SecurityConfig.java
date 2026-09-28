@@ -14,14 +14,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, @Value("${storage.jwt-secret}") String jwtSecret) {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, @Value("${storage.jwt-secret}") String jwtSecret,
+                                            @Value("${springdoc.api-docs.enabled:false}") boolean swaggerOn) {
         return http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers("/internal/**").hasRole("SERVICE")
-                        .anyRequest().hasRole("USER"))
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers("/error").permitAll();
+                    // Swagger's own pages only; every endpoint it calls still needs a token
+                    if (swaggerOn) {
+                        auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll();
+                    }
+                    auth.requestMatchers("/internal/**").hasRole("SERVICE")
+                            .anyRequest().hasRole("USER");
+                })
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(new JwtAuthFilter(jwtSecret), UsernamePasswordAuthenticationFilter.class)
                 .build();
