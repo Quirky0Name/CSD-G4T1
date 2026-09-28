@@ -14,6 +14,36 @@ export type ChangeType =
   | 'doaj_delisting'
   | 'other'
 
+export type ReportStatus = 'investigating' | 'investigated' | 'assessed'
+export type AssessmentLevel = 'none' | 'low' | 'medium' | 'high' // adjust to your enum
+
+export type UserDocument = {
+  id: number // adjust to UserDocumentResponse
+  filename?: string
+}
+
+export async function listReports(paperId: string): Promise<UserReport[]> {
+  const res = await storage.get<{ reports: UserReport[] }>(`/papers/${paperId}/reports`)
+  console.log("THIS IS RES> " + res)
+  return res.data.reports
+}
+
+export type UserReport = {
+  id: number
+  paper_id: string
+  status: ReportStatus
+  created_at: string
+  investigated_at: string | null
+  change_summary: string | null
+  change_severity: AssessmentLevel | null
+  impact_level: AssessmentLevel | null
+  evaluation: string | null
+  recommendation: string | null
+  evaluated_at: string | null
+  alerts: Alert[]
+  documents: UserDocument[]
+}
+
 export type Paper = {
   id: string
   folder_id: string | null
@@ -68,7 +98,7 @@ export type PollSummary = {
 
 const storage = axios.create({
   baseURL: '/api',
-  headers: { Authorization: `Bearer ${import.meta.env.VITE_DEMO_TOKEN}` },
+  headers: { Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTExMTEtMTExMS0xMTExMTExMTExMTEiLCJleHAiOjE3OTMxMTg1NzV9.UVOw8XemZxl8ShsRS4IATDnhmTLXcXuvWOAA2uy47iU` },
 })
 
 // No token in sprint 1: docs/CONTRACTS.md, "Auth" — POST /run-poll takes

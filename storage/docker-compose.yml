@@ -36,6 +36,7 @@ services:
       S2_API_KEY: ${S2_API_KEY:-}
       UPLOAD_DIR: /data/uploads
     # a volume, so stored PDFs survive the container being recreated
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
     volumes:
       - storage_uploads:/data/uploads
     # Linux needs this for host.docker.internal; Docker Desktop has it already
