@@ -29,10 +29,11 @@ docker compose up --build
 - `CROSSREF_MAILTO`, `OPENALEX_API_KEY` and `S2_API_KEY` are optional and
   also go in `storage/.env`.
 
-### Swagger and demo set-up (local testing only)
+### Swagger and demo set-up
 
-Add `SPRING_PROFILES_ACTIVE=dev` to `storage/.env` and restart. That
-turns on:
+These are always on for now, nothing to configure. They're for the demo
+and testing, so they should come out (or go behind a setting) before a
+real deployment.
 
 - **Swagger UI** at `http://localhost:8081/swagger-ui.html`. Click
   **Authorize** and paste a user token (or a service token for the
@@ -47,9 +48,12 @@ turns on:
   alerts and reports, for rehearsing again. Research Evaluation never
   raises the same change twice, so without this a second rehearsal
   creates no alert.
+- **`DELETE /dev/papers/{id}`**: deletes the paper and everything that
+  refers to it: its snapshots, alerts and their notes, reports and their
+  documents, and the stored PDFs. Updating stops tracking it on its next
+  poll.
 
-Both only work on your own papers. Without the dev profile none of this
-exists, so never set it in a deployed environment.
+The three `/dev` tools need a user token and only work on your own papers.
 
 To set up a paper that "changes" during the demo:
 

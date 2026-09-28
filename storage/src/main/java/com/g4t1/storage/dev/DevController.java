@@ -1,7 +1,6 @@
 package com.g4t1.storage.dev;
 
 import com.g4t1.storage.snapshot.SnapshotResponse;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,9 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
-// Local testing only (dev profile). User token, and only on the caller's own papers.
+// Demo and testing tools, on for everyone for now; take out before a real deployment.
+// User token, and only on the caller's own papers.
 @RestController
-@Profile("dev")
 @RequestMapping("/dev/papers/{paperId}")
 public class DevController {
 
@@ -38,5 +37,12 @@ public class DevController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void clearHistory(@AuthenticationPrincipal UUID userId, @PathVariable UUID paperId) {
         dev.clearHistory(userId, paperId);
+    }
+
+    // the paper and everything that refers to it: snapshots, alerts and notes, reports and documents, PDFs
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePaper(@AuthenticationPrincipal UUID userId, @PathVariable UUID paperId) {
+        dev.deletePaper(userId, paperId);
     }
 }

@@ -28,10 +28,3 @@ storage:
 
 server:
   port: ${PORT:8081}
-
-# Swagger UI is for local testing only; application-dev.yml switches it on
-springdoc:
-  api-docs:
-    enabled: false
-  swagger-ui:
-    enabled: false
