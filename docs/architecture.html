@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Service Architecture</title>
+<style>
+  :root {
+    --bg: #f7f3ea;
+    --ink: #2b2a26;
+    --muted: #6b675d;
+    --card: #fffdf8;
+    --edge: #d8d0bf;
+    --head: #6f8f72;
+    --head-off: #a3ad9f;
+    --head-ink: #f8f6ef;
+    --line: #56685a;
+    --code: #3f6a86;
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono: Consolas, "Cascadia Mono", Menlo, "DejaVu Sans Mono", "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); }
+  body { padding: 12px 16px 32px; }
+  h1 { font-size: 17px; margin: 0 0 8px; font-weight: 600; }
+  h2 { font-size: 14px; margin: 20px 0 6px; font-weight: 600; }
+
+  /* the whole diagram scrolls as one piece; cards and arrows share one coordinate system */
+  .scroll { overflow: auto; max-width: 100%; }
+  .canvas { position: relative; width: 1370px; height: 924px; margin: 0 auto; }
+  .canvas svg { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; overflow: visible; }
+
+  .card {
+    position: absolute; z-index: 1; overflow: hidden;
+    background: var(--card); border-radius: 4px;
+    box-shadow: 0 0 0 1px var(--edge), 0 1px 3px rgba(60, 50, 30, .08);
+  }
+  .card.off { background: rgba(255, 253, 248, .6); box-shadow: none; outline: 1.5px dashed var(--head-off); outline-offset: -1px; }
+  .card .h {
+    display: flex; justify-content: space-between; align-items: baseline;
+    height: 26px; line-height: 26px; padding: 0 8px;
+    background: var(--head); color: var(--head-ink);
+    font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden;
+  }
+  .card.off .h { background: var(--head-off); }
+  .card .h small { font-size: 10.5px; font-weight: 400; opacity: .9; }
+
+  /* every row is 16px so arrow coordinates can be computed: centre = card top + 26 + 16*i + 8 */
+  .r {
+    display: grid; grid-template-columns: 1fr auto; column-gap: 8px;
+    height: 16px; line-height: 16px; padding: 0 8px; font-size: 10px; color: var(--muted);
+  }
+  .r > span { white-space: nowrap; overflow: hidden; }
+  .r.d { padding-left: 18px; }
+  .r.e > span:first-child { font-family: var(--mono); font-size: 10px; color: var(--code); }
+  .r.s {
+    font-size: 10.5px; font-weight: 700; color: var(--ink);
+    background: rgba(111, 143, 114, .15); border-top: 1px solid rgba(111, 143, 114, .25);
+  }
+  .r.s:first-of-type { border-top: 0; }
+  .r .tag { font-size: 9px; font-weight: 600; color: var(--head); font-family: var(--sans); }
+  .r.e .tag { color: var(--muted); }
+
+  svg .ln { fill: none; stroke: var(--line); stroke-width: 1.5; }
+  svg .ln.dash { stroke-dasharray: 5 4; }
+  svg .lbl-bg { fill: var(--bg); stroke: var(--edge); stroke-width: .75; }
+  svg .lbl { font: 600 10px var(--sans); fill: var(--ink); }
+  svg .lbl.sm { font-weight: 400; fill: var(--muted); }
+
+  .below { max-width: 1370px; margin: 0 auto; }
+  ol.flow { margin: 0; padding-left: 22px; font-size: 12.5px; line-height: 1.7; list-style: none; }
+  ol.flow li { text-indent: -22px; padding-left: 0; }
+  ol.flow code, .note code { font-family: var(--mono); font-size: 11.5px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 26px; font-size: 12px; line-height: 1.6; align-items: center; }
+  .legend svg { vertical-align: middle; margin-right: 6px; }
+  .legend code { font-family: var(--mono); font-size: 11px; color: var(--code); }
+  .key { display: inline-block; width: 26px; height: 14px; vertical-align: middle; margin-right: 6px; border-radius: 3px; }
+  .note { font-size: 12px; color: var(--muted); margin: 8px 0 0; line-height: 1.5; }
+</style>
+</head>
+<body>
+<h1>System architecture: how a tracked paper is watched, evaluated and shown</h1>
+
+<div class="scroll">
+<div class="canvas">
+
+<svg width="1370" height="924" viewBox="0 0 1370 924" aria-hidden="true">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#56685a"/>
+    </marker>
+  </defs>
+
+  <!-- ① Frontend -> Storage: track papers -->
+  <path class="ln" d="M236 74 H366" marker-end="url(#a)"/>
+  <rect class="lbl-bg" x="246" y="66" width="108" height="16" rx="2"/>
+  <text class="lbl" x="300" y="77.5" text-anchor="middle">PDF or DOI → paper</text>
+
+  <!-- ② Frontend -> Storage: act on alerts -->
+  <path class="ln" d="M236 170 H366" marker-end="url(#a)"/>
+  <rect class="lbl-bg" x="244" y="162" width="112" height="16" rx="2"/>
+  <text class="lbl" x="300" y="173.5" text-anchor="middle">status, note → alerts</text>
+
+  <!-- ③ Frontend -> Storage: read reports -->
+  <path class="ln" d="M236 282 H366" marker-end="url(#a)"/>
+  <rect class="lbl-bg" x="248" y="274" width="104" height="16" rx="2"/>
+  <text class="lbl" x="300" y="285.5" text-anchor="middle">paper id → reports</text>
+
+  <!-- ④ Frontend -> Storage: manage the draft -->
+  <path class="ln" d="M236 330 H366" marker-end="url(#a)"/>
+  <rect class="lbl-bg" x="250" y="322" width="100" height="16" rx="2"/>
+  <text class="lbl" x="300" y="333.5" text-anchor="middle">draft PDF → draft</text>
+
+  <!-- Frontend -> User Management (planned) -->
+  <path class="ln dash" d="M126 374 V440" marker-end="url(#a)"/>
+  <rect class="lbl-bg" x="80" y="392" width="92" height="28" rx="2"/>
+  <text class="lbl" x="126" y="403.5" text-anchor="middle">login, folders</text>
+  <text class="lbl sm" x="126" y="415" text-anchor="middle">→ user JWT</text>
+
+  <!-- ⑤ Updating -> Storage: poll -->
+  <path class="ln" d="M1056 202 H981 V378 H906" marker-end="url(#a)"/>
+  <rect class="lbl-bg" x="915" y="276" width="132" height="28" rx="2"/>
+  <text class="lbl" x="981" y="287.5" text-anchor="middle">reads papers, history</text>
+  <text class="lbl sm" x="981" y="299" text-anchor="middle">writes a snapshot</text>
+
+  <!-- ⑥ Updating -> Research Evaluation: nudge -->
+  <path class="ln" d="M1201 328 V424" marker-end="url(#a)"/>
+  <rect class="lbl-bg" x="1121" y="362" width="160" height="28" rx="2"/>
+  <text class="lbl" x="1201" y="373.5" text-anchor="middle">⑥ nudge: changed paper ids</text>
+  <text class="lbl sm" x="1201" y="385" text-anchor="middle">→ 202 once alerts are stored</text>
+
+  <!-- ⑦ Research Evaluation -> Storage: review changes -->
+  <path class="ln" d="M1056 506 H906" marker-end="url(#a)"/>
+  <rect class="lbl-bg" x="915" y="492" width="132" height="28" rx="2"/>
+  <text class="lbl" x="981" y="503.5" text-anchor="middle">reads snapshots, keys</text>
+  <text class="lbl sm" x="981" y="515" text-anchor="middle">writes alerts</text>
+
+  <!-- ⑧ Research Evaluation -> Storage: investigate -->
+  <path class="ln" d="M1056 634 H906" marker-end="url(#a)"/>
+  <rect class="lbl-bg" x="915" y="620" width="132" height="28" rx="2"/>
+  <text class="lbl" x="981" y="631.5" text-anchor="middle">opens a report</text>
+  <text class="lbl sm" x="981" y="643" text-anchor="middle">writes documents</text>
+
+  <!-- ⑨ Research Evaluation -> Storage: assess impact -->
+  <path class="ln" d="M1056 746 H906" marker-end="url(#a)"/>
+  <rect class="lbl-bg" x="915" y="732" width="132" height="28" rx="2"/>
+  <text class="lbl" x="981" y="743.5" text-anchor="middle">reads report, PDFs</text>
+  <text class="lbl sm" x="981" y="755" text-anchor="middle">writes the evaluation</text>
+</svg>
+
+<!-- column 1: Frontend (rows line up with Storage's ①–④ sections) -->
+<div class="card" style="left:16px; top:40px; width:220px; height:334px">
+  <div class="h">Frontend <small>React · Vite</small></div>
+  <div class="r s"><span>① Citation Sources page</span><span></span></div>
+  <div class="r d"><span>lists the papers tracked, by folder</span><span></span></div>
+  <div class="r d"><span>adds a paper: upload a PDF or a DOI</span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r s"><span>② Alerts page</span><span></span></div>
+  <div class="r d"><span>each paper's alerts, newest first</span><span></span></div>
+  <div class="r d"><span>acknowledge or dismiss an alert</span><span></span></div>
+  <div class="r d"><span>keep notes on what was done</span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r s"><span>③ Report view</span><span></span></div>
+  <div class="r d"><span>evidence fetched + impact's verdict</span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r s"><span>④ UserPaper (the draft)</span><span></span></div>
+  <div class="r d"><span>upload, view or remove the draft</span><span></span></div>
+  <div class="r d"><span>one draft per project (folder)</span><span></span></div>
+</div>
+
+<div class="card off" style="left:16px; top:440px; width:220px; height:96px">
+  <div class="h">User Management <small>planned</small></div>
+  <div class="r e"><span>POST /auth/register · /auth/login</span><span></span></div>
+  <div class="r e"><span>GET/POST/PUT/DELETE /folders</span><span></span></div>
+  <div class="r"><span>issues the user JWT (shared JWT_SECRET)</span><span></span></div>
+  <div class="r"><span>owns users, folders</span><span></span></div>
+</div>
+
+<!-- column 2: Storage Management -->
+<div class="card" style="left:366px; top:40px; width:540px; height:864px">
+  <div class="h">Storage Management <small>Java · Spring Boot · owns all data and files</small></div>
+
+  <div class="r s"><span>① Track papers</span><span class="tag">user JWT</span></div>
+  <div class="r e"><span>GET /papers</span><span></span></div>
+  <div class="r d"><span>returns {papers: [id, folder_id, doi, title, journal, publication_year, file_available, …]}</span><span></span></div>
+  <div class="r e"><span>POST /papers</span><span></span></div>
+  <div class="r d"><span>sends a PDF (file ≤ 25 MB, optional folder_id) or JSON {doi, folder_id} · returns 201 the paper</span><span></span></div>
+  <div class="r d"><span>finds the DOI with GROBID, fills metadata from Crossref/OpenAlex, downloads an open-access PDF</span><span></span></div>
+
+  <div class="r s"><span>② Act on alerts</span><span class="tag">user JWT</span></div>
+  <div class="r e"><span>GET /papers/{id}/alerts?include_dismissed=false</span><span></span></div>
+  <div class="r d"><span>returns {alerts: [id, change_type, severity, description, recommendation, status, …]}</span><span></span></div>
+  <div class="r e"><span>PATCH /alerts/{id}</span><span></span></div>
+  <div class="r d"><span>sends {status: acknowledged | dismissed} · returns the alert with status_changed_at</span><span></span></div>
+  <div class="r e"><span>POST /alerts/{id}/notes · GET /alerts/{id}/notes</span><span></span></div>
+  <div class="r d"><span>sends {text} · returns {text, created_at}; GET returns {notes: [...]}, newest first</span><span></span></div>
+
+  <div class="r s"><span>③ Read reports</span><span class="tag">user JWT</span></div>
+  <div class="r e"><span>GET /papers/{id}/reports</span><span></span></div>
+  <div class="r d"><span>returns {reports: [status, evaluation, recommendation, evaluated_at, alerts, documents]}</span><span></span></div>
+
+  <div class="r s"><span>④ Manage the draft</span><span class="tag">user JWT</span></div>
+  <div class="r e"><span>POST · GET · DELETE /research-paper?folder_id=</span><span></span></div>
+  <div class="r d"><span>POST sends file (PDF) · returns {id, folder_id, filename, uploaded_at}; DELETE returns 204</span><span></span></div>
+
+  <div class="r s"><span>⑤ Poll</span><span class="tag">service JWT</span></div>
+  <div class="r e"><span>GET /internal/papers</span><span></span></div>
+  <div class="r d"><span>returns [{id, owner_id, doi, issn}] for every user's papers</span><span></span></div>
+  <div class="r e"><span>GET /internal/papers/{id}/background-info/history?after_id=&amp;limit=</span><span></span></div>
+  <div class="r d"><span>returns {snapshots: [...]}, oldest first: the previous snapshot to compare against</span><span></span></div>
+  <div class="r e"><span>POST /internal/papers/{id}/background-info</span><span></span></div>
+  <div class="r d"><span>sends {doi, fetched_at, is_retracted, crossref_updates, in_doaj, journal…, source_status}</span><span></span></div>
+  <div class="r d"><span>returns it with snapshot_id; one per paper per poll, never updated</span><span></span></div>
+
+  <div class="r s"><span>⑦ Review changes</span><span class="tag">service JWT</span></div>
+  <div class="r e"><span>GET /internal/papers/{id}/background-info/history?last=5</span><span></span></div>
+  <div class="r d"><span>returns the recent snapshots, compared to detect what changed</span><span></span></div>
+  <div class="r e"><span>GET /internal/papers/{id}/alerts/change-keys</span><span></span></div>
+  <div class="r d"><span>returns {change_keys}, so no change is evaluated twice</span><span></span></div>
+  <div class="r e"><span>POST /internal/papers/{id}/alerts</span><span></span></div>
+  <div class="r d"><span>sends {change_type, change_key, severity, description, recommendation, notice_doi, …}</span><span></span></div>
+  <div class="r d"><span>returns 201 the new alert, or 200 with the one already stored for that change_key</span><span></span></div>
+
+  <div class="r s"><span>⑧ Investigate</span><span class="tag">service JWT</span></div>
+  <div class="r e"><span>POST /internal/papers/{id}/reports</span><span></span></div>
+  <div class="r d"><span>returns 201 a report grouping the paper's alerts not yet in one, or 204 if none</span><span></span></div>
+  <div class="r e"><span>POST /internal/documents</span><span></span></div>
+  <div class="r d"><span>sends {report_id, kind, doi, crossref_record, text, …}; Storage downloads the PDF</span><span></span></div>
+  <div class="r e"><span>PATCH /internal/papers/{id}/reports/{reportId}</span><span></span></div>
+  <div class="r d"><span>sends {status: investigated}, which lets impact start</span><span></span></div>
+
+  <div class="r s"><span>⑨ Assess impact</span><span class="tag">service JWT</span></div>
+  <div class="r e"><span>GET /internal/reports/{reportId} · GET …/history?last=1</span><span></span></div>
+  <div class="r d"><span>returns the full report (alerts, documents) and the paper's title, authors, journal</span><span></span></div>
+  <div class="r e"><span>GET …/{id}/pdf · …/{id}/research-paper · /internal/documents/{id}/pdf</span><span></span></div>
+  <div class="r d"><span>returns application/pdf: the tracked paper, the researcher's draft, each fetched document</span><span></span></div>
+  <div class="r e"><span>PUT /internal/reports/{reportId}/evaluation</span><span></span></div>
+  <div class="r d"><span>sends {change_summary, change_severity, impact_level, evaluation, recommendation, assessment}</span><span></span></div>
+  <div class="r d"><span>the report becomes assessed; the first evaluation wins</span><span></span></div>
+
+  <div class="r s"><span>Owns</span><span></span></div>
+  <div class="r d"><span>Postgres: 7 tables (see erd.html) · local disk: every PDF (tracked papers, drafts, documents)</span><span></span></div>
+</div>
+
+<!-- column 3: Updating -->
+<div class="card" style="left:1056px; top:120px; width:290px; height:208px">
+  <div class="h">Updating <small>Python · scheduler</small></div>
+  <div class="r e"><span>POST /run-poll?paper_id=</span><span class="tag">by hand</span></div>
+  <div class="r d"><span>runs a poll now → {run_id, stored, nudged, …}</span><span></span></div>
+  <div class="r d"><span>otherwise polls every 24 h (POLL_INTERVAL_HOURS)</span><span></span></div>
+  <div class="r s"><span>⑤ Poll</span><span></span></div>
+  <div class="r d"><span>syncs tracked_papers from Storage's paper list</span><span></span></div>
+  <div class="r d"><span>looks up each DOI in Crossref and OpenAlex</span><span></span></div>
+  <div class="r d"><span>stores a snapshot unless a source errored</span><span></span></div>
+  <div class="r d"><span>sets nudge_pending when the snapshot changed</span><span></span></div>
+  <div class="r s"><span>⑥ Nudge</span><span></span></div>
+  <div class="r d"><span>re-sends changed paper ids until one is accepted</span><span></span></div>
+  <div class="r"><span>owns tracked_papers, poll_runs</span><span></span></div>
+</div>
+
+<!-- column 3: Research Evaluation (rows line up with Storage's ⑦–⑨ sections) -->
+<div class="card" style="left:1056px; top:424px; width:290px; height:432px">
+  <div class="h">Research Evaluation <small>Python · LLM</small></div>
+  <div class="r e"><span>POST /evaluate/changes</span><span></span></div>
+  <div class="r d"><span>sends {paper_ids}</span><span></span></div>
+  <div class="r d"><span>returns 202 {alerts_created, skipped, failed ids}</span><span></span></div>
+  <div class="r s"><span>⑦ Review changes</span><span class="tag">in the nudge</span></div>
+  <div class="r d"><span>compares the last 5 snapshots to find changes</span><span></span></div>
+  <div class="r d"><span>rule-based severity + recommendation each</span><span></span></div>
+  <div class="r d"><span>stores new changes as alerts, then replies</span><span></span></div>
+  <div class="r d"><span>retraction, correction, expression of concern, …</span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r s"><span>⑧ Investigate</span><span class="tag">background</span></div>
+  <div class="r d"><span>opens a report for the paper's new alerts</span><span></span></div>
+  <div class="r d"><span>fetches each notice, new version, current copy</span><span></span></div>
+  <div class="r d"><span>from Crossref and Europe PMC (open-access text)</span><span></span></div>
+  <div class="r d"><span>stores them as documents, marks investigated</span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r s"><span>⑨ Assess impact</span><span class="tag">background</span></div>
+  <div class="r d"><span>Gemini reads the paper, documents and draft</span><span></span></div>
+  <div class="r d"><span>judges severity and the impact on the draft</span><span></span></div>
+  <div class="r d"><span>writes the evaluation; report → assessed</span><span></span></div>
+  <div class="r e"><span>POST /evaluate/reports</span><span class="tag">by hand</span></div>
+  <div class="r d"><span>sends {report_ids}: re-runs impact → 202</span><span></span></div>
+  <div class="r"><span>no database of its own</span><span></span></div>
+</div>
+
+</div>
+</div>
+
+<div class="below">
+  <h2>Flow</h2>
+  <ol class="flow">
+    <li>① <b>Track papers.</b> The researcher adds a paper by PDF or DOI; Storage finds the DOI (GROBID), fills metadata (Crossref/OpenAlex) and keeps a PDF (OpenAlex, then Semantic Scholar).</li>
+    <li>⑤ <b>Poll.</b> Every 24 h Updating reads the paper list, looks each DOI up in Crossref and OpenAlex, and stores a snapshot in Storage.</li>
+    <li>⑥ <b>Nudge.</b> When a paper's snapshot changed, Updating sends Research Evaluation just its id: <code>POST /evaluate/changes {paper_ids}</code>.</li>
+    <li>⑦ <b>Review changes.</b> Research Evaluation compares recent snapshots, skips changes it already has, and stores each new one as an alert with a severity and recommendation.</li>
+    <li>⑧ <b>Investigate.</b> In the background it opens a report for the new alerts and stores the evidence: notices, new versions and the current copy (Crossref, Europe PMC), whose PDFs Storage downloads.</li>
+    <li>⑨ <b>Assess impact.</b> Gemini reads the paper, the evidence and the researcher's draft, and the evaluation is written into the report.</li>
+    <li>② ③ <b>Act.</b> The researcher sees the alerts and reports, acknowledges or dismisses alerts and keeps notes.</li>
+    <li>④ <b>Draft.</b> The researcher's own draft, one per project, is what ⑨ judges the change against.</li>
+  </ol>
+
+  <h2>Legend</h2>
+  <div class="legend">
+    <span><svg width="40" height="10" aria-hidden="true"><path d="M0 5 H34" stroke="#56685a" stroke-width="1.5"/><path d="M32 1 L40 5 L32 9 z" fill="#56685a"/></svg>call, from caller to server; label = what's sent → what comes back</span>
+    <span><b>①–⑨</b> steps, matched between the arrow and the sections of each card</span>
+    <span><code>GET /path</code> endpoint</span>
+    <span><b>user JWT</b> researcher's token, owner only · <b>service JWT</b> service-to-service token</span>
+    <span><span class="key" style="background:#6f8f72"></span>built service</span>
+    <span><span class="key" style="background:#fffdf8; outline:1.5px dashed #a3ad9f; outline-offset:-1px"></span>planned</span>
+  </div>
+  <p class="note">Every service checks JWTs itself with the shared <code>JWT_SECRET</code>; none calls User Management to verify a token. Updating and Research Evaluation share data only through Storage Management.</p>
+  <p class="note">Source: <code>CSD-G4T1/docs/ENDPOINTS.md</code> and <code>ARCHITECTURE.md</code>. Exact fields and error codes are in <code>CONTRACTS.md</code>.</p>
+</div>
+</body>
+</html>
