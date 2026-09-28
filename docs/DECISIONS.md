@@ -5,6 +5,49 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-28 — Impact falls back through a list of Gemini models
+
+The plan is [EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md).
+
+### Team decisions
+
+- **A failed Gemini call is tried again on the next model in a list**
+  (`GEMINI_MODEL`, then `GEMINI_FALLBACK_MODELS` in order; the story
+  owner's call). On the free tier `gemini-flash-latest` often answers
+  `503` ("high demand") and each model has its own daily quota, so one
+  model failing says little about the next; before this, one `503` failed
+  the whole report.
+- **Any Gemini-side failure moves on:** an API error of any code, a
+  transport error (timeout, refused or dropped connection), no text, or an
+  answer that doesn't fit the schema. A different model may well answer
+  where one didn't, and a bad model name (`404`) is skipped the same way.
+  Anything else (a bug) is raised straight away.
+- **Each call starts again from `GEMINI_MODEL`,** so a model that was
+  overloaded for step 1 is tried first again for step 2.
+- **The default fallback is `gemini-flash-lite-latest` only.**
+  `gemini-3.8-flash` is what `gemini-flash-latest` resolves to (the same
+  overloaded model), and `gemini-2.5-flash` isn't available to new keys
+  (2026-09-28, "Impact asks Gemini three questions"). Teams add older
+  models their key can use in `.env`.
+- **When every model fails a step, the report is stored with a
+  placeholder evaluation** (the story owner's call, with its wording):
+  `change_severity` and `impact_level` `low`, and `change_summary`,
+  `evaluation` and `recommendation` all `FUCK U GEMINI FLASH. WHO TF IS
+  EVEN USING GEMINI FLASH`. `assessment` keeps `placeholder: true`, the
+  step that failed, each model's cause, and the answers of the steps that
+  did finish, so it can be told apart from a real judgment. Storage
+  Management failures still fail the report as before.
+- **The consequences were accepted:** the placeholder is an evaluation
+  like any other, so the report becomes `assessed` and, since an
+  evaluation is written once, keeps it (`POST /evaluate/reports` skips it;
+  re-assessing is still a later sprint). It is sent to the Telegram chat
+  and shown in the report body.
+- **`assessment.answered_by`** records the model that answered each step,
+  since the three steps may now be answered by different models;
+  `model` stays the first name and `model_version` step 1's.
+
+---
+
 ## 2026-09-28 — The researcher hears on Telegram when a report is assessed
 
 The plan is [EVALUATION-NOTIF.md](EVALUATION-NOTIF.md).

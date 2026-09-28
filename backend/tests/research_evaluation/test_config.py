@@ -169,14 +169,60 @@ def test_startup_makes_impact_a_gemini_model_with_the_timeout(tmp_path, monkeypa
     monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
     monkeypatch.setenv("GEMINI_API_KEY", "test-key")
     monkeypatch.setenv("GEMINI_MODEL", "gemini-test")
+    monkeypatch.setenv("GEMINI_FALLBACK_MODELS", "gemini-older, gemini-oldest")
     monkeypatch.setenv("IMPACT_LLM_TIMEOUT_SECONDS", "45")
     app = create_app()
 
     with TestClient(app):
         llm = app.state.impact.llm
         assert llm.model == "gemini-test"
+        assert llm.models == ("gemini-test", "gemini-older", "gemini-oldest")
         # the SDK takes milliseconds
         assert llm.client._api_client._http_options.timeout == 45_000
+
+
+def test_the_fallback_models_default_to_flash_lite():
+    settings = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+    assert settings.gemini_fallback_models == ["gemini-flash-lite-latest"]
+
+
+@pytest.mark.parametrize(
+    ("value", "models"),
+    [
+        ("gemini-a,gemini-b", ["gemini-a", "gemini-b"]),
+        (" gemini-a , ,gemini-b,, ", ["gemini-a", "gemini-b"]),
+        ("gemini-a", ["gemini-a"]),
+        ("", []),
+        (" , ", []),
+    ],
+)
+def test_the_fallback_models_are_a_comma_list_with_blanks_dropped(monkeypatch, value, models):
+    monkeypatch.setenv("GEMINI_FALLBACK_MODELS", value)
+
+    settings = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+    assert settings.gemini_fallback_models == models
+
+
+def test_no_fallback_models_means_impact_tries_only_gemini_model(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setenv("GEMINI_FALLBACK_MODELS", "")
+    app = create_app()
+
+    with TestClient(app):
+        assert app.state.impact.llm.models == ("gemini-flash-latest",)
+
+
+def test_a_model_listed_twice_is_tried_once(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setenv("GEMINI_FALLBACK_MODELS", "gemini-flash-latest,gemini-b,gemini-b")
+    app = create_app()
+
+    with TestClient(app):
+        assert app.state.impact.llm.models == ("gemini-flash-latest", "gemini-b")
 
 
 def test_notifications_are_off_unless_both_variables_are_set(monkeypatch):

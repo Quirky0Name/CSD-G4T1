@@ -59,6 +59,7 @@ bottom.
 | `LLM_BASE_URL` | `https://api.deepseek.com` |
 | `GEMINI_API_KEY` | aistudio.google.com → Get API key; Research Evaluation's impact LLM (the service starts without it, impact can't run) |
 | `GEMINI_MODEL` | `gemini-flash-latest` (default) |
+| `GEMINI_FALLBACK_MODELS` | `gemini-flash-lite-latest` (default): comma-separated models impact tries in order when a call to `GEMINI_MODEL` fails (overloaded, out of quota, timed out, an unusable answer); empty for none, and a name listed twice is tried once ([EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md)) |
 | `CROSSREF_MAILTO` | any team contact email; read by Updating and by Research Evaluation (investigation's Crossref lookups), default empty (no `mailto` sent) |
 | `JWT_SECRET` | `openssl rand -base64 32`; the same value in every service (base64, 32+ bytes) |
 | `DATABASE_URL` | local Postgres in sprint 1 (`postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` for the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres; Supabase session-pooler connection string once hosted |

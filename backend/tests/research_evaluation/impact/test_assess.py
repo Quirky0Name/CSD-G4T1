@@ -14,7 +14,14 @@ from research_evaluation.config import ResearchEvaluationSettings
 from research_evaluation.impact import prompts
 from research_evaluation.impact.assess import assess
 from research_evaluation.impact.inputs import MissingPdf, ReportInputs
-from research_evaluation.impact.llm import Answer, GeminiLlm, Pdf, make_client
+from research_evaluation.impact.llm import (
+    AllModelsFailed,
+    Answer,
+    GeminiLlm,
+    ModelFailure,
+    Pdf,
+    make_client,
+)
 from research_evaluation.impact.prompts import (
     ACTIONS_TASK,
     CHANGE_TASK,
@@ -24,6 +31,7 @@ from research_evaluation.impact.prompts import (
     SYSTEM,
 )
 from research_evaluation.impact.schemas import (
+    PLACEHOLDER_TEXT,
     ChangeAssessment,
     ImpactAssessment,
     RecommendedActions,
@@ -112,7 +120,7 @@ class FakeLlm:
         answer = self.answers[schema]
         if isinstance(answer, Exception):
             raise answer
-        return Answer(answer, "fake-gemini-001")
+        return Answer(answer, "fake-gemini-001", self.model)
 
 
 def fake(sm, severity: str = "high", overrides: dict | None = None) -> FakeLlm:
@@ -440,6 +448,100 @@ async def test_an_answer_that_doesnt_fit_raises_and_returns_nothing(sm):
     with pytest.raises(ValueError):
         await assess(llm, sm.client, await inputs_for(sm))
     assert len(llm.calls) == 2
+
+
+# every model failing a step: the placeholder (docs/EVAL-GEM-FAILSAFE.md)
+
+FAILURES = [
+    ModelFailure("gemini-flash-latest", "Gemini answered 503 (UNAVAILABLE)"),
+    ModelFailure("gemini-flash-lite-latest", "timed out (ReadTimeout)"),
+]
+FAILURES_JSON = [{"model": f.model, "cause": f.cause} for f in FAILURES]
+
+
+def assert_placeholder(evaluation, step: str):
+    assert evaluation.change_summary == PLACEHOLDER_TEXT
+    assert evaluation.change_severity == "low"
+    assert evaluation.impact_level == "low"
+    assert evaluation.evaluation == PLACEHOLDER_TEXT
+    assert evaluation.recommendation == PLACEHOLDER_TEXT
+    assert evaluation.assessment["placeholder"] is True
+    assert evaluation.assessment["failed_step"] == step
+    assert evaluation.assessment["failures"] == FAILURES_JSON
+
+
+async def test_every_model_failing_step_one_gives_the_placeholder_without_the_draft(sm):
+    llm = fake(sm, overrides={ChangeAssessment: AllModelsFailed(FAILURES)})
+
+    evaluation = await assess(llm, sm.client, await inputs_for(sm))
+
+    assert_placeholder(evaluation, "change")
+    assert len(llm.calls) == 1
+    assert sm.calls("GET", "/research-paper") == 0
+    assessment = evaluation.assessment
+    assert assessment["draft"] == "not_needed"
+    assert assessment["change"] is None
+    assert assessment["impact"] is None and assessment["actions"] is None
+    assert assessment["answered_by"] == {"change": None, "impact": None, "actions": None}
+    assert assessment["model_version"] is None
+    assert assessment["prompt_version"] == PROMPT_VERSION
+    assert assessment["pdfs"]["attached"] == ["stored paper", "current copy"]
+
+
+async def test_every_model_failing_step_two_keeps_step_ones_answer(sm):
+    llm = fake(sm, overrides={ImpactAssessment: AllModelsFailed(FAILURES)})
+
+    evaluation = await assess(llm, sm.client, await inputs_for(sm))
+
+    assert_placeholder(evaluation, "impact")
+    assert [call["schema"] for call in llm.calls] == [ChangeAssessment, ImpactAssessment]
+    assessment = evaluation.assessment
+    assert assessment["change"] == change_answer("high").model_dump(mode="json")
+    assert assessment["impact"] is None and assessment["actions"] is None
+    assert assessment["draft"] == "read"
+    assert assessment["answered_by"] == {"change": "fake-gemini", "impact": None, "actions": None}
+    assert assessment["model_version"] == "fake-gemini-001"
+
+
+async def test_every_model_failing_step_three_keeps_steps_one_and_two(sm):
+    llm = fake(sm, overrides={RecommendedActions: AllModelsFailed(FAILURES)})
+
+    evaluation = await assess(llm, sm.client, await inputs_for(sm))
+
+    assert_placeholder(evaluation, "actions")
+    assert len(llm.calls) == 3
+    assessment = evaluation.assessment
+    assert assessment["change"] == change_answer("high").model_dump(mode="json")
+    assert assessment["impact"] == IMPACT.model_dump(mode="json")
+    assert assessment["actions"] is None
+    assert assessment["answered_by"] == {
+        "change": "fake-gemini",
+        "impact": "fake-gemini",
+        "actions": None,
+    }
+
+
+async def test_a_normal_run_records_which_model_answered_each_step_and_no_placeholder(sm):
+    evaluation = await assess(fake(sm, severity="medium"), sm.client, await inputs_for(sm))
+
+    assert evaluation.assessment["answered_by"] == {
+        "change": "fake-gemini",
+        "impact": "fake-gemini",
+        "actions": "fake-gemini",
+    }
+    assert evaluation.assessment["placeholder"] is False
+    assert "failed_step" not in evaluation.assessment
+    assert evaluation.change_summary != PLACEHOLDER_TEXT
+
+
+async def test_a_gated_run_records_only_step_ones_model(sm):
+    evaluation = await assess(fake(sm, severity="none"), sm.client, await inputs_for(sm))
+
+    assert evaluation.assessment["answered_by"] == {
+        "change": "fake-gemini",
+        "impact": None,
+        "actions": None,
+    }
 
 
 @pytest.mark.live

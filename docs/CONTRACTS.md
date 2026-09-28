@@ -1004,11 +1004,19 @@ background:
    draft and what to do; then
    `PUT /internal/reports/{reportId}/evaluation`, which marks it
    `assessed`. It doesn't run when `GEMINI_API_KEY` isn't set: the reports
-   stay `investigated`.
+   stay `investigated`. A Gemini call that fails is tried on each model in
+   `GEMINI_FALLBACK_MODELS` in turn; when every model fails a step, impact
+   stores a placeholder evaluation instead
+   ([EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md)): `change_severity` and
+   `impact_level` `low`, `change_summary`, `evaluation` and
+   `recommendation` all `FUCK U GEMINI FLASH. WHO TF IS EVEN USING GEMINI
+   FLASH`, and `assessment.placeholder` `true` with `failed_step` and
+   each model's `failures`. The report becomes `assessed` like any other.
 
 Nothing in it changes the reply, and Updating never waits for it. A
 failure is logged and leaves the report `investigating` (investigation)
-or `investigated` (impact, with nothing stored); nothing retries it yet.
+or `investigated` (impact, with nothing stored: Storage Management
+failing, or a bug); nothing retries it yet.
 
 ### `POST /evaluate/reports`
 
@@ -1034,7 +1042,10 @@ runs on them in the background, one after another, after the reply.
 
 Only an `investigated` report is assessed; an `investigating` or
 `assessed` report, or an unknown id, is skipped (logged) before any PDF is
-fetched or Gemini called. A report that fails stays `investigated`.
+fetched or Gemini called. A report that fails stays `investigated`. A
+report whose Gemini models all failed is not a failure here: it is stored
+`assessed` with the placeholder evaluation (above), so this endpoint
+skips it from then on.
 
 Errors: `503` with `detail` `Gemini isn't configured` when
 `GEMINI_API_KEY` isn't set (nothing runs); `422` a body that isn't that

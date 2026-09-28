@@ -11,9 +11,10 @@ from google.genai import errors as genai_errors
 from pydantic import ValidationError
 from research_evaluation_support import notice, nudge
 
-from research_evaluation.impact.llm import Answer
+from research_evaluation.impact.llm import AllModelsFailed, Answer, ModelFailure
 from research_evaluation.impact.run import ImpactContext, assess_reports
 from research_evaluation.impact.schemas import (
+    PLACEHOLDER_TEXT,
     ChangeAssessment,
     ImpactAssessment,
     RecommendedActions,
@@ -445,6 +446,76 @@ async def test_telegram_failing_leaves_the_report_assessed_and_counted(
     assert record.name == "research_evaluation.notify"
     assert f"notifying report {report_id} failed" in record.getMessage()
     assert "test-token" not in record.getMessage()
+
+
+# every model failing a step: the placeholder (docs/EVAL-GEM-FAILSAFE.md)
+
+
+def every_model_failed() -> AllModelsFailed:
+    return AllModelsFailed(
+        [
+            ModelFailure("gemini-flash-latest", "Gemini answered 503 (UNAVAILABLE)"),
+            ModelFailure("gemini-flash-lite-latest", "Gemini answered 429 (RESOURCE_EXHAUSTED)"),
+        ]
+    )
+
+
+@pytest.mark.parametrize(("step", "failed_step"), [(1, "change"), (2, "impact"), (3, "actions")])
+async def test_every_model_failing_a_step_stores_the_placeholder_and_notifies_it(
+    client, sm, impact, telegram, step, failed_step
+):
+    impact.context = ImpactContext(
+        FakeLlm("high", fail_on=step, failure=every_model_failed()), notifier(telegram)
+    )
+    paper = await retracted_paper(sm)
+
+    response = await nudge(client, [paper])
+
+    assert response.status_code == 202
+    report = await the_report(sm, paper)
+    assert report["status"] == "assessed"
+    assert report["change_summary"] == PLACEHOLDER_TEXT
+    assert report["change_severity"] == "low"
+    assert report["impact_level"] == "low"
+    assert report["evaluation"] == PLACEHOLDER_TEXT
+    assert report["recommendation"] == PLACEHOLDER_TEXT
+    assert report["assessment"]["placeholder"] is True
+    assert report["assessment"]["failed_step"] == failed_step
+    assert [f["model"] for f in report["assessment"]["failures"]] == [
+        "gemini-flash-latest",
+        "gemini-flash-lite-latest",
+    ]
+    assert sm.calls("GET", "/research-paper") == (0 if step == 1 else 1)
+    [text] = telegram.texts()
+    assert text.startswith(f"Evaluation done: report {report['id']}\n")
+    assert f"Change: low\n{PLACEHOLDER_TEXT}" in text
+    assert f"What to do:\n{PLACEHOLDER_TEXT}" in text
+
+
+async def test_a_placeholder_report_isnt_assessed_again(sm):
+    context = ImpactContext(FakeLlm("high", fail_on=1, failure=every_model_failed()))
+    report_id = await investigated_report(sm)
+
+    assert await assess_reports(sm.client, context, [report_id]) == [report_id]
+    assert await assess_reports(sm.client, context, [report_id]) == []
+    assert len(context.llm.calls) == 1
+
+
+async def test_storage_management_failing_on_the_placeholders_put_still_fails_the_report(
+    client, sm, impact, telegram
+):
+    impact.context = ImpactContext(
+        FakeLlm("high", fail_on=1, failure=every_model_failed()), notifier(telegram)
+    )
+    sm.transport.faults["/evaluation"] = 500
+    paper = await retracted_paper(sm)
+
+    await nudge(client, [paper])
+
+    report = await the_report(sm, paper)
+    assert report["status"] == "investigated"
+    assert report["change_summary"] is None
+    assert telegram.requests == []
 
 
 async def test_without_a_notifier_nothing_is_sent_and_the_report_is_assessed(sm, telegram):
