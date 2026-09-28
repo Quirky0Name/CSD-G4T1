@@ -37,8 +37,6 @@ services:
       UPLOAD_DIR: /data/uploads
       # SPRING_PROFILES_ACTIVE=dev in storage/.env turns on Swagger and the /dev test endpoints
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
-    # a volume, so stored PDFs survive the container being recreated
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
     volumes:
       - storage_uploads:/data/uploads
     # Linux needs this for host.docker.internal; Docker Desktop has it already
