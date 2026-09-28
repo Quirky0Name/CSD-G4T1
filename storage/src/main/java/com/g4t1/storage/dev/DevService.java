@@ -8,7 +8,6 @@ import com.g4t1.storage.snapshot.SnapshotRepository;
 import com.g4t1.storage.snapshot.SnapshotRequest;
 import com.g4t1.storage.snapshot.SnapshotResponse;
 import com.g4t1.storage.snapshot.SnapshotService;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Limit;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -24,9 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-// Sets a paper up for a demo or a rehearsal. Only exists with the dev profile.
+// Sets a paper up for a demo or a rehearsal. On for everyone for now; take out before a real deployment.
 @Service
-@Profile("dev")
 public class DevService {
 
     // Crossref's updated-by types, as they appear in a snapshot's crossref_updates
@@ -89,6 +87,24 @@ public class DevService {
     @Transactional
     public void clearHistory(UUID ownerId, UUID paperId) {
         requireOwnPaper(ownerId, paperId);
+        deleteHistory(paperId).forEach(files::delete);
+    }
+
+    // Everything that points at the paper, then the paper and its PDF. Updating drops it from
+    // its own tracking on the next poll, since storage no longer lists it.
+    @Transactional
+    public void deletePaper(UUID ownerId, UUID paperId) {
+        Paper paper = requireOwnPaper(ownerId, paperId);
+        List<String> documentFiles = deleteHistory(paperId);
+        jdbc.update("delete from papers where id = ?", paperId);
+        documentFiles.forEach(files::delete);
+        if (paper.getFileKey() != null) {
+            files.delete(paper.getFileKey());
+        }
+    }
+
+    // returns the report documents' files, to delete once their rows are gone
+    private List<String> deleteHistory(UUID paperId) {
         List<String> documentFiles = jdbc.queryForList("""
                 select d.file_key from report_documents d join reports r on r.id = d.report_id
                 where r.paper_id = ? and d.file_key is not null""", String.class, paperId);
@@ -96,15 +112,14 @@ public class DevService {
         jdbc.update("delete from reports where paper_id = ?", paperId);
         jdbc.update("delete from alerts where paper_id = ?", paperId);
         jdbc.update("delete from background_metadata where paper_id = ?", paperId);
-        documentFiles.forEach(files::delete);
+        return documentFiles;
     }
 
     // someone else's paper gets the same 404 as a missing one
-    private void requireOwnPaper(UUID ownerId, UUID paperId) {
-        boolean own = papers.findById(paperId).map(Paper::getOwnerId).filter(ownerId::equals).isPresent();
-        if (!own) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
-        }
+    private Paper requireOwnPaper(UUID ownerId, UUID paperId) {
+        return papers.findById(paperId)
+                .filter(paper -> paper.getOwnerId().equals(ownerId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId));
     }
 
     private JsonNode toNode(String text) {
