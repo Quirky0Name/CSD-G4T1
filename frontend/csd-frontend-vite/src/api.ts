@@ -15,16 +15,36 @@ export type ChangeType =
   | 'other'
 
 export type ReportStatus = 'investigating' | 'investigated' | 'assessed'
-export type AssessmentLevel = 'none' | 'low' | 'medium' | 'high' // adjust to your enum
+export type AssessmentLevel = 'none' | 'low' | 'medium' | 'high'
+export type DocumentKind = 'notice' | 'new_version' | 'current_version'
 
-export type UserDocument = {
-  id: number // adjust to UserDocumentResponse
-  filename?: string
+// the Crossref record as Research Evaluation stored it (docs/CONTRACTS.md, GET /papers/{id}/reports)
+export type CrossrefRecord = {
+  doi?: string
+  title?: string | null
+  published?: string | null
+  journal?: string | null
 }
 
+export type UserDocument = {
+  id: number
+  kind: DocumentKind
+  doi: string
+  crossref_status: 'ok' | 'not_found' | 'error'
+  crossref_record: CrossrefRecord | null
+  update_to_includes_paper: boolean | null
+  text_status: 'ok' | 'not_indexed' | 'not_open_access' | 'error'
+  text: string | null
+  text_truncated: boolean
+  pdf_status: 'skipped' | 'pending' | 'ok' | 'not_found'
+  pdf_source_url: string | null
+  created_at: string
+  pdf_fetched_at: string | null
+}
+
+// a report comes with its alerts and documents, so this one call loads everything the details show
 export async function listReports(paperId: string): Promise<UserReport[]> {
   const res = await storage.get<{ reports: UserReport[] }>(`/papers/${paperId}/reports`)
-  console.log("THIS IS RES> " + res)
   return res.data.reports
 }
 
@@ -34,9 +54,10 @@ export type UserReport = {
   status: ReportStatus
   created_at: string
   investigated_at: string | null
-  change_summary: string | null
-  change_severity: AssessmentLevel | null
-  impact_level: AssessmentLevel | null
+  // not in GET /papers/{id}/reports today (only the internal report API has them), so often absent
+  change_summary?: string | null
+  change_severity?: AssessmentLevel | null
+  impact_level?: AssessmentLevel | null
   evaluation: string | null
   recommendation: string | null
   evaluated_at: string | null
