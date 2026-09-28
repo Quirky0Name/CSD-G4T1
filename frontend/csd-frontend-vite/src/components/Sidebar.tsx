@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessui/react'
+import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react'
 import {
   Bars3Icon,
   BellAlertIcon,
@@ -18,19 +18,28 @@ function classNames(...classes: Array<string | false | null | undefined>) {
 }
 
 type SidebarContentProps = {
+  onClose: () => void
   onNavigate?: () => void
 }
 
-function SidebarContent({ onNavigate }: SidebarContentProps) {
+function SidebarContent({ onClose, onNavigate }: SidebarContentProps) {
   return (
     <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-white/10 bg-gray-900 px-6 pb-4 text-gray-100">
-      <div className="flex h-16 shrink-0 items-center">
+      <div className="flex h-16 shrink-0 items-center justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
             Research desk
           </p>
           <p className="mt-1 text-lg font-semibold text-white">Library</p>
         </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="-m-2.5 p-2.5 text-gray-400 hover:text-white"
+        >
+          <span className="sr-only">Close sidebar</span>
+          <XMarkIcon aria-hidden="true" className="size-6" />
+        </button>
       </div>
 
       <nav aria-label="Main navigation" className="flex flex-1 flex-col">
@@ -88,13 +97,25 @@ function SidebarContent({ onNavigate }: SidebarContentProps) {
 
 function Sidebar() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  // desktop keeps the sidebar docked until it's closed
+  const [docked, setDocked] = useState(true)
+
+  const openSidebar = () => {
+    if (window.matchMedia('(min-width: 1024px)').matches) setDocked(true)
+    else setSidebarOpen(true)
+  }
 
   return (
     <>
-      <div className="sticky top-0 z-40 flex items-center gap-x-6 bg-gray-900 px-4 py-4 shadow-sm lg:hidden">
+      <div
+        className={classNames(
+          'sticky top-0 z-40 flex items-center gap-x-6 self-start bg-gray-900 px-4 py-4 shadow-sm',
+          docked && 'lg:hidden',
+        )}
+      >
         <button
           type="button"
-          onClick={() => setSidebarOpen(true)}
+          onClick={openSidebar}
           className="-m-2.5 p-2.5 text-gray-400 hover:text-white"
         >
           <span className="sr-only">Open sidebar</span>
@@ -107,26 +128,19 @@ function Sidebar() {
         <DialogBackdrop className="fixed inset-0 bg-gray-900/80 transition-opacity" />
         <div className="fixed inset-0 flex">
           <DialogPanel className="relative mr-16 flex w-full max-w-xs flex-1">
-            <TransitionChild>
-              <div className="absolute top-0 left-full flex w-16 justify-center pt-5">
-                <button
-                  type="button"
-                  onClick={() => setSidebarOpen(false)}
-                  className="-m-2.5 p-2.5 text-white"
-                >
-                  <span className="sr-only">Close sidebar</span>
-                  <XMarkIcon aria-hidden="true" className="size-6" />
-                </button>
-              </div>
-            </TransitionChild>
-            <SidebarContent onNavigate={() => setSidebarOpen(false)} />
+            <SidebarContent
+              onClose={() => setSidebarOpen(false)}
+              onNavigate={() => setSidebarOpen(false)}
+            />
           </DialogPanel>
         </div>
       </Dialog>
 
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-        <SidebarContent />
-      </div>
+      {docked && (
+        <div className="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-72 lg:shrink-0 lg:flex-col">
+          <SidebarContent onClose={() => setDocked(false)} />
+        </div>
+      )}
     </>
   )
 }
