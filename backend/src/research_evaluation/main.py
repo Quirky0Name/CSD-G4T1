@@ -25,6 +25,7 @@ from research_evaluation.investigation.run import (
     PaperChanges,
     investigate_papers,
 )
+from research_evaluation.notify import TelegramNotifier, telegram_configured
 from research_evaluation.storage import SERVICE_SUBJECT, sm_client
 
 # Updating waits for the evaluation, within its own 20 s timeout
@@ -152,6 +153,8 @@ def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
             ) as sm,
             # Crossref and Europe PMC only: no base URL, no auth, never the service token
             httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as external,
+            # Telegram only, the same way: the bot token is in each request's URL
+            httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as telegram,
         ):
             app.state.jwt_key = key
             app.state.sm = sm
@@ -161,8 +164,17 @@ def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
                 crossref_mailto=config.crossref_mailto,
                 pdf_timeout=config.investigation_pdf_timeout_seconds,
             )
+            notifier = (
+                TelegramNotifier(
+                    telegram,
+                    config.telegram_bot_token.get_secret_value().strip(),
+                    config.notify_telegram_chat_id.strip(),
+                )
+                if telegram_configured(config)
+                else None
+            )
             app.state.impact = (
-                ImpactContext(GeminiLlm(make_client(config), config.gemini_model))
+                ImpactContext(GeminiLlm(make_client(config), config.gemini_model), notifier)
                 if gemini_configured(config)
                 else None
             )

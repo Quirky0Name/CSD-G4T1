@@ -7,6 +7,10 @@ from support import TEST_JWT_KEY, TEST_JWT_SECRET
 
 from research_evaluation.config import ResearchEvaluationSettings
 from research_evaluation.main import create_app
+from research_evaluation.notify import telegram_configured
+
+TOKEN = "123456:secret-bot-token"
+CHAT = "987654321"
 
 pytestmark = pytest.mark.usefixtures("clean_settings_env")
 
@@ -173,3 +177,27 @@ def test_startup_makes_impact_a_gemini_model_with_the_timeout(tmp_path, monkeypa
         assert llm.model == "gemini-test"
         # the SDK takes milliseconds
         assert llm.client._api_client._http_options.timeout == 45_000
+
+
+def test_notifications_are_off_unless_both_variables_are_set(monkeypatch):
+    def configured() -> bool:
+        return telegram_configured(ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET))
+
+    assert configured() is False
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", TOKEN)
+    assert configured() is False
+    monkeypatch.setenv("NOTIFY_TELEGRAM_CHAT_ID", CHAT)
+    assert configured() is True
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "")
+    assert configured() is False
+
+
+def test_the_bot_token_stays_hidden_in_the_settings(monkeypatch):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", TOKEN)
+    monkeypatch.setenv("NOTIFY_TELEGRAM_CHAT_ID", CHAT)
+
+    settings = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+
+    assert settings.telegram_bot_token.get_secret_value() == TOKEN
+    assert TOKEN not in repr(settings)
+    assert settings.notify_telegram_chat_id == CHAT

@@ -2,7 +2,7 @@ from uuid import UUID
 
 import httpx
 import pytest
-from research_evaluation_support import snapshot_dict
+from research_evaluation_support import FakeTelegram, snapshot_dict
 from support import TEST_JWT_KEY, TEST_JWT_SECRET, load_fixture
 
 from common.service_token import ServiceTokenAuth
@@ -131,6 +131,14 @@ class Impact:
 @pytest.fixture
 def impact() -> Impact:
     return Impact()
+
+
+@pytest.fixture
+async def telegram():
+    """Telegram faked (FakeTelegram): accepts every message unless a test sets `response`."""
+    fake = FakeTelegram()
+    yield fake
+    await fake.client.aclose()
 
 
 @pytest.fixture

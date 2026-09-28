@@ -1,5 +1,6 @@
 """Snapshot builders and request helpers shared by the Research Evaluation tests."""
 
+import json
 import time
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -69,3 +70,23 @@ async def nudge(client: httpx.AsyncClient, paper_ids: list, token: str | None = 
         json={"paper_ids": [str(paper_id) for paper_id in paper_ids]},
         headers={"Authorization": f"Bearer {token or updating_token()}"},
     )
+
+
+class FakeTelegram:
+    """Telegram's Bot API with no network: records every request and answers `response`, or
+    raises it when it's an exception."""
+
+    def __init__(self, response: httpx.Response | Exception | None = None) -> None:
+        self.response = response if response is not None else httpx.Response(200, json={"ok": True})
+        self.requests: list[httpx.Request] = []
+        self.client = httpx.AsyncClient(transport=httpx.MockTransport(self._handle))
+
+    def _handle(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        if isinstance(self.response, Exception):
+            raise self.response
+        return self.response
+
+    def texts(self) -> list[str]:
+        """The text of every message sent, in order."""
+        return [json.loads(request.content)["text"] for request in self.requests]

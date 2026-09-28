@@ -13,6 +13,7 @@ from research_evaluation.impact.schemas import (
     ImpactAssessment,
     RecommendedActions,
 )
+from research_evaluation.notify import TelegramNotifier
 
 ANSWERS = {
     ChangeAssessment: ChangeAssessment.model_validate(
@@ -95,6 +96,24 @@ async def test_investigated_reports_are_assessed(client, sm, llm):
     assert await status(sm, first) == "assessed"
     assert await status(sm, second) == "assessed"
     assert len(llm.calls) == 6
+
+
+async def test_each_report_it_assesses_is_notified(client, sm, impact, telegram):
+    impact.context = ImpactContext(
+        FakeLlm(), TelegramNotifier(telegram.client, "123456:test-token", "987654321")
+    )
+    first, second = await report(sm), await report(sm)
+    skipped = await report(sm, investigated=False)
+
+    response = await trigger(client, {"report_ids": [first, skipped, second]}, updating_token())
+
+    assert response.status_code == 202
+    texts = telegram.texts()
+    assert [text.splitlines()[0] for text in texts] == [
+        f"Evaluation done: report {first}",
+        f"Evaluation done: report {second}",
+    ]
+    assert all("Change: high\nRetracted." in text for text in texts)
 
 
 async def test_a_repeated_id_is_assessed_once_and_other_ids_are_skipped(client, sm, llm):
