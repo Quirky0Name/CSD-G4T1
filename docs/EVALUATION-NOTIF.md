@@ -1,7 +1,8 @@
 # Telling the researcher an evaluation is done (plan)
 
-**Status: in progress, 2026-09-28.** S1 (the notifier) is done; S2 (wiring
-it into impact) is next. Work happens on `feat/eval-notif`.
+**Status: done (S1–S2), 2026-09-28, each subtask verified.** Work
+happened on `feat/eval-notif`; see "Codebase context" for what was built
+and where.
 
 For the demo, the researcher should hear about it when Research Evaluation
 has finished judging a change, without having to open the platform: a
@@ -44,7 +45,7 @@ SMTP credentials and could land in spam. See DECISIONS.md, 2026-09-28.
 | | Goal | State |
 |---|---|---|
 | S1 | `TelegramNotifier`: builds the message for an assessed report and sends it to the configured chat, never raising and never logging the token or the text; the two settings and `telegram_configured` | done |
-| S2 | `assess_report` notifies after the evaluation is stored (never when a report is skipped or fails); `create_app` builds the notifier with its own client when both variables are set | next |
+| S2 | `assess_report` notifies after the evaluation is stored (never when a report is skipped or fails); `create_app` builds the notifier with its own client when both variables are set | done |
 
 ## Setting it up
 
@@ -68,9 +69,11 @@ SMTP credentials and could land in spam. See DECISIONS.md, 2026-09-28.
 |---|---|
 | The notifier | `backend/src/research_evaluation/notify.py`: `TelegramNotifier(http, token, chat_id).report_assessed(report, paper, evaluation)` returns `True` once Telegram accepted the message, `False` (logged) otherwise, and never raises |
 | The message | `notify.message(report, paper, evaluation)`, a pure function; `Report` and `PaperDetails` are from `research_evaluation/storage.py`, `Evaluation` (the body impact `PUT`s) from `impact/schemas.py` |
-| "Is it configured?" | `notify.telegram_configured(settings)`: both variables set and non-empty |
+| "Is it configured?" | `notify.telegram_configured(settings)`: both variables set and not blank (whitespace only counts as unset) |
 | Settings | `ResearchEvaluationSettings.telegram_bot_token` (`SecretStr`, optional) and `notify_telegram_chat_id` (default empty) in `research_evaluation/config.py` |
-| Tests | `backend/tests/research_evaluation/test_notify.py` (message and sending, Telegram faked with `httpx.MockTransport`; one `live` test), settings in `test_config.py` |
+| Where it's called | `impact/run.py` `assess_report`: after `store_evaluation` succeeds, `context.notifier.report_assessed(report, inputs.paper, evaluation)`, outside the `try`, so a skipped or failed report returns before it and the return value is `True` whatever Telegram does |
+| Where it's built | `ImpactContext.notifier` (optional, default `None`) in `impact/run.py`; `main.create_app`'s lifespan makes it with its own `httpx.AsyncClient` (the `telegram` client) when `telegram_configured`, stripping both values. It hangs off the impact context, so without `GEMINI_API_KEY` there's no impact and nothing to notify |
+| Tests | `backend/tests/research_evaluation/test_notify.py` (message and sending, Telegram faked with `httpx.MockTransport`; startup wiring; one `live` test), settings in `test_config.py`, end to end in `impact/test_run.py` (nudge → assessed → one message; `none`; failing, unstored and skipped reports send nothing; Telegram failing leaves the report assessed) and `impact/test_trigger.py` (`POST /evaluate/reports` notifies). The fake is `FakeTelegram` in `tests/research_evaluation_support.py`, the `telegram` fixture in `tests/research_evaluation/conftest.py` |
 
 ### Gotchas
 
@@ -92,5 +95,9 @@ SMTP credentials and could land in spam. See DECISIONS.md, 2026-09-28.
 - **The client must be its own**, with no base URL and no auth, like
   investigation's: the Storage Management client carries the service
   token, which must never reach Telegram.
+- **One message per report, in the same loop.** The notification is
+  awaited before the next report is assessed, so a slow Telegram adds up
+  to 10 s (`notify.HTTP_TIMEOUT_SECONDS`) per report. Fine for the demo;
+  move it off the loop if reports are ever assessed in bulk.
 - A bot can't start a conversation: if the chat never wrote to the bot,
   Telegram answers `403` and the notification is logged as failed.

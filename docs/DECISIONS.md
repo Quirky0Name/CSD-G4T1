@@ -5,6 +5,49 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-28 — The researcher hears on Telegram when a report is assessed
+
+The plan is [EVALUATION-NOTIF.md](EVALUATION-NOTIF.md).
+
+### Team decisions
+
+- **"Evaluation done" is impact storing a report's evaluation** (the
+  report becomes `assessed`), from the nudge's background task or
+  `POST /evaluate/reports` alike. That's when there's something to tell
+  the researcher: what changed, how it affects their draft, what to do.
+- **Telegram, to one hard-coded chat, for the demo** (the story owner's
+  call: the notification doesn't have to be on the platform).
+  `TELEGRAM_BOT_TOKEN` and `NOTIFY_TELEGRAM_CHAT_ID` in Research
+  Evaluation's env; every assessed report goes to that chat, whoever owns
+  the paper. A bot is one HTTPS call with nothing else to set up, and the
+  message pops up on a phone during the demo. There's no User Management
+  yet, so there's no user or contact detail to look up.
+- **Sent only after the evaluation is stored, and it never fails
+  impact.** A report that's skipped or fails sends nothing, and a
+  Telegram failure is one log line: the report stays `assessed` and counts
+  as assessed. Nothing retries a notification.
+- **Plain text, and nothing of it in the logs.** No `parse_mode`, so the
+  model's words (and the notices they quote) are never read as markup.
+  The bot token is in the request URL, so failures log only a status code
+  or an exception class, and the app keeps the `httpx` logger at WARNING;
+  the text isn't logged either, as it's the model's judgment of the draft.
+- **Its own HTTP client**, with no base URL and no auth, like
+  investigation's, so the service token can never reach Telegram.
+- **Off unless both variables are set** (blank counts as unset); the
+  service starts and impact runs as before without them.
+
+### Rejected
+
+- **Email.** It needs an SMTP server and credentials (an app password),
+  and a demo message can land in spam.
+- **Looking up the paper's owner.** There's no User Management and no
+  contact details yet; that's for when there are real users.
+- **Notifying when alerts are stored (at the nudge).** The alerts' rule
+  text is generic; the useful message is impact's judgment, which comes a
+  minute later.
+
+---
+
 ## 2026-09-28 — Updating signs every request to Research Evaluation
 
 ### Team decisions

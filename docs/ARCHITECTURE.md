@@ -246,6 +246,14 @@ journal and author fields moved to Updating (Section 4).
      reads everything else from Storage Management, so the two stay
      independent. Alerts keep their rule-based text; impact's judgment is
      on the report. Without `GEMINI_API_KEY` impact doesn't run.
+  5. **Notification** (`notify.py`, right after impact stores a report's
+     evaluation): a Telegram message to one hard-coded chat
+     (`NOTIFY_TELEGRAM_CHAT_ID`, the demo's researcher) with the change,
+     its impact on the draft and what to do
+     ([EVALUATION-NOTIF.md](EVALUATION-NOTIF.md)). Only an `assessed`
+     report is notified; a failure to send is logged and changes nothing.
+     Off unless `TELEGRAM_BOT_TOKEN` and `NOTIFY_TELEGRAM_CHAT_ID` are
+     both set.
 
   Detection and the rules read only the snapshots. Impact reads the
   paper's stored PDF, the report's documents and, once a change is

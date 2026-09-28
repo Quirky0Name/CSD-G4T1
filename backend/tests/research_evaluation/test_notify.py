@@ -1,5 +1,5 @@
-"""The Telegram notifier on its own: the message for an assessed report and how it's sent, with
-Telegram faked by a MockTransport."""
+"""The Telegram notifier: the message for an assessed report and how it's sent, with Telegram
+faked by a MockTransport, and how startup builds it. Impact calling it is in impact/test_run.py."""
 
 import json
 import logging
@@ -7,10 +7,12 @@ from uuid import UUID
 
 import httpx
 import pytest
+from fastapi.testclient import TestClient
 from support import TEST_JWT_SECRET
 
 from research_evaluation.config import ResearchEvaluationSettings
 from research_evaluation.impact.schemas import Evaluation
+from research_evaluation.main import create_app
 from research_evaluation.notify import (
     MAX_MESSAGE_LENGTH,
     TelegramNotifier,
@@ -48,29 +50,7 @@ def utf16_length(text: str) -> int:
     return len(text.encode("utf-16-le")) // 2
 
 
-class FakeTelegram:
-    """Records every request; answers `response`, or raises it when it's an exception."""
-
-    def __init__(self, response: httpx.Response | Exception | None = None) -> None:
-        self.response = response if response is not None else httpx.Response(200, json={"ok": True})
-        self.requests: list[httpx.Request] = []
-        self.client = httpx.AsyncClient(transport=httpx.MockTransport(self._handle))
-
-    def _handle(self, request: httpx.Request) -> httpx.Response:
-        self.requests.append(request)
-        if isinstance(self.response, Exception):
-            raise self.response
-        return self.response
-
-
-@pytest.fixture
-async def telegram():
-    fake = FakeTelegram()
-    yield fake
-    await fake.client.aclose()
-
-
-# the message
+# the message (Telegram itself is conftest's `telegram`, a FakeTelegram)
 
 
 def test_a_meaningful_change_names_the_paper_and_every_part_of_the_evaluation():
@@ -201,6 +181,68 @@ async def test_a_failure_returns_false_and_logs_neither_the_token_nor_the_text(
     assert record.exc_info is None
     assert TOKEN not in record.getMessage()
     assert "retracted for methodological concerns" not in record.getMessage()
+
+
+# startup
+
+
+@pytest.fixture
+def app_env(tmp_path, monkeypatch, clean_settings_env):
+    """No .env and none of the developer's variables; a JWT secret and a Gemini key, so impact
+    runs and the notifier depends only on the Telegram variables."""
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    return monkeypatch
+
+
+def test_startup_gives_impact_a_notifier_with_its_own_client_without_auth(app_env):
+    app_env.setenv("TELEGRAM_BOT_TOKEN", f" {TOKEN} ")
+    app_env.setenv("NOTIFY_TELEGRAM_CHAT_ID", f"{CHAT}\n")
+    app = create_app()
+
+    with TestClient(app):
+        notifier = app.state.impact.notifier
+        assert isinstance(notifier, TelegramNotifier)
+        # Telegram only: never the service token, never Storage Management's URL, and not
+        # investigation's client either
+        http = notifier._http
+        assert http is not app.state.sm
+        assert http is not app.state.investigation.external
+        assert http.auth is None
+        assert str(http.base_url) == ""
+        assert (notifier._token, notifier._chat_id) == (TOKEN, CHAT)
+
+
+@pytest.mark.parametrize(
+    "variables",
+    [
+        {},
+        {"TELEGRAM_BOT_TOKEN": TOKEN},
+        {"NOTIFY_TELEGRAM_CHAT_ID": CHAT},
+        {"TELEGRAM_BOT_TOKEN": "  ", "NOTIFY_TELEGRAM_CHAT_ID": CHAT},
+        {"TELEGRAM_BOT_TOKEN": TOKEN, "NOTIFY_TELEGRAM_CHAT_ID": " "},
+    ],
+    ids=["neither", "token only", "chat only", "blank token", "blank chat"],
+)
+def test_startup_leaves_notifications_off_unless_both_variables_are_set(app_env, variables):
+    for name, value in variables.items():
+        app_env.setenv(name, value)
+    app = create_app()
+
+    with TestClient(app):
+        assert app.state.impact is not None
+        assert app.state.impact.notifier is None
+
+
+def test_without_a_gemini_key_there_is_nothing_to_notify(app_env):
+    app_env.delenv("GEMINI_API_KEY")
+    app_env.setenv("TELEGRAM_BOT_TOKEN", TOKEN)
+    app_env.setenv("NOTIFY_TELEGRAM_CHAT_ID", CHAT)
+    app = create_app()
+
+    with TestClient(app):
+        assert app.state.impact is None
 
 
 @pytest.mark.live

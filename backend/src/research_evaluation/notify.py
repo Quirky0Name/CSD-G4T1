@@ -24,10 +24,11 @@ log = logging.getLogger(__name__)
 
 
 def telegram_configured(settings: ResearchEvaluationSettings) -> bool:
+    """Both variables set; blank (or only whitespace) counts as not set."""
     return (
         settings.telegram_bot_token is not None
-        and bool(settings.telegram_bot_token.get_secret_value())
-        and bool(settings.notify_telegram_chat_id)
+        and bool(settings.telegram_bot_token.get_secret_value().strip())
+        and bool(settings.notify_telegram_chat_id.strip())
     )
 
 

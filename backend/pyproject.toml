@@ -34,7 +34,7 @@ testpaths = ["tests"]
 pythonpath = ["src", ".", "tests"]
 # importlib mode: tests/ has no __init__.py, so tests/updating can't shadow the real updating package
 addopts = "--import-mode=importlib -m 'not live'"
-markers = ["live: hits the real Crossref/OpenAlex/Europe PMC/Gemini APIs (run with -m live)"]
+markers = ["live: hits the real Crossref/OpenAlex/Europe PMC/Gemini/Telegram APIs (run with -m live)"]
 
 [tool.ruff]
 line-length = 100

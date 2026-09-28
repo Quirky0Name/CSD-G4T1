@@ -45,6 +45,15 @@ the publisher during the demo.
    many alerts it created, and the alert is stored in Storage Management:
    `GET /papers/{id}/alerts` with the researcher's token (or, against the
    stub, `GET /dev/papers/{id}/alerts`).
+   Once impact has assessed the report (in the background, up to a minute
+   with three Gemini calls), **show the Telegram message on the phone**:
+   the paper, the change's severity and summary, the impact on the draft
+   and what to do. It needs `GEMINI_API_KEY`, `TELEGRAM_BOT_TOKEN` and
+   `NOTIFY_TELEGRAM_CHAT_ID` in `backend/.env`; check the bot beforehand
+   with the `live` test in [EVALUATION-NOTIF.md](EVALUATION-NOTIF.md)
+   ("Setting it up"). If Gemini's free tier is out of requests the report
+   stays `investigated` and no message comes; assess it again later with
+   `POST /evaluate/reports`.
 4. **Frontend:** show the changes panel on the paper detail page, then
    acknowledge one change. Until the panel exists, show the same thing on
    Storage Management's API: `GET /papers/{id}/alerts` (newest first, with
