@@ -8,7 +8,6 @@ import com.g4t1.storage.snapshot.SnapshotRepository;
 import com.g4t1.storage.snapshot.SnapshotRequest;
 import com.g4t1.storage.snapshot.SnapshotResponse;
 import com.g4t1.storage.snapshot.SnapshotService;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Limit;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -24,9 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-// Sets a paper up for a demo or a rehearsal. Only exists with the dev profile.
+// Sets a paper up for a demo or a rehearsal. On for everyone for now; take out before a real deployment.
 @Service
-@Profile("dev")
 public class DevService {
 
     // Crossref's updated-by types, as they appear in a snapshot's crossref_updates

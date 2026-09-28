@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles({"test", "dev"})
+@ActiveProfiles("test")
 class DevToolsTest {
 
     // the retracted Lancet paper as the real APIs report it: two retractions plus other notices
