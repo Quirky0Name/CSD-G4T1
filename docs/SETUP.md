@@ -68,6 +68,7 @@ bottom.
 | `CACHE_MAX_ENTRIES` | `5000` (default) |
 | `EVALUATION_SNAPSHOT_WINDOW` | `5` (default), at least `2`: how many of a paper's newest snapshots Research Evaluation compares on each nudge. A change is missed if its nudge keeps failing for more than N − 2 polls in a row; raise it (e.g. `30`) before deployment |
 | `INVESTIGATION_PDF_TIMEOUT_SECONDS` | `120` (default), more than `0`: how long Research Evaluation's investigation waits for Storage Management to store a document, which includes downloading its PDF. Investigation runs after the nudge's reply, so this never delays Updating |
+| `IMPACT_LLM_TIMEOUT_SECONDS` | `120` (default), more than `0`: how long impact waits for one Gemini call (up to three per report). Impact runs after investigation, in the background; without `GEMINI_API_KEY` it doesn't run at all. The free tier allows about 20 calls per model per day |
 
 ## Scaffolding only (no keys needed)
 

@@ -144,8 +144,11 @@ Owns all Postgres and file persistence.
   [STORAGE-USER-RESEARCH-PAPER.md](STORAGE-USER-RESEARCH-PAPER.md)),
   `reports` (one per paper per nudge that stored new alerts: it groups
   those alerts through `alerts.report_id`, has a status, `investigating`
-  → `investigated` → `assessed`, and reserves the columns impact's
-  evaluation will fill; deleted with its paper), `report_documents` (what
+  → `investigated` → `assessed`, and has the columns impact's
+  evaluation fills: the change's summary and severity, the impact level
+  on the researcher's draft, the evaluation and recommendation, and the
+  full assessment as JSON, see
+  [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md); deleted with its paper), `report_documents` (what
   Research Evaluation's investigation fetched for one DOI of a report: a
   notice, a new version or the paper's current copy, with its Crossref
   record, open-access text and PDF status; one per DOI per report; deleted
@@ -170,6 +173,7 @@ Owns all Postgres and file persistence.
   `GET /internal/papers/{id}/alerts/change-keys`,
   `POST /internal/papers/{id}/reports`,
   `GET/PATCH /internal/papers/{id}/reports/{reportId}`,
+  `GET /internal/reports/{reportId}`, `PUT /internal/reports/{reportId}/evaluation`,
   `POST /internal/documents`, `GET /internal/documents/{id}/pdf`.
 - **DB hosting:** Supabase free tier.
 
@@ -228,21 +232,25 @@ journal and author fields moved to Updating (Section 4).
      version, and the paper's current copy, and stores them as the
      report's documents; Storage Management downloads the PDFs. It fetches
      facts and judges nothing.
-  4. **Impact** (`impact/`, not built yet): an LLM judges a report's
-     alerts together, from its documents, and writes its evaluation into
-     the report. It covers every kind of change, `other` included; there's
-     no separate LLM step that first classifies `other` changes
-     (DECISIONS.md, 2026-09-27). **The handoff is a report id:**
+  4. **Impact** (`impact/`, right after investigation, in the same
+     background task): Gemini judges a report's alerts together, from its
+     documents, the paper's stored PDF and the researcher's draft, and
+     writes its evaluation into the report, which becomes `assessed`
+     ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)). Three questions: what
+     changed and how severe it is (`none` = not meaningful, and it stops
+     there); how it affects the researcher, from how their draft uses the
+     paper; what they should do. It covers every kind of change, `other`
+     included; there's no separate LLM step that first classifies `other`
+     changes (DECISIONS.md, 2026-09-27). **The handoff is a report id:**
      investigation returns the ids of the reports it finished, and impact
      reads everything else from Storage Management, so the two stay
-     independent. Until impact exists, an `other` change keeps its
-     rule-based text.
+     independent. Alerts keep their rule-based text; impact's judgment is
+     on the report. Without `GEMINI_API_KEY` impact doesn't run.
 
-  So far the evaluation doesn't read the paper's PDF, notes or extracted
-  text; the templates only use the snapshots. Storage Management also
-  serves the researcher's own paper for the tracked paper's project
-  (`GET /internal/papers/{id}/research-paper`), so a later stage can judge
-  a change against what the researcher is writing; nothing reads it yet.
+  Detection and the rules read only the snapshots. Impact reads the
+  paper's stored PDF, the report's documents and, once a change is
+  meaningful, the researcher's own paper for the tracked paper's project
+  (`GET /internal/papers/{id}/research-paper`).
 - **Structured signal layer** (no reasoning, cheap): citation-neighbourhood
   metrics computed from OpenAlex reference/citation data, GROBID on the
   PDF stored in Storage Management (COI/funding text, verbatim, never
@@ -254,9 +262,14 @@ journal and author fields moved to Updating (Section 4).
   paper support or contradict a tracked one) and methodology/claims
   validation, both live in the demo. Provider: DeepSeek (see
   [DECISIONS.md](DECISIONS.md)). Results are cached and pre-warmed for
-  the demo so a slow/failed call can't stall it.
+  the demo so a slow/failed call can't stall it. **Impact's LLM is
+  Gemini** (`GEMINI_API_KEY`, `GEMINI_MODEL`), which reads the paper, its
+  new copies and the researcher's draft as PDFs directly
+  ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)).
 - **Endpoints (internal):** `POST /evaluate/changes`, called only by
-  Updating's nudge. `POST /evaluate/background-info`,
+  Updating's nudge. `POST /evaluate/reports`, service token, to assess
+  reports by id on request (re-running a failed one, or warming the demo).
+  `POST /evaluate/background-info`,
   `POST /evaluate/citation-neighbourhood` and `POST /evaluate/stance` are
   under review: likely internal steps of Research Evaluation's evaluation
   rather than endpoints (see CONTRACTS.md).
