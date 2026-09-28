@@ -1,44 +1,72 @@
-import { useRef, useState } from 'react'
-import {
-  DocumentArrowUpIcon,
-  EllipsisHorizontalIcon,
-} from '@heroicons/react/20/solid'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { DocumentArrowUpIcon, EllipsisHorizontalIcon } from '@heroicons/react/20/solid'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
+import { deleteResearchPaper, errorMessage, getResearchPaper, uploadResearchPaper, type ResearchPaper } from '../api'
+import { formatDateTime } from '../format'
+import { useToast } from './Toasts'
 
-const dummyPaper = {
-  id: '1',
-  title: 'The Impact of Attention Mechanisms on Transformer Efficiency (Draft)',
-  status: 'Draft · Last edited 2 days ago',
-}
+type LoadState = { status: 'loading' } | { status: 'ready'; paper: ResearchPaper | null }
 
 const UserPaper = () => {
-  const [hasPaper, setHasPaper] = useState(true)
-  const [fileName, setFileName] = useState<string | null>(null)
+  const showToast = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Opens the native file picker. Wire this up to an actual upload call later.
+  useEffect(() => {
+    let active = true
+    getResearchPaper()
+      .then((paper) => {
+        if (active) setState({ status: 'ready', paper })
+      })
+      .catch((err: unknown) => {
+        if (!active) return
+        setState({ status: 'ready', paper: null })
+        showToast({ tone: 'error', message: errorMessage(err) })
+      })
+    return () => {
+      active = false
+    }
+  }, [showToast])
+
   const handleUploadClick = () => {
     fileInputRef.current?.click()
   }
 
-  // Fires once a file is picked. Currently just stores the name locally —
-  // swap this out for a real upload/replace request.
-  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const handleFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    // reset the input so selecting the same file again still fires onChange
+    event.target.value = ''
     if (!file) return
 
-    setFileName(file.name)
-    setHasPaper(true)
-
-    // reset the input so selecting the same file again still fires onChange
-    e.target.value = ''
+    setBusy(true)
+    setError(null)
+    try {
+      const paper = await uploadResearchPaper(file)
+      setState({ status: 'ready', paper })
+      showToast({ tone: 'success', message: `Saved "${paper.filename}".` })
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
   }
 
-  // Does nothing yet — plug in a real delete call later.
-  const handleRemove = () => {
-    setHasPaper(false)
-    setFileName(null)
+  const handleRemove = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      await deleteResearchPaper()
+      setState({ status: 'ready', paper: null })
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
   }
+
+  const paper = state.status === 'ready' ? state.paper : null
 
   return (
     <div className="mt-10">
@@ -52,22 +80,25 @@ const UserPaper = () => {
         type="file"
         accept=".pdf"
         className="hidden"
-        onChange={handleFileSelected}
+        onChange={(event) => void handleFileSelected(event)}
       />
 
-      {!hasPaper ? (
+      {state.status === 'loading' ? (
+        <div className="flex min-h-32 items-center justify-center rounded-xl border border-dashed border-white/10 px-6 text-center">
+          <p className="text-sm/6 text-gray-400">Loading your research paper…</p>
+        </div>
+      ) : !paper ? (
         <div className="flex min-h-32 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 px-6 text-center">
           <DocumentArrowUpIcon aria-hidden="true" className="mx-auto size-8 text-gray-500" />
           <h3 className="mt-3 text-sm/6 font-semibold text-white">No paper uploaded yet</h3>
-          <p className="mt-1 text-sm/6 text-gray-400">
-            Upload a PDF to start tracking your paper.
-          </p>
+          <p className="mt-1 text-sm/6 text-gray-400">Upload a PDF to start tracking your paper.</p>
           <button
             type="button"
+            disabled={busy}
             onClick={handleUploadClick}
-            className="mt-4 inline-flex items-center rounded-md bg-indigo-500 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-400"
+            className="mt-4 inline-flex items-center rounded-md bg-indigo-500 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Upload paper
+            {busy ? 'Uploading…' : 'Upload paper'}
           </button>
         </div>
       ) : (
@@ -84,21 +115,19 @@ const UserPaper = () => {
           </div>
 
           <div className="min-w-0 flex-1 text-sm/6">
-            <p className="truncate font-medium text-white">
-              {fileName ?? dummyPaper.title}
-            </p>
+            <p className="truncate font-medium text-white">{paper.filename}</p>
             <p className="mt-0.5 flex items-center gap-x-1.5 text-xs/5 text-gray-400">
               <span className="inline-flex items-center rounded-full bg-yellow-400/10 px-1.5 py-0.5 text-[10px] font-medium text-yellow-400 ring-1 ring-inset ring-yellow-400/20">
                 Draft
               </span>
-              Last edited 2 days ago
+              Uploaded {formatDateTime(paper.uploaded_at)}
             </p>
           </div>
 
           <Menu as="div" className="relative ml-auto flex-none">
-            <MenuButton className="relative block text-gray-400 hover:text-white">
+            <MenuButton disabled={busy} className="relative block text-gray-400 hover:text-white disabled:opacity-50">
               <span className="absolute -inset-2.5" />
-              <span className="sr-only">Open options for {dummyPaper.title}</span>
+              <span className="sr-only">Open options for {paper.filename}</span>
               <EllipsisHorizontalIcon aria-hidden="true" className="size-5" />
             </MenuButton>
             <MenuItems
@@ -111,21 +140,27 @@ const UserPaper = () => {
                   onClick={handleUploadClick}
                   className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
                 >
-                  Replace paper<span className="sr-only">, {dummyPaper.title}</span>
+                  Replace paper<span className="sr-only">, {paper.filename}</span>
                 </button>
               </MenuItem>
               <MenuItem>
                 <button
                   type="button"
-                  onClick={handleRemove}
+                  onClick={() => void handleRemove()}
                   className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
                 >
-                  Remove<span className="sr-only">, {dummyPaper.title}</span>
+                  Remove<span className="sr-only">, {paper.filename}</span>
                 </button>
               </MenuItem>
             </MenuItems>
           </Menu>
         </div>
+      )}
+
+      {error && (
+        <p className="mt-3 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">
+          {error}
+        </p>
       )}
     </div>
   )
