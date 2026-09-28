@@ -34,6 +34,8 @@ class ResearchEvaluationSettings(BaseSettings):
     # impact.llm refuses to build a client when it's missing
     gemini_api_key: SecretStr | None = None
     gemini_model: str = DEFAULT_GEMINI_MODEL
+    # how long impact waits for one Gemini call; it runs after investigation, in the background
+    impact_llm_timeout_seconds: float = Field(default=120, gt=0)
 
     @field_validator("jwt_secret", mode="before")
     @classmethod

@@ -9,8 +9,14 @@ from common.service_token import ServiceTokenAuth
 from dev.stub_storage import create_app as create_stub_app
 from research_evaluation.auth import jwt_key
 from research_evaluation.config import DEFAULT_SNAPSHOT_WINDOW, ResearchEvaluationSettings
+from research_evaluation.impact.run import ImpactContext
 from research_evaluation.investigation.run import InvestigationContext
-from research_evaluation.main import create_app, investigation_context, snapshot_window
+from research_evaluation.main import (
+    create_app,
+    impact_context,
+    investigation_context,
+    snapshot_window,
+)
 from research_evaluation.storage import SERVICE_SUBJECT, sm_client
 
 
@@ -114,6 +120,19 @@ async def external():
     await apis.client.aclose()
 
 
+class Impact:
+    """Impact's context as the endpoint gets it: None (no Gemini key) unless a test sets
+    `context`, e.g. to one with a fake model."""
+
+    def __init__(self) -> None:
+        self.context: ImpactContext | None = None
+
+
+@pytest.fixture
+def impact() -> Impact:
+    return Impact()
+
+
 @pytest.fixture
 def settings(request) -> ResearchEvaluationSettings:
     """The default window, or another one via `@pytest.mark.parametrize("settings", [3], indirect=True)`.
@@ -126,10 +145,11 @@ def settings(request) -> ResearchEvaluationSettings:
 
 
 @pytest.fixture
-async def client(sm, external, settings):
+async def client(sm, external, impact, settings):
     """Research Evaluation, talking to the stub. The lifespan doesn't run under
     ASGITransport, so the key, the Storage Management client, the snapshot window and
-    investigation's context come in as overrides. Investigation runs as a background task,
+    investigation's and impact's contexts come in as overrides (impact's is None, as with no
+    Gemini key, unless a test sets `impact.context`). Investigation runs as a background task,
     which ASGITransport finishes before the nudge's response comes back."""
     app = create_app(settings)
     app.dependency_overrides[jwt_key] = lambda: TEST_JWT_KEY
@@ -138,5 +158,6 @@ async def client(sm, external, settings):
     app.dependency_overrides[investigation_context] = lambda: InvestigationContext(
         external=external.client, crossref_mailto="", pdf_timeout=settings.investigation_pdf_timeout_seconds
     )
+    app.dependency_overrides[impact_context] = lambda: impact.context
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://re") as http:
         yield http

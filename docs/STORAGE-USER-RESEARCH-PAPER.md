@@ -1,8 +1,8 @@
 # The researcher's own paper, one per project
 
 **Status: built** on `feat/storage-user-research-paper`: the researcher's
-upload, GET and DELETE, and Research Evaluation's read. Nothing in Research
-Evaluation calls the read yet (see "TODO for other owners").
+upload, GET and DELETE, and Research Evaluation's read, which impact calls
+([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)).
 
 Storage Management keeps the researcher's own paper (the draft they're
 writing) for each of their projects, so Research Evaluation can judge what a
@@ -180,13 +180,13 @@ to read.
 
 ## TODO for other owners
 
-- **Research Evaluation:** nothing calls
-  `GET /internal/papers/{id}/research-paper` yet. When a stage needs the
-  draft, add a call next to the others in
-  `backend/src/research_evaluation/storage.py` (service token, like the
-  snapshot and alert calls). Treat a `404` whose `detail` isn't
-  `No paper <id>` as "no draft", not as a failure: most projects won't have
-  one. The dev stub (`backend/dev/stub_storage.py`) doesn't serve it.
+- **Research Evaluation:** done. Impact reads the draft with
+  `storage.draft_pdf` (`backend/src/research_evaluation/storage.py`), only
+  once a change is found meaningful, and treats a `404` whose `detail`
+  isn't `No paper <id>` as "no draft", not as a failure
+  ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)). The dev stub
+  (`backend/dev/stub_storage.py`) serves it too, one draft per paper, set
+  with `POST /dev/papers/{id}/research-paper`.
 - **User Management / frontend:** once folders exist, send their real
   ids. The upload is `multipart/form-data` with `file` and an optional
   `folder_id`; leave `folder_id` out for the "no folder" project. Show a

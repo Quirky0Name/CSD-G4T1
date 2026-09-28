@@ -57,6 +57,15 @@ So it's four queries whatever the number of reports.
 - **Every report, every status** (`investigating`, `investigated`,
   `assessed`). An `investigating` report can be one still being fetched
   or one a crash left behind; nothing tells the two apart yet.
+  Likewise, an `investigated` report can be waiting for impact, being
+  assessed right now, one whose assessment failed, or one impact will
+  never assess (no `GEMINI_API_KEY`); nothing tells those apart yet
+  either. Impact writes a report only once it's finished with it, so an
+  `assessed` report is always complete (with `change_severity` `none` when
+  impact decided the change isn't meaningful and stopped there). A status
+  for "evaluating" and "couldn't evaluate" is a to-do
+  ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), "One write, at the end,
+  and what the status can't say yet").
 - **Every alert the report holds, dismissed ones included**, with their
   status, in the alert API's shape (no `change_key`).
 - **Documents without `file_key`, `sha256` and `report_id`.**

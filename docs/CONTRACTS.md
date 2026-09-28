@@ -617,6 +617,7 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
   "id": 3, "paper_id": "uuid", "status": "investigating",
   "created_at": "2026-09-27T08:00:00Z", "investigated_at": null,
   "evaluation": null, "recommendation": null, "evaluated_at": null,
+  "change_summary": null, "change_severity": null, "impact_level": null, "assessment": null,
   "alerts": [
     {"id": 7, "change_type": "retraction", "change_key": "retraction", "severity": "high",
      "description": "...", "recommendation": "...", "notice_doi": "10.xxxx/...",
@@ -627,9 +628,23 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
 ```
 
 - `status`: `investigating` (just opened), `investigated` (investigation
-  done) or `assessed` (impact done; nothing sets it yet).
-- `evaluation`, `recommendation`, `evaluated_at`: impact's, null until a
-  later plan writes them.
+  done) or `assessed` (impact done, set by
+  `PUT /internal/reports/{reportId}/evaluation`).
+- Impact's fields, all null until the report is assessed
+  ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md); written by
+  `PUT /internal/reports/{reportId}/evaluation`, below):
+  - `change_summary`: what changed in the paper, in a few sentences;
+  - `change_severity`: `none`, `low`, `medium` or `high`, how serious the
+    change is for anyone relying on the paper (`none` = not meaningful);
+  - `impact_level`: `none`, `low`, `medium` or `high`, how much the
+    researcher's draft is affected;
+  - `evaluation`: how the change affects the researcher; `recommendation`:
+    what to do; `evaluated_at`: when impact wrote them;
+  - `assessment`: impact's full answer as a JSON object, returned exactly as
+    Research Evaluation sent it.
+
+  Unlike the alerts' `severity`, which is fixed by change type, these are
+  impact's judgment.
 - `alerts`, oldest first, carry their `change_key` (unlike the frontend's
   alert API): Research Evaluation matches them to its detected changes by
   it.
@@ -651,6 +666,55 @@ first time.
 
 Errors, as problem details: `400` any other or a missing `status`; `404`
 as for `GET`; `409` a report that's already `assessed`.
+
+#### `GET /internal/reports/{reportId}`
+
+The report by its id alone, for impact, which gets bare report ids from
+investigation. **Response `200`:** the same body as
+`GET /internal/papers/{id}/reports/{reportId}`, whose `paper_id` names the
+paper.
+
+Errors, as problem details: `400` a report id that isn't a number; `404`
+with `detail` `No report <reportId>`, also for a report whose paper was
+deleted (its reports went with it).
+
+#### `PUT /internal/reports/{reportId}/evaluation`
+
+Impact's evaluation of the report
+([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)), stored **once**, which
+marks the report `assessed`.
+
+**Request:**
+
+```json
+{
+  "change_summary": "The paper was retracted because …",
+  "change_severity": "high",
+  "impact_level": "medium",
+  "evaluation": "Your Discussion cites it as …",
+  "recommendation": "Replace the citation in the Discussion.",
+  "assessment": {"prompt_version": 1, "...": "impact's full answer"}
+}
+```
+
+| Field | Rules |
+|---|---|
+| `change_summary` | required, not blank |
+| `change_severity` | required: `none`, `low`, `medium` or `high`, exact lowercase. `none` means the change isn't meaningful |
+| `impact_level` | `none`, `low`, `medium` or `high`: required unless `change_severity` is `none`, and must be null (or left out) when it is |
+| `evaluation`, `recommendation` | not blank: required unless `change_severity` is `none`, and must be null (or left out) when it is |
+| `assessment` | optional JSON, stored and returned exactly as sent; Storage Management never looks inside |
+
+**Response `200`:** the report, as `GET` returns it, with `status`
+`assessed`, `evaluated_at` set and the fields as sent (the unsent ones
+null).
+
+Only an `investigated` report accepts it, in one conditional update, so of
+two writes at once one lands. Errors, as problem details: `400` a body
+that breaks the rules above, or a report id that isn't a number; `404`
+with `detail` `No report <reportId>`; `409` with `detail` `Report <id> is
+not investigated yet` (still `investigating`) or `Report <id> is already
+assessed` (the first evaluation is kept, unchanged).
 
 ### `POST /internal/documents`
 
@@ -795,13 +859,16 @@ Rules:
 
 ## Research Evaluation
 
-Called only by Updating, with the nudge (`POST /evaluate/changes`) when
-papers changed. Research Evaluation in turn calls Storage Management: it
-reads snapshots (and later the PDF, notes and text) and stores alerts.
-Storage Management never calls Research Evaluation, and neither does the
-frontend: alerts reach the frontend through Storage Management. See
+Called by Updating, with the nudge (`POST /evaluate/changes`) when
+papers changed, and, by hand with a service token, to assess reports by id
+(`POST /evaluate/reports`, below). Research Evaluation in turn calls
+Storage Management: it reads snapshots, reports, PDFs and the researcher's
+draft, and stores alerts, report documents and evaluations. Storage
+Management never calls Research Evaluation, and neither does the frontend:
+alerts and reports reach the frontend through Storage Management. See
 DECISIONS.md, "2026-09-26 — Research Evaluation is called only by
-Updating's nudge".
+Updating's nudge", and "2026-09-28 — Reports can be assessed by id on
+request".
 
 The other three endpoints below (`/evaluate/background-info`,
 `/evaluate/citation-neighbourhood`, `/evaluate/stance`) are **under
@@ -926,12 +993,52 @@ background:
    `POST /internal/documents` (Storage Management downloads the PDF of a
    new version or current copy before answering, so this call has a long
    timeout, `INVESTIGATION_PDF_TIMEOUT_SECONDS`);
-3. `PATCH /internal/papers/{id}/reports/{reportId}` to `investigated`.
+3. `PATCH /internal/papers/{id}/reports/{reportId}` to `investigated`;
+4. **impact** ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)), on the ids of
+   the reports investigation finished, one after another: read the report
+   (`GET /internal/reports/{reportId}`; one that isn't `investigated` is
+   skipped), the paper's newest snapshot and stored PDF and the document
+   PDFs, ask Gemini what changed and how severe it is, and only if it's
+   meaningful read the researcher's draft
+   (`GET /internal/papers/{id}/research-paper`) and ask how it affects the
+   draft and what to do; then
+   `PUT /internal/reports/{reportId}/evaluation`, which marks it
+   `assessed`. It doesn't run when `GEMINI_API_KEY` isn't set: the reports
+   stay `investigated`.
 
 Nothing in it changes the reply, and Updating never waits for it. A
-failure is logged and leaves the report `investigating`; nothing retries
-it yet. The finished reports' ids are what impact (a later plan) will
-evaluate.
+failure is logged and leaves the report `investigating` (investigation)
+or `investigated` (impact, with nothing stored); nothing retries it yet.
+
+### `POST /evaluate/reports`
+
+Runs impact ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)) on reports by
+id, on request: to re-run a report whose impact failed, or to assess the
+demo's reports ahead of time. Service JWT only: `401` for a missing, bad
+or expired token, `403` for a user token.
+
+**Request:**
+
+```json
+{"report_ids": [3, 4]}
+```
+
+At least one id, each a JSON integer (`"5"` or `5.0` is rejected).
+
+**Response `202`:** the ids accepted, each once, in the order sent; impact
+runs on them in the background, one after another, after the reply.
+
+```json
+{"report_ids": [3, 4]}
+```
+
+Only an `investigated` report is assessed; an `investigating` or
+`assessed` report, or an unknown id, is skipped (logged) before any PDF is
+fetched or Gemini called. A report that fails stays `investigated`.
+
+Errors: `503` with `detail` `Gemini isn't configured` when
+`GEMINI_API_KEY` isn't set (nothing runs); `422` a body that isn't that
+shape.
 
 ### `POST /evaluate/background-info`
 

@@ -64,7 +64,9 @@ never from investigation's objects in memory, and marks the
 report `assessed` when done. So the two packages don't import each other,
 and either can be re-run on its own. The ids are the reports finished in
 this run; picking up a report whose impact failed is the impact plan's
-call. This plan returns the ids; the impact plan adds the call.
+call. This plan returns the ids; the impact plan adds the call, which is
+now built: `main.investigate_then_assess` hands them to
+`impact.run.assess_reports` ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S5).
 
 ## What already exists
 
