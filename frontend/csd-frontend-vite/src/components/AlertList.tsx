@@ -41,7 +41,7 @@ export default function AlertList() {
     <div>
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-base/7 font-semibold text-white">Research alerts</h2>
+          <h2 className="text-base/7 font-semibold text-white">Alerts</h2>
           <p className="mt-1 text-sm/6 text-gray-400">Monitor changes that may affect your research.</p>
         </div>
         {paperFilter && (

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeftIcon, ArrowPathIcon, CalendarIcon, PlusIcon } from '@heroicons/react/20/solid'
-import { errorMessage, runPoll, type PollSummary } from '../api'
+import { deletePaper, errorMessage, runPoll, type PollSummary } from '../api'
 import { formatDateTime } from '../format'
 import { useTracking } from '../tracking'
 import { useToast, type ToastTone } from '../components/Toasts'
@@ -39,6 +39,16 @@ function CitationSources() {
       showToast({ tone: 'error', message: errorMessage(err) })
     } finally {
       setPolling(false)
+    }
+  }
+
+  const handleDelete = async (paperId: string) => {
+    try {
+      await deletePaper(paperId)
+      await refresh()
+      showToast({ tone: 'success', message: 'Paper deleted' })
+    } catch (err) {
+      showToast({ tone: 'error', message: errorMessage(err) })
     }
   }
 
@@ -113,6 +123,7 @@ function CitationSources() {
           papers={state.papers.filter((paper) => paper.folder_id === null)}
           alerts={state.alerts}
           onRefreshCheck={(paperId) => void runCheck(paperId)}
+          onDelete={(paperId) => void handleDelete(paperId)}
         />
       )}
 

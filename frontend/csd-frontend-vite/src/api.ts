@@ -98,7 +98,7 @@ export type PollSummary = {
 
 const storage = axios.create({
   baseURL: '/api',
-  headers: { Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTExMTEtMTExMS0xMTExMTExMTExMTEiLCJleHAiOjE3OTMxMTg1NzV9.UVOw8XemZxl8ShsRS4IATDnhmTLXcXuvWOAA2uy47iU` },
+  headers: { Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTExMTEtMTExMS0xMTExMTExMTExMTEiLCJleHAiOjE3OTMxNzA3NDN9.xMwctT54euBxMseX5UtB56zpTa-CpRV4l9ubthstrU8` },
 })
 
 // No token in sprint 1: docs/CONTRACTS.md, "Auth" — POST /run-poll takes
@@ -188,4 +188,8 @@ export function errorMessage(err: unknown): string {
     return err.message
   }
   return err instanceof Error ? err.message : 'Something went wrong'
+}
+
+export async function deletePaper(paperId: string): Promise<void> {
+  await storage.delete(`/dev/papers/${paperId}`)
 }

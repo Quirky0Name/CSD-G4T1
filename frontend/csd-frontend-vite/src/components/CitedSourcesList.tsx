@@ -18,9 +18,10 @@ type CitedSourcesListProps = {
   papers: Paper[]
   alerts: Alert[]
   onRefreshCheck: (paperId: string) => void
+  onDelete: (paperId: string) => void
 }
 
-function CitedSourcesList({ papers, alerts, onRefreshCheck }: CitedSourcesListProps) {
+function CitedSourcesList({ papers, alerts, onRefreshCheck, onDelete }: CitedSourcesListProps) {
   const navigate = useNavigate()
 
   if (papers.length === 0) {
@@ -83,9 +84,16 @@ function CitedSourcesList({ papers, alerts, onRefreshCheck }: CitedSourcesListPr
                     <MenuItem>
                       <button
                         type="button"
-                        disabled
-                        title="No delete endpoint yet"
-                        className="block w-full px-3 py-1 text-left text-sm/6 text-white disabled:cursor-not-allowed disabled:text-gray-500 data-focus:bg-white/5"
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `Delete "${title}" and all its alerts and reports? This can't be undone.`,
+                            )
+                          ) {
+                            onDelete(paper.id)
+                          }
+                        }}
+                        className="block w-full px-3 py-1 text-left text-sm/6 text-red-400 data-focus:bg-white/5"
                       >
                         Delete<span className="sr-only">, {title}</span>
                       </button>
