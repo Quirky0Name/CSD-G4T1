@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storage Schema ERD</title>
+<style>
+  :root {
+    --bg: #f7f3ea;
+    --ink: #2b2a26;
+    --muted: #6b675d;
+    --card: #fffdf8;
+    --edge: #d8d0bf;
+    --head: #6f8f72;
+    --head-ink: #f8f6ef;
+    --line: #56685a;
+    --pk: #8a5a2b;
+    --fk: #3f6a86;
+    --uq: #6b5b8a;
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono: Consolas, "Cascadia Mono", Menlo, "DejaVu Sans Mono", "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); }
+  body { padding: 12px 16px 32px; }
+  h1 { font-size: 17px; margin: 0 0 8px; font-weight: 600; }
+  h2 { font-size: 14px; margin: 20px 0 6px; font-weight: 600; }
+
+  /* the whole diagram scrolls as one piece; cards and lines share one coordinate system */
+  .scroll { overflow: auto; max-width: 100%; }
+  .canvas { position: relative; width: 1300px; height: 680px; margin: 0 auto; }
+  .canvas svg { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; overflow: visible; }
+
+  .card {
+    position: absolute; z-index: 1; overflow: hidden;
+    background: var(--card); border-radius: 4px;
+    box-shadow: 0 0 0 1px var(--edge), 0 1px 3px rgba(60, 50, 30, .08);
+  }
+  .card .h {
+    height: 24px; line-height: 24px; padding: 0 8px;
+    background: var(--head); color: var(--head-ink);
+    font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden;
+  }
+  .r {
+    display: grid; grid-template-columns: 1fr 138px 54px; column-gap: 6px;
+    height: 16px; line-height: 16px; padding: 0 8px; font-size: 10.5px;
+  }
+  .r:nth-child(even) { background: rgba(111, 143, 114, .06); }
+  .r > span { white-space: nowrap; overflow: hidden; }
+  .t { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .k { font-size: 8.5px; font-weight: 700; letter-spacing: .02em; }
+  .k b { font-weight: 700; margin-right: 3px; }
+  .pk { color: var(--pk); }
+  .fk { color: var(--fk); }
+  .uq { color: var(--uq); }
+  .nn { color: var(--muted); font-style: normal; font-weight: 600; }
+  .fn {
+    height: 28px; padding: 3px 8px 0; font-size: 9.5px; line-height: 12px;
+    color: var(--muted); overflow: hidden; border-top: 1px dashed var(--edge);
+  }
+
+  svg .ln { fill: none; stroke: var(--line); stroke-width: 1.5; }
+  svg .card-lbl { font: 700 9.5px var(--sans); fill: var(--ink); }
+  svg .mid-bg { fill: var(--bg); stroke: var(--edge); stroke-width: .75; }
+  svg .mid { font: 600 9.5px var(--sans); fill: var(--fk); }
+
+  .below { max-width: 1300px; margin: 0 auto; }
+  ul.rels { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.7; }
+  ul.rels code, .legend code { font-family: var(--mono); font-size: 11.5px; }
+  .sep { color: var(--muted); margin: 0 6px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 12px; line-height: 1.6; }
+  .legend .k { font-size: 10px; }
+  .note { font-size: 12px; color: var(--muted); margin: 8px 0 0; line-height: 1.5; }
+</style>
+</head>
+<body>
+<h1>Storage service schema</h1>
+
+<div class="scroll">
+<div class="canvas">
+
+<svg width="1300" height="680" viewBox="0 0 1300 680" aria-hidden="true">
+  <!-- background_metadata.paper_id -> papers.id -->
+  <path class="ln" d="M354 160 H464"/>
+  <text class="card-lbl" x="358" y="155">0..*</text>
+  <text class="card-lbl" x="454" y="155">1</text>
+  <rect class="mid-bg" x="382" y="153" width="44" height="14" rx="2"/>
+  <text class="mid" x="404" y="163.5" text-anchor="middle">paper_id</text>
+
+  <!-- reports.paper_id -> papers.id -->
+  <path class="ln" d="M464 436 H440 V168 H464"/>
+  <text class="card-lbl" x="444" y="431">0..*</text>
+  <text class="card-lbl" x="454" y="180">1</text>
+  <rect class="mid-bg" x="418" y="293" width="44" height="14" rx="2"/>
+  <text class="mid" x="440" y="303.5" text-anchor="middle">paper_id</text>
+
+  <!-- alert_notes.alert_id -> alerts.id -->
+  <path class="ln" d="M784 64 H924"/>
+  <text class="card-lbl" x="788" y="59">0..*</text>
+  <text class="card-lbl" x="912" y="59">1</text>
+  <rect class="mid-bg" x="824" y="57" width="44" height="14" rx="2"/>
+  <text class="mid" x="846" y="67.5" text-anchor="middle">alert_id</text>
+
+  <!-- alerts.paper_id -> papers.id -->
+  <path class="ln" d="M924 80 H860 V164 H784"/>
+  <text class="card-lbl" x="898" y="92">0..*</text>
+  <text class="card-lbl" x="790" y="159">1</text>
+  <rect class="mid-bg" x="838" y="115" width="44" height="14" rx="2"/>
+  <text class="mid" x="860" y="125.5" text-anchor="middle">paper_id</text>
+
+  <!-- alerts.report_id -> reports.id -->
+  <path class="ln" d="M924 288 H824 V414 H784"/>
+  <text class="card-lbl" x="898" y="283">0..*</text>
+  <text class="card-lbl" x="788" y="409">0..1</text>
+  <rect class="mid-bg" x="800" y="343" width="48" height="14" rx="2"/>
+  <text class="mid" x="824" y="353.5" text-anchor="middle">report_id</text>
+
+  <!-- report_documents.report_id -> reports.id -->
+  <path class="ln" d="M924 400 H892 V426 H784"/>
+  <text class="card-lbl" x="898" y="395">0..*</text>
+  <text class="card-lbl" x="790" y="439">1</text>
+  <rect class="mid-bg" x="830" y="419" width="48" height="14" rx="2"/>
+  <text class="mid" x="854" y="429.5" text-anchor="middle">report_id</text>
+</svg>
+
+<!-- column A -->
+<div class="card" style="left:16px; top:112px; width:338px; height:316px">
+  <div class="h">background_metadata</div>
+  <div class="r"><span>snapshot_id</span><span class="t">bigint</span><span class="k"><b class="pk">PK</b></span></div>
+  <div class="r"><span>paper_id</span><span class="t">uuid</span><span class="k"><b class="fk">FK</b><i class="nn">NN</i></span></div>
+  <div class="r"><span>doi</span><span class="t">varchar(255)</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>fetched_at</span><span class="t">timestamp with time zone</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>openalex_id</span><span class="t">varchar(64)</span><span class="k"></span></div>
+  <div class="r"><span>title</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>publication_year</span><span class="t">integer</span><span class="k"></span></div>
+  <div class="r"><span>is_retracted</span><span class="t">boolean</span><span class="k"></span></div>
+  <div class="r"><span>in_doaj</span><span class="t">boolean</span><span class="k"></span></div>
+  <div class="r"><span>journal_source_id</span><span class="t">varchar(64)</span><span class="k"></span></div>
+  <div class="r"><span>journal_source_type</span><span class="t">varchar(64)</span><span class="k"></span></div>
+  <div class="r"><span>journal</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>issn_l</span><span class="t">varchar(16)</span><span class="k"></span></div>
+  <div class="r"><span>publisher</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>cited_by_count</span><span class="t">integer</span><span class="k"></span></div>
+  <div class="r"><span>crossref_updates</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>authors</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>source_status</span><span class="t">text</span><span class="k"><i class="nn">NN</i></span></div>
+</div>
+
+<div class="card" style="left:16px; top:452px; width:338px; height:152px">
+  <div class="h">research_papers</div>
+  <div class="r"><span>id</span><span class="t">uuid</span><span class="k"><b class="pk">PK</b></span></div>
+  <div class="r"><span>owner_id</span><span class="t">uuid</span><span class="k"><b class="uq">UQ¹</b><i class="nn">NN</i></span></div>
+  <div class="r"><span>folder_id</span><span class="t">uuid</span><span class="k"><b class="uq">UQ¹</b></span></div>
+  <div class="r"><span>file_key</span><span class="t">varchar(255)</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>filename</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>uploaded_at</span><span class="t">timestamp with time zone</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="fn">¹ uq_research_papers_owner_folder: unique (owner_id, folder_id) together only, nulls not distinct</div>
+</div>
+
+<!-- column B -->
+<div class="card" style="left:464px; top:16px; width:320px; height:92px">
+  <div class="h">alert_notes</div>
+  <div class="r"><span>id</span><span class="t">bigint</span><span class="k"><b class="pk">PK</b></span></div>
+  <div class="r"><span>alert_id</span><span class="t">bigint</span><span class="k"><b class="fk">FK</b><i class="nn">NN</i></span></div>
+  <div class="r"><span>text</span><span class="t">text</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>created_at</span><span class="t">timestamp with time zone</span><span class="k"><i class="nn">NN</i></span></div>
+</div>
+
+<div class="card" style="left:464px; top:132px; width:320px; height:232px">
+  <div class="h">papers</div>
+  <div class="r"><span>id</span><span class="t">uuid</span><span class="k"><b class="pk">PK</b></span></div>
+  <div class="r"><span>owner_id</span><span class="t">uuid</span><span class="k"><b class="uq">UQ¹</b><i class="nn">NN</i></span></div>
+  <div class="r"><span>folder_id</span><span class="t">uuid</span><span class="k"></span></div>
+  <div class="r"><span>doi</span><span class="t">varchar(255)</span><span class="k"><b class="uq">UQ¹</b></span></div>
+  <div class="r"><span>openalex_id</span><span class="t">varchar(64)</span><span class="k"></span></div>
+  <div class="r"><span>title</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>journal</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>issn</span><span class="t">varchar(16)</span><span class="k"></span></div>
+  <div class="r"><span>publication_year</span><span class="t">integer</span><span class="k"></span></div>
+  <div class="r"><span>file_key</span><span class="t">varchar(255)</span><span class="k"></span></div>
+  <div class="r"><span>created_at</span><span class="t">timestamp with time zone</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="fn">¹ uq_papers_owner_doi: unique (owner_id, doi) together, not per column</div>
+</div>
+
+<div class="card" style="left:464px; top:388px; width:320px; height:220px">
+  <div class="h">reports</div>
+  <div class="r"><span>id</span><span class="t">bigint</span><span class="k"><b class="pk">PK</b></span></div>
+  <div class="r"><span>paper_id</span><span class="t">uuid</span><span class="k"><b class="fk">FK</b><i class="nn">NN</i></span></div>
+  <div class="r"><span>status</span><span class="t">varchar(16)</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>created_at</span><span class="t">timestamp with time zone</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>investigated_at</span><span class="t">timestamp with time zone</span><span class="k"></span></div>
+  <div class="r"><span>evaluation</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>recommendation</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>evaluated_at</span><span class="t">timestamp with time zone</span><span class="k"></span></div>
+  <div class="r"><span>change_summary</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>change_severity</span><span class="t">varchar(16)</span><span class="k"></span></div>
+  <div class="r"><span>impact_level</span><span class="t">varchar(16)</span><span class="k"></span></div>
+  <div class="r"><span>assessment</span><span class="t">text</span><span class="k"></span></div>
+</div>
+
+<!-- column C -->
+<div class="card" style="left:924px; top:32px; width:360px; height:296px">
+  <div class="h">alerts</div>
+  <div class="r"><span>id</span><span class="t">bigint</span><span class="k"><b class="pk">PK</b></span></div>
+  <div class="r"><span>paper_id</span><span class="t">uuid</span><span class="k"><b class="fk">FK</b><b class="uq">UQ¹</b><i class="nn">NN</i></span></div>
+  <div class="r"><span>change_type</span><span class="t">varchar(32)</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>change_key</span><span class="t">varchar(512)</span><span class="k"><b class="uq">UQ¹</b><i class="nn">NN</i></span></div>
+  <div class="r"><span>severity</span><span class="t">varchar(16)</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>description</span><span class="t">text</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>recommendation</span><span class="t">text</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>notice_doi</span><span class="t">varchar(255)</span><span class="k"></span></div>
+  <div class="r"><span>detected_at</span><span class="t">timestamp with time zone</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>snapshot_id</span><span class="t">bigint</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>previous_snapshot_id</span><span class="t">bigint</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>status</span><span class="t">varchar(16)</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>status_changed_at</span><span class="t">timestamp with time zone</span><span class="k"></span></div>
+  <div class="r"><span>created_at</span><span class="t">timestamp with time zone</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>report_id</span><span class="t">bigint</span><span class="k"><b class="fk">FK</b></span></div>
+  <div class="fn">¹ uq_alerts_paper_change: unique (paper_id, change_key) together, not per column</div>
+</div>
+
+<div class="card" style="left:924px; top:352px; width:360px; height:312px">
+  <div class="h">report_documents</div>
+  <div class="r"><span>id</span><span class="t">bigint</span><span class="k"><b class="pk">PK</b></span></div>
+  <div class="r"><span>report_id</span><span class="t">bigint</span><span class="k"><b class="fk">FK</b><b class="uq">UQ¹</b><i class="nn">NN</i></span></div>
+  <div class="r"><span>kind</span><span class="t">varchar(16)</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>doi</span><span class="t">varchar(255)</span><span class="k"><b class="uq">UQ¹</b><i class="nn">NN</i></span></div>
+  <div class="r"><span>crossref_status</span><span class="t">varchar(16)</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>crossref_record</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>update_to_includes_paper</span><span class="t">boolean</span><span class="k"></span></div>
+  <div class="r"><span>text_status</span><span class="t">varchar(16)</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>text</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>text_truncated</span><span class="t">boolean</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>pdf_status</span><span class="t">varchar(16)</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>file_key</span><span class="t">varchar(255)</span><span class="k"></span></div>
+  <div class="r"><span>sha256</span><span class="t">varchar(64)</span><span class="k"></span></div>
+  <div class="r"><span>pdf_source_url</span><span class="t">text</span><span class="k"></span></div>
+  <div class="r"><span>created_at</span><span class="t">timestamp with time zone</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>pdf_fetched_at</span><span class="t">timestamp with time zone</span><span class="k"></span></div>
+  <div class="fn">¹ uq_report_documents_report_doi: unique (report_id, doi) together, not per column</div>
+</div>
+
+</div>
+</div>
+
+<div class="below">
+  <h2>Relationships</h2>
+  <ul class="rels">
+    <li><code>alerts.paper_id → papers.id</code><span class="sep">·</span>papers 1 — 0..* alerts<span class="sep">·</span>unnamed FK, on delete cascade (V3)</li>
+    <li><code>alerts.report_id → reports.id</code><span class="sep">·</span>reports 0..1 — 0..* alerts<span class="sep">·</span>unnamed FK, on delete set null (V7)</li>
+    <li><code>alert_notes.alert_id → alerts.id</code><span class="sep">·</span>alerts 1 — 0..* alert_notes<span class="sep">·</span>unnamed FK, on delete cascade (V5)</li>
+    <li><code>background_metadata.paper_id → papers.id</code><span class="sep">·</span>papers 1 — 0..* background_metadata<span class="sep">·</span>unnamed FK, no on-delete action declared (V4)</li>
+    <li><code>reports.paper_id → papers.id</code><span class="sep">·</span>papers 1 — 0..* reports<span class="sep">·</span>unnamed FK, on delete cascade (V7)</li>
+    <li><code>report_documents.report_id → reports.id</code><span class="sep">·</span>reports 1 — 0..* report_documents<span class="sep">·</span>unnamed FK, on delete cascade (V7)</li>
+  </ul>
+
+  <h2>Legend</h2>
+  <div class="legend">
+    <span><span class="k pk">PK</span> primary key</span>
+    <span><span class="k fk">FK</span> declared foreign key</span>
+    <span><span class="k uq">UQ</span> unique on its own</span>
+    <span><span class="k uq">UQ¹</span> member of composite unique key ¹ (see card footnote); unique only together</span>
+    <span><span class="k nn">NN</span> not null (PK columns are implicitly not null)</span>
+    <span><b>1</b> exactly one</span>
+    <span><b>0..1</b> zero or one</span>
+    <span><b>0..*</b> zero or more</span>
+  </div>
+  <p class="note">Cardinality: the parent end is <b>1</b> when every FK column is not null, <b>0..1</b> when any is nullable; the child end is <b>0..1</b> when the FK columns contain the child's primary key or a unique key, otherwise <b>0..*</b>. Only declared foreign keys are drawn; columns such as <code>owner_id</code>, <code>folder_id</code> and <code>snapshot_id</code> have none.</p>
+  <p class="note">Source: <code>CSD-G4T1/storage/src/main/resources/db/migration</code> — V1, V3–V8 applied (no V2 in the folder); last: <code>V8__add_report_assessment.sql</code>.</p>
+</div>
+</body>
+</html>
