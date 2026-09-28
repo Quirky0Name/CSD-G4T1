@@ -10,6 +10,7 @@ from pydantic import SecretStr
 from support import TEST_JWT_KEY, TEST_JWT_SECRET, load_fixture
 from updating_support import record_run
 
+from common.service_token import ServiceTokenAuth
 from dev.scenarios import DOIS, Scenario
 from dev.stub_research_evaluation import create_app as create_stub_re_app
 from dev.stub_storage import create_app as create_stub_app
@@ -20,7 +21,7 @@ from updating.models import PollTrigger
 from updating.poll import PollDeps
 from updating.snapshot import Snapshot, author_ids
 from updating.sources import OPENALEX_AUTHORS_URL, OpenAlexWork
-from updating.storage import ServiceTokenAuth, SnapshotId, post_snapshot
+from updating.storage import SERVICE_SUBJECT, SnapshotId, post_snapshot
 
 
 class FakeSources:
@@ -64,13 +65,16 @@ class FakeSources:
 
 
 class FaultInjectingTransport(httpx.AsyncBaseTransport):
-    """Makes Storage Management fail for the requests whose path ends with a given suffix."""
+    """Makes a stub fail for the requests whose path ends with a given suffix, and records every
+    request it's sent (headers included)."""
 
     def __init__(self, inner: httpx.AsyncBaseTransport) -> None:
         self._inner = inner
         self.faults: dict[str, int | Exception] = {}
+        self.sent: list[httpx.Request] = []
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        self.sent.append(request)
         for suffix, fault in self.faults.items():
             if request.url.path.endswith(suffix):
                 if isinstance(fault, Exception):
@@ -85,7 +89,7 @@ class StubSm:
     def __init__(self) -> None:
         self.transport = FaultInjectingTransport(httpx.ASGITransport(app=create_stub_app(TEST_JWT_KEY)))
         self.client = httpx.AsyncClient(
-            transport=self.transport, base_url="http://stub", auth=ServiceTokenAuth(TEST_JWT_KEY)
+            transport=self.transport, base_url="http://stub", auth=ServiceTokenAuth(TEST_JWT_KEY, SERVICE_SUBJECT)
         )
 
     async def add_paper(self, doi: str | None, paper_id: UUID | None = None) -> UUID:
@@ -112,11 +116,18 @@ class StubSm:
 
 
 class StubRe:
-    """The stub Research Evaluation app plus the ways a test pokes at it."""
+    """The stub Research Evaluation app plus the ways a test pokes at it. The stub checks the
+    service token like the real service; `client` carries one, as Updating's `re` client does."""
 
     def __init__(self) -> None:
-        self.transport = FaultInjectingTransport(httpx.ASGITransport(app=create_stub_re_app()))
-        self.client = httpx.AsyncClient(transport=self.transport, base_url="http://stub-re")
+        self.transport = FaultInjectingTransport(httpx.ASGITransport(app=create_stub_re_app(TEST_JWT_KEY)))
+        self.client = httpx.AsyncClient(
+            transport=self.transport, base_url="http://stub-re", auth=ServiceTokenAuth(TEST_JWT_KEY, SERVICE_SUBJECT)
+        )
+
+    def nudges(self) -> list[httpx.Request]:
+        """Every nudge request that reached the stub's transport, whole (headers included)."""
+        return [r for r in self.transport.sent if r.url.path == "/evaluate/changes"]
 
     async def received(self) -> list[list[UUID]]:
         """The paper ids of each nudge that arrived, in order."""
