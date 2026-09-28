@@ -5,6 +5,27 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-28 — Updating signs every request to Research Evaluation
+
+### Team decisions
+
+- **Updating's `re` client carries the service token, like its `sm`
+  client** (the same `svc:updating`, `role=service` token, minted fresh per
+  request). CONTRACTS.md already required it on `POST /evaluate/changes`
+  (2026-09-25), but the client had no auth, so every nudge to the real
+  Research Evaluation got `401`: papers stayed `nudge_pending` and no alert
+  was ever created. Signing the client rather than the one call covers any
+  request Updating adds to Research Evaluation later.
+- **The Research Evaluation stub checks the token** the way Research
+  Evaluation does (`401` missing or bad, `403` a user token), as the Storage
+  Management stub already did on `/internal/**`; its `/dev/**` helpers
+  need none. The stub accepting anything is how the missing token went
+  unnoticed, so now Updating's end-to-end tests fail without it. The stub
+  reads `JWT_SECRET` from the environment, so it's started with
+  `--env-file .env` (SETUP.md).
+
+---
+
 ## 2026-09-28 — Reports can be assessed by id on request
 
 The plan is [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S6.

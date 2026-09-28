@@ -12,12 +12,13 @@ from datetime import UTC, datetime
 import httpx
 from fastapi import FastAPI
 
+from common.service_token import ServiceTokenAuth
 from updating import routes
 from updating.config import UpdatingSettings
 from updating.db import init_db, make_engine, make_sessions
 from updating.poll import PollDeps
 from updating.scheduler import build_scheduler, first_run_time, last_scheduled_start
-from updating.storage import ServiceTokenAuth
+from updating.storage import SERVICE_SUBJECT
 
 HTTP_TIMEOUT_SECONDS = 20
 
@@ -48,13 +49,14 @@ def create_app(
             next_run = first_run_time(
                 await last_scheduled_start(sessions), config.poll_interval_hours, datetime.now(UTC)
             )
-            sm_auth = ServiceTokenAuth(config.jwt_secret.get_secret_value())
+            # every request to Storage Management and to Research Evaluation carries a fresh service token
+            auth = ServiceTokenAuth(config.jwt_secret.get_secret_value(), SERVICE_SUBJECT)
             async with (
                 httpx.AsyncClient(
-                    base_url=config.sm_base_url, auth=sm_auth, timeout=HTTP_TIMEOUT_SECONDS, transport=sm_transport
+                    base_url=config.sm_base_url, auth=auth, timeout=HTTP_TIMEOUT_SECONDS, transport=sm_transport
                 ) as sm,
                 httpx.AsyncClient(
-                    base_url=config.re_base_url, timeout=HTTP_TIMEOUT_SECONDS, transport=re_transport
+                    base_url=config.re_base_url, auth=auth, timeout=HTTP_TIMEOUT_SECONDS, transport=re_transport
                 ) as re,
                 httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as sources,
             ):
