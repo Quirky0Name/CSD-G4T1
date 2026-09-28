@@ -1,0 +1,43 @@
+name: Vulnerability scan
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 2 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: 0
+
+  # Disabled until deployment is set up and we ship Docker images.
+  #   images:
+  #     runs-on: ubuntu-latest
+  #     strategy:
+  #       fail-fast: false
+  #       matrix:
+  #         include:
+  #           - { name: storage,             context: storage, file: storage/Dockerfile }
+  #           - { name: updating,            context: backend, file: backend/updating.Dockerfile }
+  #           - { name: research-evaluation, context: backend, file: backend/research-evaluation.Dockerfile }
+  #     steps:
+  #       - uses: actions/checkout@v4
+  #       - run: docker build -f ${{ matrix.file }} -t ${{ matrix.name }}:scan ${{ matrix.context }}
+  #       - uses: aquasecurity/trivy-action@0.28.0
+  #         with:
+  #           image-ref: ${{ matrix.name }}:scan
+  #           severity: HIGH,CRITICAL
+  #           ignore-unfixed: true
+  #           exit-code: 0
