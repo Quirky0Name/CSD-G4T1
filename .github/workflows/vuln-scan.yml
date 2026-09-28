@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@0.28.0
+      - uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scanners: vuln,secret,misconfig
@@ -35,7 +35,7 @@ jobs:
   #     steps:
   #       - uses: actions/checkout@v4
   #       - run: docker build -f ${{ matrix.file }} -t ${{ matrix.name }}:scan ${{ matrix.context }}
-  #       - uses: aquasecurity/trivy-action@0.28.0
+  #       - uses: aquasecurity/trivy-action@v0.36.0
   #         with:
   #           image-ref: ${{ matrix.name }}:scan
   #           severity: HIGH,CRITICAL
