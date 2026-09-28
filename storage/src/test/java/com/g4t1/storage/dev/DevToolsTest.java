@@ -1,6 +1,7 @@
 package com.g4t1.storage.dev;
 
 import com.g4t1.storage.TestTokens;
+import com.g4t1.storage.file.LocalFileStore;
 import com.g4t1.storage.grobid.GrobidClient;
 import com.g4t1.storage.metadata.MetadataClient;
 import com.g4t1.storage.paper.Paper;
@@ -22,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -63,6 +65,11 @@ class DevToolsTest {
 
     @Autowired
     JsonMapper json;
+
+    @Autowired
+    LocalFileStore files;
+
+    private static final byte[] PDF = "%PDF-1.7 stored copy".getBytes(StandardCharsets.US_ASCII);
 
     @MockitoBean
     GrobidClient grobid;
@@ -154,6 +161,45 @@ class DevToolsTest {
         assertThat(count("alerts", paperId)).isZero();
         assertThat(count("reports", paperId)).isZero();
         assertThat(count("background_metadata", otherPaper)).isEqualTo(1);
+    }
+
+    @Test
+    void deletingAPaperRemovesEverythingThatRefersToItAndItsFiles() throws Exception {
+        UUID otherPaper = savePaper(user, "10.1038/s41586-021-03819-2");
+        String paperFile = files.save(PDF);
+        jdbc.update("update papers set file_key = ? where id = ?", paperFile, paperId);
+        long snapshotId = storeSnapshot(paperId, true);
+        storeSnapshot(otherPaper, true);
+        addAlertAndReport(paperId, snapshotId);
+        jdbc.update("insert into alert_notes (alert_id, text, created_at) select id, 'a note', current_timestamp from alerts where paper_id = ?", paperId);
+        String documentFile = files.save(PDF);
+        jdbc.update("""
+                insert into report_documents (report_id, kind, doi, crossref_status, text_status, pdf_status, file_key, created_at)
+                select id, 'notice', '10.1016/s0140-6736(20)31324-6', 'ok', 'none', 'stored', ?, current_timestamp
+                from reports where paper_id = ?""", documentFile, paperId);
+
+        mvc.perform(delete("/dev/papers/{id}", paperId).header(HttpHeaders.AUTHORIZATION, TestTokens.user(user)))
+                .andExpect(status().isNoContent());
+
+        assertThat(papers.existsById(paperId)).isFalse();
+        assertThat(count("background_metadata", paperId)).isZero();
+        assertThat(count("alerts", paperId)).isZero();
+        assertThat(count("reports", paperId)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from alert_notes", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from report_documents", Integer.class)).isZero();
+        assertThat(files.read(paperFile)).isEmpty();
+        assertThat(files.read(documentFile)).isEmpty();
+        // the other paper is untouched
+        assertThat(papers.existsById(otherPaper)).isTrue();
+        assertThat(count("background_metadata", otherPaper)).isEqualTo(1);
+    }
+
+    @Test
+    void anotherUsersPaperIsNotDeleted() throws Exception {
+        mvc.perform(delete("/dev/papers/{id}", paperId).header(HttpHeaders.AUTHORIZATION, TestTokens.user(UUID.randomUUID())))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("No paper " + paperId));
+        assertThat(papers.existsById(paperId)).isTrue();
     }
 
     @Test
