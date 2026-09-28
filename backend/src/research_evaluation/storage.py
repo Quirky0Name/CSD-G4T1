@@ -4,16 +4,18 @@ handle communitcation with SM
 - GET change keys already stored (the changes evaluated on earlier nudges)
 - POST alerts
 - open a report, POST its documents, mark it investigated (investigation)
+- read a report by id, the paper's details and PDFs, the draft, and store the evaluation (impact)
 
 handle HTTP codes
 """
 
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
 import httpx
 from fastapi import Request
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from research_evaluation.changes import Snapshot
 
@@ -22,6 +24,10 @@ SERVICE_SUBJECT = "svc:research-evaluation"
 
 class PaperGone(Exception):
     """Storage Management doesn't know the paper (it was never tracked, or was deleted)."""
+
+
+class ReportGone(Exception):
+    """Storage Management doesn't know the report (it never existed, or went with its paper)."""
 
 
 class _History(BaseModel):
@@ -50,6 +56,74 @@ class OpenedReport(BaseModel):
 
     id: int
     alerts: list[ReportAlert]
+
+
+class AlertInReport(BaseModel):
+    """An alert as a report shows it: impact reads what the rules said about each change."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: int
+    change_type: str
+    change_key: str
+    severity: str
+    description: str
+    notice_doi: str | None = None
+    detected_at: datetime
+
+
+class DocumentInReport(BaseModel):
+    """What investigation stored for one DOI of a report, as Storage Management returns it."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: int
+    kind: str
+    doi: str
+    crossref_status: str
+    crossref_record: dict[str, Any] | None = None
+    update_to_includes_paper: bool | None = None
+    text_status: str
+    text: str | None = None
+    text_truncated: bool = False
+    pdf_status: str
+    pdf_source_url: str | None = None
+    pdf_fetched_at: datetime | None = None
+
+
+class Report(BaseModel):
+    """A report read by its id (impact's handoff): its paper, status, alerts and documents."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: int
+    paper_id: UUID
+    status: str
+    alerts: list[AlertInReport]
+    documents: list[DocumentInReport]
+
+
+class PaperDetails(BaseModel):
+    """Who and what the tracked paper is, from its newest snapshot: enough to find it in a
+    reference list. Kept apart from detection's Snapshot, which doesn't need these."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    doi: str | None = None
+    title: str | None = None
+    publication_year: int | None = None
+    journal: str | None = None
+    authors: list[str] = []
+
+    @field_validator("authors", mode="before")
+    @classmethod
+    def _names(cls, value: Any) -> list[str]:
+        """Snapshots hold authors as objects ({name, ...}) or null; only the names are kept.
+        Names given as plain strings are kept as they are."""
+        if not value:
+            return []
+        names = (a.get("name") if isinstance(a, dict) else a for a in value)
+        return [name for name in names if isinstance(name, str) and name]
 
 
 def sm_client(request: Request) -> httpx.AsyncClient:
@@ -114,6 +188,76 @@ async def mark_investigated(http: httpx.AsyncClient, paper_id: UUID, report_id: 
         f"/internal/papers/{paper_id}/reports/{report_id}", json={"status": "investigated"}
     )
     _raise_for_status(response, paper_id)
+
+
+async def read_report(http: httpx.AsyncClient, report_id: int) -> Report:
+    """The report by its id alone (`GET /internal/reports/{id}`); ReportGone when Storage
+    Management doesn't know it, including a report that went with its deleted paper."""
+    response = await http.get(f"/internal/reports/{report_id}")
+    _raise_for_report(response, report_id)
+    return Report.model_validate(response.json())
+
+
+async def paper_details(http: httpx.AsyncClient, paper_id: UUID) -> PaperDetails:
+    """The paper's DOI, title, year, journal and authors from its newest snapshot; all empty when
+    it has none yet."""
+    response = await http.get(
+        f"/internal/papers/{paper_id}/background-info/history", params={"last": 1}
+    )
+    _raise_for_status(response, paper_id)
+    snapshots = response.json().get("snapshots") or []
+    if not snapshots:
+        return PaperDetails()
+    newest = max(snapshots, key=lambda snapshot: snapshot["snapshot_id"])
+    return PaperDetails.model_validate(newest)
+
+
+async def paper_pdf(http: httpx.AsyncClient, paper_id: UUID) -> bytes | None:
+    """The tracked paper's stored PDF, or None when it has none (no file, or missing from disk)."""
+    return await _pdf(http, f"/internal/papers/{paper_id}/pdf", paper_id)
+
+
+async def draft_pdf(http: httpx.AsyncClient, paper_id: UUID) -> bytes | None:
+    """The researcher's own paper for the tracked paper's project, or None when the project has
+    none (most don't) or its file is missing from disk. Only `No paper <id>` is the paper gone."""
+    return await _pdf(http, f"/internal/papers/{paper_id}/research-paper", paper_id)
+
+
+async def document_pdf(http: httpx.AsyncClient, document_id: int) -> bytes | None:
+    """A report document's stored PDF, or None when it has none (a notice, pending, not found,
+    or missing from disk)."""
+    response = await http.get(f"/internal/documents/{document_id}/pdf")
+    if response.status_code == 404:
+        return None
+    response.raise_for_status()
+    return response.content
+
+
+async def store_evaluation(
+    http: httpx.AsyncClient, report_id: int, body: dict[str, Any]
+) -> dict[str, Any]:
+    """Stores impact's evaluation (`PUT /internal/reports/{id}/evaluation`), which marks the
+    report assessed, and returns the report. A 409 (not investigated, or already assessed) is
+    raised like any other error status."""
+    response = await http.put(f"/internal/reports/{report_id}/evaluation", json=body)
+    _raise_for_report(response, report_id)
+    return response.json()
+
+
+async def _pdf(http: httpx.AsyncClient, path: str, paper_id: UUID) -> bytes | None:
+    response = await http.get(path)
+    if response.status_code == 404 and _detail(response) != f"No paper {paper_id}":
+        return None  # the paper is there, the file isn't
+    _raise_for_status(response, paper_id)  # PaperGone for `No paper <id>`, raises other errors
+    if response.status_code != 200:
+        raise ValueError(f"unexpected status {response.status_code} reading a PDF")
+    return response.content
+
+
+def _raise_for_report(response: httpx.Response, report_id: int) -> None:
+    if response.status_code == 404 and _detail(response) == f"No report {report_id}":
+        raise ReportGone(str(report_id))
+    response.raise_for_status()
 
 
 def _raise_for_status(response: httpx.Response, paper_id: UUID) -> None:

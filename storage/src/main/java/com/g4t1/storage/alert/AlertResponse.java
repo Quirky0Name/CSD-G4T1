@@ -16,7 +16,8 @@ public record AlertResponse(
         AlertStatus status,
         Instant statusChangedAt) {
 
-    static AlertResponse from(Alert alert) {
+    // public for the frontend's reports, which show their alerts in this shape
+    public static AlertResponse from(Alert alert) {
         return new AlertResponse(
                 alert.getId(),
                 alert.getPaperId(),

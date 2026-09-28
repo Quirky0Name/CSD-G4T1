@@ -5,6 +5,233 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-28 — Reports can be assessed by id on request
+
+The plan is [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S6.
+
+### Team decisions
+
+- **A manual trigger, `POST /evaluate/reports {"report_ids": [...]}`**
+  (the story owner's call), so a report whose impact failed can be run
+  again, and the demo's reports can be assessed ahead of time. Until now
+  Research Evaluation was called only by Updating's nudge (2026-09-26);
+  this is the one other way in, service token only, like the nudge.
+- **It replies `202` and assesses in the background,** like
+  investigation: three Gemini calls per report can take a minute. The
+  reply lists the ids accepted, each once.
+- **Only `investigated` reports are assessed** (the same `assess_reports`
+  as after a nudge), so a wrong, repeated or already-assessed id costs one
+  read and no Gemini call. It answers `503` when `GEMINI_API_KEY` isn't
+  set, rather than accepting ids it can't assess.
+
+### Also settled while building it
+
+- Ids must be JSON integers (`"5"`, `5.0` and `true` are `422`), so a
+  caller's typo isn't silently read as another report.
+
+---
+
+## 2026-09-28 — Impact runs right after investigation, on the reports it finished
+
+The plan is [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S5.
+
+### Team decisions
+
+- **The nudge's background task is investigation, then impact** on the
+  ids investigation returns, one report after another. Nothing in it
+  changes the nudge's reply, and Updating never waits for it.
+- **Impact only assesses an `investigated` report.** It reads the report
+  first and skips any other status before fetching a PDF or calling
+  Gemini, so a repeated or stale id costs one read.
+- **Without `GEMINI_API_KEY` impact doesn't run** (one log line); the
+  reports stay `investigated`. The service still starts without the key.
+- **A report whose assessment fails isn't retried** (like investigation):
+  a Gemini error or timeout, an answer that doesn't fit its schema, or
+  Storage Management failing leaves it `investigated`, with nothing
+  stored, and the next report is still assessed. Picking such reports up
+  again is for a later sprint (or the manual trigger, S6).
+- **Each Gemini call has its own timeout,** `IMPACT_LLM_TIMEOUT_SECONDS`
+  (default 120), passed to the SDK, which makes one attempt per call (no
+  hidden retries).
+
+### Also settled while building it
+
+- Failures are logged with the report id and a cause (the status code from
+  Storage Management or Gemini, the exception class), never response
+  bodies, prompts or the draft's text.
+
+---
+
+## 2026-09-28 — Impact asks Gemini three questions, reading the PDFs itself
+
+The plan is [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S4.
+
+### Team decisions
+
+- **Impact's LLM is Gemini** (`GEMINI_API_KEY`, `GEMINI_MODEL`, default
+  `gemini-flash-latest`; the story owner's call, commit `1cb2e09`).
+  DeepSeek stays for stance and claims. Gemini reads PDFs natively (several
+  per request, each up to 50 MB or 1,000 pages), so the stored paper, a
+  new version, the current copy and the researcher's draft go in as the
+  files themselves; impact needs no PDF text extraction, which doesn't
+  exist yet. Every answer is structured output against a pydantic schema,
+  with no tools.
+- **Three calls, one gate** (the story owner's call):
+  1. what changed and how severe it is: a summary and a severity of
+     `none` / `low` / `medium` / `high` for anyone relying on the paper;
+  2. how it impacts the researcher: how the draft uses the tracked paper
+     (each citing sentence, its role, the claim relied on) and whether the
+     change affects each use, giving an impact level;
+  3. the recommended actions.
+
+  At severity `none` impact stops after the first call and stores only
+  the summary and the severity. Each call has one job and is tested alone
+  with a fake model; the gate saves two calls for the common "not
+  meaningful" cases (a notice about another article, an affiliation fix).
+- **The draft is read only after the gate, and goes only into the second
+  call.** A change that isn't meaningful never touches the draft, and the
+  draft never shares a call with third-party notice text.
+- **The impact level follows a fixed table** of change severity against
+  how the draft uses the paper (RE-changes-explained.md §6): a methods or
+  data dependency escalates even a medium change, and a background mention
+  stays `low` even for a retraction. The table is in the prompt.
+- **Drafts go to whichever Gemini key is configured, free tier included**
+  (the story owner's call: it doesn't matter for this project), knowing
+  that Google may use free-tier content to improve its products and that
+  people may read it.
+- **Fetched text and PDFs stay data.** Documents go in `<document>` tags,
+  and a document tag written inside a document's own text (any case or
+  spacing) is defused; every PDF is announced by a label; the system
+  instruction says never to follow instructions inside them.
+  `PROMPT_VERSION` and the answering model's version are stored with each
+  result.
+
+### Rejected
+
+- **One call with everything.** It gives up the gate, puts the draft next
+  to notice text, and can't be tested step by step.
+- **Extracting PDF text first** (GROBID full text or a Python library).
+  Not built, and Gemini reads the PDFs itself, layout and figures included.
+
+### Also settled while building it
+
+- The free tier allows about 20 requests per model per day (seen live on
+  2026-09-28, as `429 RESOURCE_EXHAUSTED`), and `gemini-flash-latest`
+  answered `503` ("high demand") several times in a row. A meaningful
+  report takes three calls, so the free tier covers about six a day.
+- `gemini-flash-latest` currently resolves to `gemini-3.8-flash`;
+  `gemini-2.5-flash` is no longer available to new keys.
+
+---
+
+## 2026-09-28 — A report's impact evaluation is stored once, through report-id endpoints
+
+The plan is [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S1 and S2.
+
+### Team decisions
+
+- **Impact reads and writes a report by its id alone**
+  (`GET /internal/reports/{reportId}`,
+  `PUT /internal/reports/{reportId}/evaluation`). The handoff from
+  investigation is a bare report id (2026-09-27), and the nested endpoints
+  need the paper id too. The report names its paper (`paper_id`), so
+  impact gets everything else from it. Flat like the document endpoints;
+  the nested ones stay for investigation.
+- **The evaluation is written once, and only on an `investigated`
+  report** (the story owner's call). An `investigating` report isn't
+  ready (its documents may be missing) and an `assessed` one keeps its
+  first evaluation, like a stored document: both are `409`. Re-assessing
+  (a new draft, a better prompt) is for a later sprint. It's one
+  conditional update on the status, so two writes at once can't both land.
+- **"Is the change meaningful?" is the change severity**, `none` / `low`
+  / `medium` / `high`, with `none` meaning not meaningful. There's no
+  separate yes/no that could disagree with it. When it's `none`, only the
+  summary and the severity are stored (the story owner's call): impact
+  stops there, and `impact_level`, `evaluation` and `recommendation` must
+  be null. Otherwise all three are required. The report is `assessed`
+  either way.
+- **Two level columns, three texts, and the rest as JSON.** The change
+  severity and the impact level (what the frontend will sort and badge
+  by), the change summary, the evaluation and the recommendation are
+  columns; `assessment` holds impact's full answer (per-alert judgments,
+  how the draft uses the paper, the list of actions, the model) as JSON,
+  stored as sent like `crossref_record`, so its shape can change without a
+  migration. One enum, `AssessmentLevel`, serves both levels.
+- **Impact never changes alerts.** The alerts' rule-based severity (by
+  change type) stays as it was; the change severity and impact level are
+  impact's judgment, on the report. So whether a paper was retracted never
+  depends on an LLM.
+
+### Rejected
+
+- **A `change_meaningful` boolean next to the severity.** Two fields for
+  one answer, which could disagree.
+- **Overwriting an assessed report's evaluation.** Two impact runs could
+  race, and nothing needs it until re-assessment exists.
+- **Reading reports by paper and report id, with investigation handing
+  over both.** It changes the handoff the team settled on the day before.
+
+### Also settled while building it
+
+- The report of a deleted paper is gone with it (cascade), so the flat
+  `GET` answers `No report <id>` for it, not `No paper <id>`.
+- The migration is `V8__add_report_assessment.sql`. `feat/storage-reports-user-endpoint`
+  (the researcher's `GET /papers/{id}/reports`) has its own
+  `UserReportResponse` listing fields, so whichever branch merges second
+  adds the four new fields to it.
+## 2026-09-28 — The frontend reads a paper's reports
+
+The contract is `GET /papers/{id}/reports` in CONTRACTS.md; where the code
+lives is [STORAGE-USER-REPORTS.md](STORAGE-USER-REPORTS.md).
+
+### Team decisions
+
+- **One endpoint per paper returns its reports with their alerts and
+  documents inside** (the story owner's call). The investigation plan left
+  a frontend reports endpoint to the impact plan, but reports and their
+  documents already exist, so the frontend can show what was fetched about
+  each change now. One call per paper, like the alert list.
+- **Built before impact.** `evaluation`, `recommendation` and
+  `evaluated_at` are in the response already and stay null until impact
+  writes them, so the shape doesn't change when it does.
+- **Alerts in the alert API's shape and order.** A report's alerts look
+  exactly like `GET /papers/{id}/alerts`'s, so the frontend reuses its
+  alert type and acts on them with the same endpoints. `change_key`, which
+  only Research Evaluation needs, stays hidden, as in the alert list.
+- **Every report, whatever its status, with every alert it grouped,
+  dismissed ones included.** A report is what impact judges together;
+  hiding a dismissed alert would show the evaluation without part of what
+  it judged, and the researcher's status never decides reports
+  (2026-09-27). A report whose alerts all moved to a later report (a late
+  retraction notice) is still listed, with no alerts: its documents, and
+  later its evaluation, are still what happened.
+- **Documents as stored, without Storage Management's and impact's
+  columns:** `file_key` (a path on Storage Management's disk; papers show
+  only `file_available` for the same reason), `sha256` (a fact for impact's
+  comparison) and `report_id` (the document is inside its report). Text is
+  sent in full, at most 60,000 characters per document.
+
+### Rejected
+
+- **A list without text, plus an endpoint for one report.** Two calls and
+  a second contract to save at most a few hundred KB per paper. It can be
+  added if lists get heavy.
+- **Hiding dismissed alerts, or an `include_dismissed` flag like the alert
+  list's.** See above: a report is shown whole.
+- **A frontend endpoint for a document's stored PDF, for now.**
+  `pdf_source_url` is the open-access link the PDF came from, which the
+  frontend can link to. Add one if the frontend needs Storage Management's
+  own copy (e.g. the link stops working).
+
+### Also settled while building it
+
+- A request makes four queries however many reports the paper has: the
+  paper (ownership), its reports, all their alerts, all their documents.
+- `AlertResponse.from` and `AlertService.LIST_ORDER` are now public, so
+  reports reuse the alert API's shape and order instead of copying them.
+
+---
+
 ## 2026-09-27 — A late retraction notice replaces a notice-less retraction alert
 
 The plan is [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md), S7.

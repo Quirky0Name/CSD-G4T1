@@ -64,7 +64,9 @@ never from investigation's objects in memory, and marks the
 report `assessed` when done. So the two packages don't import each other,
 and either can be re-run on its own. The ids are the reports finished in
 this run; picking up a report whose impact failed is the impact plan's
-call. This plan returns the ids; the impact plan adds the call.
+call. This plan returns the ids; the impact plan adds the call, which is
+now built: `main.investigate_then_assess` hands them to
+`impact.run.assess_reports` ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md), S5).
 
 ## What already exists
 
@@ -430,8 +432,10 @@ Documents (both write and read the `report_documents` table):
   and one per user tracking the paper), and a DOI's `/` doesn't fit in a
   path. For impact, later.
 
-A frontend `GET /papers/{id}/reports` is left for the impact plan. Impact
-also reads the tracked paper's stored PDF (`GET /internal/papers/{id}/pdf`)
+A frontend `GET /papers/{id}/reports` was left for the impact plan; it's
+now built ahead of impact, with each report's alerts and documents and
+the evaluation fields null until impact fills them
+([STORAGE-USER-REPORTS.md](STORAGE-USER-REPORTS.md)). Impact also reads the tracked paper's stored PDF (`GET /internal/papers/{id}/pdf`)
 and the researcher's draft (`GET /internal/papers/{id}/research-paper`),
 both already built.
 

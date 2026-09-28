@@ -87,6 +87,9 @@ async def test_opening_groups_only_the_papers_unreported_alerts(client):
         and report["recommendation"] is None
         and report["evaluated_at"] is None
     )
+    # impact's fields, present and null
+    for field in ("change_summary", "change_severity", "impact_level", "assessment"):
+        assert field in report and report[field] is None
     assert [a["id"] for a in report["alerts"]] == [retraction["id"], correction["id"]]
     assert [a["change_key"] for a in report["alerts"]] == ["retraction", "correction:10.1/c"]
     assert report["documents"] == []
@@ -133,6 +136,8 @@ async def test_reading_a_report_gives_its_alerts_and_documents(client):
     assert read.status_code == 200
     assert read.json()["documents"] == [stored]
     assert [a["change_key"] for a in read.json()["alerts"]] == ["retraction"]
+    for field in ("change_summary", "change_severity", "impact_level", "assessment"):
+        assert field in read.json() and read.json()[field] is None
 
 
 async def test_an_unknown_report_or_another_papers_report_is_no_report_404(client):
@@ -268,6 +273,17 @@ async def test_the_new_endpoints_need_a_service_token(client):
             "/internal/documents", json=document(1), headers={"Authorization": "Bearer nope"}
         )
     ).status_code == 401
+    assert (await client.get("/internal/reports/1", headers=user)).status_code == 403
+    assert (
+        await client.put("/internal/reports/1/evaluation", json=full_evaluation(), headers=user)
+    ).status_code == 403
+    assert (
+        await client.put(
+            "/internal/reports/1/evaluation",
+            json=full_evaluation(),
+            headers={"Authorization": "Bearer nope"},
+        )
+    ).status_code == 401
 
 
 async def report_for_new_paper(client) -> dict:
@@ -353,3 +369,186 @@ async def test_reading_a_pdf_that_isnt_stored_is_404(client):
     unknown = await client.get("/internal/documents/999/pdf")
     assert unknown.status_code == 404
     assert unknown.json()["detail"] == "No document 999"
+
+
+# GET /internal/reports/{id} and PUT /internal/reports/{id}/evaluation
+
+
+def full_evaluation(**fields) -> dict:
+    body = {
+        "change_summary": "The paper was retracted for fabricated data.",
+        "change_severity": "high",
+        "impact_level": "medium",
+        "evaluation": "Your Discussion relies on it.",
+        "recommendation": "Replace the citation.",
+        "assessment": {"prompt_version": 1, "change": {"severity": "high"}, "impact": None},
+    }
+    body.update(fields)
+    return body
+
+
+async def investigated_report(client) -> tuple[str, int]:
+    paper = await add_paper(client)
+    await add_alert(client, paper, "retraction")
+    report = await open_report(client, paper)
+    marked = await client.patch(
+        f"/internal/papers/{paper}/reports/{report['id']}", json={"status": "investigated"}
+    )
+    assert marked.status_code == 200
+    return paper, report["id"]
+
+
+async def test_reading_by_id_is_the_nested_read(client):
+    paper, report_id = await investigated_report(client)
+    await client.post("/internal/documents", json=document(report_id))
+
+    flat = await client.get(f"/internal/reports/{report_id}")
+    nested = await client.get(f"/internal/papers/{paper}/reports/{report_id}")
+
+    assert flat.status_code == 200
+    assert flat.json() == nested.json()
+    assert flat.json()["paper_id"] == paper
+
+
+async def test_reading_an_unknown_report_by_id_is_no_report_404(client):
+    response = await client.get("/internal/reports/999")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "No report 999"
+
+
+async def test_a_full_evaluation_is_stored_and_the_report_assessed(client):
+    paper, report_id = await investigated_report(client)
+    body = full_evaluation()
+
+    response = await client.put(f"/internal/reports/{report_id}/evaluation", json=body)
+
+    assert response.status_code == 200
+    stored = response.json()
+    assert stored["status"] == "assessed"
+    assert stored["evaluated_at"] is not None
+    for field, value in body.items():
+        assert stored[field] == value
+    nested = (await client.get(f"/internal/papers/{paper}/reports/{report_id}")).json()
+    assert nested["assessment"] == body["assessment"]
+
+
+async def test_a_change_that_isnt_meaningful_stores_only_the_summary_and_severity(client):
+    _, report_id = await investigated_report(client)
+
+    response = await client.put(
+        f"/internal/reports/{report_id}/evaluation",
+        json={"change_summary": "An affiliation was corrected.", "change_severity": "none"},
+    )
+
+    assert response.status_code == 200
+    stored = response.json()
+    assert stored["status"] == "assessed"
+    assert (stored["change_summary"], stored["change_severity"]) == (
+        "An affiliation was corrected.",
+        "none",
+    )
+    assert stored["impact_level"] is None
+    assert stored["evaluation"] is None and stored["recommendation"] is None
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {k: v for k, v in full_evaluation().items() if k != "change_summary"},
+        full_evaluation(change_summary=" "),
+        {k: v for k, v in full_evaluation().items() if k != "change_severity"},
+        full_evaluation(change_severity="critical"),
+        full_evaluation(impact_level="severe"),
+        full_evaluation(impact_level=None),
+        full_evaluation(evaluation=None),
+        full_evaluation(recommendation="  "),
+        {"change_summary": "s", "change_severity": "none", "impact_level": "none"},
+        {"change_summary": "s", "change_severity": "none", "evaluation": "e"},
+        {"change_summary": "s", "change_severity": "none", "recommendation": "r"},
+    ],
+)
+async def test_a_bad_evaluation_is_rejected_and_changes_nothing(client, body):
+    _, report_id = await investigated_report(client)
+
+    response = await client.put(f"/internal/reports/{report_id}/evaluation", json=body)
+
+    assert response.status_code == 422
+    report = (await client.get(f"/internal/reports/{report_id}")).json()
+    assert report["status"] == "investigated"
+
+
+async def test_an_investigating_report_is_a_conflict(client):
+    paper = await add_paper(client)
+    await add_alert(client, paper, "retraction")
+    report = await open_report(client, paper)
+
+    response = await client.put(
+        f"/internal/reports/{report['id']}/evaluation", json=full_evaluation()
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == f"Report {report['id']} is not investigated yet"
+
+
+async def test_an_assessed_report_keeps_its_first_evaluation(client):
+    _, report_id = await investigated_report(client)
+    first = (
+        await client.put(f"/internal/reports/{report_id}/evaluation", json=full_evaluation())
+    ).json()
+
+    again = await client.put(
+        f"/internal/reports/{report_id}/evaluation",
+        json={"change_summary": "Another.", "change_severity": "none"},
+    )
+
+    assert again.status_code == 409
+    assert again.json()["detail"] == f"Report {report_id} is already assessed"
+    assert (await client.get(f"/internal/reports/{report_id}")).json() == first
+
+
+async def test_evaluating_an_unknown_report_is_no_report_404(client):
+    response = await client.put("/internal/reports/999/evaluation", json=full_evaluation())
+    assert response.status_code == 404
+    assert response.json()["detail"] == "No report 999"
+
+
+# GET /internal/papers/{id}/pdf and /research-paper, set with the stub-only /dev helpers
+
+
+async def test_a_papers_pdf_and_draft_are_served_once_set(client):
+    paper = await add_paper(client)
+    await client.post(f"/dev/papers/{paper}/pdf", content=b"%PDF-1.7 paper")
+    await client.post(f"/dev/papers/{paper}/research-paper", content=b"%PDF-1.7 draft")
+
+    pdf = await client.get(f"/internal/papers/{paper}/pdf")
+    draft = await client.get(f"/internal/papers/{paper}/research-paper")
+
+    assert (pdf.status_code, pdf.content) == (200, b"%PDF-1.7 paper")
+    assert pdf.headers["content-type"] == "application/pdf"
+    assert (draft.status_code, draft.content) == (200, b"%PDF-1.7 draft")
+
+
+async def test_missing_pdfs_have_storage_managements_404_details(client):
+    paper = await add_paper(client)
+    missing = str(uuid4())
+
+    pdf = await client.get(f"/internal/papers/{paper}/pdf")
+    draft = await client.get(f"/internal/papers/{paper}/research-paper")
+
+    assert (pdf.status_code, pdf.json()["detail"]) == (404, f"Paper {paper} has no stored PDF")
+    assert (draft.status_code, draft.json()["detail"]) == (
+        404,
+        f"No research paper in the project of paper {paper}",
+    )
+    for path in ("pdf", "research-paper"):
+        response = await client.get(f"/internal/papers/{missing}/{path}")
+        assert (response.status_code, response.json()["detail"]) == (404, f"No paper {missing}")
+
+
+async def test_the_pdf_endpoints_need_a_service_token(client):
+    paper = await add_paper(client)
+    for path in ("pdf", "research-paper"):
+        response = await client.get(
+            f"/internal/papers/{paper}/{path}", headers={"Authorization": "Bearer nope"}
+        )
+        assert response.status_code == 401

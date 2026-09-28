@@ -19,9 +19,9 @@ from typing import Annotated, Any, Literal
 from uuid import UUID, uuid4
 
 import jwt
-from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query, Request, Response
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from common.doi import normalize_doi
 from common.service_token import decode_jwt_secret
@@ -69,6 +69,32 @@ class ReportStatusChange(BaseModel):
     status: Literal["investigating", "investigated", "assessed"]
 
 
+Level = Literal["none", "low", "medium", "high"]
+
+
+class ReportEvaluation(BaseModel):
+    """The body of `PUT /internal/reports/{id}/evaluation`: impact's result. With change_severity
+    none only the summary goes in; otherwise impact_level, evaluation and recommendation are
+    required. The real service answers 400 where this stub's validation answers 422."""
+
+    change_summary: str = Field(min_length=1, pattern=r"\S")
+    change_severity: Level
+    impact_level: Level | None = None
+    evaluation: str | None = None
+    recommendation: str | None = None
+    assessment: Any = None
+
+    @model_validator(mode="after")
+    def _shape(self) -> "ReportEvaluation":
+        rest = (self.impact_level, self.evaluation, self.recommendation)
+        if self.change_severity == "none":
+            if any(value is not None for value in rest):
+                raise ValueError("impact_level, evaluation and recommendation must be null when change_severity is none")
+        elif self.impact_level is None or any(not (text and text.strip()) for text in rest[1:]):
+            raise ValueError("impact_level, evaluation and recommendation are required unless change_severity is none")
+        return self
+
+
 class DownloadablePdf(BaseModel):
     """Stub-only: a DOI whose PDF the stub's scripted download finds."""
 
@@ -114,6 +140,10 @@ class Store:
     downloadable_pdfs: dict[str, str] = field(default_factory=dict)
     pdf_downloads: list[str] = field(default_factory=list)
     pdf_files: dict[int, bytes] = field(default_factory=dict)
+    # each paper's stored PDF, and the researcher's draft for its project (the stub keeps one per
+    # paper; the real service keys drafts by owner and folder)
+    paper_pdfs: dict[UUID, bytes] = field(default_factory=dict)
+    drafts: dict[UUID, bytes] = field(default_factory=dict)
 
     def add_snapshot(self, paper_id: UUID, snapshot: dict[str, Any]) -> dict[str, Any]:
         self.last_snapshot_id += 1
@@ -134,6 +164,8 @@ class Store:
         self.downloadable_pdfs.clear()
         self.pdf_downloads.clear()
         self.pdf_files.clear()
+        self.paper_pdfs.clear()
+        self.drafts.clear()
 
 
 def create_app(jwt_key: bytes | None = None) -> FastAPI:
@@ -171,6 +203,24 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
     def store_snapshot(paper_id: UUID, snapshot: dict[str, Any]) -> dict[str, Any]:
         find_paper(paper_id)
         return store.add_snapshot(paper_id, snapshot)
+
+    @internal.get("/papers/{paper_id}/pdf")
+    def paper_pdf(paper_id: UUID) -> Response:
+        """The paper's stored PDF, with Storage Management's 404 details."""
+        find_paper(paper_id)
+        content = store.paper_pdfs.get(paper_id)
+        if content is None:
+            raise HTTPException(404, f"Paper {paper_id} has no stored PDF")
+        return Response(content, media_type="application/pdf")
+
+    @internal.get("/papers/{paper_id}/research-paper")
+    def research_paper(paper_id: UUID) -> Response:
+        """The researcher's draft for the paper's project, with Storage Management's 404 details."""
+        find_paper(paper_id)
+        content = store.drafts.get(paper_id)
+        if content is None:
+            raise HTTPException(404, f"No research paper in the project of paper {paper_id}")
+        return Response(content, media_type="application/pdf")
 
     @internal.get("/papers/{paper_id}/background-info/history")
     def history(
@@ -286,6 +336,11 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
             "evaluation": None,
             "recommendation": None,
             "evaluated_at": None,
+            # impact's fields (docs/EVALUATION-IMPACT.md), null until the report is assessed
+            "change_summary": None,
+            "change_severity": None,
+            "impact_level": None,
+            "assessment": None,
         }
         store.reports[report["id"]] = report
         for alert in unreported:
@@ -309,6 +364,32 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
         if report["status"] == "investigating":
             report["status"] = "investigated"
             report["investigated_at"] = datetime.now(UTC).isoformat()
+        return report_view(report)
+
+    def find_report_by_id(report_id: int) -> dict[str, Any]:
+        """A report by its id alone; a deleted paper's reports went with it, as in Storage Management."""
+        report = store.reports.get(report_id)
+        if report is None or UUID(report["paper_id"]) not in store.papers:
+            raise HTTPException(404, f"No report {report_id}")
+        return report
+
+    @internal.get("/reports/{report_id}")
+    def read_report_by_id(report_id: int) -> dict[str, Any]:
+        return report_view(find_report_by_id(report_id))
+
+    @internal.put("/reports/{report_id}/evaluation")
+    def record_evaluation(report_id: int, evaluation: ReportEvaluation) -> dict[str, Any]:
+        """Stores impact's evaluation once, only on an investigated report, and marks it assessed."""
+        report = find_report_by_id(report_id)
+        if report["status"] == "investigating":
+            raise HTTPException(409, f"Report {report_id} is not investigated yet")
+        if report["status"] == "assessed":
+            raise HTTPException(409, f"Report {report_id} is already assessed")
+        report.update(
+            evaluation.model_dump(mode="json"),
+            status="assessed",
+            evaluated_at=datetime.now(UTC).isoformat(),
+        )
         return report_view(report)
 
     @internal.post("/documents")
@@ -388,6 +469,18 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
         if before:
             store.add_snapshot(paper.id, before.model_dump(mode="json"))
         return paper
+
+    @dev.post("/papers/{paper_id}/pdf", status_code=204)
+    async def set_paper_pdf(paper_id: UUID, request: Request) -> None:
+        """Stub-only: the request body becomes the paper's stored PDF."""
+        find_paper(paper_id)
+        store.paper_pdfs[paper_id] = await request.body()
+
+    @dev.post("/papers/{paper_id}/research-paper", status_code=204)
+    async def set_research_paper(paper_id: UUID, request: Request) -> None:
+        """Stub-only: the request body becomes the draft for the paper's project."""
+        find_paper(paper_id)
+        store.drafts[paper_id] = await request.body()
 
     @dev.post("/pdfs", status_code=204)
     def make_pdf_downloadable(pdf: DownloadablePdf) -> None:
