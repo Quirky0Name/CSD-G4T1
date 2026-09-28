@@ -4,14 +4,19 @@ RE's individual configs independent of common/config.py whihc is for all backend
 missing/invalid variables -> start up fails
 """
 
+from typing import Annotated
+
 from pydantic import Field, SecretBytes, SecretStr, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from common.service_token import decode_jwt_secret
 
 DEFAULT_SM_BASE_URL = "http://localhost:8081"
 DEFAULT_SNAPSHOT_WINDOW = 5
 DEFAULT_GEMINI_MODEL = "gemini-flash-latest"
+# not gemini-3.8-flash (what gemini-flash-latest resolves to) nor gemini-2.5-flash (gone for new
+# keys): docs/EVAL-GEM-FAILSAFE.md
+DEFAULT_GEMINI_FALLBACK_MODELS = ("gemini-flash-lite-latest",)
 
 
 class ResearchEvaluationSettings(BaseSettings):
@@ -34,6 +39,9 @@ class ResearchEvaluationSettings(BaseSettings):
     # impact.llm refuses to build a client when it's missing
     gemini_api_key: SecretStr | None = None
     gemini_model: str = DEFAULT_GEMINI_MODEL
+    # tried in order after gemini_model when a call to it fails (docs/EVAL-GEM-FAILSAFE.md);
+    # comma separated in the env, empty for none
+    gemini_fallback_models: Annotated[list[str], NoDecode] = list(DEFAULT_GEMINI_FALLBACK_MODELS)
     # how long impact waits for one Gemini call; it runs after investigation, in the background
     impact_llm_timeout_seconds: float = Field(default=120, gt=0)
     # the demo's notification when a report is assessed (docs/EVALUATION-NOTIF.md): a Telegram
@@ -45,3 +53,9 @@ class ResearchEvaluationSettings(BaseSettings):
     @classmethod
     def _decode_jwt_secret(cls, value: str) -> bytes:
         return decode_jwt_secret(value)
+
+    @field_validator("gemini_fallback_models", mode="before")
+    @classmethod
+    def _split_fallback_models(cls, value: str | list[str]) -> list[str]:
+        names = value.split(",") if isinstance(value, str) else value
+        return [name.strip() for name in names if name.strip()]

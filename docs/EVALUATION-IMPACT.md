@@ -554,8 +554,13 @@ at the end stays: it's what keeps "`assessed` means complete" true.
 
 - **Gemini isn't configured** (`GEMINI_API_KEY` empty): impact doesn't run;
   one log line; reports stay `investigated`.
-- **Anything fails for one report** (Gemini error or timeout, an answer
-  that doesn't fit the schema, Storage Management unreachable, a `409`):
+- **A Gemini call fails** (an API error such as `503` or `429`, a timeout
+  or dropped connection, no text, an answer that doesn't fit the schema):
+  the same call is tried on the next model in `GEMINI_FALLBACK_MODELS`,
+  in order, starting from `GEMINI_MODEL` for every call
+  ([EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md)).
+- **Anything else fails for one report** (every model failing the same
+  call, Storage Management unreachable, a `409`):
   logged with the report id and the cause (no response bodies, no prompt or
   draft text), the report stays `investigated`, the next report is still
   assessed. Nothing is stored for a report whose steps didn't all finish

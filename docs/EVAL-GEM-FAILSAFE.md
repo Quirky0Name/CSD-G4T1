@@ -185,3 +185,47 @@ No test calls Gemini: the model is a fake, as in EVALUATION-IMPACT.md.
 
 Filled in as each subtask lands: where each piece lives, how they fit
 together, and the gotchas.
+
+### Falling back through the models (S1)
+
+**Status: done.**
+
+- **The setting:** `config.py` `gemini_fallback_models` (default
+  `DEFAULT_GEMINI_FALLBACK_MODELS`, `("gemini-flash-lite-latest",)`). It is
+  `Annotated[list[str], NoDecode]` with a `before` validator that splits on
+  commas and drops blanks, so the env var (and `.env`) is a plain comma
+  list, not JSON.
+- **`impact/llm.py`:**
+  - `FallbackLlm(client, models)` is the `Llm` the lifespan builds: one
+    Gemini client, a tuple of names. `model` is the first name (what
+    `assessment.model` records); an empty tuple is refused. `generate`
+    calls the module's `generate` once per model, in order, and returns the
+    first answer.
+  - `MODEL_FAILURES` (`genai_errors.APIError`, `httpx.TransportError`,
+    `ValidationError`, `ValueError`) are what move on to the next model;
+    each is logged once as `Gemini model <name> failed (<cause>)`.
+    Anything else propagates.
+  - `failure_cause(exc)` says what went wrong without bodies or text: the
+    API code and status, the transport error's class, the schema error
+    count, "no text in the answer" (`NoText`, which `generate` now raises
+    for an empty answer; a `ValueError`), or else the class name only.
+  - When every model failed: `AllModelsFailed.failures`, a list of
+    `ModelFailure(model, cause)` in the order tried.
+  - `Answer.model` is the name the answer was asked of (default `None`, so
+    fakes that build `Answer(value, version)` still work).
+  - `GeminiLlm` (one model) is kept; the tests still use it.
+- **`main.py`:** the lifespan builds
+  `FallbackLlm(make_client(config), (GEMINI_MODEL, *GEMINI_FALLBACK_MODELS))`
+  with duplicates removed in order (`dict.fromkeys`).
+- **Gotchas:**
+  - Until S2, `AllModelsFailed` fails the report in `run.assess_report`
+    like any other error (logged, stays `investigated`).
+  - A `ValueError` includes errors the SDK raises client side (for example
+    its `UnknownApiResponseError`); they move on too, and are recorded by
+    class name.
+  - The SDK makes one attempt per call (no `retry_options`), so every
+    retry is a fallback here.
+- **Tests:** `tests/research_evaluation/impact/test_llm.py` (a scripted
+  fake client answering per model name) and
+  `tests/research_evaluation/test_config.py` (the setting and the
+  lifespan).

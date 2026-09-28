@@ -5,6 +5,33 @@ settled and anyone (including the TA) can see the reasoning. Newest first.
 
 ---
 
+## 2026-09-28 — Impact falls back through a list of Gemini models
+
+The plan is [EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md).
+
+### Team decisions
+
+- **A failed Gemini call is tried again on the next model in a list**
+  (`GEMINI_MODEL`, then `GEMINI_FALLBACK_MODELS` in order; the story
+  owner's call). On the free tier `gemini-flash-latest` often answers
+  `503` ("high demand") and each model has its own daily quota, so one
+  model failing says little about the next; before this, one `503` failed
+  the whole report.
+- **Any Gemini-side failure moves on:** an API error of any code, a
+  transport error (timeout, refused or dropped connection), no text, or an
+  answer that doesn't fit the schema. A different model may well answer
+  where one didn't, and a bad model name (`404`) is skipped the same way.
+  Anything else (a bug) is raised straight away.
+- **Each call starts again from `GEMINI_MODEL`,** so a model that was
+  overloaded for step 1 is tried first again for step 2.
+- **The default fallback is `gemini-flash-lite-latest` only.**
+  `gemini-3.8-flash` is what `gemini-flash-latest` resolves to (the same
+  overloaded model), and `gemini-2.5-flash` isn't available to new keys
+  (2026-09-28, "Impact asks Gemini three questions"). Teams add older
+  models their key can use in `.env`.
+
+---
+
 ## 2026-09-28 — The researcher hears on Telegram when a report is assessed
 
 The plan is [EVALUATION-NOTIF.md](EVALUATION-NOTIF.md).
