@@ -1,0 +1,7 @@
+# Local testing only, with SPRING_PROFILES_ACTIVE=dev: Swagger UI at /swagger-ui.html and the
+# /dev endpoints for setting papers up for a demo. Never set in a deployed environment.
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
