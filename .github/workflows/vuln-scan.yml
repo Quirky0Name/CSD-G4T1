@@ -21,6 +21,13 @@ jobs:
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: 0
+          format: table
+          output: trivy-report.txt
+      - name: Show report
+        if: always()
+        run: |
+          cat trivy-report.txt
+          { echo '## Trivy report'; echo '```'; cat trivy-report.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
   # Disabled until deployment is set up and we ship Docker images.
   #   images:
