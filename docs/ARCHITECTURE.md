@@ -245,7 +245,10 @@ journal and author fields moved to Updating (Section 4).
      investigation returns the ids of the reports it finished, and impact
      reads everything else from Storage Management, so the two stay
      independent. Alerts keep their rule-based text; impact's judgment is
-     on the report. Without `GEMINI_API_KEY` impact doesn't run.
+     on the report. Without `GEMINI_API_KEY` impact doesn't run. A failed
+     Gemini call falls back through `GEMINI_FALLBACK_MODELS`; when every
+     model fails, the report is stored `assessed` with a placeholder
+     evaluation ([EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md)).
   5. **Notification** (`notify.py`, right after impact stores a report's
      evaluation): a Telegram message to one hard-coded chat
      (`NOTIFY_TELEGRAM_CHAT_ID`, the demo's researcher) with the change,

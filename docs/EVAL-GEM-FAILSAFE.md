@@ -1,7 +1,8 @@
 # Falling back through Gemini models when a call fails (plan)
 
-**Status: planned, 2026-09-28.** Work happens on `fix/gem-request-failure`;
-see "Codebase context" for what was built and where, as each subtask lands.
+**Status: done (S0–S2), 2026-09-28.** Work happened on
+`fix/gem-request-failure`; see "Codebase context" for what was built and
+where.
 
 It changes one thing in [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md):
 what happens when a Gemini call fails. Today impact calls one model
@@ -218,8 +219,8 @@ together, and the gotchas.
   `FallbackLlm(make_client(config), (GEMINI_MODEL, *GEMINI_FALLBACK_MODELS))`
   with duplicates removed in order (`dict.fromkeys`).
 - **Gotchas:**
-  - Until S2, `AllModelsFailed` fails the report in `run.assess_report`
-    like any other error (logged, stays `investigated`).
+  - `AllModelsFailed` never reaches `run.assess_report`: `assess` turns it
+    into the placeholder (S2).
   - A `ValueError` includes errors the SDK raises client side (for example
     its `UnknownApiResponseError`); they move on too, and are recorded by
     class name.
@@ -229,3 +230,39 @@ together, and the gotchas.
   fake client answering per model name) and
   `tests/research_evaluation/test_config.py` (the setting and the
   lifespan).
+
+### The placeholder evaluation (S2)
+
+**Status: done.**
+
+- **Where:** `impact/assess.py` `assess` runs the three steps inside one
+  `try`, tracking the current step (`change`, `impact`, `actions`); an
+  `AllModelsFailed` from any of them goes to `_placeholder`, which returns
+  the `Evaluation` with `PLACEHOLDER_TEXT` (in `impact/schemas.py`) as all
+  three texts and `low` for both levels. Nothing else is caught there:
+  `run.assess_report` stores and notifies the placeholder like any
+  evaluation, and still fails the report on a Storage Management error.
+- **`assessment`,** always: `answered_by` (`change`, `impact`, `actions`:
+  the `Answer.model` of each step, null for a step not run) and
+  `placeholder` (`false`). For the placeholder: `placeholder: true`,
+  `failed_step`, `failures` (`[{model, cause}]` from
+  `AllModelsFailed.failures`), and whatever the finished steps left:
+  `change` (and `model_version`) from step 1, `impact` from step 2,
+  `draft` as far as it got. Unfinished steps stay null.
+- **The draft** is still read only after step 1 answered: a placeholder
+  at step 1 never requests it (`draft` `not_needed`).
+- **Gotchas:**
+  - A placeholder report is `assessed` for good: Storage Management takes
+    one evaluation, and `POST /evaluate/reports` skips `assessed` reports.
+    To assess it for real, the evaluation columns and `status` would have
+    to be reset in the database.
+  - The notifier can't tell a placeholder from a real `low` evaluation;
+    only `assessment.placeholder` can. The frontend should check it too.
+  - Only `AllModelsFailed` gives the placeholder. A plain `Llm` (such as
+    `GeminiLlm`, or a test fake) raising a Gemini error still fails the
+    report as before.
+- **Tests:** `tests/research_evaluation/impact/test_assess.py` (the
+  placeholder at each step, what `assessment` keeps, `answered_by` on a
+  normal and a gated run) and `test_run.py` (end to end: stored
+  `assessed`, notified, not assessed again, and a failing `PUT` still
+  leaves it `investigated`).

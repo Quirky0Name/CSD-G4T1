@@ -493,7 +493,12 @@ RecommendedActions
 | — | `reports.evaluated_at`, `status` → `assessed` | set by Storage Management | set |
 
 `draft` is `read`, `none` (no draft for the project) or `not_needed`
-(stopped at the gate). The two levels the frontend will want to sort or
+(stopped at the gate). Since the model fallback
+([EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md)), `assessment` also has
+`answered_by` (the model that answered each of `change`, `impact` and
+`actions`, or null) and `placeholder` (`false`; `true` for the placeholder
+evaluation stored when every model failed a step, which adds
+`failed_step` and `failures`, and leaves the unfinished steps null). The two levels the frontend will want to sort or
 badge by (`change_severity`, `impact_level`) and the three texts are real
 columns; the rest is JSON, so the shape of the per-alert and per-use detail
 can change without a migration.
@@ -512,13 +517,16 @@ land.
 
 **Impact writes the report once, only when it's finished with it:**
 after step 3, or after step 1 when the change severity is `none` (it
-decided not to go further). Nothing is written between steps, and a
-failure at any step writes nothing. So a report is never half-assessed,
-and `assessed` always means a complete evaluation:
+decided not to go further), or when every Gemini model failed a step (the
+placeholder, [EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md)). Nothing is
+written between steps, and any other failure writes nothing. So a report
+is never half-assessed: `assessed` means a complete evaluation, or the
+placeholder, which `assessment.placeholder` tells apart:
 
 | The report | Means |
 |---|---|
 | `assessed`, `change_severity` `none` | stopped at the gate: the change isn't meaningful; only `change_summary` and `change_severity` are set |
+| `assessed`, `assessment.placeholder` `true` | every Gemini model failed a step: the placeholder (`low` levels, a fixed text), not a judgment |
 | `assessed`, any other severity | done: every field is set |
 | `investigated` | not assessed: see the gap below |
 
@@ -529,7 +537,9 @@ before impact started. From the report alone, a reader such as the
 frontend can't tell these apart:
 - impact hasn't reached it yet (it runs right after investigation);
 - impact is running now;
-- impact failed (Gemini error, timeout, quota) and won't retry;
+- impact failed (Storage Management failing, a bug) and won't retry
+  (every Gemini model failing isn't this: the report is `assessed` with a
+  placeholder, EVAL-GEM-FAILSAFE.md);
 - impact is off (`GEMINI_API_KEY` isn't set).
 
 **To add** (not built; see "Later sprints"): a status for it, so the
@@ -548,7 +558,8 @@ forever:
 the values need no migration, but a cause column would), the `PATCH` and
 the flat `PUT` accept them, and CONTRACTS and the frontend's report body
 (`STORAGE-USER-REPORTS.md`) list them. Whatever is added, the single write
-at the end stays: it's what keeps "`assessed` means complete" true.
+at the end stays: it's what keeps "`assessed` means complete (or the
+placeholder)" true.
 
 ### Failures
 
@@ -559,8 +570,13 @@ at the end stays: it's what keeps "`assessed` means complete" true.
   the same call is tried on the next model in `GEMINI_FALLBACK_MODELS`,
   in order, starting from `GEMINI_MODEL` for every call
   ([EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md)).
-- **Anything else fails for one report** (every model failing the same
-  call, Storage Management unreachable, a `409`):
+- **Every model fails the same call:** the report is stored `assessed`
+  with a placeholder evaluation (`low` severity and impact, a fixed text in
+  every text field, `assessment.placeholder` `true`;
+  [EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md)), and notified like any
+  other.
+- **Anything else fails for one report** (Storage Management unreachable,
+  a `409`):
   logged with the report id and the cause (no response bodies, no prompt or
   draft text), the report stays `investigated`, the next report is still
   assessed. Nothing is stored for a report whose steps didn't all finish

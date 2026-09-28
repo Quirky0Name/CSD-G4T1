@@ -29,6 +29,22 @@ The plan is [EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md).
   overloaded model), and `gemini-2.5-flash` isn't available to new keys
   (2026-09-28, "Impact asks Gemini three questions"). Teams add older
   models their key can use in `.env`.
+- **When every model fails a step, the report is stored with a
+  placeholder evaluation** (the story owner's call, with its wording):
+  `change_severity` and `impact_level` `low`, and `change_summary`,
+  `evaluation` and `recommendation` all `FUCK U GEMINI FLASH. WHO TF IS
+  EVEN USING GEMINI FLASH`. `assessment` keeps `placeholder: true`, the
+  step that failed, each model's cause, and the answers of the steps that
+  did finish, so it can be told apart from a real judgment. Storage
+  Management failures still fail the report as before.
+- **The consequences were accepted:** the placeholder is an evaluation
+  like any other, so the report becomes `assessed` and, since an
+  evaluation is written once, keeps it (`POST /evaluate/reports` skips it;
+  re-assessing is still a later sprint). It is sent to the Telegram chat
+  and shown in the report body.
+- **`assessment.answered_by`** records the model that answered each step,
+  since the three steps may now be answered by different models;
+  `model` stays the first name and `model_version` step 1's.
 
 ---
 

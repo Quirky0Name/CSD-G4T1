@@ -10,6 +10,10 @@ Role = Literal[
     "methods_or_data", "key_evidence", "supporting", "comparison", "background", "critical"
 ]
 
+# every text of the evaluation stored when every Gemini model failed a step
+# (docs/EVAL-GEM-FAILSAFE.md; the story owner's wording)
+PLACEHOLDER_TEXT = "FUCK U GEMINI FLASH. WHO TF IS EVEN USING GEMINI FLASH"
+
 
 class _Answer(BaseModel):
     # the model's extra keys are dropped rather than failing a whole report

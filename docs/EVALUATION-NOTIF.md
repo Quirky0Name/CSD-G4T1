@@ -21,6 +21,10 @@ report's evaluation (the report becomes `assessed`) is "evaluation done".
   change's severity and summary, the impact level on the draft, the
   evaluation and the recommendation. A report rated `none` (not
   meaningful) gets a short message: the summary and "Nothing to do."
+  The placeholder evaluation stored when every Gemini model failed
+  ([EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md)) is sent like any other:
+  `low` change and impact, and its fixed text as summary, evaluation and
+  recommendation.
 - A notification never changes what impact does. It's sent only after the
   evaluation is stored, and a failure to send is logged and nothing more:
   the report stays `assessed`.
