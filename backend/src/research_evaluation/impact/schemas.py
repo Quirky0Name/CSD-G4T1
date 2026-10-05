@@ -11,7 +11,7 @@ Role = Literal[
 ]
 
 # every text of the evaluation stored when every Gemini model failed a step
-# (docs/EVAL-GEM-FAILSAFE.md; the story owner's wording)
+# (docs/EVALUATION.md, "Impact"; the story owner's wording)
 PLACEHOLDER_TEXT = "FUCK U GEMINI FLASH. WHO TF IS EVEN USING GEMINI FLASH"
 
 

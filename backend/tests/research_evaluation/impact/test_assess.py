@@ -450,7 +450,7 @@ async def test_an_answer_that_doesnt_fit_raises_and_returns_nothing(sm):
     assert len(llm.calls) == 2
 
 
-# every model failing a step: the placeholder (docs/EVAL-GEM-FAILSAFE.md)
+# every model failing a step: the placeholder (docs/EVALUATION.md, "Impact")
 
 FAILURES = [
     ModelFailure("gemini-flash-latest", "Gemini answered 503 (UNAVAILABLE)"),

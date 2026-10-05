@@ -1,6 +1,6 @@
 """What impact's first step reads from Storage Management for one report: the paper's details,
 its stored PDF, and the PDF of each document that has one. Never the researcher's draft: that is
-read only once the change turns out to be meaningful (docs/EVALUATION-IMPACT.md, "The gate")."""
+read only once the change turns out to be meaningful (docs/EVALUATION.md, "Impact")."""
 
 from dataclasses import dataclass, field
 

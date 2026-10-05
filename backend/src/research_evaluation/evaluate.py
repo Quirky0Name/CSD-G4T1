@@ -1,4 +1,4 @@
-"""Change evaluation for Updating's nudge (docs/EVALUATION-REVIEW-CHANGES.md, S5).
+"""Change evaluation for Updating's nudge (docs/EVALUATION.md, "The nudge").
 
 The conductor: for each paper it reads the newest N snapshots from Storage Management
 (N = EVALUATION_SNAPSHOT_WINDOW) and runs stage 1 (changes.py) on every consecutive pair.

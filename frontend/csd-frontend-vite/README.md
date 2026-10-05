@@ -2,7 +2,7 @@
 
 React + TypeScript + Vite, talking to Storage Management and Updating.
 See [docs/CONTRACTS.md](../../docs/CONTRACTS.md) for the full API and
-[docs/LOCAL_STORAGE_DB.md](../../docs/LOCAL_STORAGE_DB.md) for the
+its "Frontend ↔ Storage Management" table for the
 endpoint-by-feature list this frontend was built against.
 
 ## Running against the services
@@ -12,8 +12,8 @@ through Vite's proxy (`vite.config.ts`): `/api` forwards to Storage
 Management, `/updating` to Updating. Both need to be running:
 
 - Storage Management on `localhost:8081` — see
-  [docs/LOCAL_STORAGE_DB.md](../../docs/LOCAL_STORAGE_DB.md), "Running
-  locally".
+  [docs/SETUP.md](../../docs/SETUP.md), "Running everything in
+  Docker" or "Storage Management without Docker".
 - Updating on `localhost:8001` — see the repo root
   [SETUP.md](../../docs/SETUP.md), pointed at that same Storage
   Management (`SM_BASE_URL=http://localhost:8081`).
@@ -40,7 +40,7 @@ print(jwt.encode(
 ```
 
 (On Windows, use the PowerShell snippet in
-[docs/LOCAL_STORAGE_DB.md](../../docs/LOCAL_STORAGE_DB.md), "Getting a
+[docs/SETUP.md](../../docs/SETUP.md), "A demo user
 token".) The token lasts 30 days; change `sub` for a different demo
 user. Updating's `POST /run-poll` takes no token in sprint 1.
 

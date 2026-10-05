@@ -285,7 +285,7 @@ async def test_only_investigated_reports_are_assessed(sm):
     assert len(llm.calls) == calls
 
 
-# notifying the researcher (docs/EVALUATION-NOTIF.md), with Telegram faked
+# notifying the researcher (docs/EVALUATION.md, "Notification"), with Telegram faked
 
 
 TITLE = "Hydroxychloroquine and azithromycin as a treatment of COVID-19"  # the test snapshots'
@@ -448,7 +448,7 @@ async def test_telegram_failing_leaves_the_report_assessed_and_counted(
     assert "test-token" not in record.getMessage()
 
 
-# every model failing a step: the placeholder (docs/EVAL-GEM-FAILSAFE.md)
+# every model failing a step: the placeholder (docs/EVALUATION.md, "Impact")
 
 
 def every_model_failed() -> AllModelsFailed:

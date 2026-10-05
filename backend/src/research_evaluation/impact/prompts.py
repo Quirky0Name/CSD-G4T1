@@ -1,4 +1,4 @@
-"""Impact's prompts (docs/EVALUATION-IMPACT.md, "The prompts"): the system instruction shared by
+"""Impact's prompts (docs/EVALUATION.md, "Impact"): the system instruction shared by
 the three calls, each step's task, and the builders that lay out what the model is given.
 
 Fetched text and PDFs are data, never instructions (docs/DECISIONS.md): documents go inside
