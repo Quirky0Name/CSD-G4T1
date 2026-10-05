@@ -261,9 +261,9 @@ be in `GET /papers/{id}/alerts` a moment before it's in a report.
 
 | Report field | Meaning |
 |---|---|
-| `status` | `investigating` (its documents are being fetched, or fetching stopped midway; nothing resumes it yet), `investigated` (fetching finished) or `assessed` (impact wrote its evaluation; nothing sets it yet) |
+| `status` | `investigating` (its documents are being fetched, or fetching stopped midway; nothing resumes it yet), `investigated` (fetching finished) or `assessed` (impact wrote its evaluation) |
 | `created_at`, `investigated_at` | when the report was opened, and when fetching finished (null until then) |
-| `evaluation`, `recommendation`, `evaluated_at` | impact's evaluation of the report's alerts together, what the researcher should do, and when it was written. Null until impact exists |
+| `evaluation`, `recommendation`, `evaluated_at` | impact's evaluation of the report's alerts together, what the researcher should do, and when it was written. Null until the report is `assessed`, and also null on an assessed report whose change impact rated `none` (not meaningful) |
 | `alerts` | the report's alerts, in the same shape and order as `GET /papers/{id}/alerts` (newest first, then most severe), **dismissed ones included**, with their status. They're the same alerts, acted on with `PATCH /alerts/{id}` and `/alerts/{id}/notes`. Can be empty: when a retraction notice arrives after a retraction alert that had none, the alert moves to the paper's next report (see `POST /internal/papers/{id}/alerts`), and the earlier report keeps its documents |
 | `documents` | what investigation fetched, oldest first (the order it stored them) |
 
@@ -367,6 +367,32 @@ research paper, with a new `id`.
 **Response `204`**, no body.
 
 Errors: as for `GET /research-paper`. A `404` deletes nothing.
+
+### Demo tools: `/dev/papers/{id}/...`
+
+Always on for now, for the demo and testing; they should come out (or go
+behind a setting) before a real deployment. User JWT required, and only
+on the caller's own papers: another user's paper gets the same `404`
+`No paper <id>` as a missing one. How to use them for a demo is in
+LOCAL_STORAGE_DB.md, "Swagger and demo set-up".
+
+- **`POST /dev/papers/{id}/undo-change?change=`** (`retraction`,
+  `correction`, `erratum` or `expression_of_concern`): stores a copy of
+  the paper's latest snapshot with that change taken out (for a
+  retraction, `is_retracted` set back to false too), so the next poll
+  finds the change again. **`201`** with the new snapshot, in the shape
+  `POST /internal/papers/{id}/background-info` returns. `400` an unknown
+  `change`; `409` the paper has no snapshot yet (poll it once first), or
+  has no such change to undo.
+- **`DELETE /dev/papers/{id}/history`**: deletes the paper's snapshots,
+  alerts (and their notes) and reports (and their documents and PDFs), so
+  a rehearsal raises the same change again. **`204`**.
+- **`DELETE /dev/papers/{id}`**: deletes the paper and everything above,
+  plus its stored PDF. Updating stops tracking it on its next poll.
+  **`204`**. The frontend calls this to delete a tracked paper.
+
+Errors, as problem details: `401` missing or bad token; `403` a service
+token; `404` as above.
 
 ## Storage Management ↔ Research Evaluation / Updating
 
@@ -781,8 +807,8 @@ unknown enum value; `404` with `detail` `No report <report_id>`.
 
 ### `GET /internal/documents/{id}/pdf`
 
-Service-JWT only. The document's stored PDF, as `application/pdf`, for
-impact later. **It only reads; it never downloads.**
+Service-JWT only. The document's stored PDF, as `application/pdf`, read
+by impact. **It only reads; it never downloads.**
 
 Errors, as problem details: `400` an id that isn't a number; `401`
 missing or bad token; `403` a user token; `404` with one of:
@@ -1254,7 +1280,7 @@ logged by Updating, not returned.
 |---|---|---|
 | `JWT_SECRET` | all | base64-encoded, 32+ bytes (`openssl rand -base64 32`); every service decodes before use. Sprint 1: a shared throwaway value in that format |
 | `SM_BASE_URL` | Research Evaluation, Updating | Storage Management's base URL (`http://localhost:8081` locally) |
-| `RE_BASE_URL` | Storage Management, Updating | Research Evaluation's base URL (Updating's nudge goes here) |
+| `RE_BASE_URL` | Updating | Research Evaluation's base URL (Updating's nudge goes here). Storage Management never calls Research Evaluation |
 
 See [SETUP.md](SETUP.md) for the full env var list including the
 third-party API keys.

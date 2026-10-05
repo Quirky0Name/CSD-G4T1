@@ -167,7 +167,9 @@ Owns all Postgres and file persistence.
 - **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
   `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /alerts/{id}/notes`,
   `GET /papers/{id}/reports` (the paper's reports with their alerts and documents, for the frontend),
-  `POST/GET/DELETE /research-paper`, `POST/GET /internal/papers/{id}/background-info`,
+  `POST/GET/DELETE /research-paper`, `GET /internal/papers`,
+  `POST /internal/papers/{id}/background-info`,
+  `GET /internal/papers/{id}/background-info/history`,
   `GET /internal/papers/{id}/pdf`, `GET /internal/papers/{id}/research-paper`,
   `POST /internal/papers/{id}/alerts`,
   `GET /internal/papers/{id}/alerts/change-keys`,
@@ -175,6 +177,9 @@ Owns all Postgres and file persistence.
   `GET/PATCH /internal/papers/{id}/reports/{reportId}`,
   `GET /internal/reports/{reportId}`, `PUT /internal/reports/{reportId}/evaluation`,
   `POST /internal/documents`, `GET /internal/documents/{id}/pdf`.
+  Demo tools (user JWT, own papers only, to come out before a real
+  deployment): `POST /dev/papers/{id}/undo-change`,
+  `DELETE /dev/papers/{id}/history`, `DELETE /dev/papers/{id}`.
 - **DB hosting:** Supabase free tier.
 
 ## Section 3 — Research Evaluation

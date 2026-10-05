@@ -1,8 +1,9 @@
 # A paper's reports, for the frontend
 
 **Status: built** on `feat/storage-reports-user-endpoint`: the frontend can
-read a paper's reports with `GET /papers/{id}/reports`. Nothing in the
-frontend calls it yet (see "TODO for other owners").
+read a paper's reports with `GET /papers/{id}/reports`. The frontend calls
+it (`listReports` in `frontend/csd-frontend-vite/src/api.ts`, shown by
+`components/ReportList.tsx`).
 
 A report groups the alerts one nudge stored for a paper and holds what
 Research Evaluation's investigation fetched about them (its documents)
@@ -114,10 +115,10 @@ Two cases match nothing:
 
 ## TODO for other owners
 
-- **Frontend:** add the types and a `listReports(paperId)` call to
-  `frontend/csd-frontend-vite/src/api.ts` (on `feat/frontend-api-wiring`).
-  The alerts inside a report are the same `Alert` type as the alert list.
-  Match a notice to its alert by `notice_doi` = `doi`.
+- **Frontend:** done. `listReports(paperId)` and the report types are in
+  `frontend/csd-frontend-vite/src/api.ts`; the alerts inside a report are
+  the same `Alert` type as the alert list. Match a notice to its alert by
+  `notice_doi` = `doi`.
 - **Impact (Research Evaluation):** when impact writes `evaluation`,
   `recommendation` and `evaluated_at` and sets `assessed`, they show up
   here with no change to this endpoint.

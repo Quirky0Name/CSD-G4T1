@@ -204,8 +204,11 @@ above) and every call here needs the demo user token. Updating is
 
 3. **Notification**
     1. **Ability to send user toast on change notice.** No push from the
-       backend. Re-fetch the alerts every minute or so and show a toast
-       for any alert id you haven't seen before whose `status` is `new`.
+       backend to the frontend. Re-fetch the alerts every minute or so and
+       show a toast for any alert id you haven't seen before whose `status`
+       is `new`. (Outside the frontend, Research Evaluation sends a
+       Telegram message to one hard-coded chat when a report is assessed:
+       EVALUATION-NOTIF.md.)
 
 A paper's reports: `GET /papers/{id}/reports`, newest first, as
 `{"reports": [...]}`. Each report groups the alerts one check stored for
@@ -225,7 +228,11 @@ For other services only (a service token; the frontend can't call these):
 `GET /internal/papers`, `POST` and `GET /internal/papers/{id}/background-info`
 (`/history` for the GET), `POST /internal/papers/{id}/alerts`,
 `GET /internal/papers/{id}/alerts/change-keys`,
-`GET /internal/papers/{id}/pdf`, `GET /internal/papers/{id}/research-paper`.
+`GET /internal/papers/{id}/pdf`, `GET /internal/papers/{id}/research-paper`,
+`POST /internal/papers/{id}/reports`, `GET` and `PATCH
+/internal/papers/{id}/reports/{reportId}`, `GET /internal/reports/{reportId}`,
+`PUT /internal/reports/{reportId}/evaluation`, `POST /internal/documents`,
+`GET /internal/documents/{id}/pdf`.
 
 ## Resetting your local database
 

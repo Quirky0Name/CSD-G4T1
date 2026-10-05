@@ -1,7 +1,8 @@
 # Investigating a detected change (plan)
 
-**Status: plan, awaiting approval.** Work happens on
-`feat/eval-investigation`. The research behind it (every way a change shows
+**Status: done (S0–S7), each subtask verified.** Work happened on
+`feat/eval-investigation`; see "Codebase context" for what was built and
+where. The research behind it (every way a change shows
 up in real life, with real examples, and what can be fetched for it) is
 [RE-changes-explained.md](RE-changes-explained.md); the case codes below
 (R1, C6, …) are its.
@@ -1173,13 +1174,11 @@ to `alert/` and following its layout:
 
 ## TODO for other owners
 
-- **Amir (Storage Management):**
-  - agree to the report tables, `alerts.report_id`, the five endpoints (three for reports, two for
-    documents), the
-    `OpenAccessPdfClient` change and S7's exception in
-    `POST /internal/papers/{id}/alerts`, or build them himself;
-  - know that alert notes is now V5 (S0), and that V7 is taken by this
-    plan;
+- **Amir (Storage Management):** done. The report tables,
+  `alerts.report_id`, the five endpoints (three for reports, two for
+  documents), the `OpenAccessPdfClient` change and S7's exception in
+  `POST /internal/papers/{id}/alerts` are built and on `main`; alert notes
+  is V5 (S0) and the reports are V7;
 - **Zhuo En (Updating):** nothing needed. Later, perhaps: share the
   Crossref request code through `common/`.
 

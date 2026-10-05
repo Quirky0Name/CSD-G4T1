@@ -27,13 +27,14 @@ REST, trusting a single JWT issued at login. See
 | [docs/STORAGE-USER-RESEARCH-PAPER.md](docs/STORAGE-USER-RESEARCH-PAPER.md) | The researcher's own paper, one per project (folder, or "no folder"): how it's stored and replaced, where the code lives, and gotchas |
 | [docs/STORAGE-USER-TRACKED-PDF.md](docs/STORAGE-USER-TRACKED-PDF.md) | Tracked papers' stored PDFs: how both ingest paths keep them, how Research Evaluation reads them, and what else it can read from Storage Management |
 | [docs/STORAGE-USER-REPORTS.md](docs/STORAGE-USER-REPORTS.md) | A paper's reports for the frontend (`GET /papers/{id}/reports`): what's shown and hidden, how documents match alerts, where the code lives, and gotchas |
+| [docs/architecture.html](docs/architecture.html) | The service architecture as a diagram page (open in a browser) |
+| [docs/erd/erd-flyway-V8.html](docs/erd/erd-flyway-V8.html) | Storage Management's schema as an ERD, generated from the Flyway migrations up to V8 |
 
 ## Services
 
 | Service | Stack | Folder |
 |---|---|---|
 | User Management (+ frontend) | Spring Boot + React | `frontend/` |
-
 | Storage Management | Java + Spring Boot | `storage/` |
 | Research Evaluation | Python | `backend/` |
 | Updating | Python | `backend/` |

@@ -1,9 +1,8 @@
 # Seeing and reviewing paper changes (plan)
 
-**Status: built** (S1–S10 done and verified). Work happens on
-`feat/eval-reviewing-changes`. As each subtask is built and verified, the
-parts of it that change a contract or a decision move into CONTRACTS.md,
-ARCHITECTURE.md and DECISIONS.md, and the subtask is marked done below.
+**Status: built** (S1–S10 done and verified). Work happened on
+`feat/eval-reviewing-changes`. The parts of it that change a contract or a
+decision are in CONTRACTS.md, ARCHITECTURE.md and DECISIONS.md.
 
 ## The story
 
@@ -946,8 +945,5 @@ idempotently. Left for later:
 
 ## Open questions
 
-- Approval of this plan, including the severity mapping.
-- Amir's agreement to the Storage Management endpoints, or whether he
-  would rather build S1–S3 himself.
-- Commit after each verified subtask, and the ticket id for the commit
-  messages.
+None left: the plan, its severity mapping and the Storage Management
+endpoints were approved and built.

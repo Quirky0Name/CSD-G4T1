@@ -42,8 +42,6 @@ bottom.
   (the compose file sets `SM_BASE_URL` and the Linux `extra_hosts` for it). Storage
   Management's local Postgres and the compose Postgres both bind host port
   5432, so run one or remap the other.
-- Confirm the Storage Management snapshot endpoint and fields in
-  CONTRACTS.md with that owner.
 - Download the three demo PDFs by hand ahead of the demo (see
   [DEMO.md](DEMO.md)); its seed script uploads them to Storage
   Management, which keeps them for Research Evaluation.
@@ -53,7 +51,7 @@ bottom.
 | Var | Where to get it |
 |---|---|
 | `OPENALEX_API_KEY` | openalex.org account |
-| `S2_API_KEY` | Semantic Scholar API key request form |
+| `S2_API_KEY` | Semantic Scholar API key request form. Read only by Storage Management (put it in `storage/.env`), for open-access PDF links when tracking by DOI; the Python apps don't read it |
 | `LLM_API_KEY` | platform.deepseek.com |
 | `LLM_MODEL` | `deepseek-flash` (default) |
 | `LLM_BASE_URL` | `https://api.deepseek.com` |
@@ -65,7 +63,7 @@ bottom.
 | `DATABASE_URL` | local Postgres in sprint 1 (`postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` for the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres; Supabase session-pooler connection string once hosted |
 | `SM_BASE_URL` | Storage Management's running URL (`http://localhost:8081`); the stub in `backend/dev/` listens on the same port |
 | `RE_BASE_URL` | Research Evaluation's running URL (`http://localhost:8000`); the stub in `backend/dev/` listens on the same port |
-| `GROBID_URL` | `http://grobid:8070` in Docker Compose |
+| `GROBID_URL` | Read only by Storage Management (`storage/.env`; default `http://localhost:8070`, and `http://host.docker.internal:8070` in its compose file); the Python apps don't read it |
 | `POLL_INTERVAL_HOURS` | `24` (default) |
 | `CACHE_MAX_ENTRIES` | `5000` (default) |
 | `EVALUATION_SNAPSHOT_WINDOW` | `5` (default), at least `2`: how many of a paper's newest snapshots Research Evaluation compares on each nudge. A change is missed if its nudge keeps failing for more than N − 2 polls in a row; raise it (e.g. `30`) before deployment |
