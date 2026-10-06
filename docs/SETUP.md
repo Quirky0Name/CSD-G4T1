@@ -1,120 +1,85 @@
 # Setup
 
-What you need before Research Evaluation / Updating can run for real
-(anything calling an external API or the LLM). None of this is needed to
-run the empty scaffolding — see the "Scaffolding only" section at the
-bottom.
+Accounts, keys and env vars, and how to run each service locally, alone or
+together. Ports: Research Evaluation 8000, Updating 8001, GROBID 8070,
+Storage Management 8081, Postgres 5432 (backend) and 5433 (Storage
+Management in compose), frontend 5173.
 
 ## Accounts and API keys
 
 | Service | Needed for | Notes |
 |---|---|---|
-| **Semantic Scholar** | abstract/TL;DR/snippet lookups; open-access PDF links when Storage Management tracks a paper by DOI | Request a key through their API-key request form **first** — approval can take days. Keyless calls work meanwhile but hit frequent 429s. Header: `x-api-key`. |
-| **DeepSeek** | claims + stance LLM calls | Create an account at platform.deepseek.com, top up a few USD (covers development and the demo many times over — calls cost well under 1¢ each), create an API key. |
-| **Gemini** | impact's LLM calls (Research Evaluation) | Sign in at aistudio.google.com with a Google account and click "Get API key"; the free tier is enough for development. |
-| **Telegram** | the demo's notification when a report is assessed (Research Evaluation) | Optional. Create a bot with @BotFather (`/newbot`) for its token, write to it once, then read your chat id from `https://api.telegram.org/bot<token>/getUpdates`; see [EVALUATION-NOTIF.md](EVALUATION-NOTIF.md). |
-| **OpenAlex** | retraction status, citation counts, authors, journal/DOAJ-membership flag (fetched by Updating and Storage Management), citation-neighbourhood metrics (Research Evaluation) | Create a free account and key. This is the only key you need to request for Updating. A key is now required for the full $1/day free-usage budget (keyless calls get 1/10 of that). Passed as the `api_key` query param. Storage Management and Updating share that budget if they use the same key, so Updating fetches each DOI once per poll. |
-| **Crossref** | retraction/correction notices, canonical metadata (Updating, Storage Management), and each notice's own record (Research Evaluation's investigation) | No key needed. Pick a contact email for the `mailto` polite-pool parameter (`CROSSREF_MAILTO`) — improves rate limits, doesn't require registration. |
-| **GROBID** | DOI and title from uploaded PDFs (Storage Management); COI/funding text and full text for the claims LLM prompt, from the PDFs Storage Management keeps (Research Evaluation) | No key — self-hosted via Docker. |
+| **Gemini** | impact's LLM (Research Evaluation) | aistudio.google.com → "Get API key"; the free tier is enough (about 20 requests per model per day). Without it impact doesn't run |
+| **Telegram** | the notification when a report is assessed (Research Evaluation) | Optional; see "Telegram bot" below |
+| **OpenAlex** | retraction status, DOAJ, journal, authors (Updating); metadata and open-access PDF links (Storage Management) | Free account and key; keyless calls get 1/10 of the $1/day budget. Passed as the `api_key` query param. The two services share the budget if they use one key, so Updating fetches each DOI once per poll |
+| **Crossref** | notices (Updating), metadata (Storage Management), each notice's record (Research Evaluation) | No key. Set a contact email as `CROSSREF_MAILTO` for the polite pool |
+| **Semantic Scholar** | open-access PDF links when Storage Management tracks by DOI | Optional key (`S2_API_KEY`, header `x-api-key`); keyless calls hit 429s more often |
+| **GROBID** | DOI and title from uploaded PDFs (Storage Management) | No key, self-hosted: `grobid/grobid:0.9.1-crf` (~500 MB) |
+| **Europe PMC** | open-access notice text (Research Evaluation) | No key |
 
 ## Software
 
-- **No separate Python install needed.** uv downloads the pinned 3.13
-  itself on `uv sync`; your system Python (3.14) is untouched.
-- Optional, saves time later: `docker pull grobid/grobid:0.9.1-crf`
-  (~500 MB).
+- Python: none to install. `uv` downloads the pinned 3.13 on `uv sync`
+  (on Windows run it as `py -m uv`).
+- Java: JDK 25 for Storage Management outside Docker (`./mvnw` downloads
+  Maven).
+- Docker, for Postgres, GROBID and the compose stacks.
+- Node, for the frontend.
 
-## Team coordination
+## Env vars
 
-- **Sprint 1 runs locally.** Nothing is hosted yet, so `DATABASE_URL`
-  points at a local Postgres (Updating's `updating` schema). When we host,
-  get a Supabase connection string and use the **session pooler** string
-  (port 5432) — the transaction pooler breaks asyncpg's prepared
-  statements.
-- `JWT_SECRET` must be **base64 of 32+ random bytes**, even in sprint 1 while
-  there's no User Management: generate one with `openssl rand -base64 32`.
-  Storage Management base64-decodes it and its JWT library rejects keys under
-  32 bytes, so a made-up placeholder string can't work. Use the same value in Storage Management's local run and in
-  `backend/.env`; Updating checks the format at startup. Every service decodes
-  it the same way (see [CONTRACTS.md](CONTRACTS.md)).
-- Storage Management runs on `localhost:8081` by default (`PORT` overrides
-  it). A containerised Updating reaches it at `http://host.docker.internal:8081`
-  (the compose file sets `SM_BASE_URL` and the Linux `extra_hosts` for it). Storage
-  Management's local Postgres and the compose Postgres both bind host port
-  5432, so run one or remap the other.
-- Confirm the Storage Management snapshot endpoint and fields in
-  CONTRACTS.md with that owner.
-- Download the three demo PDFs by hand ahead of the demo (see
-  [DEMO.md](DEMO.md)); its seed script uploads them to Storage
-  Management, which keeps them for Research Evaluation.
+`backend/.env` (copy `backend/.env.example`; never commit it). Keep
+comments on their own line: Docker Compose's env-file parser bakes inline
+comments into the value.
 
-## Env vars (`backend/.env`, copy from `backend/.env.example`)
+| Var | Read by | Value |
+|---|---|---|
+| `JWT_SECRET` | every service | base64 of 32+ random bytes (`openssl rand -base64 32`), the same everywhere. Storage Management's JWT library rejects shorter keys; the Python apps check at startup |
+| `SM_BASE_URL` | RE, Updating | `http://localhost:8081` (compose overrides it) |
+| `RE_BASE_URL` | Updating | `http://localhost:8000` |
+| `DATABASE_URL` | Updating | `postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` (the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres |
+| `OPENALEX_API_KEY` | Updating (and Storage Management) | openalex.org |
+| `CROSSREF_MAILTO` | Updating, RE (and Storage Management) | a team contact email; empty sends none |
+| `POLL_INTERVAL_HOURS` | Updating | `24` |
+| `EVALUATION_SNAPSHOT_WINDOW` | RE | `5`, at least `2`: how many newest snapshots each nudge compares. A change is lost after N − 2 failed nudges in a row; raise it (e.g. `30`) before deployment |
+| `INVESTIGATION_PDF_TIMEOUT_SECONDS` | RE | `120`: how long investigation waits for Storage Management to store a document (it downloads the PDF first) |
+| `GEMINI_API_KEY` | RE | aistudio.google.com. Optional: the service starts without it, impact doesn't run |
+| `GEMINI_MODEL` | RE | `gemini-flash-latest` |
+| `GEMINI_FALLBACK_MODELS` | RE | `gemini-flash-lite-latest`: comma-separated models tried in order when a call fails; empty for none |
+| `IMPACT_LLM_TIMEOUT_SECONDS` | RE | `120`, per Gemini call |
+| `TELEGRAM_BOT_TOKEN`, `NOTIFY_TELEGRAM_CHAT_ID` | RE | the bot and the one chat that gets every notification; off unless both are set |
 
-| Var | Where to get it |
-|---|---|
-| `OPENALEX_API_KEY` | openalex.org account |
-| `S2_API_KEY` | Semantic Scholar API key request form |
-| `LLM_API_KEY` | platform.deepseek.com |
-| `LLM_MODEL` | `deepseek-flash` (default) |
-| `LLM_BASE_URL` | `https://api.deepseek.com` |
-| `GEMINI_API_KEY` | aistudio.google.com → Get API key; Research Evaluation's impact LLM (the service starts without it, impact can't run) |
-| `GEMINI_MODEL` | `gemini-flash-latest` (default) |
-| `GEMINI_FALLBACK_MODELS` | `gemini-flash-lite-latest` (default): comma-separated models impact tries in order when a call to `GEMINI_MODEL` fails (overloaded, out of quota, timed out, an unusable answer); empty for none, and a name listed twice is tried once ([EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md)) |
-| `CROSSREF_MAILTO` | any team contact email; read by Updating and by Research Evaluation (investigation's Crossref lookups), default empty (no `mailto` sent) |
-| `JWT_SECRET` | `openssl rand -base64 32`; the same value in every service (base64, 32+ bytes) |
-| `DATABASE_URL` | local Postgres in sprint 1 (`postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` for the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres; Supabase session-pooler connection string once hosted |
-| `SM_BASE_URL` | Storage Management's running URL (`http://localhost:8081`); the stub in `backend/dev/` listens on the same port |
-| `RE_BASE_URL` | Research Evaluation's running URL (`http://localhost:8000`); the stub in `backend/dev/` listens on the same port |
-| `GROBID_URL` | `http://grobid:8070` in Docker Compose |
-| `POLL_INTERVAL_HOURS` | `24` (default) |
-| `CACHE_MAX_ENTRIES` | `5000` (default) |
-| `EVALUATION_SNAPSHOT_WINDOW` | `5` (default), at least `2`: how many of a paper's newest snapshots Research Evaluation compares on each nudge. A change is missed if its nudge keeps failing for more than N − 2 polls in a row; raise it (e.g. `30`) before deployment |
-| `INVESTIGATION_PDF_TIMEOUT_SECONDS` | `120` (default), more than `0`: how long Research Evaluation's investigation waits for Storage Management to store a document, which includes downloading its PDF. Investigation runs after the nudge's reply, so this never delays Updating |
-| `IMPACT_LLM_TIMEOUT_SECONDS` | `120` (default), more than `0`: how long impact waits for one Gemini call (up to three per report). Impact runs after investigation, in the background; without `GEMINI_API_KEY` it doesn't run at all. The free tier allows about 20 calls per model per day |
-| `TELEGRAM_BOT_TOKEN` | @BotFather's token for your bot; with `NOTIFY_TELEGRAM_CHAT_ID`, Research Evaluation sends a Telegram message whenever impact assesses a report ([EVALUATION-NOTIF.md](EVALUATION-NOTIF.md)). Optional: without both, notifications are off |
-| `NOTIFY_TELEGRAM_CHAT_ID` | the one chat that gets every notification (the demo's hard-coded researcher), from `getUpdates` after writing to the bot once |
+`backend/.env.example` still lists `S2_API_KEY`, `GROBID_URL`,
+`LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` and `CACHE_MAX_ENTRIES`: no
+Python app reads them (see ROADMAP.md).
 
-## Scaffolding only (no keys needed)
+`storage/.env` (gitignored), for Storage Management: `JWT_SECRET` (the same
+value), and optionally `CROSSREF_MAILTO`, `OPENALEX_API_KEY`, `S2_API_KEY`.
+Outside compose it also reads `SPRING_DATASOURCE_URL`, `_USERNAME`,
+`_PASSWORD`, `GROBID_URL` (default `http://localhost:8070`), `UPLOAD_DIR`
+(default `uploads/` in the working directory) and `PORT` (default 8081).
 
-To just bring up the skeleton and confirm it boots (both apps need only
-`JWT_SECRET` in `backend/.env`; the compose file sets Updating's
-`DATABASE_URL`):
+## Running everything in Docker
 
-```
-cd backend
-docker compose -f docker-compose.dev.yml up
-```
-
-This starts GROBID, Postgres, and both FastAPI apps. The containerised
-Updating reaches Storage Management on the host at
-`host.docker.internal:8081`. See `ARCHITECTURE.md` and the plan for the full
-build order.
-
-## Running the whole stack in Docker
-
-The two compose files together run every service but the frontend:
-`backend/docker-compose.dev.yml` (GROBID, Postgres, Research Evaluation,
-Updating) and `storage/docker-compose.yml` (Storage Management and its own
-Postgres). Storage Management needs the same `JWT_SECRET` in `storage/.env`
-(see [LOCAL_STORAGE_DB.md](LOCAL_STORAGE_DB.md)).
+Every service but the frontend:
 
 ```
 cd backend && docker compose -f docker-compose.dev.yml up -d --build
 cd ../storage && docker compose up -d --build
 ```
 
-| Service | Port |
-|---|---|
-| Research Evaluation | 8000 |
-| Updating | 8001 |
-| GROBID | 8070 |
-| Storage Management | 8081 |
-| Postgres (Updating) | 5432 |
-| Postgres (Storage Management) | 5433 |
+- `backend/docker-compose.dev.yml`: GROBID, Postgres (Updating's),
+  Research Evaluation, Updating. Both apps need only `JWT_SECRET` to boot;
+  the compose file sets `DATABASE_URL` and `SM_BASE_URL`
+  (`host.docker.internal:8081`, with the Linux `extra_hosts`).
+- `storage/docker-compose.yml`: Storage Management and its Postgres (host
+  port 5433). It uses the backend's GROBID on 8070 (`docker compose up
+  grobid` in `backend/` for just that); without GROBID, uploads save
+  without a DOI. PDFs and the database are Docker volumes.
+- `down` stops and keeps the data; `down -v` also wipes the databases and
+  the stored PDFs (also the fix for any migration error).
 
-To see a poll go through them, track a paper in Storage Management, then poll
-from Updating. There's no User Management yet, so make a user token yourself:
-any user id as the subject, signed with `JWT_SECRET`. From `backend/`:
+A poll through the real services:
 
 ```
 TOKEN=$(uv run python -c "import base64, uuid, jwt; from dotenv import dotenv_values; print(jwt.encode({'sub': str(uuid.uuid4())}, base64.b64decode(dotenv_values('.env')['JWT_SECRET']), algorithm='HS256'))")
@@ -123,113 +88,148 @@ curl -X POST localhost:8081/papers -H "Authorization: Bearer $TOKEN" \
 curl -X POST localhost:8001/run-poll
 ```
 
-- Storage Management only tracks a DOI whose open-access PDF it can
-  download, and many publishers block it (ScienceDirect, and JBC behind a
-  Cloudflare check, answer `403`), so tracking those fails with `422`. PLOS
-  papers, like the one above, download fine.
-- The poll lists the paper under `stored`. A paper's first snapshot has
-  nothing to compare against, so `nudged` stays empty. Once a change is
-  found, Updating nudges the real Research Evaluation with its service
-  token and the paper is listed under `nudged`.
-- `docker compose -f docker-compose.dev.yml down` in `backend/` and
-  `docker compose down` in `storage/` stop everything and keep the data;
-  `down -v` also wipes the databases and Storage Management's stored PDFs.
+The first poll only stores a baseline (`stored`, `nudged` empty). Many
+publishers block the open-access download (ScienceDirect; JBC behind a
+Cloudflare check), so tracking those by DOI fails with `422`; PLOS works.
 
-## Running Updating locally (stub Storage Management and Research Evaluation)
+## Storage Management without Docker
 
-The real Storage Management now has the `/internal/**` endpoints Updating
-calls (CG-68). Until you run it, `backend/dev/stub_storage.py` stands in
-for them: in memory, checking the service token the way the real service
-does. Updating signs every request to Research Evaluation with its service
-token, as Research Evaluation's `POST /evaluate/changes` requires, so it can nudge
-the real service. To run Updating on its own, `backend/dev/stub_research_evaluation.py`
-stands in for Research Evaluation: it checks the service token the same way (so it
-reads `JWT_SECRET` too) and records the nudges. Without either, every change logs a
-failed nudge (the paper stays pending and is re-sent next poll). Run Updating as
-**one process**
-(one uvicorn worker); the scheduler doesn't coordinate across processes.
+```
+docker run -d --name storage-db -p 5432:5432 -e POSTGRES_DB=storage -e POSTGRES_USER=storage -e POSTGRES_PASSWORD=storage postgres:17
+```
+
+Set `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/storage`,
+`SPRING_DATASOURCE_USERNAME=storage`, `SPRING_DATASOURCE_PASSWORD=storage`
+and `JWT_SECRET`, then from `storage/`: `./mvnw spring-boot:run`
+(`.\mvnw.cmd spring-boot:run` on Windows). Flyway creates the tables. This
+Postgres and the backend's both want host port 5432: run one, or remap.
+
+In PowerShell, set vars as `$env:JWT_SECRET="..."`; a secret:
+
+```
+$b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)
+```
+
+**Resetting the local database:** if Storage Management won't start with a
+Flyway error ("applied migration not resolved locally", or a validation
+failure on V4: migrations were tidied on 2026-09-26/27), it's test data:
+`docker rm -f storage-db`, run the container again, and empty the upload
+folder. Always reset the database and the upload folder together.
+
+Swagger UI: `http://localhost:8081/swagger-ui.html` (Authorize with a user
+token, or a service token for `/internal`).
+
+## A demo user token
+
+There's no User Management, so make one "demo user" token and use it for
+everything; whatever you create belongs to that user. It only works
+against services with the same `JWT_SECRET`. Don't commit it.
+
+PowerShell, with `$env:JWT_SECRET` set (lasts 30 days; change `sub` for
+another user):
+
+```
+$key = [Convert]::FromBase64String($env:JWT_SECRET)
+function Url64($b) { [Convert]::ToBase64String($b).TrimEnd('=').Replace('+', '-').Replace('/', '_') }
+$exp = [DateTimeOffset]::UtcNow.AddDays(30).ToUnixTimeSeconds()
+$head = Url64 ([Text.Encoding]::UTF8.GetBytes('{"alg":"HS256","typ":"JWT"}'))
+$body = Url64 ([Text.Encoding]::UTF8.GetBytes("{`"sub`":`"11111111-1111-1111-1111-111111111111`",`"exp`":$exp}"))
+$sig = Url64 ([Security.Cryptography.HMACSHA256]::new($key).ComputeHash([Text.Encoding]::ASCII.GetBytes("$head.$body")))
+"$head.$body.$sig"
+```
+
+Linux/macOS, from `backend/`, with `JWT_SECRET` exported:
+
+```
+uv run python -c "import base64, os, time, jwt; print(jwt.encode({'sub': '11111111-1111-1111-1111-111111111111', 'exp': int(time.time()) + 30 * 86400}, base64.b64decode(os.environ['JWT_SECRET']), algorithm='HS256'))"
+```
+
+## Frontend
+
+From `frontend/csd-frontend-vite/`: copy `.env.example` to `.env.local`
+and set `VITE_DEMO_TOKEN` to a demo user token, then `npm install` and
+`npm run dev`. Storage Management and Updating send no CORS headers, so
+`vite.config.ts` proxies `/api` → `localhost:8081` and `/updating` →
+`localhost:8001`. `VITE_` values are baked into the built JavaScript:
+fine for a local demo token, never for a real secret.
+
+## Telegram bot
+
+1. Message **@BotFather**, `/newbot`, pick a name and username; it answers
+   with the token (`123456:ABC...`): `TELEGRAM_BOT_TOKEN`.
+2. Send your bot any message (a bot can only write to someone who wrote to
+   it first; otherwise Telegram answers `403`).
+3. Open `https://api.telegram.org/bot<token>/getUpdates`; the chat id is
+   `result[0].message.chat.id`: `NOTIFY_TELEGRAM_CHAT_ID`. For a group, add
+   the bot, send a message there, and use the group's (negative) id.
+4. Check it from `backend/`:
+   `uv run pytest -m live tests/research_evaluation/test_notify.py` sends
+   one sample message.
+
+## Updating alone, against the stubs
+
+`backend/dev/stub_storage.py` stands in for Storage Management (in memory,
+checking the service token like the real one) and
+`backend/dev/stub_research_evaluation.py` for Research Evaluation (checks
+the token, records nudges). Both read `JWT_SECRET` from the environment.
+Run Updating as **one process** (one uvicorn worker).
 
 ```
 cd backend
 uv sync
-cp .env.example .env    # then fill in the values below
-```
+cp .env.example .env    # JWT_SECRET, DATABASE_URL; POLL_INTERVAL_HOURS=0.01 for a quick loop
 
-In `.env`: `JWT_SECRET` from `openssl rand -base64 32`, `DATABASE_URL` as in the
-table above, and `POLL_INTERVAL_HOURS=0.01` for a quick loop (the first poll
-runs at startup if none has run yet, then every interval; a restart doesn't
-reset the timer).
-
-```
-# terminal 1: the stub on 8081 (it reads JWT_SECRET from the environment)
 uv run --env-file .env uvicorn dev.stub_storage:create_app --factory --port 8081
-
-# terminal 2: the Research Evaluation stub on 8000 (it reads JWT_SECRET from the environment too)
 uv run --env-file .env uvicorn dev.stub_research_evaluation:create_app --factory --port 8000
-
-# terminal 3: Updating on 8001
 uv run uvicorn updating.main:app --port 8001
 
-# terminal 4: seed papers (stub-only endpoints, no token needed)
 curl -X POST localhost:8081/dev/papers -H 'content-type: application/json' \
   -d '{"doi": "10.1016/j.ijantimicag.2020.105949"}'
-curl -X POST localhost:8081/dev/papers -H 'content-type: application/json' -d '{}'   # no DOI: skipped
-curl -X POST localhost:8081/dev/reset                                                # forget everything
+curl -X POST localhost:8081/dev/reset           # forget everything
 ```
 
-Each poll stores a snapshot per paper in the stub; read them back with a
-service token from `GET /internal/papers/{id}/background-info/history`. The poll
-summary is in Updating's `poll_runs` table. Nudges show up at
-`GET localhost:8000/dev/received`; `POST localhost:8000/dev/fail` makes the stub
-refuse them (`?on=false` to stop), to see a failed nudge re-sent next poll.
+Snapshots: `GET /internal/papers/{id}/background-info/history` on the stub
+(service token). Poll summaries: Updating's `poll_runs` table. Nudges:
+`GET localhost:8000/dev/received`; `POST localhost:8000/dev/fail`
+(`?on=false` to stop) makes the stub refuse them, to see a re-send. To run
+the real Research Evaluation against the stub Storage Management instead,
+start it with `uv run --env-file .env uvicorn research_evaluation.main:app --port 8000`
+(the stub's `/dev/papers/{id}/pdf`, `/dev/papers/{id}/research-paper` and
+`/dev/pdfs` set the PDFs it serves).
 
 ### Mock harness (seeded scenarios)
 
-To see a nudge on demand without waiting for a real change, seed a paper whose
-"before" snapshot differs from what Crossref and OpenAlex say now, then trigger a
-poll for it. `POST localhost:8081/dev/seed?scenario=` (stub Storage Management)
-adds the paper with that earlier snapshot:
+To see a nudge without waiting for a real change, seed a paper whose
+"before" snapshot differs from what the APIs say now:
+`POST localhost:8081/dev/seed?scenario=<name>` on the stub, then
+`POST /run-poll` with its `paper_id` (Swagger at `localhost:8001/docs`).
 
-| `scenario` | Paper | The nudge it should produce |
+| `scenario` | Paper | Expected nudge |
 |---|---|---|
 | `openalex_retraction` | IJAA | `is_retracted false -> true` |
-| `crossref_retraction` | IJAA | a new `retraction` notice in `crossref_updates` |
-| `corrections` | Lancet | new `correction`, `erratum` and `expression_of_concern` notices |
+| `crossref_retraction` | IJAA | a new `retraction` notice |
+| `corrections` | Lancet | new `correction`, `erratum`, `expression_of_concern` notices |
 | `doaj_delisting` | Lancet | `in_doaj true -> false` |
 | `no_change` | JBC | none |
-| `no_doi` | none (no DOI) | none: listed under `skipped_no_doi` |
+| `no_doi` | none | none: `skipped_no_doi` |
 
-**Order matters.** Start the stubs and Updating first, then seed, then trigger. Keep
-the default `POLL_INTERVAL_HOURS` (24) rather than the `0.01` above: a poll that
-lands between the seeding and your trigger takes the nudge, and your trigger then
-shows nothing. On a fresh database Updating polls once at startup, so seed after it
-is up.
+**Order matters:** start the stubs and Updating, then seed, then trigger,
+with the default 24 h interval (a poll in between takes the nudge; on a
+fresh database Updating polls once at startup). The reason is in
+Updating's log (`paper <id>: snapshot N changed since M: …`).
 
-```
-curl -X POST 'localhost:8081/dev/seed?scenario=openalex_retraction'     # note the "id" it returns
-```
-
-Then open `localhost:8001/docs` and run `POST /run-poll` with that
-`paper_id`. The summary lists the paper under
-`stored` and `nudged`; the reason is in Updating's log (`paper <id>: snapshot N
-changed since M: …`); the id arrives at `GET localhost:8000/dev/received`. Run it
-again: it stores another snapshot and `nudged` is empty. A manual run calls the live
-Crossref and OpenAlex APIs, so their answers may have drifted and list more reasons.
-
-The same scenarios run as tests, on recorded API responses, an in-process copy of
-both stubs and a fresh SQLite database each time, so they can be repeated and never
-touch live data. `-m live` runs them against the live APIs (checking the intended
-reason is among those logged):
+## Tests
 
 ```
-uv run pytest tests/updating/test_scenarios.py
-uv run pytest tests/updating/test_scenarios.py -m live
-```
-
-Tests need no keys, Docker or Postgres (they use SQLite and the stub):
-
-```
-uv run pytest             # everything except live
-uv run pytest -m live     # only the tests that hit the real Crossref/OpenAlex APIs, to catch drift
+cd backend
+uv run pytest                 # everything except live; no keys, Docker or Postgres
+uv run pytest -m live         # hits real Crossref/OpenAlex/Europe PMC/Gemini/Telegram
 uv run ruff check
+uv run pytest tests/updating/test_scenarios.py   # the mock harness on recorded responses
+
+cd storage
+./mvnw test                   # H2, network mocked
+
+cd frontend/csd-frontend-vite
+npm run build && npm run lint
 ```

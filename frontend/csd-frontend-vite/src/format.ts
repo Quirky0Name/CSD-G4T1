@@ -43,8 +43,8 @@ export function compareAlerts(a: Alert, b: Alert): number {
   return b.id - a.id
 }
 
-// The paper's severity state (LOCAL_STORAGE_DB.md, "Retrieve paper severity
-// state"): the highest severity among its unresolved alerts, or none.
+// The paper's severity state (docs/CONTRACTS.md, the frontend feature
+// table): the highest severity among its unresolved alerts, or none.
 export function highestNewSeverity(alerts: Alert[]): Severity | null {
   let highest: Severity | null = null
   for (const alert of alerts) {

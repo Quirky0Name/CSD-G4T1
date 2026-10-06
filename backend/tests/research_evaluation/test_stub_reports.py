@@ -1,5 +1,5 @@
 """The stub Storage Management's reports and documents behave like the real ones
-(docs/EVALUATION-INVESTIGATION.md, S1), so Research Evaluation can be tested against it."""
+(docs/EVALUATION.md, "Investigation"), so Research Evaluation can be tested against it."""
 
 import hashlib
 from uuid import uuid4

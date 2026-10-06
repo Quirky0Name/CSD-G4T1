@@ -1,4 +1,4 @@
-"""Impact's assessment of one report, in three steps (docs/EVALUATION-IMPACT.md):
+"""Impact's assessment of one report, in three steps (docs/EVALUATION.md, "Impact"):
 
 1. what changed, and how severe is it? At severity none (not meaningful) it stops: only the
    summary and severity are kept, and the draft is never read;
@@ -11,7 +11,7 @@ A model answer that doesn't fit its schema raises, and nothing is returned for t
 (with FallbackLlm, the next model is tried instead, down to the placeholder below).
 
 When every model the Llm falls back through fails one of the steps (AllModelsFailed), it returns
-the placeholder evaluation instead (docs/EVAL-GEM-FAILSAFE.md): severity and impact low, every
+the placeholder evaluation instead (docs/EVALUATION.md, "Impact"): severity and impact low, every
 text the placeholder message, and what did happen in `assessment`."""
 
 from typing import Any

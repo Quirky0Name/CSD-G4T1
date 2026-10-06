@@ -4,7 +4,7 @@ import { defineConfig } from 'vite'
 
 // Storage Management and Updating send no CORS headers, so dev requests are
 // proxied through Vite instead of hitting them directly from the browser.
-// See docs/LOCAL_STORAGE_DB.md, "Calling it from the frontend".
+// See docs/SETUP.md, "Frontend".
 const STORAGE_MANAGEMENT_URL = 'http://localhost:8081'
 const UPDATING_URL = 'http://localhost:8001'
 

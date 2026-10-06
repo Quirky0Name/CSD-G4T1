@@ -1,4 +1,4 @@
-"""Tells the researcher on Telegram that a report's evaluation is done (docs/EVALUATION-NOTIF.md).
+"""Tells the researcher on Telegram that a report's evaluation is done (docs/EVALUATION.md, "Notification").
 
 For the demo the recipient is hard-coded: every assessed report goes to one chat,
 NOTIFY_TELEGRAM_CHAT_ID, through the bot TELEGRAM_BOT_TOKEN. There's no user lookup yet.

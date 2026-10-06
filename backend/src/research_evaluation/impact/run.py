@@ -1,7 +1,7 @@
 """Impact over a list of report ids: for each, read the report, skip it unless it's
 `investigated`, gather its inputs, assess it with the model, and store the evaluation in Storage
-Management, which marks it `assessed` (docs/EVALUATION-IMPACT.md). Once it's stored, the
-researcher is told on Telegram, when that's configured (docs/EVALUATION-NOTIF.md).
+Management, which marks it `assessed` (docs/EVALUATION.md, "Impact"). Once it's stored, the
+researcher is told on Telegram, when that's configured (docs/EVALUATION.md, "Notification").
 
 It runs in the background, after investigation, so it must never raise. A report that fails is
 logged, stays `investigated` and nothing is stored for it; nothing retries it (a later sprint)."""

@@ -1,370 +1,166 @@
 # Architecture
 
+The system map: what each service owns, how data flows between them, and
+the cross-cutting rules. How each service works inside, where its code
+lives and its gotchas are in its own doc:
+[STORAGE.md](STORAGE.md), [EVALUATION.md](EVALUATION.md),
+[UPDATING.md](UPDATING.md). Endpoint shapes are in
+[CONTRACTS.md](CONTRACTS.md), the reasoning in [DECISIONS.md](DECISIONS.md),
+and what isn't built in [ROADMAP.md](ROADMAP.md).
+
 ## Overview
 
-The core loop is: detect a meaningful change in a tracked paper → assess
-its impact → recommend an action → the researcher decides. That's a direct
-reframe from the professor's review of the original pitch: the module
-theme is measuring change in a landscape, not issuing a one-time trust
-verdict.
+The core loop: **detect a meaningful change in a tracked paper → assess
+its impact on the researcher's own draft → recommend an action → the
+researcher decides.** That reframes the original pitch after the
+professor's review: the module theme is measuring change in a landscape,
+not issuing a one-time trust verdict. Background-info checking
+(retraction status, journal, authors) is the raw signal layer the loop
+reads from, not a feature on its own.
 
-The original product vision — paper upload and management, background
-checks on a paper's author/journal/retraction status, claim validation
-against related work, and topic-based paper discovery — still stands, but
-its role has shifted. Background-info checking is now the raw signal
-layer the detect-change loop reads from, not the headline feature on its
-own.
+### Week 7 (midterm) scope: what's built
 
-### Week 7 (midterm) scope
+- Track a paper by PDF upload or by DOI; Storage Management keeps its PDF.
+- The researcher's own paper (their draft), one per project.
+- Updating polls Crossref and OpenAlex on a schedule, stores a snapshot
+  per paper per poll, and nudges Research Evaluation when a snapshot
+  differs in a field the alerts depend on.
+- Research Evaluation detects the changes (retraction, correction,
+  erratum, expression of concern, DOAJ delisting, other Crossref notices)
+  and stores each as an **alert** with a rule-based severity.
+- It then **investigates** them (fetches each notice's Crossref record and
+  open-access text, the paper's current copy, a new version) into a
+  **report**, and Gemini judges the report's **impact** on the
+  researcher's draft (change severity, impact level, evaluation,
+  recommendation).
+- A Telegram message to one hard-coded chat when a report is assessed.
+- The frontend: tracked papers, alerts (acknowledge, dismiss, notes),
+  reports, the draft upload, a manual poll, deleting a paper.
+- Demo tools in Storage Management to replay a change on a real paper.
 
-Mostly zero-LLM by design, so the live demo stays reliable, with one
-deliberate exception: Research Evaluation's stance/claims LLM work is in
-scope for week 7 too, not deferred to week 13.
+Everything else from the original plan (User Management, notes per paper,
+stance and claims checks, GROBID COI text, citation metrics, deployment,
+new related papers, topic discovery) is in [ROADMAP.md](ROADMAP.md).
 
-- Ingest a paper (PDF upload or DOI-only) and keep its PDF
-- Notes: a plain-text editor per paper
-- Background-info snapshot: CrossRef/OpenAlex status, journal and author
-  data, fetched and stored by Updating (see Section 4), plus GROBID-extracted
-  COI text + citation-neighbourhood metrics (self-citation ratio,
-  retraction cascade, citation diversity, citations/year) from Research
-  Evaluation
-- Change detection: Updating stores a snapshot of each paper on every
-  poll and, when a snapshot differs from the previous one in the fields we
-  alert on, tells Research Evaluation which papers changed. It records no
-  changes itself. Research Evaluation reads the snapshots from Storage
-  Management, works out the differences and evaluates them (severity,
-  impact statement, recommendation)
-- Stance detection and methodology/claims validation (LLM), scoped to
-  Research Evaluation only — see below
-
-### Week 13 (final) scope
-
-Everything that needs open-ended reasoning beyond the week-7 LLM work:
-
-- Methodology/claims validation refinements
-- Topic-based paper discovery
-- Highlighting the most relevant passages in a paper
-- Updating: surfacing newly-appearing related papers (not just status
-  diffs on tracked papers) — out of scope for week 7 by team decision
-
-## Shared architecture
-
-Five services sit behind one React frontend and talk to each other over
-REST; a single JWT, issued by User Management at login, is what the rest
-of the system trusts — no service calls back to User Management to check
-a token, they validate its signature themselves, so nothing else goes
-down if that one service does.
-
-```
-flowchart LR
-   FE[React Frontend] --> UM[User Management]
-   FE --> SM[Storage Management]
-   UM -- JWT --> SM
-   SM --> DB[(Postgres)]
-   SM --> FILES[(Local disk - PDFs)]
-   SM --> GROBID[GROBID]
-   RE[Research Evaluation - LLM] --> SM
-   RE --> EXT[CrossRef / OpenAlex]
-   UPD[Updating - Scheduler] --> EXT
-   UPD -- "changed paper ids" --> RE
-   UPD --> SM
-```
-
-Updating and Research Evaluation share data only through Storage
-Management. Updating writes snapshots there and, when a poll finds a
-change, sends Research Evaluation just the ids of the changed papers.
-Research Evaluation reads everything it needs from Storage Management:
-the snapshots (the updatable data) and the paper, its stored PDF, notes
-and extracted text (the non-updatable data).
-
-Sprint 1 runs everything locally with a shared throwaway `JWT_SECRET`
-(still base64 of 32+ bytes); User Management doesn't exist yet, so the
-JWT paths above are wired up but not backed by real logins.
+## Services
 
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
-| User Management | Spring Boot (backend) + React (Vite, frontend) | `users`, `folders`; auth | `frontend/` |
-| Storage Management | Java + Spring Boot | `papers`, `notes`, `background_metadata`, `background_text`, `research_papers`; Postgres + every tracked paper's PDF and each project's research paper on local disk | `storage/` |
-| Research Evaluation | Python | Change evaluation (severity, impact, recommendation), read from Storage Management when nudged by Updating; COI text, citation-neighbourhood metrics, LLM reasoning (claims + stance, week 7) | `backend/` |
-| Updating | Python (shares the `backend/` project with Research Evaluation) | Crossref/OpenAlex status, journal and author fetching; sending snapshots to Storage Management; nudging Research Evaluation when a snapshot changed; the polling scheduler and its small polling state (`tracked_papers`) | `backend/` |
-| Deployment | Docker + a public cloud target | Containerisation, environment config, CI | (cross-cutting) |
+| User Management | Spring Boot (planned) | `users`, `folders`, login and JWTs. **Not built**: a hand-made demo token stands in (SETUP.md) | — |
+| Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls Storage Management and Updating through the Vite proxy | `frontend/csd-frontend-vite/` |
+| Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts and notes, reports and documents, research papers | `storage/` |
+| Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact, notification); no database of its own | `backend/src/research_evaluation/` |
+| Updating | Python 3.13, FastAPI, APScheduler | the polling job and its small state (`tracked_papers`, `poll_runs`) in its own schema | `backend/src/updating/` |
+
+Research Evaluation and Updating share one Python project (`backend/`, one
+`pyproject.toml`, `common/` for the DOI normaliser and the service-token
+auth) but are separate apps with a Dockerfile each. Neither imports the
+other's package.
 
 Rubric note: Java + Spring Boot for at least one component is satisfied by
-Storage Management on its own, so Research Evaluation being Python
-carries no compliance risk.
+Storage Management.
 
-## Section 1 — User Management
+## Data flow
 
-Owns accounts and research folders. Nothing else in the system should
-touch the `users` or `folders` tables directly.
+```
+Frontend ──/api──▶ Storage Management ◀──/internal── Research Evaluation ──▶ Crossref, Europe PMC, Gemini, Telegram
+   │                  │  ▲        │                        ▲
+   │                  │  │        └─▶ GROBID, Crossref,    │ POST /evaluate/changes (paper ids)
+   │                  ▼  │            OpenAlex, S2          │
+   │              Postgres + PDF folder                     │
+   └──/updating──▶ Updating ──/internal (snapshots)──────────┘
+                     └─▶ Crossref, OpenAlex
+```
 
-- **Data model:** `users (id, email, password_hash, created_at)`,
-  `folders (id, owner_id -> users, name, created_at)`
-- **Auth flow:** register (BCrypt hash) → login (verify hash, issue signed
-  JWT with the user's id) → every request to Storage Management carries
-  `Authorization: Bearer <token>`; it validates the signature itself, no
-  callback per request.
-- **Frontend** (owned by this service): Vite, React Router, Axios with a
-  JWT-attaching interceptor, react-hook-form + zod, Tailwind + shadcn/ui,
-  React Context for auth state.
-- **Endpoints:** `POST /auth/register`, `POST /auth/login`,
-  `GET/POST/PUT/DELETE /folders...`
+One poll, end to end:
 
-Cross-service note: a folder's papers live in Storage Management via a
-bare `folder_id` reference — no enforced FK across services. A folder is
-one research project. `folder_id` null means no folder, and everything a
-user keeps outside folders counts as one more project of theirs (see
-CONTRACTS.md, "Folders and projects").
+1. **Updating** lists tracked papers (`GET /internal/papers`), fetches each
+   DOI once from Crossref and OpenAlex, stores a snapshot per paper in
+   Storage Management, and compares it with the paper's previous one.
+2. If it differs in a nudge field, Updating sends the changed paper ids to
+   `POST /evaluate/changes`. A nudge carries ids only, never data.
+3. **Research Evaluation** reads the paper's newest N snapshots, detects
+   the changes, skips those already stored (by change key), gives the rest
+   a rule-based assessment and stores them as alerts. Then it replies:
+   `202`, or `503` so Updating re-sends next poll.
+4. After the reply, in the background: **investigation** opens a report
+   grouping the paper's new alerts and stores what it fetched as the
+   report's documents (Storage Management downloads their PDFs); then
+   **impact** asks Gemini about the report and stores its evaluation (the
+   report becomes `assessed`); then **notify** sends the Telegram message.
+5. The **frontend** reads alerts and reports from Storage Management; the
+   researcher acknowledges, dismisses or adds notes.
 
-## Section 2 — Storage Management
+Rules that hold across the flow:
 
-Owns all Postgres and file persistence.
+- **Updating and Research Evaluation share data only through Storage
+  Management.** Updating records snapshots, never changes; Research
+  Evaluation works out the differences itself.
+- **Only Updating calls Research Evaluation** (the nudge), plus a manual
+  `POST /evaluate/reports` with a service token. Storage Management and
+  the frontend never call it.
+- **Storage Management fetches nothing on its own** except what ingest and
+  document storage need (GROBID, Crossref/OpenAlex metadata, open-access
+  PDF downloads). It stores what it's sent.
+- **Detection is deterministic.** Whether a paper was retracted never
+  depends on an LLM; alerts keep their rule-based severity, and Gemini's
+  judgment sits on the report next to them.
+- **Background work never raises and is never retried.** A failure is
+  logged and leaves the report where it was (ROADMAP.md lists the gaps).
+- **Third-party text is data.** Notice text and PDFs go to Gemini tagged
+  as documents, and nothing acts on them.
 
-- **Ingestion, two paths, both keeping the PDF:** upload (PDF → local
-  disk → GROBID header extract → `papers` row) and DOI-only (CrossRef
-  metadata → open-access PDF from OpenAlex, then Semantic Scholar → local
-  disk → `papers` row). A DOI with no downloadable open-access PDF isn't
-  tracked (see DECISIONS.md, 2026-09-26).
-- **Schema:** `papers`, `notes` (separate table/endpoint from `papers`),
-  `background_metadata` (insert-only history, kept in full and per paper —
-  never overwrite, that's what Updating and Research Evaluation compare;
-  one row per tracked paper per poll, even when nothing changed, except
-  that Updating stores none for a paper on a poll where Crossref or
-  OpenAlex failed for its DOI, see Section 4), `background_text` (raw text for
-  week-13 LLM input; nothing here is diffed in week 7),
-  `authors_background`, `alerts` (one row per change Research Evaluation
-  detects on a paper, with its severity, description, recommendation,
-  detection time and the researcher's status; unique per paper and
-  `change_key`, so a re-sent nudge can't store a change twice; deleted
-  with its paper), `alert_notes` (the researcher's append-only log of
-  notes on an alert, e.g. what they did about it; deleted with its
-  alert), `research_papers` (the researcher's own paper for each project:
-  one per folder, plus one for the user's "no folder" project; a new
-  upload replaces it, see
-  [STORAGE-USER-RESEARCH-PAPER.md](STORAGE-USER-RESEARCH-PAPER.md)),
-  `reports` (one per paper per nudge that stored new alerts: it groups
-  those alerts through `alerts.report_id`, has a status, `investigating`
-  → `investigated` → `assessed`, and has the columns impact's
-  evaluation fills: the change's summary and severity, the impact level
-  on the researcher's draft, the evaluation and recommendation, and the
-  full assessment as JSON, see
-  [EVALUATION-IMPACT.md](EVALUATION-IMPACT.md); deleted with its paper), `report_documents` (what
-  Research Evaluation's investigation fetched for one DOI of a report: a
-  notice, a new version or the paper's current copy, with its Crossref
-  record, open-access text and PDF status; one per DOI per report; deleted
-  with its report). See
-  [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md).
-- **File storage:** every tracked paper's PDF is kept, so Research
-  Evaluation has the paper itself to read when it evaluates a change.
-  PDF bytes never go in Postgres: they're on local disk for now, and
-  Postgres holds only the file's key. Research Evaluation reads a PDF
-  through `GET /internal/papers/{id}/pdf`, never from the disk directly.
-  Each project's research paper is stored the same way, in the same
-  folder, and so are report documents' PDFs: Storage Management downloads
-  a new version's or the paper's current copy when investigation stores
-  the document (`POST /internal/documents`), and serves it back through
-  `GET /internal/documents/{id}/pdf`.
-- **Endpoints:** `POST/GET /papers`, `GET /papers/{id}` (joined DTO),
-  `PUT /papers/{id}/notes`, `GET /papers/{id}/alerts`, `PATCH /alerts/{id}`, `POST/GET /alerts/{id}/notes`,
-  `GET /papers/{id}/reports` (the paper's reports with their alerts and documents, for the frontend),
-  `POST/GET/DELETE /research-paper`, `POST/GET /internal/papers/{id}/background-info`,
-  `GET /internal/papers/{id}/pdf`, `GET /internal/papers/{id}/research-paper`,
-  `POST /internal/papers/{id}/alerts`,
-  `GET /internal/papers/{id}/alerts/change-keys`,
-  `POST /internal/papers/{id}/reports`,
-  `GET/PATCH /internal/papers/{id}/reports/{reportId}`,
-  `GET /internal/reports/{reportId}`, `PUT /internal/reports/{reportId}/evaluation`,
-  `POST /internal/documents`, `GET /internal/documents/{id}/pdf`.
-- **DB hosting:** Supabase free tier.
+## Auth
 
-## Section 3 — Research Evaluation
+- One JWT (HS256, `sub` = user id, `exp`), meant to be issued by User
+  Management at login. Every service validates the signature itself with
+  the shared `JWT_SECRET` (base64 of 32+ bytes, decoded before use); none
+  calls back to User Management.
+- **Service tokens:** Updating (`svc:updating`) and Research Evaluation
+  (`svc:research-evaluation`) mint short-lived tokens with `role=service`
+  (`common/service_token.py`). Storage Management's `/internal/**` takes
+  only service tokens; everything else takes only user tokens.
+  `POST /evaluate/changes` and `/evaluate/reports` take any service token.
+- **Sprint 1:** no User Management, so one hand-made "demo user" token is
+  used for everything, and Updating's `POST /run-poll` takes no token.
 
-See [CONTRACTS.md](CONTRACTS.md) for the full endpoint/DTO contract.
-Owns working out what changed in a paper and what that means, and the
-paper-evaluation/comparison logic behind it, including LLM reasoning —
-live in week 7, not deferred. Fetching the retraction, correction, DOAJ,
-journal and author fields moved to Updating (Section 4).
+## Folders and projects
 
-- **Change evaluation:** Updating calls `POST /evaluate/changes` with the
-  ids of the papers that changed and nothing else. Research Evaluation
-  reads those papers' snapshots and their non-updatable data (the paper,
-  its stored PDF, notes and extracted text) from Storage Management,
-  **works out the differences between the snapshots itself**,
-  classifies them (retraction, correction, erratum, expression of concern,
-  DOAJ delisting) and produces a severity, an impact statement and a
-  recommendation. Each evaluated change is stored as an alert in Storage
-  Management (`POST /internal/papers/{id}/alerts`); Research Evaluation
-  keeps no database of its own for this, and the frontend reads and acts
-  on alerts through Storage Management.
-- **The nudge is answered after the evaluation.** Research Evaluation
-  replies `202` once every paper's alerts are stored, and `503` if any
-  paper failed, so Updating's `nudge_pending` flag (Section 4) is the
-  retry: Research Evaluation keeps no pending list or watermark. On every
-  nudge it reads each paper's newest N snapshots (`EVALUATION_SNAPSHOT_WINDOW`,
-  default 5) and runs detection on all of them (cheap). That window
-  covers a change whose nudge failed up to N − 2 times in a row; a longer
-  run of failures loses it. It then asks Storage Management which change keys
-  already have an alert and evaluates only the new changes. So a change
-  is never evaluated twice, which matters once evaluation calls an LLM,
-  and Storage Management still stores each change once (by its change
-  key) if two nudges ever overlap. The one exception is a retraction with
-  a notice, which is sent even when `retraction` is stored: a notice that
-  arrives after OpenAlex's flag replaces the notice-less alert in Storage
-  Management and makes it new, so its notice gets investigated
-  (EVALUATION-INVESTIGATION.md, S7). The rules re-run for it on each
-  nudge, which is cheap; the LLM works on reports, not alerts.
-- **Change evaluation runs in stages** (the plans are
-  [EVALUATION-REVIEW-CHANGES.md](EVALUATION-REVIEW-CHANGES.md) and
-  [EVALUATION-INVESTIGATION.md](EVALUATION-INVESTIGATION.md)):
-  1. **Detection** (`changes.py`): compare two consecutive snapshots and
-     list the changes, by the classification table in CONTRACTS.md.
-     Deterministic, so whether a paper was retracted never depends on an
-     LLM.
-  2. **Rule-based assessment** (`rules.py`): every change gets a severity,
-     description and recommendation from fixed templates, so every alert
-     is complete. The nudge is answered here.
-  3. **Investigation** (`investigation/`, after the reply, in the
-     background): per paper, Storage Management opens a **report** grouping
-     the paper's alerts that aren't in a report yet (in practice, the ones
-     that nudge stored, plus any a crash left ungrouped); Research
-     Evaluation fetches each
-     change's notice (Crossref record, Europe PMC open-access text), a new
-     version, and the paper's current copy, and stores them as the
-     report's documents; Storage Management downloads the PDFs. It fetches
-     facts and judges nothing.
-  4. **Impact** (`impact/`, right after investigation, in the same
-     background task): Gemini judges a report's alerts together, from its
-     documents, the paper's stored PDF and the researcher's draft, and
-     writes its evaluation into the report, which becomes `assessed`
-     ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)). Three questions: what
-     changed and how severe it is (`none` = not meaningful, and it stops
-     there); how it affects the researcher, from how their draft uses the
-     paper; what they should do. It covers every kind of change, `other`
-     included; there's no separate LLM step that first classifies `other`
-     changes (DECISIONS.md, 2026-09-27). **The handoff is a report id:**
-     investigation returns the ids of the reports it finished, and impact
-     reads everything else from Storage Management, so the two stay
-     independent. Alerts keep their rule-based text; impact's judgment is
-     on the report. Without `GEMINI_API_KEY` impact doesn't run. A failed
-     Gemini call falls back through `GEMINI_FALLBACK_MODELS`; when every
-     model fails, the report is stored `assessed` with a placeholder
-     evaluation ([EVAL-GEM-FAILSAFE.md](EVAL-GEM-FAILSAFE.md)).
-  5. **Notification** (`notify.py`, right after impact stores a report's
-     evaluation): a Telegram message to one hard-coded chat
-     (`NOTIFY_TELEGRAM_CHAT_ID`, the demo's researcher) with the change,
-     its impact on the draft and what to do
-     ([EVALUATION-NOTIF.md](EVALUATION-NOTIF.md)). Only an `assessed`
-     report is notified; a failure to send is logged and changes nothing.
-     Off unless `TELEGRAM_BOT_TOKEN` and `NOTIFY_TELEGRAM_CHAT_ID` are
-     both set.
+A folder is one research project. Folders will belong to User Management;
+Storage Management holds only a bare `folder_id` with no FK and no check.
+`folder_id` null is the user's "no folder" project. Storage Management
+keys a project by (owner, `folder_id`), so the same folder id from two
+users is two projects. A tracked paper is in exactly one project, and its
+project's research paper is the draft impact reads. Details in
+CONTRACTS.md, "Folders and projects".
 
-  Detection and the rules read only the snapshots. Impact reads the
-  paper's stored PDF, the report's documents and, once a change is
-  meaningful, the researcher's own paper for the tracked paper's project
-  (`GET /internal/papers/{id}/research-paper`).
-- **Structured signal layer** (no reasoning, cheap): citation-neighbourhood
-  metrics computed from OpenAlex reference/citation data, GROBID on the
-  PDF stored in Storage Management (COI/funding text, verbatim, never
-  judged).
-- **Also captured, storage only in week 7:** Semantic Scholar abstract/
-  TL;DR, with snippets fetched (and cached/reused) at stance-comparison
-  time rather than stored per paper.
-- **LLM reasoning (week 7):** stance detection (does a newly-appearing
-  paper support or contradict a tracked one) and methodology/claims
-  validation, both live in the demo. Provider: DeepSeek (see
-  [DECISIONS.md](DECISIONS.md)). Results are cached and pre-warmed for
-  the demo so a slow/failed call can't stall it. **Impact's LLM is
-  Gemini** (`GEMINI_API_KEY`, `GEMINI_MODEL`), which reads the paper, its
-  new copies and the researcher's draft as PDFs directly
-  ([EVALUATION-IMPACT.md](EVALUATION-IMPACT.md)).
-- **Endpoints (internal):** `POST /evaluate/changes`, called only by
-  Updating's nudge. `POST /evaluate/reports`, service token, to assess
-  reports by id on request (re-running a failed one, or warming the demo).
-  `POST /evaluate/background-info`,
-  `POST /evaluate/citation-neighbourhood` and `POST /evaluate/stance` are
-  under review: likely internal steps of Research Evaluation's evaluation
-  rather than endpoints (see CONTRACTS.md).
+## Data model
 
-## Section 4 — Updating
+Storage Management's Postgres (Flyway, `storage/src/main/resources/db/migration/`;
+diagram: [erd/erd-flyway-V8.html](erd/erd-flyway-V8.html)):
 
-Owns the scheduled job that re-checks tracked papers: it fetches their
-current status from Crossref and OpenAlex and snapshots it. It records
-snapshots only, never changes: when a new snapshot differs from the
-previous one it tells Research Evaluation which papers changed, and
-Research Evaluation works out the differences and what they mean.
+| Table | One row per | Migration |
+|---|---|---|
+| `papers` | user tracking a paper (owner, folder, DOI, metadata at ingest, PDF `file_key`) | V1 |
+| `alerts` | detected change on a paper (type, `change_key`, rule-based severity and text, the researcher's status, `report_id`) | V3, V7 |
+| `background_metadata` | snapshot Updating sent (insert-only, full history per paper) | V4 |
+| `alert_notes` | note in the researcher's log on an alert | V5 |
+| `research_papers` | project's draft PDF | V6 |
+| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation) | V7, V8 |
+| `report_documents` | DOI fetched for a report (notice, new version, current copy) | V7 |
 
-- **Why polling:** none of CrossRef/OpenAlex offer webhooks, and
-  OpenAlex's `from_updated_date` filter is Premium-only. Polling is the
-  right answer, not a workaround.
-- **Job design:** on a schedule (`POLL_INTERVAL_HOURS`), list tracked
-  papers from Storage Management, fetch each DOI once from Crossref
-  (`updated-by`) and OpenAlex (retraction, DOAJ, journal, authors), and
-  send one snapshot per tracked paper to Storage Management (insert-only,
-  even when nothing changed). Then compare each paper's new snapshot with
-  its previous one, which Updating reads back from Storage Management, to
-  decide whether to nudge Research Evaluation. Each snapshot's
-  `fetched_at` records when the paper was last checked. Papers with no DOI
-  are skipped and logged.
-- **Outage gate:** if Crossref or OpenAlex returns `error` for a paper's
-  DOI, Updating stores no snapshot for that paper this poll, lists it under
-  `source_errors` in the run summary and retries on the next poll. Only
-  `error` gates: `not_found` (e.g. DataCite DOIs) is a stable answer and is
-  stored. Without the gate, a change published during an outage would be
-  lost, because a field whose source wasn't `ok` is never compared (see
-  DECISIONS.md, "2026-09-25 — Updating stores no snapshot when Crossref or
-  OpenAlex errors"); with it, every stored snapshot is comparable
-  with the one before it.
-- **Schedule:** the first poll after a start runs one interval after the
-  last scheduled poll (immediately if that is already due), so restarts and
-  redeploys can't keep postponing it.
-- **When to nudge:** Updating does a plain comparison of the fields the
-  alerts depend on and doesn't classify what changed. It nudges when the
-  new snapshot differs from the previous one in any of:
-  - `is_retracted` false → true;
-  - a new `crossref_updates` entry of type `retraction`, `correction`,
-    `erratum` or `expression_of_concern`, where an entry is identified by
-    (notice DOI, type): Crossref lists the same notice once per source
-    (publisher, Retraction Watch), and a new source for a known pair is
-    not a new entry;
-  - `in_doaj` true → false.
+Everything referring to a paper is deleted with it. PDFs are files in
+`UPLOAD_DIR`, never in Postgres.
 
-  A field that is null in either snapshot, or whose source wasn't `ok`, is
-  never compared (a failure must not look like a status change). A paper's
-  first snapshot is only a baseline. Classifying the difference (including
-  the DOAJ rule that a delisting needs the same journal source) is
-  Research Evaluation's job; see CONTRACTS.md.
-- **Week 7 scope:** the changes above. Citation counts are stored but not
-  alerted on. Detecting newly-appearing related papers is explicitly **out
-  of scope** for week 7 (team decision — see DECISIONS.md).
-- **Handoff to Research Evaluation (a nudge, not a payload):** the flow
-  for one poll is: fetch from the APIs → store the snapshot in Storage
-  Management → compare with the previous snapshot → if it differs,
-  `POST /evaluate/changes` to Research Evaluation with the changed
-  `paper_ids`. A poll with no changes sends nothing. No snapshot data is
-  passed; Research Evaluation reads it, and works out the differences,
-  from Storage Management. Updating keeps a `nudge_pending` flag per paper
-  in `tracked_papers`, cleared once Research Evaluation accepted the nudge,
-  so if it was down the next poll re-sends those paper ids (the next
-  snapshot would otherwise look unchanged). Zero LLM calls in Updating.
-- **Updating's own data:** `tracked_papers` (`paper_id`, `doi`,
-  `last_snapshot_id`, `nudge_pending`) and `poll_runs` (a summary per
-  run). There are no change records; the snapshots in Storage Management
-  are the only history.
-- **Endpoints:** `POST /run-poll`.
+Updating's own schema (`updating`, Alembic): `tracked_papers` (`paper_id`,
+`doi`, `last_snapshot_id`, `nudge_pending`) and `poll_runs`.
 
-## Section 5 — Deployment
+## Deployment
 
-Owns getting every service (and GROBID) reachable from the public
-internet.
-
-- **Containerisation:** one Dockerfile per service, composed via Docker
-  Compose for local dev and as the deployable unit. Research Evaluation
-  and Updating are built from the one Python project in `backend/`, with
-  `research-evaluation.Dockerfile` and `updating.Dockerfile`.
-- **Cloud target:** a single VM running the whole Compose stack.
-- **Data services:** Postgres via Supabase free tier; PDFs on the VM's
-  local disk, mounted as a persistent volume so they survive redeploys.
-  S3 is an option later if the stack outgrows one VM.
-- **Config/secrets:** environment variables per service, never committed.
-- **CI:** GitHub Actions builds each service's image on merge to `main`
-  and redeploys to the VM.
+What exists: one Dockerfile per service (`storage/Dockerfile`,
+`backend/research-evaluation.Dockerfile`, `backend/updating.Dockerfile`)
+and two compose files that run every service but the frontend locally
+(SETUP.md). CI (`.github/workflows/`) is a Trivy vulnerability scan on
+PRs, pushes to `main` and weekly, plus Telegram messages when a PR is
+opened or approved. Nothing is hosted; the planned target (one VM running
+the compose stack, Postgres on Supabase) is in ROADMAP.md.

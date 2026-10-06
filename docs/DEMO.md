@@ -50,8 +50,7 @@ the publisher during the demo.
    the paper, the change's severity and summary, the impact on the draft
    and what to do. It needs `GEMINI_API_KEY`, `TELEGRAM_BOT_TOKEN` and
    `NOTIFY_TELEGRAM_CHAT_ID` in `backend/.env`; check the bot beforehand
-   with the `live` test in [EVALUATION-NOTIF.md](EVALUATION-NOTIF.md)
-   ("Setting it up"). If Gemini's free tier is out of requests the report
+   with the `live` test in [SETUP.md](SETUP.md) ("Telegram bot"). If Gemini's free tier is out of requests the report
    stays `investigated` and no message comes; assess it again later with
    `POST /evaluate/reports`.
 4. **Frontend:** show the changes panel on the paper detail page, then

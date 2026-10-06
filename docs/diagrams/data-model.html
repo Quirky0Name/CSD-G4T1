@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Model</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:  #f5f5f5;
+      --color-ink:    #2d3142;
+      --color-muted:  #4f5d75;
+      --color-accent: #eb6c36;
+      --font-sans:    'Geist', system-ui, sans-serif;
+      --font-serif:   'Instrument Serif', serif;
+      --font-mono:    'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .frame { max-width: 1416px; width: 100%; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin: 0 0 0.25rem 40px;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 2.5rem;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      color: var(--color-ink);
+      margin: 0 0 0.25rem 40px;
+    }
+    svg { width: 100%; min-width: 1416px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">CS203 · G4T1 · Postgres</p>
+    <h1>Data model</h1>
+    <div class="diagram-container">
+      <svg viewBox="0 0 1416 648" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="data-model-title data-model-desc">
+        <title id="data-model-title">Data model</title>
+        <desc id="data-model-desc">Entity-relationship diagram: a tracked paper owns its snapshots, alerts and reports; reports group alerts and hold fetched documents; alerts carry notes; the project's draft and Updating's tracking tables link to papers and snapshots without foreign keys.</desc>
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+        <line x1="296" y1="100" x2="392" y2="100" fill="none" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="4,3"/>
+        <line x1="296" y1="436" x2="392" y2="436" fill="none" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="4,3"/>
+        <line x1="534" y1="220" x2="534" y2="336" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+        <line x1="676" y1="100" x2="740" y2="100" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+        <path d="M 676,180 H 700 Q 708,180 708,188 V 428 Q 708,436 716,436 H 740" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+        <line x1="890" y1="336" x2="890" y2="274" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+        <line x1="1040" y1="100" x2="1096" y2="100" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+        <line x1="1040" y1="436" x2="1096" y2="436" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+        <rect x="304" y="80" width="80" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="344" y="89" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SAME PROJECT</text>
+        <rect x="302" y="106" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="308" y="116" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">1</text>
+        <rect x="374" y="106" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="380" y="116" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">N</text>
+        <rect x="300" y="416" width="88" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="344" y="425" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">LAST SNAPSHOT</text>
+        <rect x="363" y="442" width="30" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="378" y="452" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">0..1</text>
+        <rect x="514" y="224" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="520" y="234" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">1</text>
+        <rect x="514" y="320" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="520" y="330" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">N</text>
+        <rect x="554" y="272" width="56" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="582" y="281" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HISTORY</text>
+        <rect x="682" y="106" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="688" y="116" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">1</text>
+        <rect x="722" y="106" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="728" y="116" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">N</text>
+        <rect x="682" y="186" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="688" y="196" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">1</text>
+        <rect x="722" y="442" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="728" y="452" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">N</text>
+        <rect x="855" y="320" width="30" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="870" y="330" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">0..1</text>
+        <rect x="870" y="278" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="876" y="288" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">N</text>
+        <rect x="906" y="299" width="48" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="930" y="308" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GROUPS</text>
+        <rect x="1046" y="106" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="1052" y="116" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">1</text>
+        <rect x="1078" y="106" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="1084" y="116" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">N</text>
+        <rect x="1046" y="442" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="1052" y="452" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">1</text>
+        <rect x="1078" y="442" width="12" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="1084" y="452" fill="#4f5d75" font-size="10" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="middle">N</text>
+        <rect x="40" y="40" width="256" height="126" rx="6" fill="#f5f5f5"/>
+        <rect x="40" y="40" width="256" height="126" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="41" y="41" width="254" height="42" rx="5" fill="rgba(45,49,66,0.04)"/>
+        <line x1="40" y1="82" x2="296" y2="82" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+        <text x="52" y="55" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">V6 · RESEARCHER&#x27;S DRAFT</text>
+        <text x="52" y="73" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif">research_papers</text>
+        <text x="52" y="98" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace"># id</text>
+        <text x="284" y="98" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">uuid</text>
+        <text x="52" y="116" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">owner_id · folder_id</text>
+        <text x="284" y="116" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">1 per project</text>
+        <text x="52" y="134" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">file_key · filename</text>
+        <text x="284" y="134" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">draft PDF</text>
+        <text x="52" y="152" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">uploaded_at</text>
+        <text x="284" y="152" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">upload replaces</text>
+        <rect x="392" y="40" width="284" height="180" rx="6" fill="#f5f5f5"/>
+        <rect x="392" y="40" width="284" height="180" rx="6" fill="rgba(235,108,54,0.04)" stroke="#eb6c36" stroke-width="1"/>
+        <rect x="393" y="41" width="282" height="42" rx="5" fill="rgba(235,108,54,0.10)"/>
+        <line x1="392" y1="82" x2="676" y2="82" stroke="rgba(235,108,54,0.40)" stroke-width="1"/>
+        <text x="404" y="55" fill="#eb6c36" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">V1 · TRACKED PAPER</text>
+        <text x="404" y="73" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif">papers</text>
+        <text x="404" y="98" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace"># id</text>
+        <text x="664" y="98" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">uuid</text>
+        <text x="404" y="116" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">owner_id</text>
+        <text x="664" y="116" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">user · no FK</text>
+        <text x="404" y="134" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">folder_id</text>
+        <text x="664" y="134" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">project · null = none</text>
+        <text x="404" y="152" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">doi</text>
+        <text x="664" y="152" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">unique per owner</text>
+        <text x="404" y="170" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">openalex_id</text>
+        <text x="404" y="188" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">title · journal · year</text>
+        <text x="664" y="188" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">at ingest</text>
+        <text x="404" y="206" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">file_key</text>
+        <text x="664" y="206" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">PDF on disk</text>
+        <rect x="740" y="40" width="300" height="234" rx="6" fill="#f5f5f5"/>
+        <rect x="740" y="40" width="300" height="234" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="741" y="41" width="298" height="42" rx="5" fill="rgba(45,49,66,0.04)"/>
+        <line x1="740" y1="82" x2="1040" y2="82" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+        <text x="752" y="55" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">V3 · DETECTED CHANGE</text>
+        <text x="752" y="73" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif">alerts</text>
+        <text x="752" y="98" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace"># id</text>
+        <text x="752" y="116" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">→ paper_id</text>
+        <text x="752" y="134" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">→ report_id</text>
+        <text x="1028" y="134" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">null until grouped</text>
+        <text x="752" y="152" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">change_type</text>
+        <text x="1028" y="152" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">retraction, erratum…</text>
+        <text x="752" y="170" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">change_key</text>
+        <text x="1028" y="170" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">unique per paper</text>
+        <text x="752" y="188" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">severity</text>
+        <text x="1028" y="188" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">high · medium · low</text>
+        <text x="752" y="206" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">description · recommendation</text>
+        <text x="1028" y="206" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">rules</text>
+        <text x="752" y="224" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">[previous_]snapshot_id</text>
+        <text x="1028" y="224" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">no FK</text>
+        <text x="752" y="242" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">status</text>
+        <text x="1028" y="242" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">new · acknowledged · dismissed</text>
+        <text x="752" y="260" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">detected_at</text>
+        <text x="1028" y="260" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">first snapshot seen</text>
+        <rect x="1096" y="40" width="280" height="126" rx="6" fill="#f5f5f5"/>
+        <rect x="1096" y="40" width="280" height="126" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="1097" y="41" width="278" height="42" rx="5" fill="rgba(45,49,66,0.04)"/>
+        <line x1="1096" y1="82" x2="1376" y2="82" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+        <text x="1108" y="55" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">V5 · RESEARCHER&#x27;S LOG</text>
+        <text x="1108" y="73" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif">alert_notes</text>
+        <text x="1108" y="98" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace"># id</text>
+        <text x="1108" y="116" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">→ alert_id</text>
+        <text x="1108" y="134" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">text</text>
+        <text x="1364" y="134" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">what they did</text>
+        <text x="1108" y="152" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">created_at</text>
+        <rect x="40" y="336" width="256" height="198" rx="6" fill="#f5f5f5"/>
+        <rect x="40" y="336" width="256" height="198" rx="6" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+        <rect x="41" y="337" width="254" height="42" rx="5" fill="rgba(45,49,66,0.04)"/>
+        <line x1="40" y1="378" x2="296" y2="378" stroke="rgba(45,49,66,0.16)" stroke-width="1"/>
+        <text x="52" y="351" fill="#7a8399" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">UPDATING SERVICE · OWN SCHEMA</text>
+        <text x="52" y="369" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif">updating schema</text>
+        <text x="52" y="394" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif">tracked_papers</text>
+        <text x="52" y="412" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace"># paper_id · doi</text>
+        <text x="284" y="412" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">= papers.id</text>
+        <text x="52" y="430" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">last_snapshot_id</text>
+        <text x="284" y="430" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">newest seen</text>
+        <text x="52" y="448" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">nudge_pending</text>
+        <text x="284" y="448" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">re-send</text>
+        <text x="52" y="466" fill="#2d3142" font-size="11" font-weight="600" font-family="'Geist', sans-serif">poll_runs</text>
+        <text x="52" y="484" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace"># id · trigger</text>
+        <text x="284" y="484" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">scheduled · manual</text>
+        <text x="52" y="502" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">status</text>
+        <text x="284" y="502" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">running · succeeded · failed</text>
+        <text x="52" y="520" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">started/finished · summary</text>
+        <rect x="392" y="336" width="284" height="198" rx="6" fill="#f5f5f5"/>
+        <rect x="392" y="336" width="284" height="198" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="393" y="337" width="282" height="42" rx="5" fill="rgba(45,49,66,0.04)"/>
+        <line x1="392" y1="378" x2="676" y2="378" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+        <text x="404" y="351" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">V4 · SNAPSHOT · INSERT-ONLY</text>
+        <text x="404" y="369" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif">background_metadata</text>
+        <text x="404" y="394" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace"># snapshot_id</text>
+        <text x="404" y="412" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">→ paper_id</text>
+        <text x="404" y="430" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">fetched_at</text>
+        <text x="664" y="430" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">poll time</text>
+        <text x="404" y="448" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">is_retracted · in_doaj</text>
+        <text x="664" y="448" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">null = no answer</text>
+        <text x="404" y="466" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">title · journal · publisher</text>
+        <text x="664" y="466" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">as polled</text>
+        <text x="404" y="484" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">issn_l · cited_by_count</text>
+        <text x="404" y="502" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">crossref_updates · authors</text>
+        <text x="664" y="502" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">JSON text</text>
+        <text x="404" y="520" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">source_status</text>
+        <text x="664" y="520" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">per source</text>
+        <rect x="740" y="336" width="300" height="198" rx="6" fill="#f5f5f5"/>
+        <rect x="740" y="336" width="300" height="198" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="741" y="337" width="298" height="42" rx="5" fill="rgba(45,49,66,0.04)"/>
+        <line x1="740" y1="378" x2="1040" y2="378" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+        <text x="752" y="351" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">V7 + V8 · INVESTIGATION + IMPACT</text>
+        <text x="752" y="369" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif">reports</text>
+        <text x="752" y="394" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace"># id</text>
+        <text x="752" y="412" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">→ paper_id</text>
+        <text x="752" y="430" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">status</text>
+        <text x="1028" y="430" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">investigating→investigated→assessed</text>
+        <text x="752" y="448" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">change_severity</text>
+        <text x="1028" y="448" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">none · low · medium · high</text>
+        <text x="752" y="466" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">impact_level</text>
+        <text x="1028" y="466" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">same scale, on draft</text>
+        <text x="752" y="484" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">change_summary · assessment</text>
+        <text x="1028" y="484" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">Gemini</text>
+        <text x="752" y="502" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">evaluation · recommendation</text>
+        <text x="1028" y="502" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">Gemini</text>
+        <text x="752" y="520" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">investigated_at · evaluated_at</text>
+        <rect x="1096" y="336" width="280" height="216" rx="6" fill="#f5f5f5"/>
+        <rect x="1096" y="336" width="280" height="216" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="1097" y="337" width="278" height="42" rx="5" fill="rgba(45,49,66,0.04)"/>
+        <line x1="1096" y1="378" x2="1376" y2="378" stroke="rgba(45,49,66,0.22)" stroke-width="1"/>
+        <text x="1108" y="351" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">V7 · FETCHED DOCUMENT</text>
+        <text x="1108" y="369" fill="#2d3142" font-size="14" font-weight="600" font-family="'Geist', sans-serif">report_documents</text>
+        <text x="1108" y="394" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace"># id</text>
+        <text x="1108" y="412" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">→ report_id</text>
+        <text x="1108" y="430" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">kind</text>
+        <text x="1364" y="430" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">notice · new/current version</text>
+        <text x="1108" y="448" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">doi</text>
+        <text x="1364" y="448" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">unique per report</text>
+        <text x="1108" y="466" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">crossref_status · record</text>
+        <text x="1108" y="484" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">update_to_includes_paper</text>
+        <text x="1364" y="484" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">notices only</text>
+        <text x="1108" y="502" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">text_status · text</text>
+        <text x="1364" y="502" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">open-access text</text>
+        <text x="1108" y="520" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">pdf_status · file_key</text>
+        <text x="1364" y="520" fill="#7a8399" font-size="10" font-family="'Geist Mono', monospace" text-anchor="end">PDF on disk</text>
+        <text x="1108" y="538" fill="#2d3142" font-size="11" font-family="'Geist Mono', monospace">sha256 · pdf_source_url</text>
+        <line x1="40" y1="576" x2="1376" y2="576" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <rect x="40" y="590" width="16" height="12" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1"/>
+        <text x="64" y="600" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif">Root: everything is deleted with its paper</text>
+        <rect x="320" y="590" width="16" height="12" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="344" y="600" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif">Storage Management table (Flyway)</text>
+        <rect x="572" y="590" width="16" height="12" rx="2" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-dasharray="4,3" stroke-width="1"/>
+        <text x="596" y="600" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif">Updating&#x27;s schema (Alembic)</text>
+        <line x1="784" y1="596" x2="816" y2="596" fill="none" stroke="#4f5d75" stroke-width="1.2"/>
+        <text x="824" y="600" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif">Foreign key, 1 — N</text>
+        <line x1="952" y1="596" x2="984" y2="596" fill="none" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="4,3"/>
+        <text x="992" y="600" fill="#4f5d75" font-size="11" font-family="'Geist', sans-serif">Logical link, no FK</text>
+        <text x="1128" y="600" fill="#4f5d75" font-size="11" font-family="'Geist Mono', monospace"># primary key   → foreign key</text>
+        <text x="40" y="624" fill="#7a8399" font-size="11" font-family="'Geist', sans-serif">owner_id / folder_id point to User Management (not built yet) with no FK. PDFs are files in UPLOAD_DIR, found by file_key. Grey notes are meaning or allowed values, not SQL types.</text>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

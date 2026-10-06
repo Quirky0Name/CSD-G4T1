@@ -1,4 +1,4 @@
-"""Stage 2 of change evaluation: the rule-based assessment (docs/EVALUATION-REVIEW-CHANGES.md, S4).
+"""Stage 2 of change evaluation: the rule-based assessment (docs/EVALUATION.md, "The nudge").
 
 Gives every change from stage 1 a severity, a description and a recommendation from
 fixed rules, so every alert always has a complete assessment. Later stages (LLM
