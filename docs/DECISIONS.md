@@ -158,7 +158,7 @@ owned that story made.
   severity are stored; the report is `assessed` either way.
 - **Two level columns and three texts, the rest as JSON** (`assessment`),
   so the detail's shape can change without a migration.
-- **Impact never changes alerts**: their rule-based alert severity stays, so a
+- **Impact never changes alerts**: their rule-based severity stays, so a
   retraction never depends on an LLM.
 - Rejected: overwriting an assessed evaluation (races, no need yet);
   reading reports by paper and report id (changes the agreed handoff).
@@ -253,11 +253,11 @@ owned that story made.
 ## 2026-09-27 — Alert notes migration renumbered to V5
 
 - **`V4__create_alert_notes.sql` became `V5__…`**, unchanged, because
-  `snapshots` and alert notes were each written as V4 on their
+  `background_metadata` and alert notes were each written as V4 on their
   own branches and Flyway refused to start on `main`. No new migration can
   fix two files with one version, so this one breaks the "never edit a
   migration on `main`" rule. Alert notes moved because
-  `snapshots` was merged first. Consequence: a database that ran
+  `background_metadata` was merged first. Consequence: a database that ran
   alert notes as V4 needs a reset, and new migrations check the numbers on
   other open branches.
 
@@ -276,26 +276,26 @@ owned that story made.
 - **No paper-details endpoint for Research Evaluation**: the snapshots
   carry the same identity fields, fresher (`papers.title` goes stale), and
   it needs nothing else from `papers`. Revisit if a stage needs the owner,
-  project or ingest metadata.
+  folder or ingest metadata.
 
-## 2026-09-27 — The researcher's draft, one per project
+## 2026-09-27 — The researcher's own paper, one per project
 
 - **Storage Management keeps the researcher's draft per project**
-  (`POST /draft`), so a change can be judged against what they're
+  (`POST /research-paper`), so a change can be judged against what they're
   writing. Stored like a tracked paper's PDF.
-- **`project_id` null is the default project**, everywhere, never a
-  sentinel; missing or `""` means the default project on input.
-- **A project is keyed by owner and `project_id`**: project ids aren't checked
+- **A folder is a project; `folder_id` null is the "no folder" project**,
+  everywhere, never a sentinel; missing or `""` means no folder on input.
+- **A project is keyed by owner and `folder_id`**: folders aren't checked
   (no User Management), so the owner in the key keeps users apart.
 - **One draft per project, the newest upload replaces it** (same id, old
   file deleted): a change is judged against the draft as it is now.
-- **Read by tracked paper id** (`GET /internal/papers/{id}/draft`):
+- **Read by tracked paper id** (`GET /internal/papers/{id}/research-paper`):
   Research Evaluation only has paper ids, and a tracked paper is in exactly
   one project.
 - **Its own table**, no GROBID or Crossref on upload.
-- Rejected: a flag on `papers` (Updating would poll it); a sentinel project
-  id; keeping every draft version; reading by owner and project, or by DOI
-  across users (hands over other users' drafts); a papers ↔ projects join
+- Rejected: a flag on `papers` (Updating would poll it); a sentinel folder
+  id; keeping every draft version; reading by owner and folder, or by DOI
+  across users (hands over other users' drafts); a papers ↔ folders join
   table (revisit with User Management).
 
 ## 2026-09-26 — Researchers can keep a log of notes on an alert
@@ -329,7 +329,7 @@ owned that story made.
 
 ## 2026-09-26 — Alerts from one poll are listed most severe first
 
-- **The alert list breaks ties on `detected_at` by alert severity, then newer
+- **The alert list breaks ties on `detected_at` by severity, then newer
   `id`.** Alerts from one pair of snapshots share a detection time and
   were ordered by `id`, which put the retraction (stored first) below an
   erratum from the same poll. Storage Management sorts in memory; the

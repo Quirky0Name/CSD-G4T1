@@ -122,7 +122,7 @@ Gemini, so pick the provider again when they're started.
   a `background_text` table for it.
 - [ ] **Citation-neighbourhood metrics** (self-citation ratio, retracted
   references, citing institutions and sources, citations per year) from
-  OpenAlex. `/evaluate/background-info` and
+  OpenAlex. `/evaluate/snapshot` and
   `/evaluate/citation-neighbourhood` are under review, like stance.
 - [ ] Semantic Scholar abstract / TL;DR, and snippets cached per (claim,
   candidate) for stance.

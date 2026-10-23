@@ -21,7 +21,7 @@ feature on their own.
 ### Week 7 (midterm) scope: what's built
 
 - Track a paper by PDF upload or by DOI; Storage Management keeps its PDF.
-- The researcher's draft (their draft), one per project.
+- The researcher's draft, one per project.
 - Updating polls Crossref and OpenAlex on a schedule, stores a snapshot
   per paper per poll, and nudges Research Evaluation when a snapshot
   differs in a field the alerts depend on.

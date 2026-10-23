@@ -48,8 +48,7 @@ belongs to the caller.
 - **A tracked paper is in exactly one project:** its owner plus its
   `project_id`.
 
-See DECISIONS.md, "2026-09-27 — The researcher's draft, one per
-project".
+See DECISIONS.md, 2026-09-27.
 
 ## Frontend ↔ Storage Management
 
@@ -1039,7 +1038,7 @@ Errors: `503` with `detail` `Gemini isn't configured` when
 `GEMINI_API_KEY` isn't set (nothing runs); `422` a body that isn't that
 shape.
 
-### Under review: `/evaluate/background-info`, `/evaluate/citation-neighbourhood`, `/evaluate/stance`
+### Under review: `/evaluate/snapshot`, `/evaluate/citation-neighbourhood`, `/evaluate/stance`
 
 From the 2026-09-18 design and never built; likely to become internal
 steps of the stance and claims work rather than endpoints (ROADMAP.md,
