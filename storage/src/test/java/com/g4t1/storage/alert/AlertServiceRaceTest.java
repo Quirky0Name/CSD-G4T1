@@ -25,7 +25,7 @@ class AlertServiceRaceTest {
 
     private final UUID paperId = UUID.randomUUID();
     private final NewAlertRequest request = new NewAlertRequest(ChangeType.CORRECTION, "correction:10.1/x",
-            Severity.MEDIUM, "A correction was published.", "Read the correction.", "10.1/x",
+            AlertSeverity.MEDIUM, "A correction was published.", "Read the correction.", "10.1/x",
             Instant.parse("2026-09-20T12:00:00Z"), 42L, 41L);
 
     @Test
@@ -45,7 +45,7 @@ class AlertServiceRaceTest {
 
     @Test
     void theLoserOfARaceToAddARetractionNoticeGetsTheWinnersAlert() {
-        NewAlertRequest withNotice = new NewAlertRequest(ChangeType.RETRACTION, "retraction", Severity.HIGH,
+        NewAlertRequest withNotice = new NewAlertRequest(ChangeType.RETRACTION, "retraction", AlertSeverity.HIGH,
                 "Retracted, see the notice.", "Stop citing it.", "10.1/notice",
                 Instant.parse("2026-09-25T12:00:00Z"), 47L, 46L);
         Alert noticeless = mock(Alert.class);

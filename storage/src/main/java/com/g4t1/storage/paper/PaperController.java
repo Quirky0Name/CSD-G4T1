@@ -34,13 +34,13 @@ public class PaperController {
     @ResponseStatus(HttpStatus.CREATED)
     public PaperResponse upload(@AuthenticationPrincipal UUID userId,
                                 @RequestParam("file") MultipartFile file,
-                                @RequestParam(name = "folder_id", required = false) UUID folderId) throws IOException {
-        return papers.uploadPdf(userId, folderId, file);
+                                @RequestParam(name = "project_id", required = false) UUID projectId) throws IOException {
+        return papers.uploadPdf(userId, projectId, file);
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public PaperResponse trackByDoi(@AuthenticationPrincipal UUID userId, @RequestBody TrackDoiRequest request) {
-        return papers.trackByDoi(userId, request.folderId(), request.doi());
+        return papers.trackByDoi(userId, request.projectId(), request.doi());
     }
 }

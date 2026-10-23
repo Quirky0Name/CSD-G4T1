@@ -60,7 +60,7 @@ async def report(sm, investigated: bool = True) -> int:
         json={
             "change_type": "retraction",
             "change_key": "retraction",
-            "severity": "high",
+            "alert_severity": "high",
             "description": "d",
             "recommendation": "r",
             "notice_doi": None,

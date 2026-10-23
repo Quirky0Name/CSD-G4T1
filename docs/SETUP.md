@@ -188,13 +188,13 @@ curl -X POST localhost:8081/dev/papers -H 'content-type: application/json' \
 curl -X POST localhost:8081/dev/reset           # forget everything
 ```
 
-Snapshots: `GET /internal/papers/{id}/background-info/history` on the stub
-(service token). Poll summaries: Updating's `poll_runs` table. Nudges:
+Snapshots: `GET /internal/papers/{id}/snapshots` on the stub
+(service token). Poll summaries: Updating's `polls` table. Nudges:
 `GET localhost:8000/dev/received`; `POST localhost:8000/dev/fail`
 (`?on=false` to stop) makes the stub refuse them, to see a re-send. To run
 the real Research Evaluation against the stub Storage Management instead,
 start it with `uv run --env-file .env uvicorn research_evaluation.main:app --port 8000`
-(the stub's `/dev/papers/{id}/pdf`, `/dev/papers/{id}/research-paper` and
+(the stub's `/dev/papers/{id}/pdf`, `/dev/papers/{id}/draft` and
 `/dev/pdfs` set the PDFs it serves).
 
 ### Mock harness (seeded scenarios)

@@ -36,7 +36,7 @@ async def add_alert(client, paper_id: str, change_key: str) -> dict:
         json={
             "change_type": "retraction",
             "change_key": change_key,
-            "severity": "high",
+            "alert_severity": "high",
             "description": "Something changed.",
             "recommendation": "Read the notice.",
             "notice_doi": "10.1/notice",
@@ -432,7 +432,7 @@ async def test_a_full_evaluation_is_stored_and_the_report_assessed(client):
     assert nested["assessment"] == body["assessment"]
 
 
-async def test_a_change_that_isnt_meaningful_stores_only_the_summary_and_severity(client):
+async def test_a_change_that_isnt_meaningful_stores_only_the_summary_and_change_severity(client):
     _, report_id = await investigated_report(client)
 
     response = await client.put(
@@ -512,16 +512,16 @@ async def test_evaluating_an_unknown_report_is_no_report_404(client):
     assert response.json()["detail"] == "No report 999"
 
 
-# GET /internal/papers/{id}/pdf and /research-paper, set with the stub-only /dev helpers
+# GET /internal/papers/{id}/pdf and /draft, set with the stub-only /dev helpers
 
 
 async def test_a_papers_pdf_and_draft_are_served_once_set(client):
     paper = await add_paper(client)
     await client.post(f"/dev/papers/{paper}/pdf", content=b"%PDF-1.7 paper")
-    await client.post(f"/dev/papers/{paper}/research-paper", content=b"%PDF-1.7 draft")
+    await client.post(f"/dev/papers/{paper}/draft", content=b"%PDF-1.7 draft")
 
     pdf = await client.get(f"/internal/papers/{paper}/pdf")
-    draft = await client.get(f"/internal/papers/{paper}/research-paper")
+    draft = await client.get(f"/internal/papers/{paper}/draft")
 
     assert (pdf.status_code, pdf.content) == (200, b"%PDF-1.7 paper")
     assert pdf.headers["content-type"] == "application/pdf"
@@ -533,21 +533,21 @@ async def test_missing_pdfs_have_storage_managements_404_details(client):
     missing = str(uuid4())
 
     pdf = await client.get(f"/internal/papers/{paper}/pdf")
-    draft = await client.get(f"/internal/papers/{paper}/research-paper")
+    draft = await client.get(f"/internal/papers/{paper}/draft")
 
     assert (pdf.status_code, pdf.json()["detail"]) == (404, f"Paper {paper} has no stored PDF")
     assert (draft.status_code, draft.json()["detail"]) == (
         404,
-        f"No research paper in the project of paper {paper}",
+        f"No draft in the project of paper {paper}",
     )
-    for path in ("pdf", "research-paper"):
+    for path in ("pdf", "draft"):
         response = await client.get(f"/internal/papers/{missing}/{path}")
         assert (response.status_code, response.json()["detail"]) == (404, f"No paper {missing}")
 
 
 async def test_the_pdf_endpoints_need_a_service_token(client):
     paper = await add_paper(client)
-    for path in ("pdf", "research-paper"):
+    for path in ("pdf", "draft"):
         response = await client.get(
             f"/internal/papers/{paper}/{path}", headers={"Authorization": "Bearer nope"}
         )

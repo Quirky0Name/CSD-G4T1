@@ -211,7 +211,7 @@ class AlertNoteTest {
 
     private Alert seed(String changeKey) {
         String type = changeKey.split(":")[0];
-        return alerts.save(new Alert(paperId, new NewAlertRequest(ChangeType.of(type), changeKey, Severity.HIGH,
+        return alerts.save(new Alert(paperId, new NewAlertRequest(ChangeType.of(type), changeKey, AlertSeverity.HIGH,
                 "Description of " + type, "Recommendation for " + type, null,
                 Instant.parse("2026-09-20T12:00:00Z"), 42L, 41L)));
     }

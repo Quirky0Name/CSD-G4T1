@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 import pytest
 
 from research_evaluation.changes import Change, ChangeType
-from research_evaluation.rules import Severity, assess
+from research_evaluation.rules import AlertSeverity, assess
 
 DETECTED = datetime(2026, 9, 2, 12, 0, tzinfo=UTC)
 
@@ -14,18 +14,18 @@ def change(kind: ChangeType, **fields) -> Change:
 
 
 @pytest.mark.parametrize(
-    ("kind", "severity"),
+    ("kind", "alert_severity"),
     [
-        (ChangeType.RETRACTION, Severity.HIGH),
-        (ChangeType.EXPRESSION_OF_CONCERN, Severity.MEDIUM),
-        (ChangeType.CORRECTION, Severity.MEDIUM),
-        (ChangeType.ERRATUM, Severity.LOW),
-        (ChangeType.DOAJ_DELISTING, Severity.LOW),
-        (ChangeType.OTHER, Severity.MEDIUM),
+        (ChangeType.RETRACTION, AlertSeverity.HIGH),
+        (ChangeType.EXPRESSION_OF_CONCERN, AlertSeverity.MEDIUM),
+        (ChangeType.CORRECTION, AlertSeverity.MEDIUM),
+        (ChangeType.ERRATUM, AlertSeverity.LOW),
+        (ChangeType.DOAJ_DELISTING, AlertSeverity.LOW),
+        (ChangeType.OTHER, AlertSeverity.MEDIUM),
     ],
 )
-def test_each_kind_of_change_has_its_severity(kind, severity):
-    assert assess(change(kind)).severity is severity
+def test_each_kind_of_change_has_its_alert_severity(kind, alert_severity):
+    assert assess(change(kind)).alert_severity is alert_severity
 
 
 @pytest.mark.parametrize("kind", list(ChangeType))

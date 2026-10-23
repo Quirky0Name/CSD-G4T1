@@ -5,11 +5,11 @@ from uuid import uuid4
 import httpx
 import pytest
 from support import load_fixture
-from updating_support import poll_runs, tracked_rows
+from updating_support import polls, tracked_rows
 
 from dev.scenarios import DOIS, fixture_snapshot
 from updating import poll as poll_module
-from updating.models import PollTrigger, RunStatus
+from updating.models import PollStatus, PollTrigger
 from updating.poll import PollFailed, UnknownPaper, run_poll
 
 
@@ -34,11 +34,11 @@ async def test_stores_one_snapshot_per_paper_and_records_it(deps, sm, sources):
         assert datetime.fromisoformat(row["fetched_at"]).microsecond == 0
         assert (await tracked_rows(deps))[paper_id].last_snapshot_id == row["snapshot_id"]
 
-    [run] = await poll_runs(deps)
-    assert run.status is RunStatus.SUCCEEDED
-    assert run.trigger is PollTrigger.SCHEDULED
-    assert run.finished_at is not None and run.error is None
-    assert run.summary == summary.model_dump(mode="json")
+    [recorded] = await polls(deps)
+    assert recorded.status is PollStatus.SUCCEEDED
+    assert recorded.trigger is PollTrigger.SCHEDULED
+    assert recorded.finished_at is not None and recorded.error is None
+    assert recorded.summary == summary.model_dump(mode="json")
 
 
 async def test_papers_sharing_a_doi_are_fetched_once_and_each_get_a_snapshot(deps, sm, sources):
@@ -105,8 +105,8 @@ async def test_a_source_error_stores_nothing_and_is_listed(deps, sm, sources, fa
         for paper_id in (first, second)
     ]
     assert summary.model_dump(mode="json")["source_errors"] == expected
-    [run] = await poll_runs(deps)
-    assert run.summary["source_errors"] == expected
+    [recorded] = await polls(deps)
+    assert recorded.summary["source_errors"] == expected
     # the outage doesn't hold up other papers
     assert [s.paper_id for s in summary.stored] == [healthy]
     assert len(await sm.history(healthy)) == 1
@@ -182,7 +182,7 @@ async def test_every_poll_stores_a_snapshot_even_when_nothing_changed(deps, sm, 
     first, second = await sm.history(paper)
     assert first["snapshot_id"] < second["snapshot_id"]
     assert (await tracked_rows(deps))[paper].last_snapshot_id == second["snapshot_id"]
-    assert len(await poll_runs(deps)) == 2
+    assert len(await polls(deps)) == 2
 
 
 async def test_a_failed_store_is_listed_and_does_not_stop_the_other_papers(deps, sm, sources):
@@ -192,8 +192,8 @@ async def test_a_failed_store_is_listed_and_does_not_stop_the_other_papers(deps,
     server_error = await sm.add_paper(DOIS["lancet"])
     unreachable = await sm.add_paper(DOIS["jbc"])
     fine = await sm.add_paper(DOIS["ijaa"])
-    sm.transport.faults[f"{server_error}/background-info"] = 500
-    sm.transport.faults[f"{unreachable}/background-info"] = httpx.ConnectError("down")
+    sm.transport.faults["POST", f"{server_error}/snapshots"] = 500
+    sm.transport.faults["POST", f"{unreachable}/snapshots"] = httpx.ConnectError("down")
 
     summary = await poll(deps)
 
@@ -206,23 +206,23 @@ async def test_a_failed_store_is_listed_and_does_not_stop_the_other_papers(deps,
     assert rows[server_error].last_snapshot_id is None
     assert rows[unreachable].last_snapshot_id is None
     assert rows[fine].last_snapshot_id is not None
-    [run] = await poll_runs(deps)
-    assert run.status is RunStatus.SUCCEEDED
+    [recorded] = await polls(deps)
+    assert recorded.status is PollStatus.SUCCEEDED
 
 
-async def test_an_unavailable_paper_list_fails_the_run(deps, sm):
+async def test_an_unavailable_paper_list_fails_the_poll(deps, sm):
     sm.transport.faults["/internal/papers"] = 503
 
     with pytest.raises(PollFailed, match="Storage Management"):
         await poll(deps)
 
-    [run] = await poll_runs(deps)
-    assert run.status is RunStatus.FAILED
-    assert "Storage Management" in run.error
-    assert run.finished_at is not None and run.summary is None
+    [recorded] = await polls(deps)
+    assert recorded.status is PollStatus.FAILED
+    assert "Storage Management" in recorded.error
+    assert recorded.finished_at is not None and recorded.summary is None
 
 
-async def test_an_unexpected_error_marks_the_run_failed_and_propagates(deps, sm, sources, monkeypatch):
+async def test_an_unexpected_error_marks_the_poll_failed_and_propagates(deps, sm, sources, monkeypatch):
     sources.serve("jbc")
     await sm.add_paper(DOIS["jbc"])
 
@@ -234,11 +234,11 @@ async def test_an_unexpected_error_marks_the_run_failed_and_propagates(deps, sm,
     with pytest.raises(RuntimeError):
         await poll(deps)
 
-    [run] = await poll_runs(deps)
-    assert run.status is RunStatus.FAILED and run.error == "RuntimeError"
+    [recorded] = await polls(deps)
+    assert recorded.status is PollStatus.FAILED and recorded.error == "RuntimeError"
 
 
-async def test_a_single_paper_run_stores_only_that_paper_and_keeps_the_other_rows(deps, sm, sources):
+async def test_a_single_paper_poll_stores_only_that_paper_and_keeps_the_other_rows(deps, sm, sources):
     sources.serve("lancet")
     sources.serve("jbc")
     lancet = await sm.add_paper(DOIS["lancet"])
@@ -255,12 +255,12 @@ async def test_a_single_paper_run_stores_only_that_paper_and_keeps_the_other_row
     assert set(rows) == {lancet, jbc}
     assert rows[jbc].last_snapshot_id == jbc_snapshot
     assert sources.routes[("jbc", "crossref")].call_count == 1  # fetched by the first poll only
-    run = (await poll_runs(deps))[-1]
-    assert run.trigger is PollTrigger.MANUAL
-    assert run.summary["paper_id"] == str(lancet)
+    recorded = (await polls(deps))[-1]
+    assert recorded.trigger is PollTrigger.MANUAL
+    assert recorded.summary["paper_id"] == str(lancet)
 
 
-async def test_a_single_paper_run_for_a_paper_without_a_doi_lists_it_as_skipped(deps, sm, sources):
+async def test_a_single_paper_poll_for_a_paper_without_a_doi_lists_it_as_skipped(deps, sm, sources):
     no_doi = await sm.add_paper(None)
 
     summary = await run_poll(deps, PollTrigger.MANUAL, no_doi)
@@ -269,15 +269,15 @@ async def test_a_single_paper_run_for_a_paper_without_a_doi_lists_it_as_skipped(
     assert summary.stored == [] and await tracked_rows(deps) == {}
 
 
-async def test_a_single_paper_run_for_an_unknown_paper_fails_the_run(deps, sm, sources):
+async def test_a_single_paper_poll_for_an_unknown_paper_fails_the_poll(deps, sm, sources):
     await sm.add_paper(DOIS["jbc"])
     unknown = uuid4()
 
     with pytest.raises(UnknownPaper, match=str(unknown)):
         await run_poll(deps, PollTrigger.MANUAL, unknown)
 
-    [run] = await poll_runs(deps)
-    assert run.status is RunStatus.FAILED and str(unknown) in run.error
+    [recorded] = await polls(deps)
+    assert recorded.status is PollStatus.FAILED and str(unknown) in recorded.error
     assert await tracked_rows(deps) == {}  # rejected before anything was synced
 
 
@@ -289,7 +289,7 @@ async def test_a_poll_that_comes_due_during_another_waits_for_it(deps, sm, sourc
     await asyncio.sleep(0)
 
     assert not waiting.done()
-    assert await poll_runs(deps) == []  # no run is recorded until it has the lock
+    assert await polls(deps) == []  # no poll is recorded until it has the lock
     released_at = datetime.now(UTC)
     deps.lock.release()
     summary = await waiting

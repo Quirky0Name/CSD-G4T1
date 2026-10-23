@@ -21,7 +21,7 @@ from pydantic import BaseModel, ValidationError
 
 from research_evaluation.changes import Change, ChangeType, find_changes
 from research_evaluation.investigation.run import PaperChanges
-from research_evaluation.rules import Assessment, Severity, assess
+from research_evaluation.rules import AlertSeverity, Assessment, assess
 from research_evaluation.storage import PaperGone, snapshot_history, store_alert, stored_change_keys
 
 log = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class NewAlert(BaseModel):
 
     change_type: ChangeType
     change_key: str
-    severity: Severity
+    alert_severity: AlertSeverity
     description: str
     recommendation: str
     notice_doi: str | None
@@ -145,7 +145,7 @@ def _alert(change: Change, assessment: Assessment) -> dict:
     return NewAlert(
         change_type=change.change_type,
         change_key=change.change_key,
-        severity=assessment.severity,
+        alert_severity=assessment.alert_severity,
         description=assessment.description,
         recommendation=assessment.recommendation,
         notice_doi=change.notice_doi,

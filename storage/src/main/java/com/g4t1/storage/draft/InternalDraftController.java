@@ -1,4 +1,4 @@
-package com.g4t1.storage.research;
+package com.g4t1.storage.draft;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -10,17 +10,17 @@ import java.util.UUID;
 
 // Controller for RE; SecurityConfig limits /internal/** to ROLE_SERVICE
 @RestController
-public class InternalResearchPaperController {
+public class InternalDraftController {
 
-    private final ResearchPaperService researchPapers;
+    private final DraftService drafts;
 
-    public InternalResearchPaperController(ResearchPaperService researchPapers) {
-        this.researchPapers = researchPapers;
+    public InternalDraftController(DraftService drafts) {
+        this.drafts = drafts;
     }
 
-    // the researcher's own paper for the project this tracked paper is in
-    @GetMapping("/internal/papers/{paperId}/research-paper")
-    public ResponseEntity<byte[]> researchPaper(@PathVariable UUID paperId) {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(researchPapers.pdfForPaper(paperId));
+    // the researcher's draft for the project this tracked paper is in
+    @GetMapping("/internal/papers/{paperId}/draft")
+    public ResponseEntity<byte[]> draft(@PathVariable UUID paperId) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(drafts.pdfForPaper(paperId));
     }
 }

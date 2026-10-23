@@ -17,7 +17,7 @@ from research_evaluation.impact.llm import Part, Pdf
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -233,7 +233,7 @@ def paper_block(paper: PaperDetails) -> str:
 def alerts_block(alerts: list[AlertInReport]) -> str:
     lines = [
         (
-            "ALERTS (what Crossref or OpenAlex recorded; the severity is a fixed rule by type, "
+            "ALERTS (what Crossref or OpenAlex recorded; the alert severity is fixed by type, "
             "not a judgement)"
         )
     ]
@@ -241,7 +241,7 @@ def alerts_block(alerts: list[AlertInReport]) -> str:
         notice = f"notice {alert.notice_doi}" if alert.notice_doi else "no notice"
         lines.append(
             f"- alert {alert.id}: {alert.change_type}, {notice}, "
-            f"detected {alert.detected_at.date().isoformat()}, rule severity {alert.severity}"
+            f"detected {alert.detected_at.date().isoformat()}, alert severity {alert.alert_severity}"
         )
     return "\n".join(lines)
 

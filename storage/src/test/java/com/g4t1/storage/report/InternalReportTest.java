@@ -6,7 +6,7 @@ import com.g4t1.storage.alert.AlertRepository;
 import com.g4t1.storage.alert.AlertStatus;
 import com.g4t1.storage.alert.ChangeType;
 import com.g4t1.storage.alert.NewAlertRequest;
-import com.g4t1.storage.alert.Severity;
+import com.g4t1.storage.alert.AlertSeverity;
 import com.g4t1.storage.paper.Paper;
 import com.g4t1.storage.paper.PaperRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -115,7 +115,7 @@ class InternalReportTest {
                 .andExpect(jsonPath("$.alerts[*].id").value(contains((int) retraction, (int) correction)))
                 .andExpect(jsonPath("$.alerts[*].change_key").value(contains("retraction", "correction:10.1/c")))
                 .andExpect(jsonPath("$.alerts[0].change_type").value("retraction"))
-                .andExpect(jsonPath("$.alerts[0].severity").value("high"))
+                .andExpect(jsonPath("$.alerts[0].alert_severity").value("high"))
                 .andExpect(jsonPath("$.alerts[0].description").value("Something changed."))
                 .andExpect(jsonPath("$.alerts[0].notice_doi").value("10.1/notice"))
                 .andExpect(jsonPath("$.alerts[0].detected_at").value("2026-09-20T12:00:00Z"))
@@ -361,7 +361,7 @@ class InternalReportTest {
     }
 
     private long alert(UUID paper, String changeKey) {
-        return alerts.save(new Alert(paper, new NewAlertRequest(ChangeType.RETRACTION, changeKey, Severity.HIGH,
+        return alerts.save(new Alert(paper, new NewAlertRequest(ChangeType.RETRACTION, changeKey, AlertSeverity.HIGH,
                 "Something changed.", "Read the notice.", "10.1/notice", Instant.parse("2026-09-20T12:00:00Z"),
                 42L, 41L))).getId();
     }

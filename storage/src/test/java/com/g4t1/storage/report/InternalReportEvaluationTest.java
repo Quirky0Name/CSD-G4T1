@@ -5,7 +5,7 @@ import com.g4t1.storage.alert.Alert;
 import com.g4t1.storage.alert.AlertRepository;
 import com.g4t1.storage.alert.ChangeType;
 import com.g4t1.storage.alert.NewAlertRequest;
-import com.g4t1.storage.alert.Severity;
+import com.g4t1.storage.alert.AlertSeverity;
 import com.g4t1.storage.paper.Paper;
 import com.g4t1.storage.paper.PaperRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -146,7 +146,7 @@ class InternalReportEvaluationTest {
     }
 
     @Test
-    void aChangeThatIsntMeaningfulStoresOnlyTheSummaryAndSeverity() throws Exception {
+    void aChangeThatIsntMeaningfulStoresOnlyTheSummaryAndChangeSeverity() throws Exception {
         long reportId = investigatedReportId();
 
         record(reportId, Map.of("change_summary", "An author's affiliation was corrected.", "change_severity", "none"))
@@ -174,7 +174,7 @@ class InternalReportEvaluationTest {
                 with("evaluation", "  "),
                 without("recommendation"),
                 with("recommendation", ""),
-                // severity none with any of the rest set
+                // change severity none with any of the rest set
                 Map.of("change_summary", "s", "change_severity", "none", "impact_level", "none"),
                 Map.of("change_summary", "s", "change_severity", "none", "evaluation", "e"),
                 Map.of("change_summary", "s", "change_severity", "none", "recommendation", "r"));
@@ -285,7 +285,7 @@ class InternalReportEvaluationTest {
     }
 
     private long alert(String changeKey) {
-        return alerts.save(new Alert(paperId, new NewAlertRequest(ChangeType.RETRACTION, changeKey, Severity.HIGH,
+        return alerts.save(new Alert(paperId, new NewAlertRequest(ChangeType.RETRACTION, changeKey, AlertSeverity.HIGH,
                 "Something changed.", "Read the notice.", "10.1/notice", Instant.parse("2026-09-20T12:00:00Z"),
                 42L, 41L))).getId();
     }

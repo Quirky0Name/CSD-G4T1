@@ -31,24 +31,24 @@ This is the single source of truth for every interface between services.
   `POST /run-poll` will take the user's JWT once User Management exists
   (CG-99).
 
-## Folders and projects
+## Projects
 
-A folder is one research project. Folders belong to User Management; other
-services hold only a bare `folder_id` (uuid), with no FK and no check that
-the folder exists or belongs to the caller.
+Projects belong to User Management; other services hold only a bare
+`project_id` (uuid), with no FK and no check that the project exists or
+belongs to the caller.
 
-- **`folder_id` null means no folder**, and everything a user keeps
-  outside folders is one more project of theirs: their "no folder"
-  project. Stored rows and responses always show no folder as `null`,
-  never as a sentinel id. As input, leaving `folder_id` out means no
-  folder, and so does `""`.
-- **Storage Management keys a project by owner and `folder_id`**, since it
-  can't check who owns a folder id. The same `folder_id` sent by two users
+- **`project_id` null means the default project**: everything a user
+  keeps outside their other projects is one more project of theirs. Stored
+  rows and responses always show the default project as `null`, never as a
+  sentinel id. As input, leaving `project_id` out means the default
+  project, and so does `""`.
+- **Storage Management keys a project by owner and `project_id`**, since it
+  can't check who owns a project id. The same `project_id` sent by two users
   is two projects.
 - **A tracked paper is in exactly one project:** its owner plus its
-  `folder_id`.
+  `project_id`.
 
-See DECISIONS.md, "2026-09-27 — The researcher's own paper, one per
+See DECISIONS.md, "2026-09-27 — The researcher's draft, one per
 project".
 
 ## Frontend ↔ Storage Management
@@ -61,14 +61,14 @@ Vite proxy (`/api/...`, SETUP.md), with the user's token.
 | List tracked papers | `GET /papers` |
 | Track a paper | `POST /papers`, multipart PDF or JSON `{"doi"}` |
 | Delete a paper | `DELETE /dev/papers/{id}` (a demo tool for now) |
-| Check a paper now | Updating's `POST /run-poll?paper_id=` (`/updating/...`) |
+| Poll a paper now | Updating's `POST /run-poll?paper_id=` (`/updating/...`) |
 | A paper's alerts | `GET /papers/{id}/alerts` (one call per paper; no cross-paper list yet) |
 | Acknowledge / dismiss | `PATCH /alerts/{id}` |
 | Notes on an alert | `POST` / `GET /alerts/{id}/notes` |
 | A paper's reports (alerts, documents, evaluation) | `GET /papers/{id}/reports` |
-| A paper's severity | not a field: the highest `severity` among its `new` alerts |
+| A paper's alert severity | not a field: the highest `alert_severity` among its `new` alerts |
 | New-alert toast | no push: re-fetch alerts and toast unseen `new` ids |
-| The draft for a project | `POST` / `GET` / `DELETE /research-paper` |
+| The draft for a project | `POST` / `GET` / `DELETE /draft` |
 
 ### `GET /papers`
 
@@ -79,20 +79,20 @@ User JWT required. The caller's tracked papers, **newest first** (by
 
 ```json
 {"papers": [
-  {"id": "uuid", "folder_id": null, "doi": "10.xxxx/...", "openalex_id": "W...", "title": "...", "journal": "...", "issn": "0000-0000", "publication_year": 2020, "file_available": true, "created_at": "2026-09-24T08:00:00Z"}
+  {"id": "uuid", "project_id": null, "doi": "10.xxxx/...", "openalex_id": "W...", "title": "...", "journal": "...", "issn": "0000-0000", "publication_year": 2020, "file_available": true, "created_at": "2026-09-24T08:00:00Z"}
 ]}
 ```
 
 Each paper has the same shape `POST /papers` returns. A user with no
-papers gets `{"papers": []}`. To show one project, filter on `folder_id`
-(`null` is the "no folder" project).
+papers gets `{"papers": []}`. To show one project, filter on `project_id`
+(`null` is the default project).
 
 Errors: `401` missing or bad token, `403` a service token.
 
 ### `POST /papers` (PDF upload)
 
 User JWT required; the caller becomes the paper's owner. Multipart form
-with `file` (a PDF, 25 MB max) and an optional `folder_id` (uuid).
+with `file` (a PDF, 25 MB max) and an optional `project_id` (uuid).
 Storage pulls the DOI out of the PDF with GROBID and fills in the rest
 from CrossRef/OpenAlex. If GROBID finds no DOI the paper is still saved,
 just without metadata. The PDF is kept on Storage Management's local
@@ -101,7 +101,7 @@ disk, so Research Evaluation can read it later through
 
 **Response `201`:**
 ```json
-{"id": "uuid", "folder_id": "uuid", "doi": "10.xxxx/...", "openalex_id": "W...", "title": "...", "journal": "...", "issn": "0000-0000", "publication_year": 2020, "file_available": true, "created_at": "2026-09-24T08:00:00Z"}
+{"id": "uuid", "project_id": "uuid", "doi": "10.xxxx/...", "openalex_id": "W...", "title": "...", "journal": "...", "issn": "0000-0000", "publication_year": 2020, "file_available": true, "created_at": "2026-09-24T08:00:00Z"}
 ```
 
 Errors come back as problem details, with the reason in `detail`:
@@ -113,7 +113,7 @@ Errors come back as problem details, with the reason in `detail`:
 User JWT required, and only the paper's owner sees its alerts. Returns
 the changes Research Evaluation detected on the paper, each with its
 assessment, **newest first**: by `detected_at` descending, with ties
-(changes found in the same pair of snapshots) broken by severity (`high`,
+(changes found in the same pair of snapshots) broken by alert severity (`high`,
 then `medium`, then `low`), then by `id` descending.
 
 Dismissed alerts are left out unless `include_dismissed=true`.
@@ -125,7 +125,7 @@ Acknowledged alerts are always listed, with their status.
 {"alerts": [
   {
     "id": 7, "paper_id": "uuid",
-    "change_type": "retraction", "severity": "high",
+    "change_type": "retraction", "alert_severity": "high",
     "description": "...", "recommendation": "...",
     "notice_doi": "10.xxxx/...", "detected_at": "2026-09-24T12:00:00Z",
     "status": "new", "status_changed_at": null
@@ -138,7 +138,7 @@ A paper with no alerts gives `{"alerts": []}`.
 | Field | Meaning |
 |---|---|
 | `change_type` | `retraction`, `correction`, `erratum`, `expression_of_concern`, `doaj_delisting` or `other` |
-| `severity` | `high`, `medium` or `low` |
+| `alert_severity` | `high`, `medium` or `low` |
 | `description` | what changed and how it affects the researcher |
 | `recommendation` | what to do about it |
 | `notice_doi` | the Crossref notice, or null when there isn't one |
@@ -252,7 +252,7 @@ report of the paper, whatever its status, **newest first** (by
     "created_at": "2026-09-27T08:00:00Z", "investigated_at": "2026-09-27T08:00:40Z",
     "evaluation": null, "recommendation": null, "evaluated_at": null,
     "alerts": [
-      {"id": 7, "paper_id": "uuid", "change_type": "retraction", "severity": "high",
+      {"id": 7, "paper_id": "uuid", "change_type": "retraction", "alert_severity": "high",
        "description": "...", "recommendation": "...", "notice_doi": "10.xxxx/notice",
        "detected_at": "2026-09-24T12:00:00Z", "status": "new", "status_changed_at": null}
     ],
@@ -317,8 +317,8 @@ downloads an open-access copy (every OpenAlex PDF link, then Semantic
 Scholar's) and keeps it like an upload. A DOI with no downloadable
 open-access PDF isn't tracked (see DECISIONS.md, 2026-09-26).
 
-**Request:** `{"doi": "10.xxxx/...", "folder_id": "uuid"}`. `folder_id` is
-optional; leaving it out or sending `""` means no folder.
+**Request:** `{"doi": "10.xxxx/...", "project_id": "uuid"}`. `project_id` is
+optional; leaving it out or sending `""` means the default project.
 
 **Response `201`:** same shape as the upload.
 
@@ -329,59 +329,59 @@ no paper with that DOI, or no open-access PDF could be downloaded for it
 (pick a different paper), `503` CrossRef couldn't be reached (nothing is
 saved, try again).
 
-### `POST /research-paper`
+### `POST /draft`
 
-User JWT required; the caller is the owner. Uploads the researcher's own
-paper (the draft they're writing) for one of their projects, so Research
+User JWT required; the caller is the owner. Uploads the researcher's draft
+(the paper they're writing) for one of their projects, so Research
 Evaluation can judge a change in a tracked paper against it. Multipart form
-with `file` (a PDF, 25 MB max) and an optional `folder_id` (uuid; left out
-or `""` means the "no folder" project, see "Folders and projects"). The PDF
+with `file` (a PDF, 25 MB max) and an optional `project_id` (uuid; left out
+or `""` means the default project, see "Projects"). The PDF
 is kept on Storage Management's local disk like a tracked paper's. Nothing
 is read out of it (no GROBID or CrossRef).
 
-**A project has one research paper.** Uploading to a project that already
+**A project has one draft.** Uploading to a project that already
 has one replaces it: the `id` stays the same, `filename` and `uploaded_at`
 become the new upload's, and the old PDF is deleted.
 
-**Response `201`** for the project's first research paper, **`200`** when
+**Response `201`** for the project's first draft, **`200`** when
 it replaced one:
 
 ```json
-{"id": "uuid", "folder_id": "uuid", "filename": "my-draft.pdf", "uploaded_at": "2026-09-27T08:00:00Z"}
+{"id": "uuid", "project_id": "uuid", "filename": "my-draft.pdf", "uploaded_at": "2026-09-27T08:00:00Z"}
 ```
 
-`folder_id` is `null` for the "no folder" project. `filename` is the name
+`project_id` is `null` for the default project. `filename` is the name
 the file was uploaded with.
 
-Errors, as problem details: `400` not a PDF, no `file`, or a `folder_id`
+Errors, as problem details: `400` not a PDF, no `file`, or a `project_id`
 that isn't a UUID; `401` missing or bad token; `403` a service token; `413`
 over 25 MB. A refused upload changes nothing: the project keeps the
-research paper it had.
+draft it had.
 
-### `GET /research-paper?folder_id=`
+### `GET /draft?project_id=`
 
-User JWT required. The caller's research paper for one of their projects;
-leave `folder_id` out (or send `""`) for the "no folder" project.
+User JWT required. The caller's draft for one of their projects;
+leave `project_id` out (or send `""`) for the default project.
 
 **Response `200`:** the same body as the upload's, for the current
 upload.
 
-Errors, as problem details: `400` a `folder_id` that isn't a UUID; `401`
+Errors, as problem details: `400` a `project_id` that isn't a UUID; `401`
 missing or bad token; `403` a service token; `404` the project has no
-research paper (`detail`: `No research paper in folder <id>`, or `No
-research paper outside folders`). Another user's research paper is never
-returned: the same `folder_id` under another owner is another project.
+draft (`detail`: `No draft in project <id>`, or `No draft in the default
+project`). Another user's draft is never
+returned: the same `project_id` under another owner is another project.
 
-### `DELETE /research-paper?folder_id=`
+### `DELETE /draft?project_id=`
 
-User JWT required. Deletes the caller's research paper for one of their
-projects and its PDF; leave `folder_id` out (or send `""`) for the "no
-folder" project. Uploading to the project again afterwards starts a new
-research paper, with a new `id`.
+User JWT required. Deletes the caller's draft for one of their
+projects and its PDF; leave `project_id` out (or send `""`) for the
+default project. Uploading to the project again afterwards starts a new
+draft, with a new `id`.
 
 **Response `204`**, no body.
 
-Errors: as for `GET /research-paper`. A `404` deletes nothing.
+Errors: as for `GET /draft`. A `404` deletes nothing.
 
 ### Demo tools: `/dev/papers/{id}/...`
 
@@ -396,7 +396,7 @@ STORAGE.md, "Demo tools", and DEMO.md.
   the paper's latest snapshot with that change taken out (for a
   retraction, `is_retracted` set back to false too), so the next poll
   finds the change again. **`201`** with the new snapshot, in the shape
-  `POST /internal/papers/{id}/background-info` returns. `400` an unknown
+  `POST /internal/papers/{id}/snapshots` returns. `400` an unknown
   `change`; `409` the paper has no snapshot yet (poll it once first), or
   has no such change to undo.
 - **`DELETE /dev/papers/{id}/history`**: deletes the paper's snapshots,
@@ -425,9 +425,9 @@ into its own `tracked_papers` table.
 [{"id": "uuid", "owner_id": "uuid", "doi": "10.xxxx/...", "issn": "0000-0000"}]
 ```
 
-### `POST /internal/papers/{id}/background-info`
+### `POST /internal/papers/{id}/snapshots`
 
-Stores the snapshot in the request body as a new `background_metadata`
+Stores the snapshot in the request body as a new `snapshots`
 row (insert-only, never overwrite) and returns it with its id. Storage
 Management doesn't fetch anything or call Research Evaluation here;
 Updating fetched the data. Updating sends one snapshot per tracked paper
@@ -463,7 +463,7 @@ Errors: `400` a missing `doi`, `fetched_at` or `source_status`, `401`
 missing or bad token, `403` a user token, `404` an unknown paper, with
 `detail` exactly `No paper <id>`.
 
-### `GET /internal/papers/{id}/background-info/history?after_id=&last=&limit=`
+### `GET /internal/papers/{id}/snapshots?after_id=&last=&limit=`
 
 Ascending order by snapshot id. Used by Updating (to read a paper's
 previous snapshot before deciding whether to nudge) and by Research
@@ -512,13 +512,13 @@ or bad token; `403` a user token; `404` with one of:
 
 Only the first means the paper is gone.
 
-### `GET /internal/papers/{id}/research-paper`
+### `GET /internal/papers/{id}/draft`
 
-Service-JWT only. Returns, as `application/pdf`, the researcher's own
-paper (the draft they uploaded with `POST /research-paper`) for the
-project the tracked paper is in: the paper's owner plus its `folder_id`,
-or the owner's "no folder" project when the paper has no folder (see
-"Folders and projects"). Research Evaluation evaluates one user's paper at
+Service-JWT only. Returns, as `application/pdf`, the researcher's draft
+(the one they uploaded with `POST /draft`) for the
+project the tracked paper is in: the paper's owner plus its `project_id`,
+or the owner's default project when the paper has no project id (see
+"Projects"). Research Evaluation evaluates one tracked paper at
 a time, so this is the draft whose author gets the alert. It's always the
 project's current upload.
 
@@ -529,8 +529,8 @@ or bad token; `403` a user token; `404` with one of:
 | `detail` | Meaning |
 |---|---|
 | `No paper <id>` | no tracked paper with that id, exactly as on the other internal endpoints |
-| `No research paper in the project of paper <id>` | the paper exists, but its project has no research paper (yet) |
-| `The research paper for paper <id> is missing from disk` | the row points at a file that isn't there (e.g. a local database and upload folder reset separately) |
+| `No draft in the project of paper <id>` | the paper exists, but its project has no draft (yet) |
+| `The draft for paper <id> is missing from disk` | the row points at a file that isn't there (e.g. a local database and upload folder reset separately) |
 
 Only the first means the paper is gone; the other two mean there's no
 draft to read.
@@ -547,7 +547,7 @@ re-sent nudge can't store the same change twice.
 ```json
 {
   "change_type": "retraction", "change_key": "retraction",
-  "severity": "high",
+  "alert_severity": "high",
   "description": "...", "recommendation": "...",
   "notice_doi": "10.xxxx/...",
   "detected_at": "2026-09-24T12:00:00Z",
@@ -559,7 +559,7 @@ re-sent nudge can't store the same change twice.
 |---|---|
 | `change_type` | required: `retraction`, `correction`, `erratum`, `expression_of_concern`, `doaj_delisting` or `other` (a Crossref notice type Research Evaluation doesn't classify yet), exact lowercase |
 | `change_key` | required, at most 512 characters. Identifies the change within the paper (e.g. `retraction`, `correction:<notice_doi>`) |
-| `severity` | required: `high`, `medium` or `low`, exact lowercase |
+| `alert_severity` | required: `high`, `medium` or `low`, exact lowercase |
 | `description`, `recommendation` | required, not blank |
 | `notice_doi` | optional, at most 255 characters |
 | `detected_at` | required: the `fetched_at` of the first snapshot the change shows up in |
@@ -576,7 +576,7 @@ shows it:
 ```json
 {
   "id": 7, "paper_id": "uuid",
-  "change_type": "retraction", "severity": "high",
+  "change_type": "retraction", "alert_severity": "high",
   "description": "...", "recommendation": "...",
   "notice_doi": "10.xxxx/...", "detected_at": "2026-09-24T12:00:00Z",
   "status": "new", "status_changed_at": null
@@ -589,7 +589,7 @@ never returned.
 **The one exception to "unchanged": a late retraction notice.** When the
 stored alert is a `retraction` with no `notice_doi` (OpenAlex's flag came
 first) and the request is a `retraction` with a `notice_doi`, the row is
-replaced with the request's `severity`, `description`, `recommendation`,
+replaced with the request's `alert_severity`, `description`, `recommendation`,
 `notice_doi`, `detected_at` and snapshot ids, and treated as a new alert:
 `status` goes back to `new`, `status_changed_at` is cleared, and it leaves
 its report so the paper's next report takes it. Its `id` stays, so the
@@ -598,7 +598,7 @@ researcher's notes on it stay. The answer is `201`, like a new alert. A
 EVALUATION.md, "The nudge".
 
 Errors, as problem details: `400` a missing or blank required field, an
-unknown `change_type` or `severity`, or a `detected_at` that isn't a
+unknown `change_type` or `alert_severity`, or a `detected_at` that isn't a
 timestamp; `401` missing or bad token; `403` a user token; `404` no paper
 with that id.
 
@@ -660,7 +660,7 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
   "evaluation": null, "recommendation": null, "evaluated_at": null,
   "change_summary": null, "change_severity": null, "impact_level": null, "assessment": null,
   "alerts": [
-    {"id": 7, "change_type": "retraction", "change_key": "retraction", "severity": "high",
+    {"id": 7, "change_type": "retraction", "change_key": "retraction", "alert_severity": "high",
      "description": "...", "recommendation": "...", "notice_doi": "10.xxxx/...",
      "detected_at": "2026-09-24T12:00:00Z", "status": "new"}
   ],
@@ -684,7 +684,7 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
   - `assessment`: impact's full answer as a JSON object, returned exactly as
     Research Evaluation sent it.
 
-  Unlike the alerts' `severity`, which is fixed by change type, these are
+  Unlike the alerts' `alert_severity`, which is fixed by change type, these are
   impact's judgment.
 - `alerts`, oldest first, carry their `change_key` (unlike the frontend's
   alert API): Research Evaluation matches them to its detected changes by
@@ -910,7 +910,7 @@ Storage Management. How the evaluation works is in EVALUATION.md.
 Called by Updating at the end of a poll in which a paper's snapshot
 changed (UPDATING.md). A nudge, not a payload: only the ids of the changed
 papers. Research Evaluation reads each paper's newest N snapshots
-(`history?last=N`, N = `EVALUATION_SNAPSHOT_WINDOW`), detects the changes,
+(`snapshots?last=N`, N = `EVALUATION_SNAPSHOT_WINDOW`), detects the changes,
 skips those whose change key is already stored
 (`GET /internal/papers/{id}/alerts/change-keys`), and stores the rest as
 alerts. A retraction with a notice is sent even when `retraction` is
@@ -921,7 +921,7 @@ user token. A body that isn't `{"paper_ids": [uuid, ...]}` gets `422`.
 
 Classification, from the sprint's alert stories:
 
-| Change | Rule on the snapshots | Severity | `change_key` |
+| Change | Rule on the snapshots | Alert severity | `change_key` |
 |---|---|---|---|
 | Retraction | `is_retracted` false → true, or a new `crossref_updates` entry of type `retraction` | `high` | `retraction` |
 | Expression of concern | a new `crossref_updates` entry of type `expression_of_concern` | `medium` | `expression_of_concern:<notice_doi>` |
@@ -950,7 +950,7 @@ baseline. Also:
 - The change key identifies the change within the paper, so a re-sent
   nudge stores nothing new (see `POST /internal/papers/{id}/alerts`).
 
-The severity, description and recommendation are rule-based templates per
+The alert severity, description and recommendation are rule-based templates per
 change type (EVALUATION.md, "The nudge").
 
 **Request:**
@@ -1052,13 +1052,13 @@ Updating's snapshots: a failed source produces `null`, never a default
 Updating calls Storage Management (`/internal/**`) and Research Evaluation
 (`/evaluate/changes`); the frontend calls only `POST /run-poll`, through the
 Vite proxy. The poll job, the outage gate and when it nudges are in
-UPDATING.md. The run summary below is the poll's contract.
+UPDATING.md. The poll summary below is the poll's contract.
 
 ### `POST /run-poll?paper_id=`
 
 No auth in sprint 1 (see "Auth"). Runs the poll job synchronously (used for
 the demo and for testing, since a real change won't reliably land inside a
-10-minute slot) and returns the run summary. It is recorded in `poll_runs`
+10-minute slot) and returns the poll summary. It is recorded in `polls`
 with trigger `manual`, so it never moves the schedule of the automatic polls.
 
 `paper_id` (optional) limits fetching and storing to that paper. Everything
@@ -1070,7 +1070,7 @@ error.
 
 | Status | When |
 |---|---|
-| `200` | the run summary, below |
+| `200` | the poll summary, below |
 | `404` | `paper_id` isn't a paper Storage Management lists |
 | `409` | a poll is already running. Only one runs at a time: a scheduled poll that comes due meanwhile waits for it, and a manual call that arrives at the very moment it is handed the lock waits too |
 | `422` | `paper_id` isn't a uuid |
@@ -1078,7 +1078,7 @@ error.
 
 ```json
 {
-  "run_id": 7, "trigger": "manual", "paper_id": "uuid",
+  "poll_id": 7, "trigger": "manual", "paper_id": "uuid",
   "started_at": "2026-09-25T08:00:00Z", "finished_at": "2026-09-25T08:00:03Z",
   "stored": [{"paper_id": "uuid", "doi": "10.xxxx/...", "snapshot_id": 42}],
   "skipped_no_doi": [],
@@ -1091,11 +1091,11 @@ error.
 
 | Field | Meaning |
 |---|---|
-| `paper_id` | the paper the run was limited to; null for a full run |
+| `paper_id` | the paper the poll was limited to; null for a full poll |
 | `stored` | papers a snapshot was stored for, with its `snapshot_id` |
 | `skipped_no_doi` | papers with no DOI, which aren't polled |
-| `source_errors` | papers with no snapshot this run because Crossref or OpenAlex returned `error` for their DOI (the outage gate); retried next poll |
-| `store_errors` | papers with no snapshot this run because Storage Management failed: the previous-snapshot read (`reading history: …`) or the store itself; retried next poll |
+| `source_errors` | papers with no snapshot this poll because Crossref or OpenAlex returned `error` for their DOI (the outage gate); retried next poll |
+| `store_errors` | papers with no snapshot this poll because Storage Management failed: the previous-snapshot read (`reading history: …`) or the store itself; retried next poll |
 | `nudged` | every paper id sent to `POST /evaluate/changes` and accepted with `202`, including ones left over from an earlier failed nudge |
 | `nudge_error` | `{paper_ids, reason}` when the nudge wasn't accepted; those papers stay pending and are re-sent next poll, otherwise null |
 

@@ -40,7 +40,7 @@ class JwtAuthTest {
                 .expiration(Date.from(Instant.now().minusSeconds(60)))
                 .signWith(KEY).compact();
 
-        mvc.perform(get("/research-paper").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+        mvc.perform(get("/draft").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -60,7 +60,7 @@ class JwtAuthTest {
         String user = Jwts.builder().subject(UUID.randomUUID().toString()).signWith(OTHER_KEY).compact();
         String service = Jwts.builder().subject("svc:updating").claim("role", "service").signWith(OTHER_KEY).compact();
 
-        mvc.perform(get("/research-paper").header(HttpHeaders.AUTHORIZATION, "Bearer " + user))
+        mvc.perform(get("/draft").header(HttpHeaders.AUTHORIZATION, "Bearer " + user))
                 .andExpect(status().isUnauthorized());
         mvc.perform(get("/internal/papers").header(HttpHeaders.AUTHORIZATION, "Bearer " + service))
                 .andExpect(status().isUnauthorized());
@@ -70,7 +70,7 @@ class JwtAuthTest {
     void aUserTokenWhoseSubjectIsNotAUuidIsUnauthorized() throws Exception {
         String token = Jwts.builder().subject("alice@example.com").signWith(KEY).compact();
 
-        mvc.perform(get("/research-paper").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+        mvc.perform(get("/draft").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -80,7 +80,7 @@ class JwtAuthTest {
         String user = Jwts.builder().claim("scope", "none").signWith(KEY).compact();
         String service = Jwts.builder().claim("role", "service").signWith(KEY).compact();
 
-        mvc.perform(get("/research-paper").header(HttpHeaders.AUTHORIZATION, "Bearer " + user))
+        mvc.perform(get("/draft").header(HttpHeaders.AUTHORIZATION, "Bearer " + user))
                 .andExpect(status().isUnauthorized());
         mvc.perform(get("/internal/papers").header(HttpHeaders.AUTHORIZATION, "Bearer " + service))
                 .andExpect(status().isUnauthorized());

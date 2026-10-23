@@ -16,11 +16,11 @@ import java.util.UUID;
 @Service
 public class AlertService {
 
-    // newest first; within one detection time, Severity's declared order (high first), then the newer id.
+    // newest first; within one detection time, AlertSeverity's declared order (high first), then the newer id.
     // Public so the frontend's reports list their alerts in the same order
     public static final Comparator<Alert> LIST_ORDER = Comparator
             .comparing(Alert::getDetectedAt, Comparator.reverseOrder())
-            .thenComparing(Alert::getSeverity)
+            .thenComparing(Alert::getAlertSeverity)
             .thenComparing(Alert::getId, Comparator.reverseOrder());
 
     private final AlertRepository alerts;
@@ -72,7 +72,7 @@ public class AlertService {
     }
 
     private boolean replace(Alert stored, NewAlertRequest request) {
-        return alerts.replaceNoticelessRetraction(stored.getId(), request.severity(), request.description(),
+        return alerts.replaceNoticelessRetraction(stored.getId(), request.alertSeverity(), request.description(),
                 request.recommendation(), request.noticeDoi(), request.detectedAt(), request.snapshotId(),
                 request.previousSnapshotId(), AlertStatus.NEW) == 1;
     }

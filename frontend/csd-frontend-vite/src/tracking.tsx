@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { listAlerts, listPapers, errorMessage, type Alert, type Paper } from './api'
-import { CHANGE_TYPE_LABEL, SEVERITY_LABEL } from './format'
+import { CHANGE_TYPE_LABEL, ALERT_SEVERITY_LABEL } from './format'
 import { useToast } from './components/Toasts'
 
 const ALERT_REFRESH_MS = 60_000
@@ -45,7 +45,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
         seen.add(alert.id)
         showToast({
           tone: 'error',
-          message: `${CHANGE_TYPE_LABEL[alert.change_type]} on "${paperTitle.get(alert.paper_id)}" · ${SEVERITY_LABEL[alert.severity]}`,
+          message: `${CHANGE_TYPE_LABEL[alert.change_type]} on "${paperTitle.get(alert.paper_id)}" · ${ALERT_SEVERITY_LABEL[alert.alert_severity]}`,
           action: { label: 'View', onClick: () => navigate(`/alerts?paper=${alert.paper_id}`) },
         })
       }

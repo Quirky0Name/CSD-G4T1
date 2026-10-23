@@ -1,6 +1,6 @@
 """Stage 2 of change evaluation: the rule-based assessment (docs/EVALUATION.md, "The nudge").
 
-Gives every change from stage 1 a severity, a description and a recommendation from
+Gives every change from stage 1 an alert severity, a description and a recommendation from
 fixed rules, so every alert always has a complete assessment. Later stages (LLM
 investigation, meaningfulness, stance checks) revise this one instead of starting from
 nothing. Pure: no HTTP, no LLM."""
@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict
 from research_evaluation.changes import Change, ChangeType
 
 
-class Severity(StrEnum):
+class AlertSeverity(StrEnum):
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -21,19 +21,19 @@ class Severity(StrEnum):
 class Assessment(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    severity: Severity
+    alert_severity: AlertSeverity
     description: str
     recommendation: str
 
 
-SEVERITY = {
-    ChangeType.RETRACTION: Severity.HIGH,
-    ChangeType.EXPRESSION_OF_CONCERN: Severity.MEDIUM,
-    ChangeType.CORRECTION: Severity.MEDIUM,
-    ChangeType.ERRATUM: Severity.LOW,
-    ChangeType.DOAJ_DELISTING: Severity.LOW,
+ALERT_SEVERITY = {
+    ChangeType.RETRACTION: AlertSeverity.HIGH,
+    ChangeType.EXPRESSION_OF_CONCERN: AlertSeverity.MEDIUM,
+    ChangeType.CORRECTION: AlertSeverity.MEDIUM,
+    ChangeType.ERRATUM: AlertSeverity.LOW,
+    ChangeType.DOAJ_DELISTING: AlertSeverity.LOW,
     # unknown kinds of notice get attention rather than being overlooked
-    ChangeType.OTHER: Severity.MEDIUM,
+    ChangeType.OTHER: AlertSeverity.MEDIUM,
 }
 
 
@@ -87,7 +87,7 @@ def assess(change: Change) -> Assessment:
                 "change we assess yet."
             )
             recommendation = "Read the notice to see what changed and whether it affects how you use this paper."
-    return Assessment(severity=SEVERITY[change.change_type], description=description, recommendation=recommendation)
+    return Assessment(alert_severity=ALERT_SEVERITY[change.change_type], description=description, recommendation=recommendation)
 
 
 def _notice(change: Change) -> str:

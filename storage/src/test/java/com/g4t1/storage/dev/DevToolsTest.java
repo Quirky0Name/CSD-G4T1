@@ -157,10 +157,10 @@ class DevToolsTest {
         mvc.perform(delete("/dev/papers/{id}/history", paperId).header(HttpHeaders.AUTHORIZATION, TestTokens.user(user)))
                 .andExpect(status().isNoContent());
 
-        assertThat(count("background_metadata", paperId)).isZero();
+        assertThat(count("snapshots", paperId)).isZero();
         assertThat(count("alerts", paperId)).isZero();
         assertThat(count("reports", paperId)).isZero();
-        assertThat(count("background_metadata", otherPaper)).isEqualTo(1);
+        assertThat(count("snapshots", otherPaper)).isEqualTo(1);
     }
 
     @Test
@@ -182,7 +182,7 @@ class DevToolsTest {
                 .andExpect(status().isNoContent());
 
         assertThat(papers.existsById(paperId)).isFalse();
-        assertThat(count("background_metadata", paperId)).isZero();
+        assertThat(count("snapshots", paperId)).isZero();
         assertThat(count("alerts", paperId)).isZero();
         assertThat(count("reports", paperId)).isZero();
         assertThat(jdbc.queryForObject("select count(*) from alert_notes", Integer.class)).isZero();
@@ -191,7 +191,7 @@ class DevToolsTest {
         assertThat(files.read(documentFile)).isEmpty();
         // the other paper is untouched
         assertThat(papers.existsById(otherPaper)).isTrue();
-        assertThat(count("background_metadata", otherPaper)).isEqualTo(1);
+        assertThat(count("snapshots", otherPaper)).isEqualTo(1);
     }
 
     @Test
@@ -233,7 +233,7 @@ class DevToolsTest {
     private void addAlertAndReport(UUID paper, long snapshotId) {
         jdbc.update("insert into reports (paper_id, created_at) values (?, current_timestamp)", paper);
         jdbc.update("""
-                insert into alerts (paper_id, change_type, change_key, severity, description, recommendation,
+                insert into alerts (paper_id, change_type, change_key, alert_severity, description, recommendation,
                                     detected_at, snapshot_id, previous_snapshot_id, created_at)
                 values (?, 'retraction', 'openalex:is_retracted', 'high', 'd', 'r', current_timestamp, ?, ?, current_timestamp)
                 """, paper, snapshotId, snapshotId);

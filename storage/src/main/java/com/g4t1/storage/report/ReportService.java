@@ -79,8 +79,9 @@ public class ReportService {
     /**
      * Stores impact's evaluation and marks the report assessed, once, and only for an investigated
      * report: an investigating one isn't ready, and an assessed one keeps its first evaluation. When
-     * the change isn't meaningful (severity none) only the summary and severity are stored and the rest
-     * must be left out; otherwise impact_level, evaluation and recommendation are all required.
+     * the change isn't meaningful (change severity none) only the summary and change severity are
+     * stored and the rest must be left out; otherwise impact_level, evaluation and recommendation
+     * are all required.
      */
     @Transactional
     public ReportResponse recordEvaluation(long reportId, ReportEvaluationRequest request) {

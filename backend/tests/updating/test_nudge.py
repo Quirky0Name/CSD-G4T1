@@ -3,7 +3,7 @@
 import httpx
 import pytest
 from support import load_fixture
-from updating_support import poll_runs, tracked_rows
+from updating_support import polls, tracked_rows
 
 from dev.scenarios import DOIS, fixture_snapshot
 from updating.models import PollTrigger
@@ -46,8 +46,8 @@ async def test_a_retraction_since_the_seeded_baseline_nudges_once(deps, sm, re, 
     assert summary.nudged == [paper] and summary.nudge_error is None
     assert await re.received() == [[paper]]
     assert (await tracked_rows(deps))[paper].nudge_pending is False
-    [run] = await poll_runs(deps)
-    assert run.summary["nudged"] == [str(paper)]
+    [recorded] = await polls(deps)
+    assert recorded.summary["nudged"] == [str(paper)]
 
 
 def lancet_updates():
@@ -81,7 +81,7 @@ async def test_notices_already_known_from_another_source_do_not_nudge(deps, sm, 
     assert summary.nudged == [] and await re.received() == []
 
 
-async def test_a_rerun_does_not_nudge_again_for_the_same_difference(deps, sm, re, sources):
+async def test_a_second_poll_does_not_nudge_again_for_the_same_difference(deps, sm, re, sources):
     sources.serve("lancet")
     paper = await add_seeded(sm, "lancet")
     await poll(deps)
@@ -131,7 +131,7 @@ async def test_a_source_that_does_not_know_the_doi_does_not_nudge(deps, sm, re, 
     [(None, "HTTP 503"), (200, "HTTP 200"), (httpx.ConnectError("down"), "ConnectError")],
     ids=["RE down", "not a 202", "unreachable"],
 )
-async def test_a_failed_nudge_stays_pending_and_is_re_sent_on_the_next_run(deps, sm, re, sources, fault, reason):
+async def test_a_failed_nudge_stays_pending_and_is_re_sent_on_the_next_poll(deps, sm, re, sources, fault, reason):
     sources.serve("lancet")
     paper = await add_seeded(sm, "lancet")
     if fault is None:
@@ -144,8 +144,8 @@ async def test_a_failed_nudge_stays_pending_and_is_re_sent_on_the_next_run(deps,
     assert failed.nudged == []
     assert failed.nudge_error.paper_ids == [paper] and failed.nudge_error.reason == reason
     assert (await tracked_rows(deps))[paper].nudge_pending is True
-    [run] = await poll_runs(deps)
-    assert run.summary["nudge_error"] == {"paper_ids": [str(paper)], "reason": reason}
+    [recorded] = await polls(deps)
+    assert recorded.summary["nudge_error"] == {"paper_ids": [str(paper)], "reason": reason}
 
     await re.fail(on=False)
     re.transport.faults.clear()
@@ -173,7 +173,7 @@ async def test_every_pending_paper_goes_out_in_one_call(deps, sm, re, sources):
 async def test_a_failed_history_read_stores_nothing_and_the_change_is_caught_next_poll(deps, sm, re, sources):
     sources.serve("lancet")
     paper = await add_seeded(sm, "lancet")
-    sm.transport.faults["/background-info/history"] = 503
+    sm.transport.faults["GET", "/snapshots"] = 503
 
     failed = await poll(deps)
 
@@ -214,7 +214,7 @@ async def test_a_journal_leaving_doaj_nudges_once(deps, sm, re, sources, body):
     assert await re.received() == [[paper]]
 
 
-async def test_a_single_paper_run_still_sends_every_pending_paper(deps, sm, re, sources):
+async def test_a_single_paper_poll_still_sends_every_pending_paper(deps, sm, re, sources):
     sources.serve("lancet")
     sources.serve("ijaa")
     lancet = await add_seeded(sm, "lancet")

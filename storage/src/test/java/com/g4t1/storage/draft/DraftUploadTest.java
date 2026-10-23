@@ -1,4 +1,4 @@
-package com.g4t1.storage.research;
+package com.g4t1.storage.draft;
 
 import com.g4t1.storage.TestTokens;
 import com.jayway.jsonpath.JsonPath;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class ResearchPaperUploadTest {
+class DraftUploadTest {
 
     private static final byte[] DRAFT = "%PDF-1.7 my draft".getBytes(StandardCharsets.US_ASCII);
     private static final byte[] DRAFT_V2 = "%PDF-1.7 my draft, second version".getBytes(StandardCharsets.US_ASCII);
@@ -42,52 +42,52 @@ class ResearchPaperUploadTest {
     MockMvc mvc;
 
     @Autowired
-    ResearchPaperRepository researchPapers;
+    DraftRepository drafts;
 
     @Value("${storage.upload-dir}")
     String uploadDir;
 
     private final UUID owner = UUID.randomUUID();
-    private final UUID folder = UUID.randomUUID();
+    private final UUID project = UUID.randomUUID();
 
     @BeforeEach
     void clean() {
-        researchPapers.deleteAll();
+        drafts.deleteAll();
     }
 
     @Test
     void firstUploadStoresThePdfOnDiskAndItsKeyInTheDatabase() throws Exception {
         Instant before = Instant.now();
 
-        upload(owner, folder.toString(), pdf("draft.pdf", DRAFT))
+        upload(owner, project.toString(), pdf("draft.pdf", DRAFT))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isString())
-                .andExpect(jsonPath("$.folder_id").value(folder.toString()))
+                .andExpect(jsonPath("$.project_id").value(project.toString()))
                 .andExpect(jsonPath("$.filename").value("draft.pdf"))
                 .andExpect(jsonPath("$.uploaded_at").isString());
 
-        ResearchPaper saved = researchPapers.findAll().getFirst();
+        Draft saved = drafts.findAll().getFirst();
         assertThat(saved.getOwnerId()).isEqualTo(owner);
-        assertThat(saved.getFolderId()).isEqualTo(folder);
+        assertThat(saved.getProjectId()).isEqualTo(project);
         assertThat(saved.getUploadedAt()).isBetween(before.minusMillis(1), Instant.now());
         assertThat(Files.readAllBytes(file(saved.getFileKey()))).isEqualTo(DRAFT);
     }
 
     @Test
-    void uploadingAgainToTheSameFolderReplacesTheFileAndDeletesTheOldOne() throws Exception {
-        String first = upload(owner, folder.toString(), pdf("draft.pdf", DRAFT))
+    void uploadingAgainToTheSameProjectReplacesTheFileAndDeletesTheOldOne() throws Exception {
+        String first = upload(owner, project.toString(), pdf("draft.pdf", DRAFT))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        String oldKey = researchPapers.findAll().getFirst().getFileKey();
+        String oldKey = drafts.findAll().getFirst().getFileKey();
 
-        upload(owner, folder.toString(), pdf("draft-v2.pdf", DRAFT_V2))
+        upload(owner, project.toString(), pdf("draft-v2.pdf", DRAFT_V2))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(JsonPath.<String>read(first, "$.id")))
-                .andExpect(jsonPath("$.folder_id").value(folder.toString()))
+                .andExpect(jsonPath("$.project_id").value(project.toString()))
                 .andExpect(jsonPath("$.filename").value("draft-v2.pdf"));
 
-        assertThat(researchPapers.count()).isEqualTo(1);
-        ResearchPaper saved = researchPapers.findAll().getFirst();
+        assertThat(drafts.count()).isEqualTo(1);
+        Draft saved = drafts.findAll().getFirst();
         assertThat(saved.getFilename()).isEqualTo("draft-v2.pdf");
         assertThat(saved.getFileKey()).isNotEqualTo(oldKey);
         assertThat(Files.readAllBytes(file(saved.getFileKey()))).isEqualTo(DRAFT_V2);
@@ -95,58 +95,58 @@ class ResearchPaperUploadTest {
     }
 
     @Test
-    void eachFolderIsItsOwnProject() throws Exception {
-        UUID otherFolder = UUID.randomUUID();
+    void eachProjectHasItsOwnDraft() throws Exception {
+        UUID otherProject = UUID.randomUUID();
 
-        upload(owner, folder.toString(), pdf("a.pdf", DRAFT)).andExpect(status().isCreated());
-        upload(owner, otherFolder.toString(), pdf("b.pdf", DRAFT_V2)).andExpect(status().isCreated());
+        upload(owner, project.toString(), pdf("a.pdf", DRAFT)).andExpect(status().isCreated());
+        upload(owner, otherProject.toString(), pdf("b.pdf", DRAFT_V2)).andExpect(status().isCreated());
 
-        assertThat(researchPapers.findAll())
-                .extracting(ResearchPaper::getFolderId, ResearchPaper::getFilename)
+        assertThat(drafts.findAll())
+                .extracting(Draft::getProjectId, Draft::getFilename)
                 .containsExactlyInAnyOrder(
-                        tuple(folder, "a.pdf"),
-                        tuple(otherFolder, "b.pdf"));
+                        tuple(project, "a.pdf"),
+                        tuple(otherProject, "b.pdf"));
     }
 
     @Test
-    void noFolderIsOneProjectPerUserWhetherFolderIdIsLeftOutOrEmpty() throws Exception {
+    void theDefaultProjectIsOnePerUserWhetherProjectIdIsLeftOutOrEmpty() throws Exception {
         String first = upload(owner, null, pdf("draft.pdf", DRAFT))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.folder_id").value(nullValue()))
+                .andExpect(jsonPath("$.project_id").value(nullValue()))
                 .andReturn().getResponse().getContentAsString();
 
         upload(owner, "", pdf("draft-v2.pdf", DRAFT_V2))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(JsonPath.<String>read(first, "$.id")))
-                .andExpect(jsonPath("$.folder_id").value(nullValue()));
+                .andExpect(jsonPath("$.project_id").value(nullValue()));
 
-        assertThat(researchPapers.count()).isEqualTo(1);
-        assertThat(researchPapers.findAll().getFirst().getFolderId()).isNull();
+        assertThat(drafts.count()).isEqualTo(1);
+        assertThat(drafts.findAll().getFirst().getProjectId()).isNull();
     }
 
     @Test
-    void noFolderIsSeparateFromTheUsersFolders() throws Exception {
-        upload(owner, folder.toString(), pdf("in-folder.pdf", DRAFT)).andExpect(status().isCreated());
-        upload(owner, null, pdf("no-folder.pdf", DRAFT_V2)).andExpect(status().isCreated());
+    void theDefaultProjectIsSeparateFromTheUsersOtherProjects() throws Exception {
+        upload(owner, project.toString(), pdf("in-project.pdf", DRAFT)).andExpect(status().isCreated());
+        upload(owner, null, pdf("default-project.pdf", DRAFT_V2)).andExpect(status().isCreated());
 
-        assertThat(researchPapers.count()).isEqualTo(2);
+        assertThat(drafts.count()).isEqualTo(2);
     }
 
     @Test
     void anotherUsersUploadNeverReplacesThisOne() throws Exception {
         UUID someoneElse = UUID.randomUUID();
-        upload(owner, folder.toString(), pdf("mine.pdf", DRAFT)).andExpect(status().isCreated());
-        upload(owner, null, pdf("mine-no-folder.pdf", DRAFT)).andExpect(status().isCreated());
+        upload(owner, project.toString(), pdf("mine.pdf", DRAFT)).andExpect(status().isCreated());
+        upload(owner, null, pdf("mine-default-project.pdf", DRAFT)).andExpect(status().isCreated());
 
-        // Storage can't check who owns a folder id, so the same id under another user is another project
-        upload(someoneElse, folder.toString(), pdf("theirs.pdf", DRAFT_V2)).andExpect(status().isCreated());
-        upload(someoneElse, null, pdf("theirs-no-folder.pdf", DRAFT_V2)).andExpect(status().isCreated());
+        // Storage can't check who owns a project id, so the same id under another user is another project
+        upload(someoneElse, project.toString(), pdf("theirs.pdf", DRAFT_V2)).andExpect(status().isCreated());
+        upload(someoneElse, null, pdf("theirs-default-project.pdf", DRAFT_V2)).andExpect(status().isCreated());
 
-        assertThat(researchPapers.count()).isEqualTo(4);
-        assertThat(researchPapers.findAll())
+        assertThat(drafts.count()).isEqualTo(4);
+        assertThat(drafts.findAll())
                 .filteredOn(saved -> saved.getOwnerId().equals(owner))
-                .extracting(ResearchPaper::getFilename)
-                .containsExactlyInAnyOrder("mine.pdf", "mine-no-folder.pdf");
+                .extracting(Draft::getFilename)
+                .containsExactlyInAnyOrder("mine.pdf", "mine-default-project.pdf");
     }
 
     @Test
@@ -154,11 +154,11 @@ class ResearchPaperUploadTest {
         long filesBefore = storedFileCount();
         var text = new MockMultipartFile("file", "notes.txt", "text/plain", "hello".getBytes());
 
-        upload(owner, folder.toString(), text)
+        upload(owner, project.toString(), text)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("Only PDF files can be uploaded"));
 
-        assertThat(researchPapers.count()).isZero();
+        assertThat(drafts.count()).isZero();
         assertThat(storedFileCount()).isEqualTo(filesBefore);
     }
 
@@ -168,63 +168,63 @@ class ResearchPaperUploadTest {
         byte[] big = new byte[2048];
         System.arraycopy(DRAFT, 0, big, 0, DRAFT.length);
 
-        upload(owner, folder.toString(), pdf("big.pdf", big))
+        upload(owner, project.toString(), pdf("big.pdf", big))
                 .andExpect(status().isContentTooLarge())
                 .andExpect(jsonPath("$.detail").value(startsWith("PDF is too large")));
 
-        assertThat(researchPapers.count()).isZero();
+        assertThat(drafts.count()).isZero();
         assertThat(storedFileCount()).isEqualTo(filesBefore);
     }
 
     @Test
-    void aRefusedUploadLeavesTheCurrentResearchPaperAsItWas() throws Exception {
-        upload(owner, folder.toString(), pdf("draft.pdf", DRAFT)).andExpect(status().isCreated());
-        ResearchPaper current = researchPapers.findAll().getFirst();
+    void aRefusedUploadLeavesTheCurrentDraftAsItWas() throws Exception {
+        upload(owner, project.toString(), pdf("draft.pdf", DRAFT)).andExpect(status().isCreated());
+        Draft current = drafts.findAll().getFirst();
 
-        upload(owner, folder.toString(), new MockMultipartFile("file", "notes.txt", "text/plain", "hi".getBytes()))
+        upload(owner, project.toString(), new MockMultipartFile("file", "notes.txt", "text/plain", "hi".getBytes()))
                 .andExpect(status().isBadRequest());
 
-        ResearchPaper after = researchPapers.findAll().getFirst();
+        Draft after = drafts.findAll().getFirst();
         assertThat(after.getFileKey()).isEqualTo(current.getFileKey());
         assertThat(after.getFilename()).isEqualTo("draft.pdf");
         assertThat(Files.readAllBytes(file(after.getFileKey()))).isEqualTo(DRAFT);
     }
 
     @Test
-    void aFolderIdThatIsNotAUuidIsRejected() throws Exception {
+    void aProjectIdThatIsNotAUuidIsRejected() throws Exception {
         upload(owner, "not-a-uuid", pdf("draft.pdf", DRAFT))
                 .andExpect(status().isBadRequest());
 
-        assertThat(researchPapers.count()).isZero();
+        assertThat(drafts.count()).isZero();
     }
 
     @Test
     void aMissingFileIsRejected() throws Exception {
-        mvc.perform(multipart("/research-paper").param("folder_id", folder.toString())
+        mvc.perform(multipart("/draft").param("project_id", project.toString())
                         .header(HttpHeaders.AUTHORIZATION, TestTokens.user(owner)))
                 .andExpect(status().isBadRequest());
 
-        assertThat(researchPapers.count()).isZero();
+        assertThat(drafts.count()).isZero();
     }
 
     @Test
     void uploadNeedsAUserToken() throws Exception {
-        mvc.perform(multipart("/research-paper").file(pdf("draft.pdf", DRAFT)))
+        mvc.perform(multipart("/draft").file(pdf("draft.pdf", DRAFT)))
                 .andExpect(status().isUnauthorized());
-        mvc.perform(multipart("/research-paper").file(pdf("draft.pdf", DRAFT))
+        mvc.perform(multipart("/draft").file(pdf("draft.pdf", DRAFT))
                         .header(HttpHeaders.AUTHORIZATION, "Bearer not-a-jwt"))
                 .andExpect(status().isUnauthorized());
-        mvc.perform(multipart("/research-paper").file(pdf("draft.pdf", DRAFT))
+        mvc.perform(multipart("/draft").file(pdf("draft.pdf", DRAFT))
                         .header(HttpHeaders.AUTHORIZATION, TestTokens.service()))
                 .andExpect(status().isForbidden());
 
-        assertThat(researchPapers.count()).isZero();
+        assertThat(drafts.count()).isZero();
     }
 
-    private ResultActions upload(UUID user, String folderId, MockMultipartFile file) throws Exception {
-        MockMultipartHttpServletRequestBuilder request = multipart("/research-paper").file(file);
-        if (folderId != null) {
-            request.param("folder_id", folderId);
+    private ResultActions upload(UUID user, String projectId, MockMultipartFile file) throws Exception {
+        MockMultipartHttpServletRequestBuilder request = multipart("/draft").file(file);
+        if (projectId != null) {
+            request.param("project_id", projectId);
         }
         return mvc.perform(request.header(HttpHeaders.AUTHORIZATION, TestTokens.user(user)));
     }

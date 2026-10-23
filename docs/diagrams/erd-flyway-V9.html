@@ -80,7 +80,7 @@
 <div class="canvas">
 
 <svg width="1300" height="680" viewBox="0 0 1300 680" aria-hidden="true">
-  <!-- background_metadata.paper_id -> papers.id -->
+  <!-- snapshots.paper_id -> papers.id -->
   <path class="ln" d="M354 160 H464"/>
   <text class="card-lbl" x="358" y="155">0..*</text>
   <text class="card-lbl" x="454" y="155">1</text>
@@ -125,7 +125,7 @@
 
 <!-- column A -->
 <div class="card" style="left:16px; top:112px; width:338px; height:316px">
-  <div class="h">background_metadata</div>
+  <div class="h">snapshots</div>
   <div class="r"><span>snapshot_id</span><span class="t">bigint</span><span class="k"><b class="pk">PK</b></span></div>
   <div class="r"><span>paper_id</span><span class="t">uuid</span><span class="k"><b class="fk">FK</b><i class="nn">NN</i></span></div>
   <div class="r"><span>doi</span><span class="t">varchar(255)</span><span class="k"><i class="nn">NN</i></span></div>
@@ -147,14 +147,14 @@
 </div>
 
 <div class="card" style="left:16px; top:452px; width:338px; height:152px">
-  <div class="h">research_papers</div>
+  <div class="h">drafts</div>
   <div class="r"><span>id</span><span class="t">uuid</span><span class="k"><b class="pk">PK</b></span></div>
   <div class="r"><span>owner_id</span><span class="t">uuid</span><span class="k"><b class="uq">UQ¹</b><i class="nn">NN</i></span></div>
-  <div class="r"><span>folder_id</span><span class="t">uuid</span><span class="k"><b class="uq">UQ¹</b></span></div>
+  <div class="r"><span>project_id</span><span class="t">uuid</span><span class="k"><b class="uq">UQ¹</b></span></div>
   <div class="r"><span>file_key</span><span class="t">varchar(255)</span><span class="k"><i class="nn">NN</i></span></div>
   <div class="r"><span>filename</span><span class="t">text</span><span class="k"></span></div>
   <div class="r"><span>uploaded_at</span><span class="t">timestamp with time zone</span><span class="k"><i class="nn">NN</i></span></div>
-  <div class="fn">¹ uq_research_papers_owner_folder: unique (owner_id, folder_id) together only, nulls not distinct</div>
+  <div class="fn">¹ uq_drafts_owner_project: unique (owner_id, project_id) together only, nulls not distinct</div>
 </div>
 
 <!-- column B -->
@@ -170,7 +170,7 @@
   <div class="h">papers</div>
   <div class="r"><span>id</span><span class="t">uuid</span><span class="k"><b class="pk">PK</b></span></div>
   <div class="r"><span>owner_id</span><span class="t">uuid</span><span class="k"><b class="uq">UQ¹</b><i class="nn">NN</i></span></div>
-  <div class="r"><span>folder_id</span><span class="t">uuid</span><span class="k"></span></div>
+  <div class="r"><span>project_id</span><span class="t">uuid</span><span class="k"></span></div>
   <div class="r"><span>doi</span><span class="t">varchar(255)</span><span class="k"><b class="uq">UQ¹</b></span></div>
   <div class="r"><span>openalex_id</span><span class="t">varchar(64)</span><span class="k"></span></div>
   <div class="r"><span>title</span><span class="t">text</span><span class="k"></span></div>
@@ -205,7 +205,7 @@
   <div class="r"><span>paper_id</span><span class="t">uuid</span><span class="k"><b class="fk">FK</b><b class="uq">UQ¹</b><i class="nn">NN</i></span></div>
   <div class="r"><span>change_type</span><span class="t">varchar(32)</span><span class="k"><i class="nn">NN</i></span></div>
   <div class="r"><span>change_key</span><span class="t">varchar(512)</span><span class="k"><b class="uq">UQ¹</b><i class="nn">NN</i></span></div>
-  <div class="r"><span>severity</span><span class="t">varchar(16)</span><span class="k"><i class="nn">NN</i></span></div>
+  <div class="r"><span>alert_severity</span><span class="t">varchar(16)</span><span class="k"><i class="nn">NN</i></span></div>
   <div class="r"><span>description</span><span class="t">text</span><span class="k"><i class="nn">NN</i></span></div>
   <div class="r"><span>recommendation</span><span class="t">text</span><span class="k"><i class="nn">NN</i></span></div>
   <div class="r"><span>notice_doi</span><span class="t">varchar(255)</span><span class="k"></span></div>
@@ -249,7 +249,7 @@
     <li><code>alerts.paper_id → papers.id</code><span class="sep">·</span>papers 1 — 0..* alerts<span class="sep">·</span>unnamed FK, on delete cascade (V3)</li>
     <li><code>alerts.report_id → reports.id</code><span class="sep">·</span>reports 0..1 — 0..* alerts<span class="sep">·</span>unnamed FK, on delete set null (V7)</li>
     <li><code>alert_notes.alert_id → alerts.id</code><span class="sep">·</span>alerts 1 — 0..* alert_notes<span class="sep">·</span>unnamed FK, on delete cascade (V5)</li>
-    <li><code>background_metadata.paper_id → papers.id</code><span class="sep">·</span>papers 1 — 0..* background_metadata<span class="sep">·</span>unnamed FK, no on-delete action declared (V4)</li>
+    <li><code>snapshots.paper_id → papers.id</code><span class="sep">·</span>papers 1 — 0..* snapshots<span class="sep">·</span>unnamed FK, no on-delete action declared (V4)</li>
     <li><code>reports.paper_id → papers.id</code><span class="sep">·</span>papers 1 — 0..* reports<span class="sep">·</span>unnamed FK, on delete cascade (V7)</li>
     <li><code>report_documents.report_id → reports.id</code><span class="sep">·</span>reports 1 — 0..* report_documents<span class="sep">·</span>unnamed FK, on delete cascade (V7)</li>
   </ul>
@@ -265,8 +265,8 @@
     <span><b>0..1</b> zero or one</span>
     <span><b>0..*</b> zero or more</span>
   </div>
-  <p class="note">Cardinality: the parent end is <b>1</b> when every FK column is not null, <b>0..1</b> when any is nullable; the child end is <b>0..1</b> when the FK columns contain the child's primary key or a unique key, otherwise <b>0..*</b>. Only declared foreign keys are drawn; columns such as <code>owner_id</code>, <code>folder_id</code> and <code>snapshot_id</code> have none.</p>
-  <p class="note">Source: <code>CSD-G4T1/storage/src/main/resources/db/migration</code> — V1, V3–V8 applied (no V2 in the folder); last: <code>V8__add_report_assessment.sql</code>.</p>
+  <p class="note">Cardinality: the parent end is <b>1</b> when every FK column is not null, <b>0..1</b> when any is nullable; the child end is <b>0..1</b> when the FK columns contain the child's primary key or a unique key, otherwise <b>0..*</b>. Only declared foreign keys are drawn; columns such as <code>owner_id</code>, <code>project_id</code> and <code>snapshot_id</code> have none.</p>
+  <p class="note">Source: <code>CSD-G4T1/storage/src/main/resources/db/migration</code> — V1, V3–V9 applied (no V2 in the folder); last: <code>V9__rename_to_glossary_terms.sql</code>.</p>
 </div>
 </body>
 </html>

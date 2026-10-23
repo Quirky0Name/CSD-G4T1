@@ -23,7 +23,7 @@ public class Paper {
     @Column(nullable = false)
     private UUID ownerId;
 
-    private UUID folderId;
+    private UUID projectId;
 
     private String doi;
     private String openalexId;
@@ -63,12 +63,12 @@ public class Paper {
         return ownerId;
     }
 
-    public UUID getFolderId() {
-        return folderId;
+    public UUID getProjectId() {
+        return projectId;
     }
 
-    public void setFolderId(UUID folderId) {
-        this.folderId = folderId;
+    public void setProjectId(UUID projectId) {
+        this.projectId = projectId;
     }
 
     public String getDoi() {

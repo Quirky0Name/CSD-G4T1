@@ -14,20 +14,20 @@ The core loop: **detect a meaningful change in a tracked paper → assess
 its impact on the researcher's own draft → recommend an action → the
 researcher decides.** That reframes the original pitch after the
 professor's review: the module theme is measuring change in a landscape,
-not issuing a one-time trust verdict. Background-info checking
-(retraction status, journal, authors) is the raw signal layer the loop
-reads from, not a feature on its own.
+not issuing a one-time trust verdict. The snapshots (retraction status,
+journal, authors) are the raw signal layer the loop reads from, not a
+feature on their own.
 
 ### Week 7 (midterm) scope: what's built
 
 - Track a paper by PDF upload or by DOI; Storage Management keeps its PDF.
-- The researcher's own paper (their draft), one per project.
+- The researcher's draft (their draft), one per project.
 - Updating polls Crossref and OpenAlex on a schedule, stores a snapshot
   per paper per poll, and nudges Research Evaluation when a snapshot
   differs in a field the alerts depend on.
 - Research Evaluation detects the changes (retraction, correction,
   erratum, expression of concern, DOAJ delisting, other Crossref notices)
-  and stores each as an **alert** with a rule-based severity.
+  and stores each as an **alert** with a rule-based alert severity.
 - It then **investigates** them (fetches each notice's Crossref record and
   open-access text, the paper's current copy, a new version) into a
   **report**, and Gemini judges the report's **impact** on the
@@ -46,11 +46,11 @@ new related papers, topic discovery) is in [ROADMAP.md](ROADMAP.md).
 
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
-| User Management | Spring Boot (planned) | `users`, `folders`, login and JWTs. **Not built**: a hand-made demo token stands in (SETUP.md) | — |
+| User Management | Spring Boot (planned) | `users`, `projects`, login and JWTs. **Not built**: a hand-made demo token stands in (SETUP.md) | — |
 | Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls Storage Management and Updating through the Vite proxy | `frontend/csd-frontend-vite/` |
-| Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts and notes, reports and documents, research papers | `storage/` |
+| Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts and notes, reports and documents, drafts | `storage/` |
 | Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact, notification); no database of its own | `backend/src/research_evaluation/` |
-| Updating | Python 3.13, FastAPI, APScheduler | the polling job and its small state (`tracked_papers`, `poll_runs`) in its own schema | `backend/src/updating/` |
+| Updating | Python 3.13, FastAPI, APScheduler | the polling job and its small state (`tracked_papers`, `polls`) in its own schema | `backend/src/updating/` |
 
 Research Evaluation and Updating share one Python project (`backend/`, one
 `pyproject.toml`, `common/` for the DOI normaliser and the service-token
@@ -103,7 +103,7 @@ Rules that hold across the flow:
   document storage need (GROBID, Crossref/OpenAlex metadata, open-access
   PDF downloads). It stores what it's sent.
 - **Detection is deterministic.** Whether a paper was retracted never
-  depends on an LLM; alerts keep their rule-based severity, and Gemini's
+  depends on an LLM; alerts keep their rule-based alert severity, and Gemini's
   judgment sits on the report next to them.
 - **Background work never raises and is never retried.** A failure is
   logged and leaves the report where it was (ROADMAP.md lists the gaps).
@@ -124,28 +124,27 @@ Rules that hold across the flow:
 - **Sprint 1:** no User Management, so one hand-made "demo user" token is
   used for everything, and Updating's `POST /run-poll` takes no token.
 
-## Folders and projects
+## Projects
 
-A folder is one research project. Folders will belong to User Management;
-Storage Management holds only a bare `folder_id` with no FK and no check.
-`folder_id` null is the user's "no folder" project. Storage Management
-keys a project by (owner, `folder_id`), so the same folder id from two
-users is two projects. A tracked paper is in exactly one project, and its
-project's research paper is the draft impact reads. Details in
-CONTRACTS.md, "Folders and projects".
+Projects will belong to User Management; Storage Management holds only a
+bare `project_id` with no FK and no check. `project_id` null is the user's
+default project. Storage Management keys a project by (owner,
+`project_id`), so the same project id from two users is two projects. A
+tracked paper is in exactly one project, and its project's draft is the
+one impact reads. Details in CONTRACTS.md, "Projects".
 
 ## Data model
 
 Storage Management's Postgres (Flyway, `storage/src/main/resources/db/migration/`;
-diagram: [erd/erd-flyway-V8.html](erd/erd-flyway-V8.html)):
+diagram: [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html)):
 
 | Table | One row per | Migration |
 |---|---|---|
-| `papers` | user tracking a paper (owner, folder, DOI, metadata at ingest, PDF `file_key`) | V1 |
-| `alerts` | detected change on a paper (type, `change_key`, rule-based severity and text, the researcher's status, `report_id`) | V3, V7 |
-| `background_metadata` | snapshot Updating sent (insert-only, full history per paper) | V4 |
+| `papers` | user tracking a paper (owner, project, DOI, metadata at ingest, PDF `file_key`) | V1, V9 |
+| `alerts` | detected change on a paper (type, `change_key`, rule-based alert severity and text, the researcher's status, `report_id`) | V3, V7, V9 |
+| `snapshots` | snapshot Updating sent (insert-only, the full snapshot history per paper) | V4, V9 |
 | `alert_notes` | note in the researcher's log on an alert | V5 |
-| `research_papers` | project's draft PDF | V6 |
+| `drafts` | project's draft PDF | V6, V9 |
 | `reports` | nudge that stored new alerts for a paper (status, impact's evaluation) | V7, V8 |
 | `report_documents` | DOI fetched for a report (notice, new version, current copy) | V7 |
 
@@ -153,7 +152,7 @@ Everything referring to a paper is deleted with it. PDFs are files in
 `UPLOAD_DIR`, never in Postgres.
 
 Updating's own schema (`updating`, Alembic): `tracked_papers` (`paper_id`,
-`doi`, `last_snapshot_id`, `nudge_pending`) and `poll_runs`.
+`doi`, `last_snapshot_id`, `nudge_pending`) and `polls`.
 
 ## Deployment
 

@@ -1,4 +1,4 @@
-package com.g4t1.storage.research;
+package com.g4t1.storage.draft;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,10 +11,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
-// The researcher's own paper for a project. One row per (owner, folder); a new upload swaps the file.
+// The researcher's draft for a project. One row per (owner, project); a new upload swaps the file.
 @Entity
-@Table(name = "research_papers")
-public class ResearchPaper {
+@Table(name = "drafts")
+public class Draft {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -23,8 +23,8 @@ public class ResearchPaper {
     @Column(nullable = false)
     private UUID ownerId;
 
-    // null = the owner's "no folder" project
-    private UUID folderId;
+    // null = the owner's default project
+    private UUID projectId;
 
     // key into the file store
     @Column(nullable = false)
@@ -35,12 +35,12 @@ public class ResearchPaper {
     @Column(nullable = false)
     private Instant uploadedAt;
 
-    protected ResearchPaper() {
+    protected Draft() {
     }
 
-    public ResearchPaper(UUID ownerId, UUID folderId, String fileKey, String filename) {
+    public Draft(UUID ownerId, UUID projectId, String fileKey, String filename) {
         this.ownerId = ownerId;
-        this.folderId = folderId;
+        this.projectId = projectId;
         replaceFile(fileKey, filename);
     }
 
@@ -59,8 +59,8 @@ public class ResearchPaper {
         return ownerId;
     }
 
-    public UUID getFolderId() {
-        return folderId;
+    public UUID getProjectId() {
+        return projectId;
     }
 
     public String getFileKey() {

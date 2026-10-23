@@ -41,7 +41,7 @@ webhooks, and OpenAlex's `from_updated_date` filter is Premium-only.
    them, and the next poll re-sends those ids. A poll with no pending
    paper sends nothing.
 
-The run summary is stored in `poll_runs` and returned by `POST /run-poll`.
+The poll summary is stored in `polls` and returned by `POST /run-poll`.
 
 ## When it nudges
 
@@ -101,7 +101,7 @@ Built in `snapshot.py`. Rules that matter for anyone reading them:
 | Storage Management client (`SERVICE_SUBJECT = "svc:updating"`) | `storage.py` |
 | Research Evaluation client | `evaluation.py` |
 | Schedule | `scheduler.py` |
-| Tables (`tracked_papers`, `poll_runs`) and engine | `models.py`, `db.py`; Alembic in `migrations/` |
+| Tables (`tracked_papers`, `polls`) and engine | `models.py`, `db.py`; Alembic in `migrations/` |
 | Stubs for running alone | `backend/dev/stub_storage.py`, `backend/dev/stub_research_evaluation.py`, `backend/dev/scenarios.py` |
 | Tests | `backend/tests/updating/` (`test_scenarios.py` replays the mock-harness scenarios on recorded responses) |
 

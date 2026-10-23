@@ -1,4 +1,4 @@
-package com.g4t1.storage.research;
+package com.g4t1.storage.draft;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,37 +16,37 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.UUID;
 
-// the researcher's own paper, one per project; no folder_id (or "") means the "no folder" project
+// the researcher's draft, one per project; no project_id (or "") means the default project
 @RestController
-@RequestMapping("/research-paper")
-public class ResearchPaperController {
+@RequestMapping("/draft")
+public class DraftController {
 
-    private final ResearchPaperService researchPapers;
+    private final DraftService drafts;
 
-    public ResearchPaperController(ResearchPaperService researchPapers) {
-        this.researchPapers = researchPapers;
+    public DraftController(DraftService drafts) {
+        this.drafts = drafts;
     }
 
-    // 201 for the project's first research paper, 200 when it replaced one
+    // 201 for the project's first draft, 200 when it replaced one
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ResearchPaperResponse> upload(@AuthenticationPrincipal UUID userId,
-                                                        @RequestParam("file") MultipartFile file,
-                                                        @RequestParam(name = "folder_id", required = false) UUID folderId)
+    public ResponseEntity<DraftResponse> upload(@AuthenticationPrincipal UUID userId,
+                                                @RequestParam("file") MultipartFile file,
+                                                @RequestParam(name = "project_id", required = false) UUID projectId)
             throws IOException {
-        var stored = researchPapers.upload(userId, folderId, file);
-        return ResponseEntity.status(stored.created() ? HttpStatus.CREATED : HttpStatus.OK).body(stored.researchPaper());
+        var stored = drafts.upload(userId, projectId, file);
+        return ResponseEntity.status(stored.created() ? HttpStatus.CREATED : HttpStatus.OK).body(stored.draft());
     }
 
     @GetMapping
-    public ResearchPaperResponse get(@AuthenticationPrincipal UUID userId,
-                                     @RequestParam(name = "folder_id", required = false) UUID folderId) {
-        return researchPapers.find(userId, folderId);
+    public DraftResponse get(@AuthenticationPrincipal UUID userId,
+                             @RequestParam(name = "project_id", required = false) UUID projectId) {
+        return drafts.find(userId, projectId);
     }
 
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@AuthenticationPrincipal UUID userId,
-                       @RequestParam(name = "folder_id", required = false) UUID folderId) {
-        researchPapers.delete(userId, folderId);
+                       @RequestParam(name = "project_id", required = false) UUID projectId) {
+        drafts.delete(userId, projectId);
     }
 }

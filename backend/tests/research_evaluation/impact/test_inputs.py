@@ -32,7 +32,7 @@ async def add_alert(sm, paper: UUID, change_key: str, notice_doi: str | None = N
         json={
             "change_type": "retraction",
             "change_key": change_key,
-            "severity": "high",
+            "alert_severity": "high",
             "description": "The paper was retracted.",
             "recommendation": "Read the notice.",
             "notice_doi": notice_doi,
@@ -93,7 +93,7 @@ async def paper_with_everything(sm) -> UUID:
         ],
     )
     await sm.client.post(f"/dev/papers/{paper}/pdf", content=PAPER_BYTES)
-    await sm.client.post(f"/dev/papers/{paper}/research-paper", content=DRAFT_BYTES)
+    await sm.client.post(f"/dev/papers/{paper}/draft", content=DRAFT_BYTES)
     return paper
 
 
@@ -107,7 +107,7 @@ async def test_a_report_read_by_id_has_its_paper_alerts_and_documents(sm):
     assert report.paper_id == paper
     assert report.status == "investigated"
     [alert] = report.alerts
-    assert (alert.change_key, alert.notice_doi, alert.severity) == ("retraction", NOTICE, "high")
+    assert (alert.change_key, alert.notice_doi, alert.alert_severity) == ("retraction", NOTICE, "high")
     kinds = {d.doi: (d.kind, d.pdf_status) for d in report.documents}
     assert kinds == {
         NOTICE: ("notice", "skipped"),
@@ -135,7 +135,7 @@ async def test_gathering_reads_step_ones_inputs_and_never_the_draft(sm):
     assert content.startswith(b"%PDF")
     assert inputs.missing == [MissingPdf(f"new version {NEW_VERSION}", "not stored (not_found)")]
     # the draft is never read here, and only the ok document's PDF is fetched
-    assert sm.calls("GET", "/research-paper") == 0
+    assert sm.calls("GET", "/draft") == 0
     assert sm.calls("GET", f"/documents/{document.id}/pdf") == 1
     assert sm.calls("GET", "/pdf") == 2  # the paper's and that one document's
 
@@ -178,13 +178,13 @@ async def test_no_draft_is_none_not_an_error(sm):
 @pytest.mark.parametrize(
     "detail",
     [
-        "No research paper in the project of paper {paper}",
-        "The research paper for paper {paper} is missing from disk",
+        "No draft in the project of paper {paper}",
+        "The draft for paper {paper} is missing from disk",
     ],
 )
 async def test_each_no_draft_404_is_none(sm, detail):
     paper = await paper_with_everything(sm)
-    sm.transport.faults["/research-paper"] = httpx.Response(
+    sm.transport.faults["/draft"] = httpx.Response(
         404, json={"detail": detail.format(paper=paper)}
     )
     assert await draft_pdf(sm.client, paper) is None
@@ -224,7 +224,7 @@ async def test_any_other_error_status_is_raised(sm):
     sm.transport.faults[f"/reports/{report_id}"] = 500
     with pytest.raises(httpx.HTTPStatusError):
         await read_report(sm.client, report_id)
-    sm.transport.faults["/research-paper"] = 503
+    sm.transport.faults["/draft"] = 503
     with pytest.raises(httpx.HTTPStatusError):
         await draft_pdf(sm.client, paper)
 
@@ -246,7 +246,7 @@ async def test_the_paper_details_come_from_the_newest_snapshot(sm):
 
     assert (details.title, details.publication_year) == ("New title", 2021)
     assert details.authors == []  # the test snapshots have authors null
-    assert sm.queries("GET", "/background-info/history") == ["last=1"]
+    assert sm.queries("GET", "/snapshots") == ["last=1"]
 
 
 async def test_a_paper_with_no_snapshot_has_empty_details(sm):

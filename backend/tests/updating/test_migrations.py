@@ -16,11 +16,11 @@ def connection():
         yield conn
 
 
-def test_migration_0001_creates_tables_that_match_the_models(connection):
+def test_the_migrations_create_tables_that_match_the_models(connection):
     run_migrations(connection)
 
     version = connection.execute(sa.text("SELECT version_num FROM updating.alembic_version"))
-    assert version.scalar_one() == "0001"
+    assert version.scalar_one() == "0002"
 
     context = MigrationContext.configure(
         connection,

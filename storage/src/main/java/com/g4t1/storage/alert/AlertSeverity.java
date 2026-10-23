@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Locale;
 
 // declared most severe first: AlertService lists alerts from the same poll in this order
-public enum Severity {
+public enum AlertSeverity {
     HIGH, MEDIUM, LOW;
 
     @JsonValue
@@ -15,19 +15,19 @@ public enum Severity {
     }
 
     @JsonCreator
-    public static Severity of(String value) {
-        for (Severity severity : values()) {
+    public static AlertSeverity of(String value) {
+        for (AlertSeverity severity : values()) {
             if (severity.value().equals(value)) {
                 return severity;
             }
         }
-        throw new IllegalArgumentException("Unknown severity " + value);
+        throw new IllegalArgumentException("Unknown alert severity " + value);
     }
 
     @jakarta.persistence.Converter
-    public static class Converter extends LowercaseEnumConverter<Severity> {
+    public static class Converter extends LowercaseEnumConverter<AlertSeverity> {
         public Converter() {
-            super(Severity.class);
+            super(AlertSeverity.class);
         }
     }
 }

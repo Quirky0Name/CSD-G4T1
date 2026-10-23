@@ -24,64 +24,16 @@ most needed first within each.
   `sources.fetch_crossref` and Research Evaluation's
   `investigation/crossref.py` through `common/` (with Updating's owner).
 
-- [ ] **Settle the naming, then rename consistently** (tables, entities,
-  endpoints, JSON fields, docs, frontend copy). Candidates:
-  - the researcher's own paper → **draft** (`research_papers`,
-    `/research-paper`, `draft_pdf` already in Research Evaluation);
-  - background-info / `background_metadata` / `background-info/history` →
-    **snapshot(s)**;
-  - folder → **project** (`folder_id`, "no folder" project);
-  - and check the rest while at it: tracked paper vs paper vs work,
-    alert vs change, report documents, `nudge`.
-
-  Decide before the DOI re-key below, so the new tables and endpoints get
-  the final names once, and renames of existing columns go in new
-  migrations.
-
-## Data model: DOI as the shared key
-
-- [ ] **Re-key everything that describes a paper by its DOI, so no work is
-  repeated across users.** Today every row hangs off `paper_id` (one user
-  tracking one DOI), so for *n* users tracking one DOI: Updating fetches
-  once but reads history, POSTs the same snapshot and compares *n* times;
-  Storage Management stores *n* identical snapshots, PDFs and alerts;
-  Research Evaluation detects, investigates (Crossref, Europe PMC, PDF
-  downloads) and runs Gemini *n* times. Agreed direction (2026-10-05):
-  - **`paper_id` is the user's tracking of a DOI in one project**: one
-    row per (user, folder, DOI). The one-DOI-per-user rule becomes
-    one-DOI-per-project. It's only the key for user state.
-  - **Keyed by DOI (shared):** snapshots, the paper's stored PDF, detected
-    changes (today's alert content: type, `change_key`, rule severity and
-    text, `detected_at`), reports and their documents, and impact step 1
-    (what changed, how severe; it doesn't read the draft).
-  - **Keyed by `paper_id` / project (per user):** owner and folder, the
-    researcher's alert status and notes, impact steps 2–3 (they read the
-    project's draft), notifications.
-  - **Updating and Research Evaluation work on DOIs:** Updating keeps one
-    `tracked_papers` row, one history read, one snapshot and one nudge
-    entry per DOI; the nudge carries DOIs; Research Evaluation detects
-    and investigates once per DOI, runs step 1 once, then steps 2–3 once
-    per project tracking that DOI.
-
-  Open before planning: a change detected before a user started tracking
-  (show it, or keep today's per-user baseline); uploads with no DOI (a
-  private, never-polled paper, or refused); which PDF a DOI keeps when
-  users upload different copies; DOIs in internal URLs (they contain `/`:
-  query parameter or body, or a surrogate id); migrations V9+ plus a
-  one-time local reset. Supersedes DECISIONS.md 2026-09-24's "snapshots
-  per paper" and 2026-09-27's "a tracked paper is in exactly one project".
-  Needs a plan doc with subtasks per service, signed off by each owner.
-
 ## User Management and auth
 
-- [ ] **User Management service**: `users` and `folders`, register
-  (BCrypt), login issuing the JWT, folder CRUD
-  (`GET/POST/PUT/DELETE /folders…`). Nothing exists; a hand-made demo
+- [ ] **User Management service**: `users` and `projects`, register
+  (BCrypt), login issuing the JWT, project CRUD
+  (`GET/POST/PUT/DELETE /projects…`). Nothing exists; a hand-made demo
   token stands in.
 - [ ] Frontend login, auth state and a JWT-attaching interceptor in place
   of `VITE_DEMO_TOKEN`.
 - [ ] `POST /run-poll` takes the user's JWT (CG-99).
-- [ ] Real folder ids from the frontend for papers and drafts.
+- [ ] Real project ids from the frontend for papers and drafts.
 - [ ] Notifications to the paper's owner instead of one hard-coded
   Telegram chat (needs users and contact details).
 
@@ -91,17 +43,17 @@ most needed first within each.
   (`GET /papers/{id}/reports`) has `evaluation`, `recommendation` and
   `evaluated_at` but not `change_summary`, `change_severity`,
   `impact_level` or `assessment`. The frontend already reads the first
-  three (`api.ts`, `ReportList.tsx`), so its severity and impact badges
-  never show and its summary falls back to `evaluation`. Add them to the
+  three (`api.ts`, `ReportList.tsx`), so its change severity and impact
+  badges never show and its summary falls back to `evaluation`. Add them to the
   record and its `from`, `ReportListTest`, and CONTRACTS.md. (The merge
   note in the impact plan said whichever branch merged second would add
   them; neither did.)
 - [ ] Show a placeholder evaluation as such (`assessment.placeholder`),
   and let the researcher confirm or reject an evaluation.
-- [ ] `GET /alerts` across all of a user's papers (filters `folder_id`,
+- [ ] `GET /alerts` across all of a user's papers (filters `project_id`,
   `status`, `include_dismissed`), for an overview or a "3 new" badge:
   one query joining `alerts` to `papers` on the owner, no migration.
-- [ ] A paper's severity state as a field, instead of the frontend
+- [ ] A paper's alert severity state as a field, instead of the frontend
   working it out from the alerts.
 - [ ] Download a report document's stored PDF (a user endpoint next to
   `GET /internal/documents/{id}/pdf`, ownership through report and paper),
@@ -154,7 +106,7 @@ most needed first within each.
 - [ ] Impact: read the paper's earlier reports as context (E5: a
   correction, EoC and retraction in three reports; E4: an EoC lifted);
   verify quotes against PDF text; compute the impact level in code from
-  the severity table; cache how a draft uses a paper.
+  the change severity table; cache how a draft uses a paper.
 
 ## Original scope not built
 

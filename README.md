@@ -13,7 +13,7 @@ a demo token stands in for now). See
 
 | Doc | What's in it |
 |---|---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The system map: week-7 scope, services and ownership, data flow, auth, folders and projects, data model, deployment |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The system map: week-7 scope, services and ownership, data flow, auth, projects, data model, deployment |
 | [docs/STORAGE.md](docs/STORAGE.md) | Storage Management inside: papers and PDFs, drafts, snapshots, alerts and notes, reports and documents, demo tools, code layout, gotchas |
 | [docs/EVALUATION.md](docs/EVALUATION.md) | Research Evaluation inside: detection and rules, investigation, Gemini impact and its fallback, the Telegram notification, code layout, gotchas |
 | [docs/UPDATING.md](docs/UPDATING.md) | Updating inside: the poll, the outage gate, when it nudges, the schedule, snapshots, code layout, gotchas |
@@ -23,8 +23,8 @@ a demo token stands in for now). See
 | [docs/DEMO.md](docs/DEMO.md) | The week-7 demo runbook |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | What isn't built yet and known gaps |
 | [docs/RE-changes-explained.md](docs/RE-changes-explained.md) | Research: every way each detected change shows up in real life, with real examples (the R1, C6, … case codes) |
-| [docs/architecture.html](docs/architecture.html) | The service architecture as a diagram page (open in a browser) |
-| [docs/erd/erd-flyway-V8.html](docs/erd/erd-flyway-V8.html) | Storage Management's schema as an ERD, generated from the Flyway migrations up to V8 |
+| [docs/diagrams/architecture.html](docs/diagrams/architecture.html) | The service architecture as a diagram page (open in a browser) |
+| [docs/diagrams/erd-flyway-V9.html](docs/diagrams/erd-flyway-V9.html) | Storage Management's schema as an ERD, from the Flyway migrations up to V9 |
 
 ## Services
 

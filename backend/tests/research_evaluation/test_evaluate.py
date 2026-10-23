@@ -29,7 +29,7 @@ async def test_a_retraction_becomes_a_stored_alert(client, sm):
     [alert] = await sm.alerts(paper)
     assert alert["change_type"] == "retraction"
     assert alert["change_key"] == "retraction"
-    assert alert["severity"] == "high"
+    assert alert["alert_severity"] == "high"
     assert "(notice 10.1/notice, 2024-12-16)" in alert["description"]
     assert alert["recommendation"]
     assert alert["notice_doi"] == "10.1/notice"
@@ -39,7 +39,7 @@ async def test_a_retraction_becomes_a_stored_alert(client, sm):
 
 
 @pytest.mark.parametrize(
-    ("fields", "change_type", "severity"),
+    ("fields", "change_type", "alert_severity"),
     [
         ({"is_retracted": True}, "retraction", "high"),
         ({"crossref_updates": [notice("10.1/n", "expression_of_concern")]}, "expression_of_concern", "medium"),
@@ -49,7 +49,7 @@ async def test_a_retraction_becomes_a_stored_alert(client, sm):
         ({"crossref_updates": [notice("10.1/n", "withdrawal")]}, "other", "medium"),
     ],
 )
-async def test_each_kind_of_change_is_stored_with_its_severity(client, sm, fields, change_type, severity):
+async def test_each_kind_of_change_is_stored_with_its_alert_severity(client, sm, fields, change_type, alert_severity):
     paper = await sm.add_paper()
     await sm.add_snapshot(paper, 1)
     await sm.add_snapshot(paper, 2, **fields)
@@ -57,7 +57,7 @@ async def test_each_kind_of_change_is_stored_with_its_severity(client, sm, field
     assert (await nudge(client, [paper])).status_code == 202
 
     [alert] = await sm.alerts(paper)
-    assert (alert["change_type"], alert["severity"]) == (change_type, severity)
+    assert (alert["change_type"], alert["alert_severity"]) == (change_type, alert_severity)
 
 
 async def test_an_other_change_is_stored_with_its_rule_based_assessment(client, sm):
@@ -68,7 +68,7 @@ async def test_an_other_change_is_stored_with_its_rule_based_assessment(client, 
     assert (await nudge(client, [paper])).status_code == 202
 
     [alert] = await sm.alerts(paper)
-    assert (alert["change_type"], alert["severity"]) == ("other", "medium")
+    assert (alert["change_type"], alert["alert_severity"]) == ("other", "medium")
     assert alert["change_key"] == "other:withdrawal:10.1/w"
     assert "a 'Withdrawal' notice" in alert["description"]
 
@@ -162,7 +162,7 @@ async def test_a_404_that_is_not_no_such_paper_is_a_failure(client, sm):
     paper = await sm.add_paper()
     await sm.add_snapshot(paper, 1)
     await sm.add_snapshot(paper, 2, is_retracted=True)
-    sm.transport.faults["/background-info/history"] = 404
+    sm.transport.faults["GET", "/snapshots"] = 404
 
     response = await nudge(client, [paper])
 
@@ -188,11 +188,11 @@ async def test_a_paper_deleted_before_its_alert_is_stored_is_skipped(client, sm)
 @pytest.mark.parametrize(
     ("suffix", "fault", "cause"),
     [
-        ("/background-info/history", 500, "Storage Management answered 500"),
-        ("/background-info/history", 401, "Storage Management answered 401"),
-        ("/background-info/history", 403, "Storage Management answered 403"),
-        ("/background-info/history", httpx.ReadTimeout("slow"), "Storage Management timed out"),
-        ("/background-info/history", httpx.ConnectError("refused"), "could not reach Storage Management"),
+        (("GET", "/snapshots"), 500, "Storage Management answered 500"),
+        (("GET", "/snapshots"), 401, "Storage Management answered 401"),
+        (("GET", "/snapshots"), 403, "Storage Management answered 403"),
+        (("GET", "/snapshots"), httpx.ReadTimeout("slow"), "Storage Management timed out"),
+        (("GET", "/snapshots"), httpx.ConnectError("refused"), "could not reach Storage Management"),
         ("/alerts", 400, "Storage Management answered 400"),
         ("/alerts", 500, "Storage Management answered 500"),
     ],
@@ -449,7 +449,7 @@ async def test_the_stub_lists_change_keys_like_storage_management(sm):
     paper = await sm.add_paper()
     unknown = uuid4()
     for key in ["retraction", "correction:10.1/c"]:
-        alert = {"change_type": key.split(":")[0], "change_key": key, "severity": "high", "description": "d",
+        alert = {"change_type": key.split(":")[0], "change_key": key, "alert_severity": "high", "description": "d",
                  "recommendation": "r", "detected_at": day(2), "snapshot_id": 2, "previous_snapshot_id": 1}
         assert (await sm.client.post(f"/internal/papers/{paper}/alerts", json=alert)).status_code == 201
 
@@ -482,7 +482,7 @@ async def test_the_history_request_asks_for_the_newest_window(client, sm):
 
     await nudge(client, [paper])
 
-    assert sm.queries("GET", "/background-info/history") == ["last=5"]
+    assert sm.queries("GET", "/snapshots") == ["last=5"]
 
 
 async def test_a_change_older_than_the_window_is_not_seen(client, sm):
@@ -502,7 +502,7 @@ async def test_a_bigger_window_reaches_further_back(client, sm):
 
     response = await nudge(client, [paper])
 
-    assert sm.queries("GET", "/background-info/history") == ["last=6"]
+    assert sm.queries("GET", "/snapshots") == ["last=6"]
     assert response.json()["alerts_created"] == 2
     assert sorted(alert["change_key"] for alert in await sm.alerts(paper)) == ["correction:10.1/c", "retraction"]
 
@@ -529,7 +529,7 @@ async def test_a_change_is_caught_up_after_at_most_n_minus_2_failed_nudges(clien
 async def test_the_stub_returns_the_newest_n_snapshots_oldest_first(sm):
     paper = await sm.add_paper()
     ids = [(await sm.add_snapshot(paper, n))["snapshot_id"] for n in range(1, 5)]
-    url = f"/internal/papers/{paper}/background-info/history"
+    url = f"/internal/papers/{paper}/snapshots"
 
     def snapshot_ids(response):
         return [row["snapshot_id"] for row in response.json()["snapshots"]]

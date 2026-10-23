@@ -65,12 +65,12 @@ class AlertListTest {
     void alertsFromOnePollComeMostSevereFirst() throws Exception {
         // stored in the order Research Evaluation detects them, so the retraction has the lowest id
         String poll = "2026-09-10T00:00:00Z";
-        long retraction = seed(paperId, "retraction", poll, Severity.HIGH, AlertStatus.NEW).getId();
-        long erratum = seed(paperId, "erratum:a", poll, Severity.LOW, AlertStatus.NEW).getId();
-        long correction = seed(paperId, "correction:b", poll, Severity.MEDIUM, AlertStatus.NEW).getId();
-        long concern = seed(paperId, "expression_of_concern:c", poll, Severity.MEDIUM, AlertStatus.NEW).getId();
-        // a later poll still comes first, whatever its severity
-        long later = seed(paperId, "erratum:d", "2026-09-11T00:00:00Z", Severity.LOW, AlertStatus.NEW).getId();
+        long retraction = seed(paperId, "retraction", poll, AlertSeverity.HIGH, AlertStatus.NEW).getId();
+        long erratum = seed(paperId, "erratum:a", poll, AlertSeverity.LOW, AlertStatus.NEW).getId();
+        long correction = seed(paperId, "correction:b", poll, AlertSeverity.MEDIUM, AlertStatus.NEW).getId();
+        long concern = seed(paperId, "expression_of_concern:c", poll, AlertSeverity.MEDIUM, AlertStatus.NEW).getId();
+        // a later poll still comes first, whatever its alert severity
+        long later = seed(paperId, "erratum:d", "2026-09-11T00:00:00Z", AlertSeverity.LOW, AlertStatus.NEW).getId();
 
         list(paperId, owner)
                 .andExpect(status().isOk())
@@ -88,7 +88,7 @@ class AlertListTest {
                 .andExpect(jsonPath("$.alerts[0].id").value(alert.getId()))
                 .andExpect(jsonPath("$.alerts[0].paper_id").value(paperId.toString()))
                 .andExpect(jsonPath("$.alerts[0].change_type").value("retraction"))
-                .andExpect(jsonPath("$.alerts[0].severity").value("high"))
+                .andExpect(jsonPath("$.alerts[0].alert_severity").value("high"))
                 .andExpect(jsonPath("$.alerts[0].description").value("Description of retraction"))
                 .andExpect(jsonPath("$.alerts[0].recommendation").value("Recommendation for retraction"))
                 .andExpect(jsonPath("$.alerts[0].notice_doi").value("10.1/notice"))
@@ -183,12 +183,12 @@ class AlertListTest {
     }
 
     private Alert seed(UUID paper, String changeKey, String detectedAt, AlertStatus status) {
-        return seed(paper, changeKey, detectedAt, Severity.HIGH, status);
+        return seed(paper, changeKey, detectedAt, AlertSeverity.HIGH, status);
     }
 
-    private Alert seed(UUID paper, String changeKey, String detectedAt, Severity severity, AlertStatus status) {
+    private Alert seed(UUID paper, String changeKey, String detectedAt, AlertSeverity alertSeverity, AlertStatus status) {
         String type = changeKey.split(":")[0];
-        Alert alert = new Alert(paper, new NewAlertRequest(ChangeType.of(type), changeKey, severity,
+        Alert alert = new Alert(paper, new NewAlertRequest(ChangeType.of(type), changeKey, alertSeverity,
                 "Description of " + type, "Recommendation for " + type, "10.1/notice",
                 Instant.parse(detectedAt), 42L, 41L));
         if (status != AlertStatus.NEW) {

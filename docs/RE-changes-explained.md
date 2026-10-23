@@ -35,7 +35,7 @@ It reads three signals from each snapshot: Crossref's `updated-by` list
 the paper's primary location. A field is compared only when it is non-null in
 both snapshots and its source was `ok` in both.
 
-| Change | Code trigger | Severity | Change key |
+| Change | Code trigger | Alert severity | Change key |
 |---|---|---|---|
 | Retraction | `is_retracted` False → True, or a new Crossref entry of type `retraction` | high | `retraction` |
 | Expression of concern | a new Crossref entry of type `expression_of_concern` | medium | `expression_of_concern:<notice_doi>` |
@@ -301,13 +301,13 @@ as `erratum`:
 | `10.1016/s0140-6736(20)31528-2` | a retract-and-republish notice for a *different* article |
 
 Precedence rescues the first three, because Retraction Watch types them
-correctly. The fourth has only Elsevier's entry, so **our code raises a
-low-severity erratum alert for it on the Lancet paper**, with the text "An
+correctly. The fourth has only Elsevier's entry, so **our code raises an
+erratum alert with low alert severity for it on the Lancet paper**, with the text "An
 erratum for this paper was published, fixing an error in the published
 version". The fixture test
 [test_changes.py:313](../backend/tests/research_evaluation/test_changes.py#L313)
 expects exactly that. If Retraction Watch hasn't indexed a notice, a serious
-notice can arrive as a low-severity erratum.
+notice can arrive as an erratum with low alert severity.
 
 **When it might not matter, and how to check.** Often it doesn't matter, but
 check what the notice really is before trusting the label.
@@ -553,7 +553,7 @@ Then pick the action:
 | An admin correction, an administrative DOAJ delisting, a change outside what the draft uses, or a paper the draft doesn't cite | No action, or dismiss |
 
 **Store the impact as its own field.** Keep the LLM's "impact on your draft"
-separate from the stage-2 severity instead of overwriting it. That keeps
+separate from the alert severity instead of overwriting it. That keeps
 "whether a paper was retracted never depends on an LLM" true, and it matches
 the docs' plan for new columns holding the proposal and its validation. The
 researcher still makes the final call, through acknowledge/dismiss and the
@@ -609,8 +609,8 @@ alert notes log.
 14. **`clarification` can be a published critique** (RSC Comments), and
     **`withdrawal` can target the original article when only its correction
     was withdrawn** (Elsevier).
-15. **Elsevier's corrigenda (author corrections) come in as low-severity
-    errata** (C4).
+15. **Elsevier's corrigenda (author corrections) come in as errata with
+    low alert severity** (C4).
 16. **DOAJ delistings lag and are mostly not about quality**: OpenAlex was
     still behind a day after Tecnura's removal, and about 45% of DOAJ
     withdrawals are administrative.

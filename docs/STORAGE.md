@@ -5,7 +5,7 @@ Boot, `storage/`. The frontend reads and acts on everything through it;
 Updating and Research Evaluation read and write through its `/internal/**`
 endpoints. It never calls Research Evaluation. Endpoint shapes and every
 error are in CONTRACTS.md; running it is in SETUP.md; the schema diagram
-is [erd/erd-flyway-V8.html](erd/erd-flyway-V8.html).
+is [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html).
 
 ## Code layout
 
@@ -19,10 +19,10 @@ Spring Data repository, the entity, and response records.
 | Package | What |
 |---|---|
 | `paper/` | tracked papers: upload, track by DOI, list (`PaperService`), the internal list and PDF read |
-| `snapshot/` | `background_metadata`: store a snapshot, read the history (`after_id`, `last`, `limit`) |
+| `snapshot/` | `snapshots`: store a snapshot, read the snapshot history (`after_id`, `last`, `limit`) |
 | `alert/` | alerts (internal store, change keys; user list, status), alert notes; `LowercaseEnumConverter` |
 | `report/` | reports and documents: open, read, mark investigated, store the evaluation (`ReportService`), store a document and download its PDF (`ReportDocumentService`), the user's report list |
-| `research/` | the researcher's draft per project (`ResearchPaperService`) |
+| `draft/` | the researcher's draft per project (`DraftService`) |
 | `dev/` | demo tools (`DevController`, `DevService`) and Swagger config |
 | `file/` | `LocalFileStore` (`save`, `read`, `delete` in `UPLOAD_DIR`), `Pdfs` (the `%PDF-` check) |
 | `metadata/` | `MetadataClient` (Crossref/OpenAlex metadata, DOI normalising), `OpenAccessPdfClient` |
@@ -36,7 +36,7 @@ details on, `ddl-auto: validate`, 25 MB PDF limit). Migrations:
 ## Papers and their PDFs
 
 A tracked paper is a `papers` row: one user tracking one paper, in one
-project (owner + `folder_id`). A user can't track a DOI twice
+project (owner + `project_id`). A user can't track a DOI twice
 (`uq_papers_owner_doi`).
 
 | Path (`POST /papers`) | `PaperService` | What's stored |
@@ -56,33 +56,33 @@ project (owner + `folder_id`). A user can't track a DOI twice
   is Updating's list, kept apart from `PaperResponse` so the frontend's
   shape can change freely.
 
-## The researcher's draft (`research_papers`)
+## The researcher's draft (`drafts`)
 
-One PDF per project, keyed by (owner, `folder_id`) with `unique nulls not
-distinct` (so the "no folder" project is unique too; needs Postgres 15+).
-The owner always comes from the JWT; `folder_id` missing or `""` means no
-folder; folder ids aren't checked.
+One PDF per project, keyed by (owner, `project_id`) with `unique nulls not
+distinct` (so the default project is unique too; needs Postgres 15+).
+The owner always comes from the JWT; `project_id` missing or `""` means the
+default project; project ids aren't checked.
 
-- **Upload** (`ResearchPaperService.upload`): size and `%PDF-` checks, save
+- **Upload** (`DraftService.upload`): size and `%PDF-` checks, save
   the file, then in one transaction a `SELECT … FOR UPDATE` on the
   project's row: insert (`201`) or point it at the new file (`200`, same
   `id`). The old file is deleted after the commit; a failed write deletes
   the new file. Two first uploads racing: the unique constraint rejects
   one, which retries once as a replace.
 - **Delete** uses the same locked lookup; the PDF goes after the commit.
-- **Internal read** (`pdfForPaper`, `GET /internal/papers/{id}/research-paper`):
-  finds the draft through the tracked paper's owner and folder. Its "no
-  research paper" `404` has its own detail; if the file vanished
+- **Internal read** (`pdfForPaper`, `GET /internal/papers/{id}/draft`):
+  finds the draft through the tracked paper's owner and project. Its "no
+  draft" `404` has its own detail; if the file vanished
   mid-read (a re-upload), it looks the row up once more.
 - No GROBID or Crossref on upload: a draft has no DOI.
 
-## Snapshots (`background_metadata`)
+## Snapshots (`snapshots`)
 
-Insert-only, one row per `POST /internal/papers/{id}/background-info`,
-full history per paper. Scalar fields are columns; `crossref_updates`,
+Insert-only, one row per `POST /internal/papers/{id}/snapshots`, the
+full snapshot history per paper. Scalar fields are columns; `crossref_updates`,
 `authors` and `source_status` are stored as the JSON text sent and never
 looked inside, so Updating can add fields without a storage change. The
-history read writes every field, nulls included (Updating's parser needs
+snapshot history read writes every field, nulls included (Updating's parser needs
 them all). An unknown paper is `404` `No paper <id>` exactly: Research
 Evaluation relies on that text.
 
@@ -100,7 +100,7 @@ Evaluation relies on that text.
   `new`, clears `status_changed_at` and `report_id`, and answers `201`. Id
   and notes stay.
 - **List** (`GET /papers/{id}/alerts`): `detected_at` descending, then
-  severity, then `id` descending (`AlertService.LIST_ORDER`, an in-memory
+  alert severity, then `id` descending (`AlertService.LIST_ORDER`, an in-memory
   sort). Dismissed ones hidden unless `include_dismissed=true`.
 - **Status** (`PATCH /alerts/{id}`): `acknowledged` ↔ `dismissed` freely,
   never back to `new`; repeating a status changes nothing.
@@ -189,7 +189,7 @@ Swagger UI is at `/swagger-ui.html` (also always on).
 - **PDFs live only on the machine that stored them.** Reset the database
   and the upload folder together, or rows point at missing files ("missing
   from disk" `404`s). A stray file only costs disk space.
-- **Don't call `ResearchPaperService.upload` inside another transaction**:
+- **Don't call `DraftService.upload` inside another transaction**:
   its race retry needs a fresh one.
 - **`filename` is display text** as the client sent it; never build a path
   from it.

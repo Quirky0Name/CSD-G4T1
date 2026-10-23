@@ -109,7 +109,7 @@ class InternalChangeKeysTest {
 
     private void seed(UUID paper, String changeKey, AlertStatus status) {
         String type = changeKey.split(":")[0];
-        Alert alert = new Alert(paper, new NewAlertRequest(ChangeType.of(type), changeKey, Severity.MEDIUM,
+        Alert alert = new Alert(paper, new NewAlertRequest(ChangeType.of(type), changeKey, AlertSeverity.MEDIUM,
                 "Description of " + type, "Recommendation for " + type, null,
                 Instant.parse("2026-09-20T12:00:00Z"), 42L, 41L));
         alert.setStatus(status);

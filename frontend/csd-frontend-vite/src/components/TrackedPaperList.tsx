@@ -5,32 +5,32 @@ import {
   EllipsisHorizontalIcon,
 } from '@heroicons/react/20/solid'
 import { useNavigate } from 'react-router-dom'
-import type { Alert, Paper, Severity } from '../api'
-import { formatDateTime, highestNewSeverity, SEVERITY_LABEL } from '../format'
+import type { Alert, Paper, AlertSeverity } from '../api'
+import { formatDateTime, highestNewAlertSeverity, ALERT_SEVERITY_LABEL } from '../format'
 
-const SEVERITY_DOT_CLASS: Record<Severity, string> = {
+const ALERT_SEVERITY_DOT_CLASS: Record<AlertSeverity, string> = {
   high: 'fill-red-400',
   medium: 'fill-yellow-400',
   low: 'fill-blue-400',
 }
 
-type CitedSourcesListProps = {
+type TrackedPaperListProps = {
   papers: Paper[]
   alerts: Alert[]
-  onRefreshCheck: (paperId: string) => void
+  onPoll: (paperId: string) => void
   onDelete: (paperId: string) => void
 }
 
-function CitedSourcesList({ papers, alerts, onRefreshCheck, onDelete }: CitedSourcesListProps) {
+function TrackedPaperList({ papers, alerts, onPoll, onDelete }: TrackedPaperListProps) {
   const navigate = useNavigate()
 
   if (papers.length === 0) {
     return (
       <div className="mt-10 rounded-xl border border-dashed border-white/10 px-6 py-12 text-center">
         <DocumentTextIcon aria-hidden="true" className="mx-auto size-10 text-gray-500" />
-        <h3 className="mt-4 text-sm/6 font-semibold text-white">No cited sources yet</h3>
+        <h3 className="mt-4 text-sm/6 font-semibold text-white">No tracked papers yet</h3>
         <p className="mt-2 text-sm/6 text-gray-400">
-          Upload a PDF or enter a DOI to start tracking a source.
+          Upload a PDF or enter a DOI to start tracking a paper.
         </p>
       </div>
     )
@@ -39,13 +39,13 @@ function CitedSourcesList({ papers, alerts, onRefreshCheck, onDelete }: CitedSou
   return (
     <div className="mt-10">
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h3 className="text-sm/6 font-semibold text-white">Cited sources</h3>
+        <h3 className="text-sm/6 font-semibold text-white">Tracked papers</h3>
       </div>
 
       <ul role="list" className="grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8">
         {papers.map((paper) => {
           const title = paper.title ?? 'Untitled (no DOI found)'
-          const severity = highestNewSeverity(alerts.filter((alert) => alert.paper_id === paper.id))
+          const alertSeverity = highestNewAlertSeverity(alerts.filter((alert) => alert.paper_id === paper.id))
 
           return (
             <li
@@ -75,10 +75,10 @@ function CitedSourcesList({ papers, alerts, onRefreshCheck, onDelete }: CitedSou
                     <MenuItem>
                       <button
                         type="button"
-                        onClick={() => onRefreshCheck(paper.id)}
+                        onClick={() => onPoll(paper.id)}
                         className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
                       >
-                        Refresh check<span className="sr-only">, {title}</span>
+                        Poll now<span className="sr-only">, {title}</span>
                       </button>
                     </MenuItem>
                     <MenuItem>
@@ -101,22 +101,22 @@ function CitedSourcesList({ papers, alerts, onRefreshCheck, onDelete }: CitedSou
                   </MenuItems>
                 </Menu>
               </div>
-              {severity ? (
+              {alertSeverity ? (
                 <button
                   type="button"
                   onClick={() => navigate(`/alerts?paper=${paper.id}`)}
-                  aria-label={`View ${SEVERITY_LABEL[severity].toLowerCase()} severity alert for ${title}`}
-                  title={`Change detected: ${SEVERITY_LABEL[severity]} severity`}
+                  aria-label={`View alerts for ${title} (${ALERT_SEVERITY_LABEL[alertSeverity].toLowerCase()} alert severity)`}
+                  title={`Change detected: ${ALERT_SEVERITY_LABEL[alertSeverity].toLowerCase()} alert severity`}
                   className="absolute -top-2 right-3 z-10 inline-flex cursor-pointer items-center gap-x-1.5 rounded-full bg-gray-900/95 px-2 py-1 text-[11px] font-medium text-gray-200 shadow-md inset-ring inset-ring-white/10"
                 >
-                  <svg viewBox="0 0 6 6" aria-hidden="true" className={`size-1.5 ${SEVERITY_DOT_CLASS[severity]}`}>
+                  <svg viewBox="0 0 6 6" aria-hidden="true" className={`size-1.5 ${ALERT_SEVERITY_DOT_CLASS[alertSeverity]}`}>
                     <circle r={3} cx={3} cy={3} />
                   </svg>
-                  {SEVERITY_LABEL[severity]} severity
+                  {ALERT_SEVERITY_LABEL[alertSeverity]} alert severity
                 </button>
               ) : (
                 <div
-                  title="No changes detected since last check"
+                  title="No changes detected since the last poll"
                   className="absolute -top-2 right-3 z-10 inline-flex items-center gap-x-1.5 rounded-full bg-gray-900/95 px-2 py-1 text-[11px] font-medium text-gray-400 shadow-md inset-ring inset-ring-white/10"
                 >
                   <CheckCircleIcon aria-hidden="true" className="size-3 text-emerald-500/80" />
@@ -145,4 +145,4 @@ function CitedSourcesList({ papers, alerts, onRefreshCheck, onDelete }: CitedSou
   )
 }
 
-export default CitedSourcesList
+export default TrackedPaperList

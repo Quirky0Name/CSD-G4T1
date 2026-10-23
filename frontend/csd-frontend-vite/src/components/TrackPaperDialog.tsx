@@ -5,12 +5,12 @@ import { errorMessage, trackPaperByDoi, uploadPaperPdf } from '../api'
 import { useTracking } from '../tracking'
 import { useToast } from './Toasts'
 
-type UploadSourceDialogProps = {
+type TrackPaperDialogProps = {
   open: boolean
   onClose: () => void
 }
 
-function UploadSourceDialog({ open, onClose }: UploadSourceDialogProps) {
+function TrackPaperDialog({ open, onClose }: TrackPaperDialogProps) {
   const { refresh } = useTracking()
   const showToast = useToast()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -81,9 +81,9 @@ function UploadSourceDialog({ open, onClose }: UploadSourceDialogProps) {
         <DialogPanel className="w-full max-w-xl rounded-2xl border border-white/10 bg-gray-900 p-6 text-gray-100 shadow-2xl sm:p-8">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <DialogTitle className="text-lg font-semibold text-white">Add your PDF</DialogTitle>
+              <DialogTitle className="text-lg font-semibold text-white">Track a paper</DialogTitle>
               <p className="mt-1 text-sm text-gray-400">
-                Upload a paper to extract its DOI and track its citation updates.
+                Upload a paper's PDF or enter its DOI to track it for changes.
               </p>
             </div>
             <button
@@ -97,7 +97,7 @@ function UploadSourceDialog({ open, onClose }: UploadSourceDialogProps) {
           </div>
 
           <label
-            htmlFor="source-pdf"
+            htmlFor="paper-pdf"
             onDragOver={(event) => {
               event.preventDefault()
               setIsDragging(true)
@@ -113,7 +113,7 @@ function UploadSourceDialog({ open, onClose }: UploadSourceDialogProps) {
             }`}
           >
             <input
-              id="source-pdf"
+              id="paper-pdf"
               type="file"
               accept="application/pdf,.pdf"
               onChange={handleFileChange}
@@ -146,11 +146,11 @@ function UploadSourceDialog({ open, onClose }: UploadSourceDialogProps) {
           </div>
 
           <div className="mt-6">
-            <label htmlFor="source-doi" className="block text-sm font-medium text-white">
+            <label htmlFor="paper-doi" className="block text-sm font-medium text-white">
               Upload by DOI
             </label>
             <input
-              id="source-doi"
+              id="paper-doi"
               type="text"
               value={doi}
               onChange={handleDoiChange}
@@ -190,4 +190,4 @@ function UploadSourceDialog({ open, onClose }: UploadSourceDialogProps) {
   )
 }
 
-export default UploadSourceDialog
+export default TrackPaperDialog

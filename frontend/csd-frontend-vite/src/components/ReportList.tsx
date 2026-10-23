@@ -10,7 +10,7 @@ import {
   type UserDocument,
   type UserReport,
 } from '../api'
-import { CHANGE_TYPE_LABEL, SEVERITY_LABEL, formatDateTime } from '../format'
+import { CHANGE_TYPE_LABEL, ALERT_SEVERITY_LABEL, formatDateTime } from '../format'
 import { useTracking } from '../tracking'
 
 const REPORT_STATUS_LABEL: Record<ReportStatus, string> = {
@@ -158,7 +158,7 @@ function ReportRows({
                   <span
                     className={`mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-xs font-medium inset-ring ${LEVEL_STYLES[report.change_severity]}`}
                   >
-                    {report.change_severity} severity
+                    {report.change_severity} change severity
                   </span>
                 )}
               </div>
@@ -309,7 +309,7 @@ function AlertSummary({ alert }: { alert: Alert }) {
     <li className="rounded-md bg-gray-900/60 px-3 py-2 text-gray-300">
       <p className="font-medium text-white">
         {CHANGE_TYPE_LABEL[alert.change_type]}{' '}
-        <span className="text-xs text-gray-400">({SEVERITY_LABEL[alert.severity]})</span>
+        <span className="text-xs text-gray-400">({ALERT_SEVERITY_LABEL[alert.alert_severity]} alert severity)</span>
       </p>
       <p className="mt-1 text-gray-400">{alert.description}</p>
       <p className="mt-1 text-xs text-gray-500">{formatDateTime(alert.detected_at)}</p>

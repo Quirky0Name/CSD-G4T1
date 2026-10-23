@@ -97,7 +97,7 @@ async def test_the_stored_row_is_used_even_when_it_differs_from_what_was_fetched
         json={
             "change_type": "correction",
             "change_key": f"correction:{CORRECTION_NOTICE}",
-            "severity": "medium",
+            "alert_severity": "medium",
             "description": "A correction.",
             "recommendation": "Read it.",
             "notice_doi": CORRECTION_NOTICE,
@@ -238,7 +238,7 @@ async def test_the_returned_ids_are_exactly_the_reports_finished_in_this_run(sm,
             json={
                 "change_type": "retraction",
                 "change_key": "retraction",
-                "severity": "high",
+                "alert_severity": "high",
                 "description": "Retracted.",
                 "recommendation": "Stop citing it.",
                 "notice_doi": None,
@@ -277,7 +277,7 @@ async def test_a_report_that_fails_midway_returns_no_id_and_the_log_names_it(
         json={
             "change_type": "retraction",
             "change_key": "retraction",
-            "severity": "high",
+            "alert_severity": "high",
             "description": "Retracted.",
             "recommendation": "Stop citing it.",
             "notice_doi": None,
@@ -313,7 +313,7 @@ async def test_a_report_that_fails_midway_returns_no_id_and_the_log_names_it(
 async def test_a_paper_that_failed_evaluation_still_lets_the_others_be_investigated(client, sm):
     good = await changed_paper(sm, is_retracted=True)
     broken = await changed_paper(sm, is_retracted=True)
-    sm.transport.faults[f"/papers/{broken}/background-info/history"] = 500
+    sm.transport.faults["GET", f"/papers/{broken}/snapshots"] = 500
 
     response = await nudge(client, [good, broken])
 

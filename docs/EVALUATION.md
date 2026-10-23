@@ -12,7 +12,7 @@ in [RE-changes-explained.md](RE-changes-explained.md).
 POST /evaluate/changes (paper ids, from Updating)
   ├─ 1. detection   changes.py     newest N snapshots → changes (deterministic)
   ├─    key check   storage.py     skip changes whose change_key already has an alert
-  ├─ 2. rules       rules.py       severity, description, recommendation → POST alert
+  ├─ 2. rules       rules.py       alert severity, description, recommendation → POST alert
   └─ reply 202 / 503
        └─ background task, per paper evaluated without failure that had changes:
           3. investigation  investigation/   open a report, fetch its documents → report ids
@@ -26,7 +26,7 @@ POST /evaluate/reports (report ids, by hand) ─▶ 4 and 5 only
 `main.evaluate_changes` → `evaluate.evaluate_papers`, one paper after
 another. For each paper:
 
-1. Read the newest N snapshots (`history?last=N`, N =
+1. Read the newest N snapshots (`snapshots?last=N`, N =
    `EVALUATION_SNAPSHOT_WINDOW`, default 5, minimum 2) and run detection
    on every consecutive pair. The first snapshot is only a baseline.
 2. If anything was detected, read the paper's stored change keys
@@ -63,7 +63,7 @@ Management then replaces a notice-less retraction alert with it (`201`) or
 changes nothing (`200`), so a notice that arrives after OpenAlex's flag
 still gets investigated.
 
-**Rules** (`rules.py`): fixed severity per type (retraction `high`; EoC,
+**Rules** (`rules.py`): fixed alert severity per type (retraction `high`; EoC,
 correction, `other` `medium`; erratum, DOAJ delisting `low`) and template
 text. Every alert is complete before any LLM runs.
 
@@ -149,8 +149,8 @@ Per report:
 
    | Step | Question | Reads | Answer |
    |---|---|---|---|
-   | 1. Change | What changed, is it about this paper, how severe? | paper details, alerts, documents (`<document>` blocks), PDFs: stored paper, new versions, current copy | `ChangeAssessment`: summary, severity `none`/`low`/`medium`/`high` |
-   | gate | severity `none` = not meaningful: stop, store summary and severity only | | |
+   | 1. Change | What changed, is it about this paper, how severe? | paper details, alerts, documents (`<document>` blocks), PDFs: stored paper, new versions, current copy | `ChangeAssessment`: summary, change severity `none`/`low`/`medium`/`high` |
+   | gate | change severity `none` = not meaningful: stop, store summary and change severity only | | |
    | 2. Impact | How does the draft use the paper; is each use affected; how much? | step 1's answer; PDF: the **draft**, read only now (`storage.draft_pdf`) | `ImpactAssessment`: uses, impact level, explanation |
    | 3. Actions | What should the researcher do? | steps 1 and 2 as JSON, no PDFs | `RecommendedActions` |
 
@@ -164,7 +164,7 @@ Per report:
    `assessed`. Nothing is written between steps, so an `assessed` report is
    always complete.
 
-**Three levels mean three things:** the alert's `severity` is the rule's,
+**Three levels mean three things:** the alert's `alert_severity` is the rule's,
 by change type, and never changes; the report's `change_severity` is how
 serious the change really is for anyone relying on the paper; its
 `impact_level` is how much this researcher's draft is affected. A
@@ -273,8 +273,8 @@ service token, 10 s), one for Crossref and Europe PMC, one for Telegram
 - **The stub differs from the real service:** `422` where Storage
   Management answers `400`, timestamps ending `+00:00`, no locking between
   concurrent report opens, one draft per paper (the real service keys
-  drafts by owner and folder). Seed it with `/dev/papers`, `/dev/pdfs`,
-  `/dev/papers/{id}/pdf` and `/dev/papers/{id}/research-paper`.
+  drafts by owner and project). Seed it with `/dev/papers`, `/dev/pdfs`,
+  `/dev/papers/{id}/pdf` and `/dev/papers/{id}/draft`.
 - **Tests:** ASGITransport finishes background tasks before the nudge's
   response returns, so a test can check reports right after `nudge()`.
   `conftest.ExternalApis` fakes Crossref and Europe PMC; impact uses a

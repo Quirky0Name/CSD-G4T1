@@ -22,12 +22,13 @@ from research_evaluation.storage import SERVICE_SUBJECT, sm_client
 
 class FaultInjectingTransport(httpx.AsyncBaseTransport):
     """Makes Storage Management's `/internal/**` endpoints fail for requests whose path ends
-    with a given suffix, and records every `/internal/**` request. The stub-only `/dev/**`
+    with a given suffix (a key of `(method, suffix)` limits it to that method), and records every
+    `/internal/**` request. The stub-only `/dev/**`
     helpers the tests read with never fail and aren't recorded."""
 
     def __init__(self, inner: httpx.AsyncBaseTransport) -> None:
         self._inner = inner
-        self.faults: dict[str, int | httpx.Response | Exception] = {}
+        self.faults: dict[str | tuple[str, str], int | httpx.Response | Exception] = {}
         self.requests: list[tuple[str, str, str]] = []  # (method, path, query string)
         self.sent: list[httpx.Request] = []  # the same requests, whole (headers, timeout)
 
@@ -35,8 +36,13 @@ class FaultInjectingTransport(httpx.AsyncBaseTransport):
         if request.url.path.startswith("/internal/"):
             self.requests.append((request.method, request.url.path, str(request.url.params)))
             self.sent.append(request)
-        for suffix, fault in self.faults.items():
-            if request.url.path.startswith("/internal/") and request.url.path.endswith(suffix):
+        for key, fault in self.faults.items():
+            method, suffix = key if isinstance(key, tuple) else (request.method, key)
+            if (
+                request.method == method
+                and request.url.path.startswith("/internal/")
+                and request.url.path.endswith(suffix)
+            ):
                 if isinstance(fault, Exception):
                     raise fault
                 if isinstance(fault, httpx.Response):
@@ -62,7 +68,7 @@ class StubSm:
         """Stores a snapshot fetched on `day` (see snapshot_dict); the stub assigns its id."""
         body = snapshot_dict(day, **fields)
         del body["snapshot_id"], body["paper_id"]
-        response = await self.client.post(f"/internal/papers/{paper_id}/background-info", json=body)
+        response = await self.client.post(f"/internal/papers/{paper_id}/snapshots", json=body)
         response.raise_for_status()
         return response.json()
 

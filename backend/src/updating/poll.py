@@ -13,7 +13,7 @@ of the poll every pending paper is sent to Research Evaluation in one call, and 
 cleared only when it answers 202. A paper's first snapshot is a baseline and never nudges.
 
 One poll at a time: `PollDeps.lock` is shared by the scheduled job and `POST /run-poll`.
-A scheduled tick that finds it held waits, so a single-paper manual run doesn't push every other
+A scheduled tick that finds it held waits, so a single-paper manual poll doesn't push every other
 paper back a full interval; the manual trigger refuses instead (`run_manual_poll`)."""
 
 import asyncio
@@ -30,7 +30,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from common.doi import Doi
 from updating.compare import nudge_reasons
 from updating.evaluation import send_changes
-from updating.models import PollRun, PollTrigger, RunStatus, TrackedPaper
+from updating.models import Poll, PollStatus, PollTrigger, TrackedPaper
 from updating.snapshot import Snapshot, author_ids, build_snapshot
 from updating.sources import (
     OpenAlexWork,
@@ -97,9 +97,9 @@ class NudgeError(_Frozen):
 
 
 class PollSummary(_Frozen):
-    run_id: int
+    poll_id: int
     trigger: PollTrigger
-    paper_id: PaperId | None  # set for a single-paper run, null for a full one
+    paper_id: PaperId | None  # set for a single-paper poll, null for a full one
     started_at: datetime
     finished_at: datetime
     stored: list[Stored]
@@ -114,23 +114,23 @@ async def run_poll(
     deps: PollDeps, trigger: PollTrigger, paper_id: PaperId | None = None
 ) -> PollSummary:
     """Poll every tracked paper, or only `paper_id`. Waits if another poll is running."""
-    # the run row is created inside the lock, so a run that waits (or is cancelled while
+    # the poll's row is created inside the lock, so a poll that waits (or is cancelled while
     # waiting, at shutdown) leaves no `running` row behind
     async with deps.lock:
         started_at = datetime.now(UTC)
         async with deps.sessions() as session:
-            run = PollRun(trigger=trigger, status=RunStatus.RUNNING, started_at=started_at)
-            session.add(run)
+            poll = Poll(trigger=trigger, status=PollStatus.RUNNING, started_at=started_at)
+            session.add(poll)
             await session.commit()
-            run_id = run.id
+            poll_id = poll.id
 
         try:
-            summary = await _poll(deps, run_id, trigger, paper_id, started_at)
-        except Exception as exc:  # a cancelled run (shutdown) is a BaseException and stays `running`
+            summary = await _poll(deps, poll_id, trigger, paper_id, started_at)
+        except Exception as exc:  # a cancelled poll (shutdown) is a BaseException and stays `running`
             error = str(exc) if isinstance(exc, PollFailed) else type(exc).__name__
-            await _close_run(deps, run_id, RunStatus.FAILED, summary=None, error=error)
+            await _close_poll(deps, poll_id, PollStatus.FAILED, summary=None, error=error)
             raise
-        await _close_run(deps, run_id, RunStatus.SUCCEEDED, summary=summary, error=None)
+        await _close_poll(deps, poll_id, PollStatus.SUCCEEDED, summary=summary, error=None)
         return summary
 
 
@@ -145,7 +145,7 @@ async def run_manual_poll(deps: PollDeps, paper_id: PaperId | None) -> PollSumma
 
 
 async def _poll(
-    deps: PollDeps, run_id: int, trigger: PollTrigger, only_paper: PaperId | None, started_at: datetime
+    deps: PollDeps, poll_id: int, trigger: PollTrigger, only_paper: PaperId | None, started_at: datetime
 ) -> PollSummary:
     try:
         papers = await list_papers(deps.sm)
@@ -157,7 +157,7 @@ async def _poll(
     if only_paper is not None and only_paper not in {paper.id for paper in papers}:
         raise UnknownPaper(f"Storage Management has no paper {only_paper}")
     polled = [paper for paper in papers if only_paper in (None, paper.id)]
-    # every paper feeds the sync, so a single-paper run can't drop the other papers' rows
+    # every paper feeds the sync, so a single-paper poll can't drop the other papers' rows
     all_dois = {paper.id: paper.doi for paper in papers if paper.doi}
     dois = {paper.id: paper.doi for paper in polled if paper.doi}
     skipped_no_doi = [paper.id for paper in polled if not paper.doi]
@@ -212,7 +212,7 @@ async def _poll(
             nudged = sent
 
     return PollSummary(
-        run_id=run_id,
+        poll_id=poll_id,
         trigger=trigger,
         paper_id=only_paper,
         started_at=started_at,
@@ -317,13 +317,13 @@ async def _send_nudges(deps: PollDeps) -> list[PaperId] | NudgeError:
     return pending
 
 
-async def _close_run(
-    deps: PollDeps, run_id: int, status: RunStatus, summary: PollSummary | None, error: str | None
+async def _close_poll(
+    deps: PollDeps, poll_id: int, status: PollStatus, summary: PollSummary | None, error: str | None
 ) -> None:
     async with deps.sessions() as session:
         await session.execute(
-            update(PollRun)
-            .where(PollRun.id == run_id)
+            update(Poll)
+            .where(Poll.id == poll_id)
             .values(
                 status=status,
                 finished_at=datetime.now(UTC),

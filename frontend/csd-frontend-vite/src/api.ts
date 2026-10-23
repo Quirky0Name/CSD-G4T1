@@ -4,7 +4,7 @@
 // live for real deployments.
 import axios from 'axios'
 
-export type Severity = 'high' | 'medium' | 'low'
+export type AlertSeverity = 'high' | 'medium' | 'low'
 export type AlertStatus = 'new' | 'acknowledged' | 'dismissed'
 export type ChangeType =
   | 'retraction'
@@ -67,7 +67,7 @@ export type UserReport = {
 
 export type Paper = {
   id: string
-  folder_id: string | null
+  project_id: string | null
   doi: string | null
   openalex_id: string | null
   title: string | null
@@ -82,7 +82,7 @@ export type Alert = {
   id: number
   paper_id: string
   change_type: ChangeType
-  severity: Severity
+  alert_severity: AlertSeverity
   description: string
   recommendation: string
   notice_doi: string | null
@@ -96,15 +96,15 @@ export type AlertNote = {
   created_at: string
 }
 
-export type ResearchPaper = {
+export type Draft = {
   id: string
-  folder_id: string | null
+  project_id: string | null
   filename: string
   uploaded_at: string
 }
 
 export type PollSummary = {
-  run_id: number
+  poll_id: number
   trigger: string
   paper_id: string | null
   started_at: string
@@ -175,9 +175,9 @@ export async function runPoll(paperId?: string): Promise<PollSummary> {
   return res.data
 }
 
-export async function getResearchPaper(): Promise<ResearchPaper | null> {
+export async function getDraft(): Promise<Draft | null> {
   try {
-    const res = await storage.get<ResearchPaper>('/research-paper')
+    const res = await storage.get<Draft>('/draft')
     return res.data
   } catch (err) {
     if (axios.isAxiosError(err) && err.response?.status === 404) return null
@@ -185,15 +185,15 @@ export async function getResearchPaper(): Promise<ResearchPaper | null> {
   }
 }
 
-export async function uploadResearchPaper(file: File): Promise<ResearchPaper> {
+export async function uploadDraft(file: File): Promise<Draft> {
   const body = new FormData()
   body.append('file', file)
-  const res = await storage.post<ResearchPaper>('/research-paper', body)
+  const res = await storage.post<Draft>('/draft', body)
   return res.data
 }
 
-export async function deleteResearchPaper(): Promise<void> {
-  await storage.delete('/research-paper')
+export async function deleteDraft(): Promise<void> {
+  await storage.delete('/draft')
 }
 
 // Spring's ProblemDetail and FastAPI's HTTPException both put the reason in

@@ -1,16 +1,16 @@
-package com.g4t1.storage.research;
+package com.g4t1.storage.draft;
 
 import java.time.Instant;
 import java.util.UUID;
 
-// folder_id is null for the "no folder" project
-public record ResearchPaperResponse(UUID id, UUID folderId, String filename, Instant uploadedAt) {
+// project_id is null for the default project
+public record DraftResponse(UUID id, UUID projectId, String filename, Instant uploadedAt) {
 
-    static ResearchPaperResponse from(ResearchPaper researchPaper) {
-        return new ResearchPaperResponse(
-                researchPaper.getId(),
-                researchPaper.getFolderId(),
-                researchPaper.getFilename(),
-                researchPaper.getUploadedAt());
+    static DraftResponse from(Draft draft) {
+        return new DraftResponse(
+                draft.getId(),
+                draft.getProjectId(),
+                draft.getFilename(),
+                draft.getUploadedAt());
     }
 }

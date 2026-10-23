@@ -53,7 +53,7 @@ class AlertActionTest {
         papers.deleteAll();
         paperId = papers.save(new Paper(owner)).getId();
         alertId = alerts.save(new Alert(paperId, new NewAlertRequest(ChangeType.RETRACTION, "retraction",
-                Severity.HIGH, "This paper was retracted.", "Stop relying on its findings.", "10.1/notice",
+                AlertSeverity.HIGH, "This paper was retracted.", "Stop relying on its findings.", "10.1/notice",
                 Instant.parse("2026-09-20T12:00:00Z"), 42L, 41L))).getId();
     }
 

@@ -90,7 +90,7 @@ async def retracted_paper(sm, draft: bool = True) -> UUID:
     )
     await sm.client.post(f"/dev/papers/{paper}/pdf", content=b"%PDF-1.7 stored paper")
     if draft:
-        await sm.client.post(f"/dev/papers/{paper}/research-paper", content=DRAFT)
+        await sm.client.post(f"/dev/papers/{paper}/draft", content=DRAFT)
     return paper
 
 
@@ -125,10 +125,10 @@ async def test_a_new_retraction_ends_assessed_with_the_models_answers(client, sm
     assert report["assessment"]["draft"] == "read"
     assert report["assessment"]["actions"] == ACTIONS.model_dump(mode="json")
     assert llm.calls == [ChangeAssessment, ImpactAssessment, RecommendedActions]
-    assert sm.calls("GET", "/research-paper") == 1
+    assert sm.calls("GET", "/draft") == 1
 
 
-async def test_a_change_rated_none_stores_the_summary_and_severity_only(client, sm, impact):
+async def test_a_change_rated_none_stores_the_summary_and_change_severity_only(client, sm, impact):
     llm = FakeLlm("none")
     impact.context = ImpactContext(llm)
     paper = await retracted_paper(sm)
@@ -141,7 +141,7 @@ async def test_a_change_rated_none_stores_the_summary_and_severity_only(client, 
     assert report["impact_level"] is None
     assert report["evaluation"] is None and report["recommendation"] is None
     assert llm.calls == [ChangeAssessment]
-    assert sm.calls("GET", "/research-paper") == 0
+    assert sm.calls("GET", "/draft") == 0
 
 
 async def test_without_a_gemini_key_reports_stay_investigated(client, sm, impact):
@@ -154,7 +154,7 @@ async def test_without_a_gemini_key_reports_stay_investigated(client, sm, impact
     report = await the_report(sm, paper)
     assert report["status"] == "investigated"
     assert report["change_summary"] is None
-    assert sm.calls("GET", "/research-paper") == 0
+    assert sm.calls("GET", "/draft") == 0
     assert sm.calls("PUT", "/evaluation") == 0
 
 
@@ -259,7 +259,7 @@ async def test_only_investigated_reports_are_assessed(sm):
         json={
             "change_type": "retraction",
             "change_key": "retraction",
-            "severity": "high",
+            "alert_severity": "high",
             "description": "d",
             "recommendation": "r",
             "notice_doi": None,
@@ -305,7 +305,7 @@ async def investigated_report(sm) -> int:
         json={
             "change_type": "retraction",
             "change_key": "retraction",
-            "severity": "high",
+            "alert_severity": "high",
             "description": "d",
             "recommendation": "r",
             "notice_doi": None,
@@ -403,7 +403,7 @@ async def test_skipped_reports_are_not_notified(sm, telegram):
         json={
             "change_type": "retraction",
             "change_key": "retraction",
-            "severity": "high",
+            "alert_severity": "high",
             "description": "d",
             "recommendation": "r",
             "notice_doi": None,
@@ -485,7 +485,7 @@ async def test_every_model_failing_a_step_stores_the_placeholder_and_notifies_it
         "gemini-flash-latest",
         "gemini-flash-lite-latest",
     ]
-    assert sm.calls("GET", "/research-paper") == (0 if step == 1 else 1)
+    assert sm.calls("GET", "/draft") == (0 if step == 1 else 1)
     [text] = telegram.texts()
     assert text.startswith(f"Evaluation done: report {report['id']}\n")
     assert f"Change: low\n{PLACEHOLDER_TEXT}" in text

@@ -38,16 +38,16 @@ the publisher during the demo.
    `supports`).
 3. **Updating, Swagger UI:** `POST /run-poll?paper_id=<tracked>` —
    show the new snapshot (now `is_retracted=true` with a `retraction`
-   entry in `crossref_updates`) and that the run summary lists the paper
+   entry in `crossref_updates`) and that the poll summary lists the paper
    as nudged, then show that Research Evaluation read the two snapshots
    from Storage Management, worked out the differences and evaluated them
-   (severity, impact text and recommendation). The nudge's reply says how
+   (alert severity, impact text and recommendation). The nudge's reply says how
    many alerts it created, and the alert is stored in Storage Management:
    `GET /papers/{id}/alerts` with the researcher's token (or, against the
    stub, `GET /dev/papers/{id}/alerts`).
    Once impact has assessed the report (in the background, up to a minute
    with three Gemini calls), **show the Telegram message on the phone**:
-   the paper, the change's severity and summary, the impact on the draft
+   the paper, the change severity and summary, the impact on the draft
    and what to do. It needs `GEMINI_API_KEY`, `TELEGRAM_BOT_TOKEN` and
    `NOTIFY_TELEGRAM_CHAT_ID` in `backend/.env`; check the bot beforehand
    with the `live` test in [SETUP.md](SETUP.md) ("Telegram bot"). If Gemini's free tier is out of requests the report
@@ -56,7 +56,7 @@ the publisher during the demo.
 4. **Frontend:** show the changes panel on the paper detail page, then
    acknowledge one change. Until the panel exists, show the same thing on
    Storage Management's API: `GET /papers/{id}/alerts` (newest first, with
-   severity, description, recommendation and detection time), then
+   alert severity, description, recommendation and detection time), then
    `PATCH /alerts/{id}` with `{"status": "acknowledged"}`. Then record what
    the researcher did, `POST /alerts/{id}/notes` with
    `{"text": "Removed the citation from my draft."}`, and read the log back

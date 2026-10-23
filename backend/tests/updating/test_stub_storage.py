@@ -90,7 +90,7 @@ async def test_posting_snapshots_returns_201_with_ascending_ids(client):
     ids = []
     for n in range(3):
         response = await client.post(
-            f"/internal/papers/{PAPER_ID}/background-info",
+            f"/internal/papers/{PAPER_ID}/snapshots",
             json={"doi": "10.1/abc", "cited_by_count": n},
             headers=service_headers(),
         )
@@ -106,26 +106,26 @@ async def test_posting_snapshots_returns_201_with_ascending_ids(client):
 async def test_unknown_paper_is_404(client):
     headers = service_headers()
 
-    post = await client.post(f"/internal/papers/{uuid4()}/background-info", json={}, headers=headers)
-    history = await client.get(f"/internal/papers/{uuid4()}/background-info/history", headers=headers)
+    post = await client.post(f"/internal/papers/{uuid4()}/snapshots", json={}, headers=headers)
+    history = await client.get(f"/internal/papers/{uuid4()}/snapshots", headers=headers)
 
     assert post.status_code == history.status_code == 404
 
 
 async def test_history_is_ascending_with_exclusive_after_id_and_limit(client):
     await add_paper(client)
-    url = f"/internal/papers/{PAPER_ID}/background-info"
+    url = f"/internal/papers/{PAPER_ID}/snapshots"
     for n in range(4):
         await client.post(url, json={"n": n}, headers=service_headers())
 
-    everything = (await client.get(url + "/history", headers=service_headers())).json()["snapshots"]
+    everything = (await client.get(url, headers=service_headers())).json()["snapshots"]
     ids = [row["snapshot_id"] for row in everything]
     assert [row["n"] for row in everything] == [0, 1, 2, 3]
 
-    after = await client.get(url + f"/history?after_id={ids[1]}", headers=service_headers())
+    after = await client.get(url + f"?after_id={ids[1]}", headers=service_headers())
     assert [row["n"] for row in after.json()["snapshots"]] == [2, 3]
 
-    limited = await client.get(url + f"/history?after_id={ids[0]}&limit=2", headers=service_headers())
+    limited = await client.get(url + f"?after_id={ids[0]}&limit=2", headers=service_headers())
     assert [row["n"] for row in limited.json()["snapshots"]] == [1, 2]
 
 
@@ -133,9 +133,9 @@ async def test_history_only_returns_that_papers_snapshots(client):
     await add_paper(client)
     other = uuid4()
     await client.post("/dev/papers", json={"id": str(other)})
-    await client.post(f"/internal/papers/{other}/background-info", json={"n": 1}, headers=service_headers())
+    await client.post(f"/internal/papers/{other}/snapshots", json={"n": 1}, headers=service_headers())
 
-    response = await client.get(f"/internal/papers/{PAPER_ID}/background-info/history",
+    response = await client.get(f"/internal/papers/{PAPER_ID}/snapshots",
                                 headers=service_headers())
 
     assert response.json() == {"snapshots": []}
@@ -143,13 +143,13 @@ async def test_history_only_returns_that_papers_snapshots(client):
 
 async def test_reset_forgets_papers_and_snapshots(client):
     await add_paper(client)
-    await client.post(f"/internal/papers/{PAPER_ID}/background-info", json={}, headers=service_headers())
+    await client.post(f"/internal/papers/{PAPER_ID}/snapshots", json={}, headers=service_headers())
 
     assert (await client.post("/dev/reset")).status_code == 204
 
     assert (await client.get("/internal/papers", headers=service_headers())).json() == []
     await add_paper(client)
-    first = await client.post(f"/internal/papers/{PAPER_ID}/background-info", json={},
+    first = await client.post(f"/internal/papers/{PAPER_ID}/snapshots", json={},
                               headers=service_headers())
     assert first.json()["snapshot_id"] == 1
 
@@ -160,7 +160,7 @@ async def test_seeding_a_scenario_adds_a_paper_with_a_full_snapshot(client, scen
 
     assert response.status_code == 201
     paper = response.json()
-    history = await client.get(f"/internal/papers/{paper['id']}/background-info/history",
+    history = await client.get(f"/internal/papers/{paper['id']}/snapshots",
                                headers=service_headers())
     [row] = history.json()["snapshots"]
     assert HistoryRow.model_validate(row).doi == paper["doi"]  # the whole shape, as Updating reads it
@@ -171,7 +171,7 @@ async def test_seeding_the_no_doi_scenario_adds_a_paper_with_no_doi_and_no_snaps
 
     paper = response.json()
     assert paper["doi"] is None
-    history = await client.get(f"/internal/papers/{paper['id']}/background-info/history",
+    history = await client.get(f"/internal/papers/{paper['id']}/snapshots",
                                headers=service_headers())
     assert history.json() == {"snapshots": []}
 
