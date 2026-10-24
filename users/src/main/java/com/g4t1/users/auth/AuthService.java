@@ -35,7 +35,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
         // one answer for an unknown email and a wrong password, so login never shows which emails have accounts
-        User user = users.findByEmail(request.email())
+        User user = users.findByEmail(request.email().toLowerCase(Locale.ROOT))
                 .filter(found -> passwords.matches(request.password(), found.getPasswordHash()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong email or password"));
         return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
