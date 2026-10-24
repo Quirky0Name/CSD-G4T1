@@ -73,6 +73,13 @@ class RegisterTest {
                 .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
     }
 
+    @Test
+    void aPasswordUnderEightCharactersIsABadRequest() {
+        register(newEmail(), "seven77")
+                .expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
+    }
+
     private RestTestClient.ResponseSpec register(String email, String password) {
         return client.post().uri("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
