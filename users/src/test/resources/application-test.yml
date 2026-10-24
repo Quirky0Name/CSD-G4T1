@@ -4,3 +4,8 @@
 spring:
   datasource:
     url: jdbc:h2:mem:users;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+
+users:
+  # test-only key, base64 like the real JWT_SECRET; 64 bytes, long enough that the
+  # JWT library would pick HS512 on its own instead of the contract's HS256
+  jwt-secret: dXNlcnMtdGVzdC1zZWNyZXQtbm90LWZvci1wcm9kLWxvbmctZW5vdWdoLXRvLXRlbXB0LWhzNTEyLXNpZ25pbg==
