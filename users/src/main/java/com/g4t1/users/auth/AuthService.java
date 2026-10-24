@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Locale;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -15,6 +16,8 @@ public class AuthService {
     private final UserRepository users;
     private final TokenService tokens;
     private final PasswordEncoder passwords = new BCryptPasswordEncoder();
+    // checked when an email has no account, so that answer takes as long as a wrong password
+    private final String hashForUnknownEmails = passwords.encode("no account has this password");
 
     public AuthService(UserRepository users, TokenService tokens) {
         this.users = users;
@@ -34,10 +37,14 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
+        Optional<User> found = users.findByEmail(request.email().toLowerCase(Locale.ROOT));
+        String hash = found.map(User::getPasswordHash).orElse(hashForUnknownEmails);
+        boolean passwordMatches = passwords.matches(request.password(), hash);
         // one answer for an unknown email and a wrong password, so login never shows which emails have accounts
-        User user = users.findByEmail(request.email().toLowerCase(Locale.ROOT))
-                .filter(found -> passwords.matches(request.password(), found.getPasswordHash()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong email or password"));
+        if (found.isEmpty() || !passwordMatches) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong email or password");
+        }
+        User user = found.get();
         return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
     }
 }
