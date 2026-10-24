@@ -35,6 +35,9 @@ public class AuthService {
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
         User user = users.findByEmail(request.email()).orElseThrow();
+        if (!passwords.matches(request.password(), user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong email or password");
+        }
         return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
     }
 }
