@@ -114,7 +114,7 @@ class FakeLlm:
                 "system": system,
                 "parts": parts,
                 "schema": schema,
-                "drafts_read_before": self.sm.calls("GET", "/research-paper"),
+                "drafts_read_before": self.sm.calls("GET", "/draft"),
             }
         )
         answer = self.answers[schema]
@@ -177,7 +177,7 @@ def report(paper_id: UUID, documents: list[DocumentInReport]) -> Report:
                 id=7,
                 change_type="retraction",
                 change_key="retraction",
-                severity="high",
+                alert_severity="high",
                 description="The paper was retracted.",
                 notice_doi=NOTICE,
                 detected_at=datetime(2026, 9, 24, 12, tzinfo=UTC),
@@ -199,7 +199,7 @@ PAPER = PaperDetails(
 async def inputs_for(sm, draft: bytes | None = DRAFT, **overrides) -> ReportInputs:
     paper = await sm.add_paper()
     if draft is not None:
-        await sm.client.post(f"/dev/papers/{paper}/research-paper", content=draft)
+        await sm.client.post(f"/dev/papers/{paper}/draft", content=draft)
     documents = [notice(), current_copy()]
     fields = {
         "report": report(paper, documents),
@@ -284,7 +284,7 @@ async def test_severity_none_stops_after_one_call_and_never_reads_the_draft(sm):
     evaluation = await assess(llm, sm.client, await inputs_for(sm))
 
     assert len(llm.calls) == 1
-    assert sm.calls("GET", "/research-paper") == 0
+    assert sm.calls("GET", "/draft") == 0
     body = evaluation.model_dump(mode="json")
     assert body["change_summary"] == change_answer("none").summary
     assert body["change_severity"] == "none"
@@ -306,7 +306,7 @@ async def test_a_report_whose_alerts_are_rated_but_whose_severity_is_none_also_s
 
     assert len(llm.calls) == 1
     assert evaluation.change_severity == "none"
-    assert sm.calls("GET", "/research-paper") == 0
+    assert sm.calls("GET", "/draft") == 0
 
 
 @pytest.mark.parametrize("severity", ["low", "medium", "high"])
@@ -317,7 +317,7 @@ async def test_a_meaningful_change_reads_the_draft_once_then_runs_steps_two_and_
 
     assert [c["schema"] for c in llm.calls] == [ChangeAssessment, ImpactAssessment, RecommendedActions]
     assert [c["drafts_read_before"] for c in llm.calls] == [0, 1, 1]
-    assert sm.calls("GET", "/research-paper") == 1
+    assert sm.calls("GET", "/draft") == 1
 
 
 async def test_step_two_gets_the_change_the_table_and_the_draft_and_only_it_gets_the_draft(sm):
@@ -450,7 +450,7 @@ async def test_an_answer_that_doesnt_fit_raises_and_returns_nothing(sm):
     assert len(llm.calls) == 2
 
 
-# every model failing a step: the placeholder (docs/EVAL-GEM-FAILSAFE.md)
+# every model failing a step: the placeholder (docs/EVALUATION.md, "Impact")
 
 FAILURES = [
     ModelFailure("gemini-flash-latest", "Gemini answered 503 (UNAVAILABLE)"),
@@ -477,7 +477,7 @@ async def test_every_model_failing_step_one_gives_the_placeholder_without_the_dr
 
     assert_placeholder(evaluation, "change")
     assert len(llm.calls) == 1
-    assert sm.calls("GET", "/research-paper") == 0
+    assert sm.calls("GET", "/draft") == 0
     assessment = evaluation.assessment
     assert assessment["draft"] == "not_needed"
     assert assessment["change"] is None

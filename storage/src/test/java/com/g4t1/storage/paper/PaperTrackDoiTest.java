@@ -83,7 +83,7 @@ class PaperTrackDoiTest {
 
         Paper saved = papers.findAll().getFirst();
         assertThat(saved.getOwnerId()).isEqualTo(user);
-        assertThat(saved.getFolderId()).isNull();
+        assertThat(saved.getProjectId()).isNull();
         assertThat(Files.readAllBytes(Path.of(uploadDir, saved.getFileKey()))).isEqualTo(PDF);
     }
 
@@ -101,30 +101,30 @@ class PaperTrackDoiTest {
     }
 
     @Test
-    void trackingByDoiKeepsTheFolder() throws Exception {
+    void trackingByDoiKeepsTheProject() throws Exception {
         when(metadata.lookup(any())).thenReturn(Optional.of(
                 new PaperMetadata("10.1000/xyz123", null, "A paper", null, null, null)));
-        UUID folder = UUID.randomUUID();
+        UUID project = UUID.randomUUID();
 
         mvc.perform(post("/papers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"doi\":\"10.1000/xyz123\",\"folder_id\":\"" + folder + "\"}")
+                        .content("{\"doi\":\"10.1000/xyz123\",\"project_id\":\"" + project + "\"}")
                         .header(HttpHeaders.AUTHORIZATION, TestTokens.user(user)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.folder_id").value(folder.toString()));
+                .andExpect(jsonPath("$.project_id").value(project.toString()));
     }
 
     @Test
-    void blankFolderIsTreatedAsNoFolder() throws Exception {
+    void blankProjectIdIsTreatedAsTheDefaultProject() throws Exception {
         when(metadata.lookup(any())).thenReturn(Optional.of(
                 new PaperMetadata("10.1000/xyz123", null, "A paper", null, null, null)));
 
         mvc.perform(post("/papers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"doi\":\"10.1000/xyz123\",\"folder_id\":\"\"}")
+                        .content("{\"doi\":\"10.1000/xyz123\",\"project_id\":\"\"}")
                         .header(HttpHeaders.AUTHORIZATION, TestTokens.user(user)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.folder_id").isEmpty());
+                .andExpect(jsonPath("$.project_id").isEmpty());
     }
 
     @Test

@@ -50,7 +50,7 @@ public class PaperService {
     }
 
     @Transactional
-    public PaperResponse uploadPdf(UUID ownerId, UUID folderId, MultipartFile file) throws IOException {
+    public PaperResponse uploadPdf(UUID ownerId, UUID projectId, MultipartFile file) throws IOException {
         if (file.getSize() > maxPdfSize.toBytes()) {
             throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE,
                     "PDF is too large, the limit is " + maxPdfSize.toMegabytes() + " MB");
@@ -65,7 +65,7 @@ public class PaperService {
         rejectDuplicate(ownerId, doi);
 
         Paper paper = new Paper(ownerId);
-        paper.setFolderId(folderId);
+        paper.setProjectId(projectId);
         paper.setDoi(doi);
         paper.setTitle(header.title() != null ? header.title() : file.getOriginalFilename());
         if (doi != null) {
@@ -76,7 +76,7 @@ public class PaperService {
     }
 
     @Transactional
-    public PaperResponse trackByDoi(UUID ownerId, UUID folderId, String rawDoi) {
+    public PaperResponse trackByDoi(UUID ownerId, UUID projectId, String rawDoi) {
         String doi = MetadataClient.normalizeDoi(rawDoi);
         if (doi == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "doi is required");
@@ -103,7 +103,7 @@ public class PaperService {
                         + "Try a different paper"));
 
         Paper paper = new Paper(ownerId);
-        paper.setFolderId(folderId);
+        paper.setProjectId(projectId);
         paper.setDoi(doi);
         applyMetadata(paper, found);
         paper.setFileKey(files.save(pdf));

@@ -6,7 +6,7 @@ import com.g4t1.storage.alert.LowercaseEnumConverter;
 
 import java.util.Locale;
 
-// impact's two levels on a report: the change's severity (NONE = not meaningful) and the impact on the draft
+// impact's two levels on a report: the change severity (NONE = not meaningful) and the impact on the draft
 public enum AssessmentLevel {
     NONE, LOW, MEDIUM, HIGH;
 

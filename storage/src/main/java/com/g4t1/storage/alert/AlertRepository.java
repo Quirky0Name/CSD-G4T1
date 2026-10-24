@@ -20,7 +20,7 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     @Query("select a.changeKey from Alert a where a.paperId = :paperId order by a.changeKey")
     List<String> findChangeKeysByPaperId(@Param("paperId") UUID paperId);
 
-    // unordered; AlertService sorts the list, since the order depends on severity
+    // unordered; AlertService sorts the list, since the order depends on alert severity
     List<Alert> findByPaperId(UUID paperId);
 
     List<Alert> findByPaperIdAndStatusNot(UUID paperId, AlertStatus status);
@@ -44,13 +44,13 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
-            update Alert a set a.severity = :severity, a.description = :description,
+            update Alert a set a.alertSeverity = :alertSeverity, a.description = :description,
                 a.recommendation = :recommendation, a.noticeDoi = :noticeDoi, a.detectedAt = :detectedAt,
                 a.snapshotId = :snapshotId, a.previousSnapshotId = :previousSnapshotId,
                 a.status = :status, a.statusChangedAt = null, a.reportId = null
             where a.id = :id and a.noticeDoi is null""")
     int replaceNoticelessRetraction(@Param("id") long id,
-                                    @Param("severity") Severity severity,
+                                    @Param("alertSeverity") AlertSeverity alertSeverity,
                                     @Param("description") String description,
                                     @Param("recommendation") String recommendation,
                                     @Param("noticeDoi") String noticeDoi,

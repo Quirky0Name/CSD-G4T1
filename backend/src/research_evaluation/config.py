@@ -15,7 +15,7 @@ DEFAULT_SM_BASE_URL = "http://localhost:8081"
 DEFAULT_SNAPSHOT_WINDOW = 5
 DEFAULT_GEMINI_MODEL = "gemini-flash-latest"
 # not gemini-3.8-flash (what gemini-flash-latest resolves to) nor gemini-2.5-flash (gone for new
-# keys): docs/EVAL-GEM-FAILSAFE.md
+# keys): docs/EVALUATION.md, "Impact"
 DEFAULT_GEMINI_FALLBACK_MODELS = ("gemini-flash-lite-latest",)
 
 
@@ -39,12 +39,12 @@ class ResearchEvaluationSettings(BaseSettings):
     # impact.llm refuses to build a client when it's missing
     gemini_api_key: SecretStr | None = None
     gemini_model: str = DEFAULT_GEMINI_MODEL
-    # tried in order after gemini_model when a call to it fails (docs/EVAL-GEM-FAILSAFE.md);
+    # tried in order after gemini_model when a call to it fails (docs/EVALUATION.md, "Impact");
     # comma separated in the env, empty for none
     gemini_fallback_models: Annotated[list[str], NoDecode] = list(DEFAULT_GEMINI_FALLBACK_MODELS)
     # how long impact waits for one Gemini call; it runs after investigation, in the background
     impact_llm_timeout_seconds: float = Field(default=120, gt=0)
-    # the demo's notification when a report is assessed (docs/EVALUATION-NOTIF.md): a Telegram
+    # the demo's notification when a report is assessed (docs/EVALUATION.md, "Notification"): a Telegram
     # bot and the one hard-coded chat it writes to; notifications are off unless both are set
     telegram_bot_token: SecretStr | None = None
     notify_telegram_chat_id: str = ""

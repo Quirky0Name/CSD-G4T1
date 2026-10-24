@@ -164,7 +164,7 @@ class SnapshotTest {
         store(missing, SNAPSHOT)
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.detail").value("No paper " + missing));
-        mvc.perform(get("/internal/papers/{id}/background-info/history", missing)
+        mvc.perform(get("/internal/papers/{id}/snapshots", missing)
                         .header(HttpHeaders.AUTHORIZATION, TestTokens.service()))
                 .andExpect(status().isNotFound());
         assertThat(snapshots.count()).isZero();
@@ -192,23 +192,23 @@ class SnapshotTest {
 
     @Test
     void userTokensAreRefused() throws Exception {
-        mvc.perform(post("/internal/papers/{id}/background-info", paperId)
+        mvc.perform(post("/internal/papers/{id}/snapshots", paperId)
                         .contentType(MediaType.APPLICATION_JSON).content(SNAPSHOT)
                         .header(HttpHeaders.AUTHORIZATION, TestTokens.user(UUID.randomUUID())))
                 .andExpect(status().isForbidden());
-        mvc.perform(get("/internal/papers/{id}/background-info/history", paperId)
+        mvc.perform(get("/internal/papers/{id}/snapshots", paperId)
                         .header(HttpHeaders.AUTHORIZATION, TestTokens.user(UUID.randomUUID())))
                 .andExpect(status().isForbidden());
     }
 
     private ResultActions store(UUID paper, String body) throws Exception {
-        return mvc.perform(post("/internal/papers/{id}/background-info", paper)
+        return mvc.perform(post("/internal/papers/{id}/snapshots", paper)
                 .contentType(MediaType.APPLICATION_JSON).content(body)
                 .header(HttpHeaders.AUTHORIZATION, TestTokens.service()));
     }
 
     private ResultActions history(String query) throws Exception {
-        return mvc.perform(get("/internal/papers/" + paperId + "/background-info/history" + query)
+        return mvc.perform(get("/internal/papers/" + paperId + "/snapshots" + query)
                 .header(HttpHeaders.AUTHORIZATION, TestTokens.service()));
     }
 

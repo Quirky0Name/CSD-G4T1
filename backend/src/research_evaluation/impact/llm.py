@@ -139,7 +139,7 @@ class AllModelsFailed(RuntimeError):
 
 @dataclass(frozen=True)
 class FallbackLlm:
-    """The Llm impact runs with (docs/EVAL-GEM-FAILSAFE.md): each call tries GEMINI_MODEL, then
+    """The Llm impact runs with (docs/EVALUATION.md, "Impact"): each call tries GEMINI_MODEL, then
     GEMINI_FALLBACK_MODELS in order, until one answers; raises AllModelsFailed when none
     does. Every call starts again from the first model."""
 

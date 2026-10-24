@@ -4,13 +4,13 @@ from uuid import uuid4
 
 import jwt
 from support import TEST_JWT_KEY
-from updating_support import RUN_POLL, poll_runs, trigger_poll
+from updating_support import RUN_POLL, polls, trigger_poll
 
 from dev.scenarios import DOIS, Scenario
 from updating.models import PollTrigger
 
 
-async def test_a_paper_id_scopes_the_run_to_that_paper(updating_client, updating_app, sm, sources):
+async def test_a_paper_id_scopes_the_poll_to_that_paper(updating_client, updating_app, sm, sources):
     sources.serve("lancet")
     sources.serve("jbc")
     lancet = await sm.add_paper(DOIS["lancet"])
@@ -21,8 +21,8 @@ async def test_a_paper_id_scopes_the_run_to_that_paper(updating_client, updating
     assert summary["paper_id"] == str(lancet) and summary["trigger"] == "manual"
     assert [s["paper_id"] for s in summary["stored"]] == [str(lancet)]
     assert await sm.history(jbc) == []
-    manual_runs = [r for r in await poll_runs(updating_app.state.poll_deps) if r.trigger is PollTrigger.MANUAL]
-    assert len(manual_runs) == 1
+    manual_polls = [r for r in await polls(updating_app.state.poll_deps) if r.trigger is PollTrigger.MANUAL]
+    assert len(manual_polls) == 1
 
 
 async def test_without_a_paper_id_every_paper_is_polled(updating_client, sm, sources):

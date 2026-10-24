@@ -79,7 +79,7 @@ class InternalAlertTest {
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.paper_id").value(paperId.toString()))
                 .andExpect(jsonPath("$.change_type").value("retraction"))
-                .andExpect(jsonPath("$.severity").value("high"))
+                .andExpect(jsonPath("$.alert_severity").value("high"))
                 .andExpect(jsonPath("$.description").value("This paper was retracted."))
                 .andExpect(jsonPath("$.recommendation").value("Stop relying on its findings."))
                 .andExpect(jsonPath("$.notice_doi").value("10.1016/j.ijantimicag.2020.106063"))
@@ -96,7 +96,7 @@ class InternalAlertTest {
         assertThat(saved.getPaperId()).isEqualTo(paperId);
         assertThat(saved.getChangeType()).isEqualTo(ChangeType.RETRACTION);
         assertThat(saved.getChangeKey()).isEqualTo("retraction");
-        assertThat(saved.getSeverity()).isEqualTo(Severity.HIGH);
+        assertThat(saved.getAlertSeverity()).isEqualTo(AlertSeverity.HIGH);
         assertThat(saved.getDescription()).isEqualTo("This paper was retracted.");
         assertThat(saved.getRecommendation()).isEqualTo("Stop relying on its findings.");
         assertThat(saved.getNoticeDoi()).isEqualTo("10.1016/j.ijantimicag.2020.106063");
@@ -108,7 +108,7 @@ class InternalAlertTest {
         assertThat(saved.getCreatedAt()).isNotNull();
 
         // the raw columns hold the same lowercase values as the API, not the enum names
-        List<String> columns = jdbc.queryForObject("select change_type, severity, status from alerts",
+        List<String> columns = jdbc.queryForObject("select change_type, alert_severity, status from alerts",
                 (row, n) -> List.of(row.getString(1), row.getString(2), row.getString(3)));
         assertThat(columns).containsExactly("retraction", "high", "new");
     }
@@ -146,12 +146,12 @@ class InternalAlertTest {
 
         Map<String, Object> resent = body();
         resent.put("description", "A different description");
-        resent.put("severity", "low");
+        resent.put("alert_severity", "low");
         store(paperId, resent)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(first.getId()))
                 .andExpect(jsonPath("$.description").value("This paper was retracted."))
-                .andExpect(jsonPath("$.severity").value("high"))
+                .andExpect(jsonPath("$.alert_severity").value("high"))
                 .andExpect(jsonPath("$.status").value("acknowledged"))
                 .andExpect(jsonPath("$.status_changed_at").value("2026-09-21T08:00:00Z"));
 
@@ -291,7 +291,7 @@ class InternalAlertTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"change_type", "change_key", "severity", "description", "recommendation",
+    @ValueSource(strings = {"change_type", "change_key", "alert_severity", "description", "recommendation",
             "detected_at", "snapshot_id", "previous_snapshot_id"})
     void aMissingRequiredFieldIsABadRequest(String field) throws Exception {
         Map<String, Object> body = body();
@@ -317,13 +317,13 @@ class InternalAlertTest {
         badType.put("change_type", "withdrawal");
         store(paperId, badType).andExpect(status().isBadRequest());
 
-        Map<String, Object> badSeverity = body();
-        badSeverity.put("severity", "urgent");
-        store(paperId, badSeverity).andExpect(status().isBadRequest());
+        Map<String, Object> badAlertSeverity = body();
+        badAlertSeverity.put("alert_severity", "urgent");
+        store(paperId, badAlertSeverity).andExpect(status().isBadRequest());
 
         // only the exact lowercase value is accepted
         Map<String, Object> upperCase = body();
-        upperCase.put("severity", "HIGH");
+        upperCase.put("alert_severity", "HIGH");
         store(paperId, upperCase).andExpect(status().isBadRequest());
 
         assertThat(alerts.count()).isZero();
@@ -388,7 +388,7 @@ class InternalAlertTest {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("change_type", "retraction");
         body.put("change_key", "retraction");
-        body.put("severity", "high");
+        body.put("alert_severity", "high");
         body.put("description", "This paper was retracted.");
         body.put("recommendation", "Stop relying on its findings.");
         body.put("notice_doi", "10.1016/j.ijantimicag.2020.106063");

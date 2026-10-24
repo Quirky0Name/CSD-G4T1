@@ -1,8 +1,8 @@
-import type { Alert, AlertStatus, ChangeType, Severity } from './api'
+import type { Alert, AlertStatus, ChangeType, AlertSeverity } from './api'
 
 // Records keyed by the full union so a new API value is a compile error
 // here, not a silent blank label.
-export const SEVERITY_LABEL: Record<Severity, string> = {
+export const ALERT_SEVERITY_LABEL: Record<AlertSeverity, string> = {
   high: 'High',
   medium: 'Medium',
   low: 'Low',
@@ -24,7 +24,7 @@ export const ALERT_STATUS_LABEL: Record<AlertStatus, string> = {
 }
 
 // high, then medium, then low (docs/CONTRACTS.md, GET /papers/{id}/alerts).
-const SEVERITY_RANK: Record<Severity, number> = { high: 0, medium: 1, low: 2 }
+const ALERT_SEVERITY_RANK: Record<AlertSeverity, number> = { high: 0, medium: 1, low: 2 }
 
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
@@ -34,23 +34,23 @@ export function formatDateTime(iso: string): string {
 }
 
 // GET /papers/{id}/alerts' order (docs/CONTRACTS.md): newest first by
-// detected_at, ties broken by severity then by id descending. Alert lists
+// detected_at, ties broken by alert severity then by id descending. Alert lists
 // from different papers are each ordered this way already; combining them
 // needs the same comparator to stay newest-first as one list.
 export function compareAlerts(a: Alert, b: Alert): number {
   if (a.detected_at !== b.detected_at) return a.detected_at < b.detected_at ? 1 : -1
-  if (a.severity !== b.severity) return SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity]
+  if (a.alert_severity !== b.alert_severity) return ALERT_SEVERITY_RANK[a.alert_severity] - ALERT_SEVERITY_RANK[b.alert_severity]
   return b.id - a.id
 }
 
-// The paper's severity state (LOCAL_STORAGE_DB.md, "Retrieve paper severity
-// state"): the highest severity among its unresolved alerts, or none.
-export function highestNewSeverity(alerts: Alert[]): Severity | null {
-  let highest: Severity | null = null
+// The paper's alert severity state (docs/CONTRACTS.md, the frontend feature
+// table): the highest alert severity among its unresolved alerts, or none.
+export function highestNewAlertSeverity(alerts: Alert[]): AlertSeverity | null {
+  let highest: AlertSeverity | null = null
   for (const alert of alerts) {
     if (alert.status !== 'new') continue
-    if (highest === null || SEVERITY_RANK[alert.severity] < SEVERITY_RANK[highest]) {
-      highest = alert.severity
+    if (highest === null || ALERT_SEVERITY_RANK[alert.alert_severity] < ALERT_SEVERITY_RANK[highest]) {
+      highest = alert.alert_severity
     }
   }
   return highest

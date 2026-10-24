@@ -126,16 +126,16 @@ class PaperUploadTest {
     }
 
     @Test
-    void uploadKeepsTheFolderItWasAddedTo() throws Exception {
+    void uploadKeepsTheProjectItWasAddedTo() throws Exception {
         when(grobid.extractHeader(any())).thenReturn(Optional.empty());
-        UUID folder = UUID.randomUUID();
+        UUID project = UUID.randomUUID();
 
-        mvc.perform(multipart("/papers").file(pdf(PDF)).param("folder_id", folder.toString())
+        mvc.perform(multipart("/papers").file(pdf(PDF)).param("project_id", project.toString())
                         .header(HttpHeaders.AUTHORIZATION, TestTokens.user(user)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.folder_id").value(folder.toString()));
+                .andExpect(jsonPath("$.project_id").value(project.toString()));
 
-        assertThat(papers.findAll().getFirst().getFolderId()).isEqualTo(folder);
+        assertThat(papers.findAll().getFirst().getProjectId()).isEqualTo(project);
     }
 
     @Test

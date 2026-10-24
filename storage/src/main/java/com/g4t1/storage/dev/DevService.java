@@ -111,7 +111,7 @@ public class DevService {
         // documents cascade with their report, notes with their alert
         jdbc.update("delete from reports where paper_id = ?", paperId);
         jdbc.update("delete from alerts where paper_id = ?", paperId);
-        jdbc.update("delete from background_metadata where paper_id = ?", paperId);
+        jdbc.update("delete from snapshots where paper_id = ?", paperId);
         return documentFiles;
     }
 

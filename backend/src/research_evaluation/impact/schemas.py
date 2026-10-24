@@ -11,7 +11,7 @@ Role = Literal[
 ]
 
 # every text of the evaluation stored when every Gemini model failed a step
-# (docs/EVAL-GEM-FAILSAFE.md; the story owner's wording)
+# (docs/EVALUATION.md, "Impact"; the story owner's wording)
 PLACEHOLDER_TEXT = "FUCK U GEMINI FLASH. WHO TF IS EVEN USING GEMINI FLASH"
 
 
@@ -86,7 +86,7 @@ class RecommendedActions(_Answer):
 
 class Evaluation(BaseModel):
     """The body of `PUT /internal/reports/{id}/evaluation`. With change_severity none only the
-    summary and severity are set (and assessment); the rest stays null."""
+    summary and change severity are set (and assessment); the rest stays null."""
 
     change_summary: str
     change_severity: Level

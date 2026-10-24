@@ -61,7 +61,7 @@ async def post_snapshot(
     http: httpx.AsyncClient, paper_id: PaperId, snapshot: Snapshot
 ) -> SnapshotId:
     response = await http.post(
-        f"/internal/papers/{paper_id}/background-info", json=snapshot.model_dump(mode="json")
+        f"/internal/papers/{paper_id}/snapshots", json=snapshot.model_dump(mode="json")
     )
     response.raise_for_status()
     return StoredSnapshot.model_validate(response.json()).snapshot_id
@@ -76,7 +76,7 @@ async def latest_snapshot(
         params: dict[str, int] = {"limit": HISTORY_PAGE_SIZE}
         if after_id is not None:
             params["after_id"] = after_id
-        response = await http.get(f"/internal/papers/{paper_id}/background-info/history", params=params)
+        response = await http.get(f"/internal/papers/{paper_id}/snapshots", params=params)
         response.raise_for_status()
         rows = _HistoryPage.model_validate(response.json()).snapshots
         if rows:

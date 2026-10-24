@@ -66,7 +66,7 @@ class AlertInReport(BaseModel):
     id: int
     change_type: str
     change_key: str
-    severity: str
+    alert_severity: str
     description: str
     notice_doi: str | None = None
     detected_at: datetime
@@ -135,7 +135,7 @@ def sm_client(request: Request) -> httpx.AsyncClient:
 async def snapshot_history(http: httpx.AsyncClient, paper_id: UUID, last: int) -> list[Snapshot]:
     """get the newest last N snapshots of the paper (oldest first) from SM
     last = snapshot window"""
-    response = await http.get(f"/internal/papers/{paper_id}/background-info/history", params={"last": last})
+    response = await http.get(f"/internal/papers/{paper_id}/snapshots", params={"last": last})
     _raise_for_status(response, paper_id)
     # turn json body into python objects (BaseModel wrapper)
     history = _History.model_validate(response.json())
@@ -202,7 +202,7 @@ async def paper_details(http: httpx.AsyncClient, paper_id: UUID) -> PaperDetails
     """The paper's DOI, title, year, journal and authors from its newest snapshot; all empty when
     it has none yet."""
     response = await http.get(
-        f"/internal/papers/{paper_id}/background-info/history", params={"last": 1}
+        f"/internal/papers/{paper_id}/snapshots", params={"last": 1}
     )
     _raise_for_status(response, paper_id)
     snapshots = response.json().get("snapshots") or []
@@ -218,9 +218,9 @@ async def paper_pdf(http: httpx.AsyncClient, paper_id: UUID) -> bytes | None:
 
 
 async def draft_pdf(http: httpx.AsyncClient, paper_id: UUID) -> bytes | None:
-    """The researcher's own paper for the tracked paper's project, or None when the project has
+    """The researcher's draft for the tracked paper's project, or None when the project has
     none (most don't) or its file is missing from disk. Only `No paper <id>` is the paper gone."""
-    return await _pdf(http, f"/internal/papers/{paper_id}/research-paper", paper_id)
+    return await _pdf(http, f"/internal/papers/{paper_id}/draft", paper_id)
 
 
 async def document_pdf(http: httpx.AsyncClient, document_id: int) -> bytes | None:

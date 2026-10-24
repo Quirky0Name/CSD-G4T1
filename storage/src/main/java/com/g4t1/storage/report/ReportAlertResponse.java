@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.g4t1.storage.alert.Alert;
 import com.g4t1.storage.alert.AlertStatus;
 import com.g4t1.storage.alert.ChangeType;
-import com.g4t1.storage.alert.Severity;
+import com.g4t1.storage.alert.AlertSeverity;
 
 import java.time.Instant;
 
@@ -15,7 +15,7 @@ public record ReportAlertResponse(
         Long id,
         ChangeType changeType,
         String changeKey,
-        Severity severity,
+        AlertSeverity alertSeverity,
         String description,
         String recommendation,
         String noticeDoi,
@@ -24,7 +24,7 @@ public record ReportAlertResponse(
 
     static ReportAlertResponse from(Alert alert) {
         return new ReportAlertResponse(alert.getId(), alert.getChangeType(), alert.getChangeKey(),
-                alert.getSeverity(), alert.getDescription(), alert.getRecommendation(), alert.getNoticeDoi(),
+                alert.getAlertSeverity(), alert.getDescription(), alert.getRecommendation(), alert.getNoticeDoi(),
                 alert.getDetectedAt(), alert.getStatus());
     }
 }

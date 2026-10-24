@@ -6,7 +6,7 @@ import com.g4t1.storage.alert.AlertRepository;
 import com.g4t1.storage.alert.AlertStatus;
 import com.g4t1.storage.alert.ChangeType;
 import com.g4t1.storage.alert.NewAlertRequest;
-import com.g4t1.storage.alert.Severity;
+import com.g4t1.storage.alert.AlertSeverity;
 import com.g4t1.storage.paper.Paper;
 import com.g4t1.storage.paper.PaperRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,16 +74,16 @@ class ReportListTest {
 
     @Test
     void reportsComeNewestFirstEachWithOnlyItsOwnAlertsAndDocuments() throws Exception {
-        long retraction = alert(paperId, "retraction", Severity.HIGH, "2026-09-20T12:00:00Z", "10.1/r").getId();
+        long retraction = alert(paperId, "retraction", AlertSeverity.HIGH, "2026-09-20T12:00:00Z", "10.1/r").getId();
         long first = open(paperId);
         document(first, "notice", "10.1/r");
-        long correction = alert(paperId, "correction:10.1/c", Severity.MEDIUM, "2026-09-21T12:00:00Z", "10.1/c").getId();
+        long correction = alert(paperId, "correction:10.1/c", AlertSeverity.MEDIUM, "2026-09-21T12:00:00Z", "10.1/c").getId();
         long second = open(paperId);
         document(second, "notice", "10.1/c");
         document(second, "current_version", PAPER_DOI);
         // another paper of the same owner has its own report, which isn't this paper's
         UUID otherPaper = papers.save(new Paper(owner)).getId();
-        alert(otherPaper, "retraction", Severity.HIGH, "2026-09-22T12:00:00Z", "10.1/other");
+        alert(otherPaper, "retraction", AlertSeverity.HIGH, "2026-09-22T12:00:00Z", "10.1/other");
         long others = open(otherPaper);
         document(others, "notice", "10.1/other");
 
@@ -99,14 +99,14 @@ class ReportListTest {
 
     @Test
     void alertsHaveTheAlertApiShapeInTheAlertListOrderWithDismissedOnesIncluded() throws Exception {
-        // stored in the order Research Evaluation detects them, so within one poll the ids don't follow severity
+        // stored in the order Research Evaluation detects them, so within one poll the ids don't follow alert severity
         String poll = "2026-09-10T00:00:00Z";
-        Alert retraction = alert(paperId, "retraction", Severity.HIGH, poll, "10.1/r");
-        long erratum = alert(paperId, "erratum:10.1/e", Severity.LOW, poll, "10.1/e").getId();
-        long correction = alert(paperId, "correction:10.1/c", Severity.MEDIUM, poll, "10.1/c").getId();
-        long concern = alert(paperId, "expression_of_concern:10.1/x", Severity.MEDIUM, poll, "10.1/x").getId();
-        // a later detection comes first, whatever its severity
-        long later = alert(paperId, "erratum:10.1/l", Severity.LOW, "2026-09-11T00:00:00Z", "10.1/l").getId();
+        Alert retraction = alert(paperId, "retraction", AlertSeverity.HIGH, poll, "10.1/r");
+        long erratum = alert(paperId, "erratum:10.1/e", AlertSeverity.LOW, poll, "10.1/e").getId();
+        long correction = alert(paperId, "correction:10.1/c", AlertSeverity.MEDIUM, poll, "10.1/c").getId();
+        long concern = alert(paperId, "expression_of_concern:10.1/x", AlertSeverity.MEDIUM, poll, "10.1/x").getId();
+        // a later detection comes first, whatever its alert severity
+        long later = alert(paperId, "erratum:10.1/l", AlertSeverity.LOW, "2026-09-11T00:00:00Z", "10.1/l").getId();
         dismiss(retraction);
         open(paperId);
 
@@ -118,7 +118,7 @@ class ReportListTest {
                 .andExpect(jsonPath("$.reports[0].alerts[1].id").value(retraction.getId()))
                 .andExpect(jsonPath("$.reports[0].alerts[1].paper_id").value(paperId.toString()))
                 .andExpect(jsonPath("$.reports[0].alerts[1].change_type").value("retraction"))
-                .andExpect(jsonPath("$.reports[0].alerts[1].severity").value("high"))
+                .andExpect(jsonPath("$.reports[0].alerts[1].alert_severity").value("high"))
                 .andExpect(jsonPath("$.reports[0].alerts[1].description").value("Description of retraction"))
                 .andExpect(jsonPath("$.reports[0].alerts[1].recommendation").value("Recommendation for retraction"))
                 .andExpect(jsonPath("$.reports[0].alerts[1].notice_doi").value("10.1/r"))
@@ -136,7 +136,7 @@ class ReportListTest {
 
     @Test
     void documentsHaveTheirStoredFieldsWithoutStorageColumnsOldestFirst() throws Exception {
-        alert(paperId, "retraction", Severity.HIGH, "2026-09-20T12:00:00Z", "10.1016/j.ijantimicag.2024.107416");
+        alert(paperId, "retraction", AlertSeverity.HIGH, "2026-09-20T12:00:00Z", "10.1016/j.ijantimicag.2024.107416");
         long reportId = open(paperId);
         ReportDocument notice = documents.saveAndFlush(new ReportDocument(new NewReportDocumentRequest(reportId,
                 DocumentKind.NOTICE, "10.1016/j.ijantimicag.2024.107416", CrossrefStatus.OK, null, true,
@@ -186,10 +186,10 @@ class ReportListTest {
 
     @Test
     void eachReportHasItsStatusAndNoEvaluationYet() throws Exception {
-        alert(paperId, "retraction", Severity.HIGH, "2026-09-20T12:00:00Z", "10.1/r");
+        alert(paperId, "retraction", AlertSeverity.HIGH, "2026-09-20T12:00:00Z", "10.1/r");
         long investigated = open(paperId);
         reportService.changeStatus(paperId, investigated, ReportStatus.INVESTIGATED);
-        alert(paperId, "correction:10.1/c", Severity.MEDIUM, "2026-09-21T12:00:00Z", "10.1/c");
+        alert(paperId, "correction:10.1/c", AlertSeverity.MEDIUM, "2026-09-21T12:00:00Z", "10.1/c");
         long investigating = open(paperId);
         Report done = reports.findById(investigated).orElseThrow();
         Report opened = reports.findById(investigating).orElseThrow();
@@ -212,11 +212,11 @@ class ReportListTest {
     @Test
     void aReportWhoseAlertMovedToALaterReportIsStillListedWithNoAlerts() throws Exception {
         // OpenAlex's flag first: a retraction alert with no notice, and the current copy fetched for it
-        Alert flag = alert(paperId, "retraction", Severity.HIGH, "2026-09-20T12:00:00Z", null);
+        Alert flag = alert(paperId, "retraction", AlertSeverity.HIGH, "2026-09-20T12:00:00Z", null);
         long flagReport = open(paperId);
         document(flagReport, "current_version", PAPER_DOI);
         // the notice arrives later and replaces the alert, which leaves its report for the next one
-        alerts.replaceNoticelessRetraction(flag.getId(), Severity.HIGH, "Retracted, with a notice.",
+        alerts.replaceNoticelessRetraction(flag.getId(), AlertSeverity.HIGH, "Retracted, with a notice.",
                 "Read the notice.", "10.1/notice", Instant.parse("2026-09-21T12:00:00Z"), 44L, 43L, AlertStatus.NEW);
         long noticeReport = open(paperId);
         document(noticeReport, "notice", "10.1/notice");
@@ -233,7 +233,7 @@ class ReportListTest {
     @Test
     void aPaperWithNoReportsGivesAnEmptyList() throws Exception {
         // an alert no report has grouped yet isn't in any report
-        alert(paperId, "retraction", Severity.HIGH, "2026-09-20T12:00:00Z", "10.1/r");
+        alert(paperId, "retraction", AlertSeverity.HIGH, "2026-09-20T12:00:00Z", "10.1/r");
 
         list(paperId, owner)
                 .andExpect(status().isOk())
@@ -243,7 +243,7 @@ class ReportListTest {
 
     @Test
     void anotherUsersPaperLooksTheSameAsAMissingOne() throws Exception {
-        alert(paperId, "retraction", Severity.HIGH, "2026-09-20T12:00:00Z", "10.1/r");
+        alert(paperId, "retraction", AlertSeverity.HIGH, "2026-09-20T12:00:00Z", "10.1/r");
         open(paperId);
         UUID missing = UUID.randomUUID();
 
@@ -277,9 +277,9 @@ class ReportListTest {
         return mvc.perform(get("/papers/" + paper + "/reports").header(HttpHeaders.AUTHORIZATION, TestTokens.user(user)));
     }
 
-    private Alert alert(UUID paper, String changeKey, Severity severity, String detectedAt, String noticeDoi) {
+    private Alert alert(UUID paper, String changeKey, AlertSeverity alertSeverity, String detectedAt, String noticeDoi) {
         String type = changeKey.split(":")[0];
-        return alerts.save(new Alert(paper, new NewAlertRequest(ChangeType.of(type), changeKey, severity,
+        return alerts.save(new Alert(paper, new NewAlertRequest(ChangeType.of(type), changeKey, alertSeverity,
                 "Description of " + type, "Recommendation for " + type, noticeDoi, Instant.parse(detectedAt),
                 42L, 41L)));
     }

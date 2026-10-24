@@ -12,7 +12,7 @@ import java.util.UUID;
 
 // Insert-only: nothing sets a field after the row is saved, so there are no setters.
 @Entity
-@Table(name = "background_metadata")
+@Table(name = "snapshots")
 public class Snapshot {
 
     @Id

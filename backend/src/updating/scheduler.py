@@ -1,7 +1,7 @@
 """The polling schedule. The job is `run_poll` itself: APScheduler logs a job's
 exceptions and carries on, so no wrapper is needed. `max_instances=1` stops a slow
 poll overlapping the next tick (one process only). `run_poll` also takes the lock it shares
-with the manual trigger: a tick that finds it held waits for that run rather than being skipped,
+with the manual trigger: a tick that finds it held waits for that poll rather than being skipped,
 which would push every other paper back a full interval."""
 
 from datetime import UTC, datetime, timedelta
@@ -11,14 +11,14 @@ from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from updating.models import PollRun, PollTrigger
+from updating.models import Poll, PollTrigger
 from updating.poll import PollDeps, run_poll
 
 
 async def last_scheduled_start(sessions: async_sessionmaker[AsyncSession]) -> datetime | None:
     async with sessions() as session:
         started = await session.scalar(
-            select(func.max(PollRun.started_at)).where(PollRun.trigger == PollTrigger.SCHEDULED)
+            select(func.max(Poll.started_at)).where(Poll.trigger == PollTrigger.SCHEDULED)
         )
     if started is not None and started.tzinfo is None:  # SQLite drops the timezone
         started = started.replace(tzinfo=UTC)

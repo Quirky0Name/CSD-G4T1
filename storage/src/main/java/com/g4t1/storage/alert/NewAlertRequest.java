@@ -11,7 +11,7 @@ import java.time.Instant;
 public record NewAlertRequest(
         @NotNull ChangeType changeType,
         @NotBlank @Size(max = 512) String changeKey,
-        @NotNull Severity severity,
+        @NotNull AlertSeverity alertSeverity,
         @NotBlank String description,
         @NotBlank String recommendation,
         @Size(max = 255) String noticeDoi,

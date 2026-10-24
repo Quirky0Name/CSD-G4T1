@@ -19,8 +19,8 @@ class PollTrigger(StrEnum):
     MANUAL = "manual"  # POST /run-poll; never moves the schedule
 
 
-class RunStatus(StrEnum):
-    RUNNING = "running"  # a row that stays `running` was interrupted (the process stopped mid-run)
+class PollStatus(StrEnum):
+    RUNNING = "running"  # a row that stays `running` was interrupted (the process stopped mid-poll)
     SUCCEEDED = "succeeded"
     FAILED = "failed"
 
@@ -50,13 +50,13 @@ class TrackedPaper(Base):
     nudge_pending: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
 
 
-class PollRun(Base):
-    __tablename__ = "poll_runs"
+class Poll(Base):
+    __tablename__ = "polls"
 
     # SQLite only autoincrements a plain INTEGER primary key
     id: Mapped[int] = mapped_column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True)
     trigger: Mapped[PollTrigger] = mapped_column(_enum(PollTrigger))
-    status: Mapped[RunStatus] = mapped_column(_enum(RunStatus))
+    status: Mapped[PollStatus] = mapped_column(_enum(PollStatus))
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     summary: Mapped[dict[str, Any] | None] = mapped_column(sa.JSON)

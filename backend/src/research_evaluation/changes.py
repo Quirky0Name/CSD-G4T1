@@ -28,7 +28,7 @@ _CLASSIFIED_NOTICES = {
     "expression_of_concern": ChangeType.EXPRESSION_OF_CONCERN,
 }
 
-# most severe first, matching rules.SEVERITY (high, then medium, then low); when one notice
+# most severe first, matching rules.ALERT_SEVERITY (high, then medium, then low); when one notice
 # is filed under several types, the first of them here decides its alert
 _NOTICE_PRECEDENCE = ["retraction", "expression_of_concern", "correction", "other", "erratum"]
 

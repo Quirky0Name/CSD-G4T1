@@ -16,11 +16,11 @@ from updating.scheduler import build_scheduler, first_run_time, last_scheduled_s
 NOW = datetime(2026, 9, 25, 12, 0, tzinfo=UTC)
 
 
-def test_first_run_is_now_when_there_has_never_been_a_run():
+def test_first_poll_is_now_when_there_has_never_been_one():
     assert first_run_time(None, 24, NOW) == NOW
 
 
-def test_first_run_counts_from_the_last_scheduled_poll_not_from_startup():
+def test_first_poll_counts_from_the_last_scheduled_poll_not_from_startup():
     assert first_run_time(NOW - timedelta(hours=6), 24, NOW) == NOW + timedelta(hours=18)
 
 
@@ -47,7 +47,7 @@ def seed_run(database_url: str, trigger: PollTrigger, started_at: datetime) -> N
 
 
 @pytest.mark.usefixtures("clean_settings_env")
-def test_app_starts_the_scheduler_after_the_last_scheduled_run_and_stops_it(tmp_path):
+def test_app_starts_the_scheduler_after_the_last_scheduled_poll_and_stops_it(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'updating.db'}"
     last = datetime.now(UTC).replace(microsecond=0) - timedelta(hours=1)
     seed_run(url, PollTrigger.SCHEDULED, last)

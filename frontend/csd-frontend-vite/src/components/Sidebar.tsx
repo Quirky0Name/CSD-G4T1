@@ -9,7 +9,7 @@ import {
 import { NavLink } from 'react-router-dom'
 
 const navigationItems = [
-  { label: 'Folders', to: '/', icon: FolderIcon },
+  { label: 'Projects', to: '/', icon: FolderIcon },
   { label: 'Alerts', to: '/alerts', icon: BellAlertIcon },
 ]
 

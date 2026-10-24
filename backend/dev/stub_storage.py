@@ -41,7 +41,7 @@ class NewAlert(BaseModel):
 
     change_type: Literal["retraction", "correction", "erratum", "expression_of_concern", "doaj_delisting", "other"]
     change_key: str = Field(min_length=1, max_length=512)
-    severity: Literal["high", "medium", "low"]
+    alert_severity: Literal["high", "medium", "low"]
     description: str = Field(min_length=1)
     recommendation: str = Field(min_length=1)
     notice_doi: str | None = None
@@ -114,7 +114,7 @@ REPORT_ALERT_FIELDS = (
     "id",
     "change_type",
     "change_key",
-    "severity",
+    "alert_severity",
     "description",
     "recommendation",
     "notice_doi",
@@ -141,7 +141,7 @@ class Store:
     pdf_downloads: list[str] = field(default_factory=list)
     pdf_files: dict[int, bytes] = field(default_factory=dict)
     # each paper's stored PDF, and the researcher's draft for its project (the stub keeps one per
-    # paper; the real service keys drafts by owner and folder)
+    # paper; the real service keys drafts by owner and project)
     paper_pdfs: dict[UUID, bytes] = field(default_factory=dict)
     drafts: dict[UUID, bytes] = field(default_factory=dict)
 
@@ -199,7 +199,7 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
     def list_papers() -> list[StubPaper]:
         return list(store.papers.values())
 
-    @internal.post("/papers/{paper_id}/background-info", status_code=201)
+    @internal.post("/papers/{paper_id}/snapshots", status_code=201)
     def store_snapshot(paper_id: UUID, snapshot: dict[str, Any]) -> dict[str, Any]:
         find_paper(paper_id)
         return store.add_snapshot(paper_id, snapshot)
@@ -213,16 +213,16 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
             raise HTTPException(404, f"Paper {paper_id} has no stored PDF")
         return Response(content, media_type="application/pdf")
 
-    @internal.get("/papers/{paper_id}/research-paper")
-    def research_paper(paper_id: UUID) -> Response:
+    @internal.get("/papers/{paper_id}/draft")
+    def draft(paper_id: UUID) -> Response:
         """The researcher's draft for the paper's project, with Storage Management's 404 details."""
         find_paper(paper_id)
         content = store.drafts.get(paper_id)
         if content is None:
-            raise HTTPException(404, f"No research paper in the project of paper {paper_id}")
+            raise HTTPException(404, f"No draft in the project of paper {paper_id}")
         return Response(content, media_type="application/pdf")
 
-    @internal.get("/papers/{paper_id}/background-info/history")
+    @internal.get("/papers/{paper_id}/snapshots")
     def history(
         paper_id: UUID,
         after_id: int | None = None,
@@ -259,7 +259,7 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
                 {
                     field: replacement[field]
                     for field in (
-                        "severity",
+                        "alert_severity",
                         "description",
                         "recommendation",
                         "notice_doi",
@@ -336,7 +336,7 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
             "evaluation": None,
             "recommendation": None,
             "evaluated_at": None,
-            # impact's fields (docs/EVALUATION-IMPACT.md), null until the report is assessed
+            # impact's fields (docs/EVALUATION.md, "Impact"), null until the report is assessed
             "change_summary": None,
             "change_severity": None,
             "impact_level": None,
@@ -476,8 +476,8 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
         find_paper(paper_id)
         store.paper_pdfs[paper_id] = await request.body()
 
-    @dev.post("/papers/{paper_id}/research-paper", status_code=204)
-    async def set_research_paper(paper_id: UUID, request: Request) -> None:
+    @dev.post("/papers/{paper_id}/draft", status_code=204)
+    async def set_draft(paper_id: UUID, request: Request) -> None:
         """Stub-only: the request body becomes the draft for the paper's project."""
         find_paper(paper_id)
         store.drafts[paper_id] = await request.body()

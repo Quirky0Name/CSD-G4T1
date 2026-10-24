@@ -17,7 +17,7 @@ import java.util.UUID;
 
 // service-token only; SecurityConfig limits /internal/** to ROLE_SERVICE
 @RestController
-@RequestMapping("/internal/papers/{paperId}/background-info")
+@RequestMapping("/internal/papers/{paperId}/snapshots")
 public class SnapshotController {
 
     private final SnapshotService snapshots;
@@ -33,7 +33,8 @@ public class SnapshotController {
         return snapshots.store(paperId, body);
     }
 
-    @GetMapping("/history")
+    // the paper's snapshot history, oldest first
+    @GetMapping
     public Map<String, List<SnapshotResponse>> history(@PathVariable UUID paperId,
                                                        @RequestParam(name = "after_id", required = false) Long afterId,
                                                        @RequestParam(required = false) Integer last,

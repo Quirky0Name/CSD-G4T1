@@ -65,18 +65,20 @@ class FakeSources:
 
 
 class FaultInjectingTransport(httpx.AsyncBaseTransport):
-    """Makes a stub fail for the requests whose path ends with a given suffix, and records every
-    request it's sent (headers included)."""
+    """Makes a stub fail for the requests whose path ends with a given suffix (a key of
+    `(method, suffix)` limits it to that method), and records every request it's sent (headers
+    included)."""
 
     def __init__(self, inner: httpx.AsyncBaseTransport) -> None:
         self._inner = inner
-        self.faults: dict[str, int | Exception] = {}
+        self.faults: dict[str | tuple[str, str], int | Exception] = {}
         self.sent: list[httpx.Request] = []
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
         self.sent.append(request)
-        for suffix, fault in self.faults.items():
-            if request.url.path.endswith(suffix):
+        for key, fault in self.faults.items():
+            method, suffix = key if isinstance(key, tuple) else (request.method, key)
+            if request.method == method and request.url.path.endswith(suffix):
                 if isinstance(fault, Exception):
                     raise fault
                 return httpx.Response(fault, request=request)
@@ -111,7 +113,7 @@ class StubSm:
         return await post_snapshot(self.client, paper_id, snapshot)
 
     async def history(self, paper_id: UUID) -> list[dict]:
-        response = await self.client.get(f"/internal/papers/{paper_id}/background-info/history")
+        response = await self.client.get(f"/internal/papers/{paper_id}/snapshots")
         return response.json()["snapshots"]
 
 

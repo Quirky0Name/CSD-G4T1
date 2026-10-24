@@ -11,16 +11,16 @@ import {
   type AlertNote,
   type AlertStatus,
   type Paper,
-  type Severity,
+  type AlertSeverity,
 } from '../api'
-import { ALERT_STATUS_LABEL, CHANGE_TYPE_LABEL, SEVERITY_LABEL, compareAlerts, formatDateTime } from '../format'
+import { ALERT_STATUS_LABEL, CHANGE_TYPE_LABEL, ALERT_SEVERITY_LABEL, compareAlerts, formatDateTime } from '../format'
 import { useTracking } from '../tracking'
 import { useToast } from './Toasts'
 
 // docs/CONTRACTS.md, POST /alerts/{id}/notes: "1 to 2000 characters".
 const ALERT_NOTE_MAX_LENGTH = 2000
 
-const SEVERITY_STYLES: Record<Severity, string> = {
+const ALERT_SEVERITY_STYLES: Record<AlertSeverity, string> = {
   high: 'bg-red-400/10 text-red-400 inset-ring-red-400/20',
   medium: 'bg-yellow-400/10 text-yellow-500 inset-ring-yellow-400/20',
   low: 'bg-gray-400/10 text-gray-400 inset-ring-gray-400/20',
@@ -117,9 +117,9 @@ function AlertRows({
                   {CHANGE_TYPE_LABEL[alert.change_type]} — {paperTitle.get(alert.paper_id) ?? 'Unknown paper'}
                 </p>
                 <span
-                  className={`mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-xs font-medium inset-ring ${SEVERITY_STYLES[alert.severity]}`}
+                  className={`mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-xs font-medium inset-ring ${ALERT_SEVERITY_STYLES[alert.alert_severity]}`}
                 >
-                  {SEVERITY_LABEL[alert.severity]}
+                  {ALERT_SEVERITY_LABEL[alert.alert_severity]}
                 </span>
                 {alert.status !== 'new' && (
                   <span

@@ -47,14 +47,14 @@ class PaperListTest {
     @Test
     void listsOnlyTheCallersPapersNewestFirst() throws Exception {
         save(user, "10.1000/older", null);
-        UUID folder = UUID.randomUUID();
-        save(user, "10.1000/newer", folder);
+        UUID project = UUID.randomUUID();
+        save(user, "10.1000/newer", project);
         save(UUID.randomUUID(), "10.1000/someone-else", null);
 
         mvc.perform(get("/papers").header(HttpHeaders.AUTHORIZATION, TestTokens.user(user)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.papers[*].doi").value(contains("10.1000/newer", "10.1000/older")))
-                .andExpect(jsonPath("$.papers[0].folder_id").value(folder.toString()))
+                .andExpect(jsonPath("$.papers[0].project_id").value(project.toString()))
                 .andExpect(jsonPath("$.papers[0].title").value("A paper"));
     }
 
@@ -73,11 +73,11 @@ class PaperListTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    private void save(UUID owner, String doi, UUID folder) throws InterruptedException {
+    private void save(UUID owner, String doi, UUID project) throws InterruptedException {
         Paper paper = new Paper(owner);
         paper.setDoi(doi);
         paper.setTitle("A paper");
-        paper.setFolderId(folder);
+        paper.setProjectId(project);
         papers.save(paper);
         // created_at is set on save; keep the two rows' timestamps apart so the order is certain
         Thread.sleep(5);

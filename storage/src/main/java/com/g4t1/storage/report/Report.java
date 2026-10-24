@@ -34,7 +34,7 @@ public class Report {
 
     private Instant investigatedAt;
 
-    // written by impact (docs/EVALUATION-IMPACT.md); null until the report is assessed
+    // written by impact (docs/EVALUATION.md, "Impact"); null until the report is assessed
     private String evaluation;
     private String recommendation;
     private Instant evaluatedAt;

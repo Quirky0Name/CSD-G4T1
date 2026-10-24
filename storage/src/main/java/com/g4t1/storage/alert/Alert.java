@@ -32,8 +32,8 @@ public class Alert {
     private String changeKey;
 
     @Column(nullable = false)
-    @Convert(converter = Severity.Converter.class)
-    private Severity severity;
+    @Convert(converter = AlertSeverity.Converter.class)
+    private AlertSeverity alertSeverity;
 
     @Column(nullable = false)
     private String description;
@@ -58,7 +58,7 @@ public class Alert {
 
     private Instant statusChangedAt;
 
-    // the report that grouped this alert (docs/EVALUATION-INVESTIGATION.md); null until one does.
+    // the report that grouped this alert (docs/EVALUATION.md, "Investigation"); null until one does.
     // Only ReportService sets it, with one bulk update over the paper's unreported alerts. Read-only
     // here, or saving an alert loaded before that update (e.g. a status change) would write it back
     @Column(insertable = false, updatable = false)
@@ -74,7 +74,7 @@ public class Alert {
         this.paperId = paperId;
         this.changeType = request.changeType();
         this.changeKey = request.changeKey();
-        this.severity = request.severity();
+        this.alertSeverity = request.alertSeverity();
         this.description = request.description();
         this.recommendation = request.recommendation();
         this.noticeDoi = request.noticeDoi();
@@ -104,8 +104,8 @@ public class Alert {
         return changeKey;
     }
 
-    public Severity getSeverity() {
-        return severity;
+    public AlertSeverity getAlertSeverity() {
+        return alertSeverity;
     }
 
     public String getDescription() {

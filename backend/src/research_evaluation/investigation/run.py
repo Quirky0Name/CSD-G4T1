@@ -3,7 +3,7 @@ document the report needs and store it in Storage Management, then mark the repo
 investigated.
 
 It runs in the background, after Research Evaluation has replied to Updating's nudge
-(docs/EVALUATION-INVESTIGATION.md, S6), so nothing here changes that reply. A failure is
+(docs/EVALUATION.md, "Investigation"), so nothing here changes that reply. A failure is
 logged and leaves the report `investigating`; nothing resumes it (a later sprint's job)."""
 
 import logging
