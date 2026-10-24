@@ -6,10 +6,11 @@ import com.g4t1.storage.alert.LowercaseEnumConverter;
 
 import java.util.Locale;
 
-// what a report document is: a notice, a newer version under another DOI, or the paper's own DOI
-// downloaded again (the current copy). Only the last two get a PDF
+// what a report document is: a notice, a newer version under another DOI, the paper's own DOI
+// downloaded again (the current copy), or a document reached by following a link from one of those
+// (a related document). All but a notice get a PDF
 public enum DocumentKind {
-    NOTICE, NEW_VERSION, CURRENT_VERSION;
+    NOTICE, NEW_VERSION, CURRENT_VERSION, RELATED;
 
     @JsonValue
     public String value() {

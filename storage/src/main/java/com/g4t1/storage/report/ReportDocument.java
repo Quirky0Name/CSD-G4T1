@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 // What investigation fetched for one DOI of a report: its Crossref record, its open-access text and,
-// for a new version or the current copy, its PDF. Never overwritten once stored.
+// for anything but a notice, its PDF. Never overwritten once stored.
 @Entity
 @Table(name = "report_documents")
 public class ReportDocument {
@@ -37,6 +37,9 @@ public class ReportDocument {
 
     // raw JSON text
     private String crossrefRecord;
+
+    // raw JSON text: the DOIs and URLs the document points at
+    private String links;
 
     private Boolean updateToIncludesPaper;
 
@@ -65,7 +68,7 @@ public class ReportDocument {
     protected ReportDocument() {
     }
 
-    ReportDocument(NewReportDocumentRequest request, String crossrefRecord) {
+    ReportDocument(NewReportDocumentRequest request, String crossrefRecord, String links) {
         this.reportId = request.reportId();
         this.kind = request.kind();
         this.doi = request.doi();
@@ -75,6 +78,7 @@ public class ReportDocument {
         this.textStatus = request.textStatus();
         this.text = request.text();
         this.textTruncated = request.textTruncated();
+        this.links = links;
         // a notice never gets a PDF; the others wait for Storage Management's download
         this.pdfStatus = kind.hasPdf() ? PdfStatus.PENDING : PdfStatus.SKIPPED;
         // Postgres keeps microseconds; truncating makes the first response match later reads
@@ -117,6 +121,10 @@ public class ReportDocument {
 
     public String getCrossrefRecord() {
         return crossrefRecord;
+    }
+
+    public String getLinks() {
+        return links;
     }
 
     public Boolean getUpdateToIncludesPaper() {

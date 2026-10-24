@@ -81,7 +81,7 @@ class InternalReportEvaluationTest {
         long alertId = alert("retraction");
         long reportId = openedReportId();
         documents.saveAndFlush(new ReportDocument(
-                InternalReportTest.documentRequest(reportId, "notice", "10.1/notice"), null));
+                InternalReportTest.documentRequest(reportId, "notice", "10.1/notice"), null, null));
 
         String flat = read(reportId).andExpect(status().isOk())
                 .andExpect(jsonPath("$.paper_id").value(paperId.toString()))

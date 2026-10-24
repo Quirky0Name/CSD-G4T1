@@ -40,8 +40,8 @@ public class ReportDocumentService {
     }
 
     /**
-     * Stores what investigation fetched for one DOI of a report and, for a new version or the
-     * current copy, downloads its open-access PDF. A DOI already stored for the report returns the
+     * Stores what investigation fetched for one DOI of a report and, for anything but a notice,
+     * downloads its open-access PDF. A DOI already stored for the report returns the
      * stored row untouched, whatever the new body says and whatever its PDF status: nothing is
      * downloaded again. Research Evaluation uses the returned row, and whether a difference matters is
      * for a later sprint. If two requests for the same DOI come at once, the unique constraint keeps
@@ -57,7 +57,8 @@ public class ReportDocumentService {
         }
         ReportDocument saved;
         try {
-            saved = documents.saveAndFlush(new ReportDocument(request, toText(request.crossrefRecord())));
+            saved = documents.saveAndFlush(new ReportDocument(request,
+                    toText(request.crossrefRecord()), toText(request.links())));
         } catch (DataIntegrityViolationException e) {
             // lost the race; anything else (e.g. the report was deleted meanwhile) is a real error
             return documents.findByReportIdAndDoi(request.reportId(), request.doi())
@@ -131,14 +132,16 @@ public class ReportDocumentService {
     private ReportDocumentResponse toResponse(ReportDocument d) {
         return new ReportDocumentResponse(d.getId(), d.getReportId(), d.getKind(), d.getDoi(),
                 d.getCrossrefStatus(), toNode(d.getCrossrefRecord()), d.getUpdateToIncludesPaper(),
-                d.getTextStatus(), d.getText(), d.isTextTruncated(), d.getPdfStatus(), d.getFileKey(),
+                d.getTextStatus(), d.getText(), d.isTextTruncated(), toNode(d.getLinks()), d.getPdfStatus(),
+                d.getFileKey(),
                 d.getSha256(), d.getPdfSourceUrl(), d.getCreatedAt(), d.getPdfFetchedAt());
     }
 
     private UserDocumentResponse toUserResponse(ReportDocument d) {
         return new UserDocumentResponse(d.getId(), d.getKind(), d.getDoi(), d.getCrossrefStatus(),
                 toNode(d.getCrossrefRecord()), d.getUpdateToIncludesPaper(), d.getTextStatus(), d.getText(),
-                d.isTextTruncated(), d.getPdfStatus(), d.getPdfSourceUrl(), d.getCreatedAt(), d.getPdfFetchedAt());
+                d.isTextTruncated(), toNode(d.getLinks()), d.getPdfStatus(), d.getPdfSourceUrl(), d.getCreatedAt(),
+                d.getPdfFetchedAt());
     }
 
     // a JSON null is stored as SQL null, not the text "null"

@@ -124,17 +124,17 @@ sources found nothing has `[]`.
     `STORAGE.md`, Gotchas).
   - Frontend label "Related document" (user: confirmed).
 - **Acceptance criteria:**
-  - [ ] `POST /internal/documents` with `kind` `related` answers `201` with `pdf_status`
+  - [x] `POST /internal/documents` with `kind` `related` answers `201` with `pdf_status`
         `ok` and a `file_key` when the mocked download succeeds, and `not_found` when it finds
         nothing (test in `InternalDocumentTest`).
-  - [ ] `GET /internal/documents/{id}/pdf` serves a stored `related` PDF (test in
+  - [x] `GET /internal/documents/{id}/pdf` serves a stored `related` PDF (test in
         `ReportDocumentPdfTest`).
-  - [ ] A `links` array sent to `POST /internal/documents` comes back unchanged in the `201`
+  - [x] A `links` array sent to `POST /internal/documents` comes back unchanged in the `201`
         row, in `GET /internal/reports/{id}` and in `GET /papers/{id}/reports`; omitted `links`
         comes back `null` (tests in `InternalDocumentTest`, `ReportListTest`).
-  - [ ] An unknown `kind` still answers `400` (existing test passes).
-  - [ ] `./mvnw test` passes.
-  - [ ] `npm run build` and `npm run lint` pass in `frontend/csd-frontend-vite/`.
+  - [x] An unknown `kind` still answers `400` (existing test passes).
+  - [x] `./mvnw test` passes.
+  - [x] `npm run build` and `npm run lint` pass in `frontend/csd-frontend-vite/`.
 - **Doc deltas:**
   - `docs/CONTRACTS.md`, `POST /internal/documents`: `kind` `related`; the `links` field and
     the `Link` shape; `related` gets a PDF; `links` in every document response.
@@ -142,6 +142,14 @@ sources found nothing has `[]`.
     `links` stored as-is.
   - `GLOSSARY.md`: **Related document**: a document investigation reached by following a typed
     link from a notice or new version, not from the paper's own notices.
+  - Decisions made during S1:
+    - `links` is any JSON value (`JsonNode`), not checked to be an array, since storage never
+      looks inside it (like `crossref_record`): `docs/CONTRACTS.md`, `POST /internal/documents`.
+    - A JSON `null` `links` is stored as SQL null, not the text `"null"`, same as
+      `crossref_record`: `docs/CONTRACTS.md`.
+    - The frontend gets a `DocumentLink` type in `api.ts` and `links` on `UserDocument`, but
+      shows nothing of it (out of scope): no doc needed, the type comment points at
+      `docs/CONTRACTS.md`.
 
 ### S2 Link extraction in investigation
 

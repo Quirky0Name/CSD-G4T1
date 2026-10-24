@@ -41,6 +41,9 @@ class ReportListTest {
             {"doi": "10.1016/j.ijantimicag.2024.107416", "title": "Retraction notice", "published": "2024-12",
              "journal": "IJAA", "update_to": [{"doi": "10.1016/j.ijantimicag.2020.105949", "type": "retraction"}],
              "relation": {}}""";
+    private static final String NOTICE_LINKS = """
+            [{"doi": "10.1016/j.ijantimicag.2020.105949", "url": null, "role": "update-to", "source": "crossref"},
+             {"doi": null, "url": "https://example.org/data", "role": null, "source": "europepmc_text"}]""";
 
     @Autowired
     MockMvc mvc;
@@ -140,10 +143,10 @@ class ReportListTest {
         long reportId = open(paperId);
         ReportDocument notice = documents.saveAndFlush(new ReportDocument(new NewReportDocumentRequest(reportId,
                 DocumentKind.NOTICE, "10.1016/j.ijantimicag.2024.107416", CrossrefStatus.OK, null, true,
-                TextStatus.OK, "This article has been retracted.", true), NOTICE_RECORD));
+                TextStatus.OK, "This article has been retracted.", true, null), NOTICE_RECORD, NOTICE_LINKS));
         ReportDocument current = documents.saveAndFlush(new ReportDocument(new NewReportDocumentRequest(reportId,
                 DocumentKind.CURRENT_VERSION, PAPER_DOI, CrossrefStatus.ERROR, null, null,
-                TextStatus.NOT_OPEN_ACCESS, null, false), null));
+                TextStatus.NOT_OPEN_ACCESS, null, false, null), null, null));
         current.recordPdf("stored-key.pdf", "ab".repeat(32), "https://pmc.example/articles/PMC7/pdf/main.pdf");
         current = documents.saveAndFlush(current);
 
@@ -161,6 +164,15 @@ class ReportListTest {
                 .andExpect(jsonPath("$.reports[0].documents[0].text_status").value("ok"))
                 .andExpect(jsonPath("$.reports[0].documents[0].text").value("This article has been retracted."))
                 .andExpect(jsonPath("$.reports[0].documents[0].text_truncated").value(true))
+                // its links as the JSON array that was sent
+                .andExpect(jsonPath("$.reports[0].documents[0].links[0].doi").value(PAPER_DOI))
+                .andExpect(jsonPath("$.reports[0].documents[0].links[0].role").value("update-to"))
+                .andExpect(jsonPath("$.reports[0].documents[0].links[0].source").value("crossref"))
+                .andExpect(jsonPath("$.reports[0].documents[0].links[0].url").value(nullValue()))
+                .andExpect(jsonPath("$.reports[0].documents[0].links[1].url").value("https://example.org/data"))
+                .andExpect(jsonPath("$.reports[0].documents[0].links[1].doi").value(nullValue()))
+                .andExpect(jsonPath("$.reports[0].documents[0].links[1].role").value(nullValue()))
+                .andExpect(jsonPath("$.reports[0].documents[0].links[1].source").value("europepmc_text"))
                 .andExpect(jsonPath("$.reports[0].documents[0].pdf_status").value("skipped"))
                 .andExpect(jsonPath("$.reports[0].documents[0].pdf_source_url").value(nullValue()))
                 .andExpect(jsonPath("$.reports[0].documents[0].created_at").value(notice.getCreatedAt().toString()))
@@ -173,6 +185,7 @@ class ReportListTest {
                 .andExpect(jsonPath("$.reports[0].documents[1].text_status").value("not_open_access"))
                 .andExpect(jsonPath("$.reports[0].documents[1].text").value(nullValue()))
                 .andExpect(jsonPath("$.reports[0].documents[1].text_truncated").value(false))
+                .andExpect(jsonPath("$.reports[0].documents[1].links").value(nullValue()))
                 .andExpect(jsonPath("$.reports[0].documents[1].pdf_status").value("ok"))
                 .andExpect(jsonPath("$.reports[0].documents[1].pdf_source_url")
                         .value("https://pmc.example/articles/PMC7/pdf/main.pdf"))
@@ -296,6 +309,6 @@ class ReportListTest {
     }
 
     private void document(long reportId, String kind, String doi) {
-        documents.saveAndFlush(new ReportDocument(InternalReportTest.documentRequest(reportId, kind, doi), null));
+        documents.saveAndFlush(new ReportDocument(InternalReportTest.documentRequest(reportId, kind, doi), null, null));
     }
 }

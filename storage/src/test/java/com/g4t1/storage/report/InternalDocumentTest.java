@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,6 +47,11 @@ class InternalDocumentTest {
             "update_to", List.of(Map.of("doi", "10.1016/j.ijantimicag.2020.105949", "type", "retraction",
                     "source", "retraction-watch")),
             "published", List.of(2024, 12));
+
+    // what investigation sends: a DOI link and a URL link, stored without being looked inside
+    private static final List<Map<String, Object>> LINKS = List.of(
+            linkOf("10.1016/j.ijantimicag.2020.105949", null, "update-to", "crossref"),
+            linkOf(null, "https://example.org/data", null, "europepmc_xml"));
 
     @Autowired
     MockMvc mvc;
@@ -113,8 +119,8 @@ class InternalDocumentTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"new_version", "current_version"})
-    void aNewVersionOrTheCurrentCopyGetsItsPdfLookedUp(String kind) throws Exception {
+    @ValueSource(strings = {"new_version", "current_version", "related"})
+    void aNewVersionTheCurrentCopyOrARelatedDocumentGetsItsPdfLookedUp(String kind) throws Exception {
         Map<String, Object> body = body();
         body.put("kind", kind);
         body.put("update_to_includes_paper", null);
@@ -125,6 +131,32 @@ class InternalDocumentTest {
                 .andExpect(jsonPath("$.kind").value(kind))
                 .andExpect(jsonPath("$.pdf_status").value("not_found"));
         verify(openAccess).downloadWithSource("10.1016/j.ijantimicag.2024.107416");
+    }
+
+    @Test
+    void linksComeBackExactlyAsSentInTheRowAndTheReport() throws Exception {
+        Map<String, Object> body = body();
+        body.put("links", LINKS);
+
+        String row = store(body).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String report = readReport().andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+        assertThat(json.readTree(row).get("links")).isEqualTo(json.valueToTree(LINKS));
+        assertThat(json.readTree(report).get("documents").get(0).get("links")).isEqualTo(json.valueToTree(LINKS));
+    }
+
+    @Test
+    void omittedOrNullLinksComeBackNull() throws Exception {
+        Map<String, Object> withNull = body();
+        withNull.put("doi", "10.1/null-links");
+        withNull.put("links", null);
+
+        store(body()).andExpect(status().isCreated()).andExpect(jsonPath("$.links").value(nullValue()));
+        store(withNull).andExpect(status().isCreated()).andExpect(jsonPath("$.links").value(nullValue()));
+        readReport()
+                .andExpect(jsonPath("$.documents[0].links").value(nullValue()))
+                .andExpect(jsonPath("$.documents[1].links").value(nullValue()));
+        assertThat(documents.findAll()).allSatisfy(d -> assertThat(d.getLinks()).isNull());
     }
 
     @Test
@@ -239,8 +271,22 @@ class InternalDocumentTest {
 
         // the constraint that backs up ReportDocumentService when two requests race past its lookup
         assertThatThrownBy(() -> documents.saveAndFlush(new ReportDocument(
-                InternalReportTest.documentRequest(reportId, "notice", "10.1016/j.ijantimicag.2024.107416"), null)))
+                InternalReportTest.documentRequest(reportId, "notice", "10.1016/j.ijantimicag.2024.107416"), null, null)))
                 .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    private ResultActions readReport() throws Exception {
+        return mvc.perform(get("/internal/reports/{id}", reportId)
+                .header(HttpHeaders.AUTHORIZATION, TestTokens.service()));
+    }
+
+    private static Map<String, Object> linkOf(String doi, String url, String role, String source) {
+        Map<String, Object> link = new LinkedHashMap<>();
+        link.put("doi", doi);
+        link.put("url", url);
+        link.put("role", role);
+        link.put("source", source);
+        return link;
     }
 
     private ResultActions store(Map<String, Object> body) throws Exception {
