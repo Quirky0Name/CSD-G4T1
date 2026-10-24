@@ -5,7 +5,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Locale;
@@ -25,7 +24,6 @@ public class AuthService {
         this.tokens = tokens;
     }
 
-    @Transactional
     public AuthResponse register(RegisterRequest request) {
         String email = normalised(request.email());
         if (users.existsByEmail(email)) {
@@ -35,7 +33,6 @@ public class AuthService {
         return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
     }
 
-    @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
         Optional<User> found = users.findByEmail(normalised(request.email()));
         String hash = found.map(User::getPasswordHash).orElse(hashForUnknownEmails);
