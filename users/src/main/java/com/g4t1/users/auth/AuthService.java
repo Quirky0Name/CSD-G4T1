@@ -31,4 +31,10 @@ public class AuthService {
         User user = users.save(new User(email, passwords.encode(request.password())));
         return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
     }
+
+    @Transactional(readOnly = true)
+    public AuthResponse login(LoginRequest request) {
+        User user = users.findByEmail(request.email()).orElseThrow();
+        return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
+    }
 }
