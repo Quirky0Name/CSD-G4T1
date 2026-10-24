@@ -30,8 +30,9 @@ most needed first within each.
   (`GET/POST/PUT/DELETE /projects…`). Register and login, which issue the
   JWT, are built (`users/`).
 - [ ] Frontend login, auth state and a JWT-attaching interceptor in place
-  of `VITE_DEMO_TOKEN`, plus a Vite proxy entry for User Management (it
-  sends no CORS headers).
+  of the demo token hard-coded in `api.ts`, which expires on 2026-10-28.
+  Plus a Vite proxy entry for User Management in development (it sends no
+  CORS headers; the root stack's web server already routes `/auth`).
 - [ ] `POST /run-poll` takes the user's JWT (CG-99).
 - [ ] Real project ids from the frontend for papers and drafts.
 - [ ] Notifications to the paper's owner instead of one hard-coded
@@ -132,14 +133,22 @@ Gemini, so pick the provider again when they're started.
 
 ## Deployment
 
-- [ ] Host the compose stack on one VM; PDFs on a persistent volume (S3
-  later if it outgrows one VM).
-- [ ] A Dockerfile for User Management and a place in the compose stack
-  (CG-135); `users/docker-compose.yml` runs only its Postgres today.
-- [ ] Postgres on Supabase (session pooler, port 5432; it starts empty and
-  runs every migration).
+- [ ] Host the root compose stack on one EC2 VM (CG-136), with 4 GB or
+  more (the stack idles at about 3 GB, GROBID's 2 GB included). HTTPS on a
+  hostname: the hostname as the Caddyfile's site address, 443 published
+  as well as 80, and a volume for Caddy's `/data` so its certificates
+  survive. Only 80 and 443 open; the database and PDF volumes on its disk
+  and backed up together (S3 for the PDFs later if it outgrows one VM).
+- [ ] Keep `/updating` off the public web server (or behind Caddy's
+  `basic_auth`) until `POST /run-poll` takes the user's JWT (CG-99):
+  anyone can start a poll today.
+- [ ] Updating retries its startup poll while Storage Management isn't up
+  yet (Updating's owner). After a host reboot Docker restarts the
+  containers in no set order, and a poll that fails then counts as the
+  day's poll.
 - [ ] CI that builds each image on merge to `main` and redeploys (today CI
   is a Trivy scan and Telegram PR pings).
-- [ ] Before a real deployment: remove the `/dev` tools and Swagger (or
-  put them behind a setting), real secrets per service, CORS instead of
-  the Vite proxy.
+- [ ] Before a real deployment: the `/dev` tools and Swagger off by a
+  setting, real secrets, a health endpoint for Storage Management, and its
+  container not running as root (CG-133); a database role per service
+  instead of the one shared role.
