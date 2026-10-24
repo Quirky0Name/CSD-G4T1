@@ -105,6 +105,13 @@ class CrossrefRecord(BaseModel):
         target = normalize_doi(doi)
         return target is not None and any(entry.doi == target for entry in self.update_to)
 
+    def names_any(self, dois: set[str]) -> bool:
+        """Whether `update_to`, `updated_by` or a relation names one of these (normalised)
+        DOIs."""
+        named = {entry.doi for entry in [*self.update_to, *self.updated_by]}
+        named.update(doi for targets in self.relation.values() for doi in targets)
+        return not named.isdisjoint(dois)
+
 
 CrossrefResult = CrossrefRecord | FetchStatus  # NOT_FOUND or ERROR when there's no record
 

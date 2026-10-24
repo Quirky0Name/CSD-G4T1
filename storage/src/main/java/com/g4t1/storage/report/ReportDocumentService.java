@@ -133,8 +133,7 @@ public class ReportDocumentService {
         return new ReportDocumentResponse(d.getId(), d.getReportId(), d.getKind(), d.getDoi(),
                 d.getCrossrefStatus(), toNode(d.getCrossrefRecord()), d.getUpdateToIncludesPaper(),
                 d.getTextStatus(), d.getText(), d.isTextTruncated(), toNode(d.getLinks()), d.getPdfStatus(),
-                d.getFileKey(),
-                d.getSha256(), d.getPdfSourceUrl(), d.getCreatedAt(), d.getPdfFetchedAt());
+                d.getFileKey(), d.getSha256(), d.getPdfSourceUrl(), d.getCreatedAt(), d.getPdfFetchedAt());
     }
 
     private UserDocumentResponse toUserResponse(ReportDocument d) {

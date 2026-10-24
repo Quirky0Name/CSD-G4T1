@@ -2,8 +2,9 @@
 
 `plan_documents` turns the detected changes behind a report's alerts into the DOIs to fetch;
 `fetch_document` fetches one DOI's Crossref record (S3) and open-access text (S4) side by
-side, and keeps the links both point at. Neither touches Storage Management: the caller stores the result
-(`POST /internal/documents`), and Storage Management downloads the PDF then."""
+side, and keeps the links both point at. Neither touches Storage Management: the caller
+stores the result (`POST /internal/documents`), and Storage Management downloads the PDF
+then."""
 
 import asyncio
 import logging
@@ -148,14 +149,18 @@ async def fetch_document(
     planned: PlannedDocument,
     paper_doi: str | None,
     mailto: str,
-    record: CrossrefResult | None = None,
+    known_record: CrossrefResult | None = None,
 ) -> FetchedDocument:
     """The document's Crossref record and open-access text, fetched side by side, and their
     links (Crossref's first, each DOI and URL once). A record already fetched (a checked link's)
     is used instead of asking Crossref again. One failing never stops the other, and nothing
     raises: a failure is a status."""
     record, text = await asyncio.gather(
-        _known(record) if record is not None else fetch_record(http, planned.doi, mailto),
+        (
+            _known(known_record)
+            if known_record is not None
+            else fetch_record(http, planned.doi, mailto)
+        ),
         fetch_text(http, planned.doi),
         return_exceptions=True,
     )
@@ -202,13 +207,8 @@ def classify_link(link: Link, paper_doi: str | None, seen: set[str]) -> LinkOutc
 def lineage_match(record: CrossrefRecord, paper_doi: str | None, report_dois: set[str]) -> bool:
     """Whether a checked DOI's record says it's in the paper's history: its `update-to`,
     `updated-by` or a relation names the paper or a DOI already in the report."""
-    known = set(report_dois)
     paper = normalize_doi(paper_doi)
-    if paper is not None:
-        known.add(paper)
-    named = {entry.doi for entry in [*record.update_to, *record.updated_by]}
-    named.update(doi for dois in record.relation.values() for doi in dois)
-    return not named.isdisjoint(known)
+    return record.names_any(report_dois | {paper} if paper is not None else report_dois)
 
 
 def _or_status(result: Any, failure: Any, source: str, doi: str) -> Any:

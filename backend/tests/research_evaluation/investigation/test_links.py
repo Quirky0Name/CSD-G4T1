@@ -68,3 +68,12 @@ def test_each_doi_and_url_is_kept_once_the_first_wins():
     url_again = Link(doi=None, url="https://example.org", role=None, source=LinkSource.EUROPEPMC_XML)
 
     assert unique([first, url, again, url_again]) == [first, url]
+
+
+def test_a_doi_inside_another_url_is_also_a_doi_link():
+    text = "Read it at https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0258361."
+
+    assert [(link.doi, link.url) for link in text_links(text)] == [
+        (None, "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0258361"),
+        ("10.1371/journal.pone.0258361", None),
+    ]

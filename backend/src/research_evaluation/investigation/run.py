@@ -194,7 +194,7 @@ async def follow_links(
                 PlannedDocument(kind=DocumentKind.RELATED, doi=link.doi),
                 paper.paper_doi,
                 context.crossref_mailto,
-                record=record,
+                known_record=record,
             )
             stored.append(
                 await store_document(sm, related.body(report.id), timeout=context.pdf_timeout)

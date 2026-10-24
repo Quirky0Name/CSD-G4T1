@@ -261,6 +261,9 @@ sources found nothing has `[]`.
       search result counts only when its `pmcid`/`pmid` is the one asked: code docstrings.
     - Text links are read from the whole plain text, before it's cut to `MAX_TEXT_CHARS`:
       code comment and `docs/EVALUATION.md`.
+    - The two text regexes run as separate scans, merged in text order and each link kept
+      once, so a DOI inside a publisher's URL (`…/article?id=10.1371/…`) is a DOI link as well
+      as the URL (code review fix): `docs/EVALUATION.md`, "Where links come from".
     - `DocumentInReport.links` is `list[dict] | None` (as Storage Management returns it, `None`
       for older rows), and the stub's `links` is any JSON: code comments, no doc needed.
     - The PLOS notice's DOI search is an inline response in `test_europepmc.py`: Europe PMC's

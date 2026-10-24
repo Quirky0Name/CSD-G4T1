@@ -17,9 +17,9 @@ from common.doi import normalize_doi
 
 _DOI_URL = re.compile(r"^https?://(dx\.)?doi\.org/", re.IGNORECASE)
 _HTTP_URL = re.compile(r"^https?://\S+$", re.IGNORECASE)
-# a URL, or else a bare DOI; at each position the URL is tried first, so a doi.org URL is
-# read whole rather than as the DOI inside it
-_IN_TEXT = re.compile(r"https?://[^\s<>\"]+|10\.\d{4,9}/[-._;()/:a-z0-9]+", re.IGNORECASE)
+# two separate scans, so a DOI inside a publisher's URL is a DOI link as well as the URL
+_URL_IN_TEXT = re.compile(r"https?://[^\s<>\"]+", re.IGNORECASE)
+_DOI_IN_TEXT = re.compile(r"10\.\d{4,9}/[-._;()/:a-z0-9]+", re.IGNORECASE)
 # punctuation that ends the sentence a link sits in, not the link
 _TRAILING = ".,;)"
 
@@ -72,17 +72,17 @@ def url_link(raw: object, role: str | None, source: LinkSource) -> Link | None:
 
 
 def text_links(text: str) -> list[Link]:
-    """The DOIs and URLs written in plain text, in order, all untyped."""
-    links = []
-    for match in _IN_TEXT.finditer(text):
-        found = match.group()
-        if found[0] in "hH":
-            link = url_link(found, None, LinkSource.EUROPEPMC_TEXT)
-        else:
-            link = doi_link(found.rstrip(_TRAILING), None, LinkSource.EUROPEPMC_TEXT)
-        if link is not None:
-            links.append(link)
-    return links
+    """The DOIs and URLs written in plain text, in the order they appear, all untyped, each
+    once (a doi.org URL and the DOI inside it are the same link)."""
+    found = [
+        (match.start(), url_link(match.group(), None, LinkSource.EUROPEPMC_TEXT))
+        for match in _URL_IN_TEXT.finditer(text)
+    ]
+    found += [
+        (match.start(), doi_link(match.group().rstrip(_TRAILING), None, LinkSource.EUROPEPMC_TEXT))
+        for match in _DOI_IN_TEXT.finditer(text)
+    ]
+    return unique(link for _, link in sorted(found, key=lambda pair: pair[0]))
 
 
 def unique(links: Iterable[Link | None]) -> list[Link]:

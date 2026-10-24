@@ -16,6 +16,7 @@ import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Literal
 
 import httpx
 from pydantic import BaseModel, Field
@@ -157,7 +158,7 @@ def _blocks(element: ET.Element) -> Iterator[str]:
 class _RecordId:
     """A PMCID or PMID the XML links to, waiting for its search."""
 
-    kind: str  # "pmcid" or "pmid"
+    kind: Literal["pmcid", "pmid"]
     value: str
     role: str | None
 
