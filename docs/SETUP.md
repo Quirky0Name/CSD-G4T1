@@ -2,8 +2,8 @@
 
 Accounts, keys and env vars, and how to run each service locally, alone or
 together. Ports: Research Evaluation 8000, Updating 8001, GROBID 8070,
-Storage Management 8081, Postgres 5432 (backend) and 5433 (Storage
-Management in compose), frontend 5173.
+User Management 8080, Storage Management 8081, Postgres 5432 (backend)
+and 5433 (Storage Management in compose), frontend 5173.
 
 ## Accounts and API keys
 
@@ -21,8 +21,8 @@ Management in compose), frontend 5173.
 
 - Python: none to install. `uv` downloads the pinned 3.13 on `uv sync`
   (on Windows run it as `py -m uv`).
-- Java: JDK 25 for Storage Management outside Docker (`./mvnw` downloads
-  Maven).
+- Java: JDK 25 for Storage Management outside Docker and for User
+  Management (`./mvnw` downloads Maven).
 - Docker, for Postgres, GROBID and the compose stacks.
 - Node, for the frontend.
 
@@ -61,7 +61,7 @@ Outside compose it also reads `SPRING_DATASOURCE_URL`, `_USERNAME`,
 
 ## Running everything in Docker
 
-Every service but the frontend:
+Every service but the frontend and User Management:
 
 ```
 cd backend && docker compose -f docker-compose.dev.yml up -d --build
@@ -119,11 +119,18 @@ folder. Always reset the database and the upload folder together.
 Swagger UI: `http://localhost:8081/swagger-ui.html` (Authorize with a user
 token, or a service token for `/internal`).
 
+## User Management
+
+Only a scaffold so far: no endpoints of its own and no database. From
+`users/`, `./mvnw spring-boot:run` (`.\mvnw.cmd spring-boot:run` on
+Windows) starts it on 8080, where any unknown path answers `404` as
+problem details.
+
 ## A demo user token
 
-There's no User Management, so make one "demo user" token and use it for
-everything; whatever you create belongs to that user. It only works
-against services with the same `JWT_SECRET`. Don't commit it.
+User Management doesn't issue tokens yet, so make one "demo user" token
+and use it for everything; whatever you create belongs to that user. It
+only works against services with the same `JWT_SECRET`. Don't commit it.
 
 PowerShell, with `$env:JWT_SECRET` set (lasts 30 days; change `sub` for
 another user):
@@ -229,6 +236,9 @@ uv run pytest tests/updating/test_scenarios.py   # the mock harness on recorded 
 
 cd storage
 ./mvnw test                   # H2, network mocked
+
+cd users
+./mvnw test                   # no database; real HTTP on a random port
 
 cd frontend/csd-frontend-vite
 npm run build && npm run lint
