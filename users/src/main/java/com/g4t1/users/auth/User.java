@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Entity
@@ -33,7 +34,8 @@ public class User {
     public User(String email, String passwordHash) {
         this.email = email;
         this.passwordHash = passwordHash;
-        this.createdAt = Instant.now();
+        // Postgres keeps microseconds; truncating makes the register response match later reads
+        this.createdAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
     }
 
     public UUID getId() {
