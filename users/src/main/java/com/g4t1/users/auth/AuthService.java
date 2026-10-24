@@ -27,8 +27,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // one account per address whatever its letter case; ROOT so the server's locale can't change it
-        String email = request.email().toLowerCase(Locale.ROOT);
+        String email = normalised(request.email());
         if (users.existsByEmail(email)) {
             throw emailTaken();
         }
@@ -38,7 +37,7 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
-        Optional<User> found = users.findByEmail(request.email().toLowerCase(Locale.ROOT));
+        Optional<User> found = users.findByEmail(normalised(request.email()));
         String hash = found.map(User::getPasswordHash).orElse(hashForUnknownEmails);
         boolean passwordMatches = passwords.matches(request.password(), hash);
         // one answer for an unknown email and a wrong password, so login never shows which emails have accounts
@@ -60,5 +59,10 @@ public class AuthService {
 
     private static ResponseStatusException emailTaken() {
         return new ResponseStatusException(HttpStatus.CONFLICT, "An account with this email already exists");
+    }
+
+    // one account per address whatever its letter case; ROOT so the server's locale can't change it
+    private static String normalised(String email) {
+        return email.toLowerCase(Locale.ROOT);
     }
 }
