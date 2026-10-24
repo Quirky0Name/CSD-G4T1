@@ -80,6 +80,14 @@ class RegisterTest {
                 .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
     }
 
+    // BCrypt can't hash past 72 bytes; "é" is 2 bytes, so this is 37 characters but 74 bytes
+    @Test
+    void aPasswordOverSeventyTwoBytesIsABadRequest() {
+        register(newEmail(), "é".repeat(37))
+                .expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
+    }
+
     private RestTestClient.ResponseSpec register(String email, String password) {
         return client.post().uri("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
