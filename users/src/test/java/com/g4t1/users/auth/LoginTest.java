@@ -8,6 +8,8 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -86,6 +88,21 @@ class LoginTest {
                 .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
                 .expectBody()
                 .jsonPath("$.detail").isEqualTo("Wrong email or password");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "{\"password\": \"correct horse battery\"}",
+            "{\"email\": \"someone@example.com\"}",
+            "{\"email\": \"\", \"password\": \"correct horse battery\"}",
+            "{\"email\": \"someone@example.com\", \"password\": \"        \"}"})
+    void aMissingOrBlankEmailOrPasswordIsABadRequest(String body) {
+        client.post().uri("/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
     }
 
     // checked the way the contract describes it: HS256 (the Python services accept nothing else) with
