@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -90,6 +91,21 @@ class LoginTest {
                 .jsonPath("$.detail").isEqualTo("Wrong email or password");
     }
 
+    // An unknown email answered at once would give away which emails have accounts, since a real account's
+    // wrong password waits for BCrypt. Generous on purpose: without the fix the gap is about 10 times.
+    @Test
+    void anUnknownEmailTakesAboutAsLongAsAWrongPassword() {
+        String email = newEmail();
+        registered(email, "correct horse battery");
+        login(email, "wrong horse battery").expectStatus().isUnauthorized();
+        login(newEmail(), "wrong horse battery").expectStatus().isUnauthorized();
+
+        long wrongPassword = medianNanos(() -> login(email, "wrong horse battery").expectStatus().isUnauthorized());
+        long unknownEmail = medianNanos(() -> login(newEmail(), "wrong horse battery").expectStatus().isUnauthorized());
+
+        assertThat(unknownEmail).isGreaterThanOrEqualTo(wrongPassword / 2);
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {
             "{\"password\": \"correct horse battery\"}",
@@ -133,6 +149,17 @@ class LoginTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("email", email, "password", password))
                 .exchange();
+    }
+
+    private static long medianNanos(Runnable attempt) {
+        long[] times = new long[5];
+        for (int i = 0; i < times.length; i++) {
+            long start = System.nanoTime();
+            attempt.run();
+            times[i] = System.nanoTime() - start;
+        }
+        Arrays.sort(times);
+        return times[times.length / 2];
     }
 
     // a fresh address per test, so tests never collide in the shared database
