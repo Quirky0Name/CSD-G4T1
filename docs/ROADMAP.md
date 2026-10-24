@@ -28,8 +28,8 @@ most needed first within each.
 
 - [ ] **User Management service**: `users` and `projects`, register
   (BCrypt), login issuing the JWT, project CRUD
-  (`GET/POST/PUT/DELETE /projects…`). Nothing exists; a hand-made demo
-  token stands in.
+  (`GET/POST/PUT/DELETE /projects…`). Only a scaffold exists (`users/`:
+  no endpoints or database yet); a hand-made demo token stands in.
 - [ ] Frontend login, auth state and a JWT-attaching interceptor in place
   of `VITE_DEMO_TOKEN`.
 - [ ] `POST /run-poll` takes the user's JWT (CG-99).
