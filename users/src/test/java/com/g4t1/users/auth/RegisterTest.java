@@ -24,8 +24,13 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -86,6 +91,21 @@ class RegisterTest {
                 .jsonPath("$.user.email").isEqualTo(email);
 
         register(email, "a different password").expectStatus().isEqualTo(409);
+    }
+
+    // a double-click on sign-up: both requests get past the "already taken?" check before either is saved
+    @Test
+    void anEmailRegisteredTwiceAtOnceIsStillOneAccount() throws InterruptedException {
+        String email = newEmail();
+        Callable<Integer> attempt = () -> register(email, "correct horse battery")
+                .expectBody(String.class).returnResult().getStatus().value();
+
+        List<Integer> statuses;
+        try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
+            statuses = pool.invokeAll(List.of(attempt, attempt)).stream().map(Future::resultNow).toList();
+        }
+
+        assertThat(statuses).containsExactlyInAnyOrder(201, 409);
     }
 
     @Test
