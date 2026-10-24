@@ -1,5 +1,6 @@
 package com.g4t1.users.auth;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,9 +30,9 @@ public class AuthService {
         // one account per address whatever its letter case; ROOT so the server's locale can't change it
         String email = request.email().toLowerCase(Locale.ROOT);
         if (users.existsByEmail(email)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "An account with this email already exists");
+            throw emailTaken();
         }
-        User user = users.save(new User(email, passwords.encode(request.password())));
+        User user = saveNew(new User(email, passwords.encode(request.password())));
         return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
     }
 
@@ -46,5 +47,18 @@ public class AuthService {
         }
         User user = found.get();
         return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
+    }
+
+    // another registration of the same email can be saved between the check and this insert
+    private User saveNew(User user) {
+        try {
+            return users.saveAndFlush(user);
+        } catch (DataIntegrityViolationException e) {
+            throw emailTaken();
+        }
+    }
+
+    private static ResponseStatusException emailTaken() {
+        return new ResponseStatusException(HttpStatus.CONFLICT, "An account with this email already exists");
     }
 }
