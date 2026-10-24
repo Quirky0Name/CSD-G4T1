@@ -46,7 +46,7 @@ new related papers, topic discovery) is in [ROADMAP.md](ROADMAP.md).
 
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
-| User Management | Spring Boot (planned) | `users`, `projects`, login and JWTs. **Not built**: a hand-made demo token stands in (SETUP.md) | — |
+| User Management | Java 25 + Spring Boot | `users`, `projects`, login and JWTs. **Scaffold only** (no endpoints or database yet): a hand-made demo token stands in (SETUP.md) | `users/` |
 | Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls Storage Management and Updating through the Vite proxy | `frontend/csd-frontend-vite/` |
 | Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts and notes, reports and documents, drafts | `storage/` |
 | Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact, notification); no database of its own | `backend/src/research_evaluation/` |
