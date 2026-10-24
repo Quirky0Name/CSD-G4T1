@@ -1,11 +1,6 @@
 package com.g4t1.users.auth;
 
 import com.jayway.jsonpath.JsonPath;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,9 +16,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -165,21 +157,7 @@ class RegisterTest {
                 .expectStatus().isCreated()
                 .expectBody(String.class).returnResult().getResponseBody();
 
-        assertIsTokenFor(JsonPath.read(body, "$.token"), JsonPath.read(body, "$.user.id"));
-    }
-
-    // checked the way the contract describes it: HS256 (the Python services accept nothing else) with
-    // the base64-decoded JWT_SECRET, sub the user's id, 24 hours to live, and no service role
-    private void assertIsTokenFor(String token, String userId) {
-        Jws<Claims> jws = Jwts.parser()
-                .verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret)))
-                .build()
-                .parseSignedClaims(token);
-        assertThat(jws.getHeader().getAlgorithm()).isEqualTo("HS256");
-        assertThat(jws.getPayload().getSubject()).isEqualTo(userId);
-        assertThat(jws.getPayload().get("role")).isNull();
-        assertThat(jws.getPayload().getExpiration())
-                .isCloseTo(Date.from(Instant.now().plus(Duration.ofHours(24))), 60_000);
+        TokenAssertions.assertIsTokenFor(JsonPath.read(body, "$.token"), JsonPath.read(body, "$.user.id"), jwtSecret);
     }
 
     private RestTestClient.ResponseSpec register(String email, String password) {
