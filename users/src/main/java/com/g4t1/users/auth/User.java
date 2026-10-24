@@ -22,13 +22,17 @@ public class User {
     private String email;
 
     @Column(nullable = false)
+    private String passwordHash;
+
+    @Column(nullable = false)
     private Instant createdAt;
 
     protected User() {
     }
 
-    public User(String email) {
+    public User(String email, String passwordHash) {
         this.email = email;
+        this.passwordHash = passwordHash;
         this.createdAt = Instant.now();
     }
 

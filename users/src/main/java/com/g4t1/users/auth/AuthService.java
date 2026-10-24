@@ -1,6 +1,8 @@
 package com.g4t1.users.auth;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -11,6 +13,7 @@ import java.util.Locale;
 public class AuthService {
 
     private final UserRepository users;
+    private final PasswordEncoder passwords = new BCryptPasswordEncoder();
 
     public AuthService(UserRepository users) {
         this.users = users;
@@ -23,6 +26,6 @@ public class AuthService {
         if (users.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "An account with this email already exists");
         }
-        return UserResponse.from(users.save(new User(email)));
+        return UserResponse.from(users.save(new User(email, passwords.encode(request.password()))));
     }
 }
