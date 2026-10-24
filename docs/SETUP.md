@@ -3,8 +3,8 @@
 Accounts, keys and env vars, and how to run each service locally, alone or
 together. Ports: Research Evaluation 8000, Updating 8001, GROBID 8070,
 User Management 8080, Storage Management 8081, Postgres 5432 (backend),
-5433 (Storage Management in compose) and 5434 (User Management), frontend
-5173.
+5433 (`storage/docker-compose.yml`) and 5434 (User Management), frontend
+5173, and the whole stack's web server 8088.
 
 ## Accounts and API keys
 
@@ -24,7 +24,8 @@ User Management 8080, Storage Management 8081, Postgres 5432 (backend),
   (on Windows run it as `py -m uv`).
 - Java: JDK 25 for Storage Management outside Docker and for User
   Management (`./mvnw` downloads Maven).
-- Docker, for Postgres, GROBID and the compose stacks.
+- Docker, for Postgres, GROBID and the compose stacks. The whole stack
+  needs nothing else.
 - Node, for the frontend.
 
 ## Env vars
@@ -63,9 +64,38 @@ Outside compose it also reads `SPRING_DATASOURCE_URL`, `_USERNAME`,
 User Management (`users/`) reads `JWT_SECRET` (the same value) and
 `SPRING_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD`.
 
+The whole stack (below) reads one `.env` at the repo root instead (copy
+`.env.example`): the same variables, plus `POSTGRES_PASSWORD` and
+`WEB_PORT`.
+
+## Running the whole stack
+
+Everything, the website included. From the repo root:
+
+1. Copy `.env.example` to `.env`. Set `JWT_SECRET` to the same value as in
+   `backend/.env`, and `POSTGRES_PASSWORD` to any letters and digits.
+2. `docker compose up -d --build`
+3. Open `http://localhost:8088`.
+
+API keys are optional: add them to `.env` to turn on those features.
+`docker compose down` stops it; `down -v` also wipes the database and the
+stored PDFs.
+
+Good to know:
+
+- The frontend's demo token (hard-coded in `api.ts`) only works with the
+  team's shared `JWT_SECRET`, and expires on 2026-10-28. Never use that
+  value on a public server: anyone can read the token from the site.
+- `POSTGRES_PASSWORD` is set when the database is first created; to
+  change it later, `down -v` (losing the data) and start again.
+- Only the website is reachable; it passes `/api`, `/auth` and
+  `/updating` on to the services. Swagger doesn't work through it, so use
+  the development stacks below for that.
+
 ## Running everything in Docker
 
-Every service but the frontend and User Management:
+For development (the backend's code mounted, ports on the host), every
+service but the frontend and User Management:
 
 ```
 cd backend && docker compose -f docker-compose.dev.yml up -d --build
@@ -126,8 +156,8 @@ token, or a service token for `/internal`).
 ## User Management
 
 Register and login (`POST /auth/register`, `/auth/login`, CONTRACTS.md).
-Not containerised yet (CG-135): its Postgres runs in Docker, the service
-with `./mvnw`. From `users/`:
+The whole stack runs it in Docker; to work on it, run its Postgres in
+Docker and the service with `./mvnw`. From `users/`:
 
 ```
 docker compose up -d
