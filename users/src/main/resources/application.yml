@@ -16,3 +16,7 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+
+users:
+  # the same base64 secret every service shares; it signs the tokens they check
+  jwt-secret: ${JWT_SECRET}
