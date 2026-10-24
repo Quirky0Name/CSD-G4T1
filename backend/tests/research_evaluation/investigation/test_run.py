@@ -2,12 +2,13 @@
 Management, with Crossref and Europe PMC faked (conftest.ExternalApis)."""
 
 from datetime import UTC, datetime
+from urllib.parse import unquote
 from uuid import UUID
 
 import httpx
 import pytest
 from research_evaluation_support import notice, nudge
-from support import load_fixture
+from support import load_fixture, load_xml_fixture
 
 from research_evaluation.changes import Change, ChangeType
 from research_evaluation.investigation.run import (
@@ -464,3 +465,285 @@ async def test_a_re_sent_notice_opens_no_report(client, sm):
 
     assert len(await report_ids(sm, paper)) == 1
     assert sm.calls("POST", f"/papers/{paper}/reports") == 2  # the second answered 204
+
+
+# following links (each case starts from the paper's alerts, as after a nudge)
+
+LANCET = "10.1016/s0140-6736(20)31180-6"
+LANCET_EOC = "10.1016/s0140-6736(20)31290-3"
+LANCET_RETRACTION = "10.1016/s0140-6736(20)31324-6"
+LANCET_REPUBLICATION = "10.1016/s0140-6736(20)31528-2"
+LANCET_COMMENTARY = "10.1016/s0140-6736(20)31174-0"
+PLOS_PAPER = "10.1371/journal.pone.0258361"
+PLOS_NOTICE = "10.1371/journal.pone.0322065"
+F1000_V1 = "10.12688/f1000research.187739.1"
+F1000_V2 = "10.12688/f1000research.187739.2"
+
+
+def alerted_change(
+    change_type: ChangeType, notice_doi: str | None, notice_type: str | None = None
+) -> Change:
+    key = change_type.value if notice_doi is None else f"{change_type.value}:{notice_doi}"
+    return Change(
+        change_type=change_type,
+        change_key=key,
+        detected_at=datetime(2026, 9, 20, 12, tzinfo=UTC),
+        snapshot_id=2,
+        previous_snapshot_id=1,
+        notice_doi=notice_doi,
+        notice_type=notice_type,
+    )
+
+
+async def investigate_one(sm, external, paper_doi: str, changes: list[Change]) -> list[dict]:
+    """Stores an alert per change, investigates the paper and returns its report's documents."""
+    paper = await sm.add_paper()
+    for change in changes:
+        response = await sm.client.post(
+            f"/internal/papers/{paper}/alerts",
+            json={
+                "change_type": change.change_type.value,
+                "change_key": change.change_key,
+                "alert_severity": "medium",
+                "description": "A change.",
+                "recommendation": "Read it.",
+                "notice_doi": change.notice_doi,
+                "detected_at": "2026-09-20T12:00:00Z",
+                "snapshot_id": 2,
+                "previous_snapshot_id": 1,
+            },
+        )
+        response.raise_for_status()
+    [report_id] = await investigate_papers(
+        sm.client,
+        context(external),
+        [PaperChanges(paper_id=paper, paper_doi=paper_doi, changes=changes)],
+    )
+    return (await read_report(sm, paper, report_id))["documents"]
+
+
+def kinds(documents: list[dict]) -> dict[str, str]:
+    return {d["doi"]: d["kind"] for d in documents}
+
+
+def crossref_requests(external) -> list[str]:
+    """The DOIs asked of Crossref, in order."""
+    return [
+        unquote(request.url.path.removeprefix("/works/"))
+        for request in external.requests
+        if request.url.host == "api.crossref.org"
+    ]
+
+
+def notice_text(*mentions: str) -> bytes:
+    """An open-access notice's JATS whose text names these DOIs and URLs."""
+    text = f"This notice concerns {' and '.join(mentions)}."
+    return f"<article><body><p>{text}</p></body></article>".encode()
+
+
+async def test_an_eoc_reaches_the_later_retraction_through_its_erratum_relation(sm, external):
+    # E5: the report holds only the EoC alert; the EoC's record relates it to the retraction
+    external.crossref[LANCET_EOC] = "lancet_eoc"
+
+    documents = await investigate_one(
+        sm, external, LANCET, [alerted_change(ChangeType.EXPRESSION_OF_CONCERN, LANCET_EOC)]
+    )
+
+    assert kinds(documents) == {LANCET_EOC: "notice", LANCET_RETRACTION: "related"}
+    related = next(d for d in documents if d["kind"] == "related")
+    # Crossref has no record for it here: stored anyway, and never checked against the paper
+    assert related["crossref_status"] == "not_found"
+    assert related["update_to_includes_paper"] is None
+    assert related["pdf_status"] == "not_found"
+    assert crossref_requests(external) == [LANCET_EOC, LANCET_RETRACTION]
+    # the EoC's links are stored whole, whatever was done with each
+    assert {link["doi"] for link in documents[0]["links"] if link["doi"]} == {
+        LANCET,
+        LANCET_RETRACTION,
+    }
+
+
+async def test_a_plos_retraction_notice_that_links_only_back_reaches_nothing(sm, external):
+    # R1: the notice's update-to and its <related-article> (a PMCID, unresolved here) both name
+    # the paper or its PMC page; the license and dx.plos.org URLs are never fetched
+    external.crossref[PLOS_NOTICE] = "plos_retraction_notice"
+    external.full_texts[PLOS_NOTICE] = load_xml_fixture("europepmc", "fulltext_PMC12017829")
+
+    documents = await investigate_one(
+        sm, external, PLOS_PAPER, [alerted_change(ChangeType.RETRACTION, PLOS_NOTICE)]
+    )
+
+    assert kinds(documents) == {PLOS_NOTICE: "notice", PLOS_PAPER: "current_version"}
+    assert sorted(crossref_requests(external)) == sorted([PLOS_NOTICE, PLOS_PAPER])
+    assert {request.url.host for request in external.requests} == {
+        "api.crossref.org",
+        "www.ebi.ac.uk",
+    }
+
+
+async def test_a_notice_about_another_article_keeps_it_in_links_and_doesnt_fetch_it(
+    sm, external
+):
+    # R5: Elsevier's retract-and-republish notice updates the commentary as well as the paper
+    external.crossref[LANCET_REPUBLICATION] = "lancet_republication"
+    external.crossref[LANCET] = "lancet"
+
+    documents = await investigate_one(
+        sm, external, LANCET, [alerted_change(ChangeType.ERRATUM, LANCET_REPUBLICATION)]
+    )
+
+    assert kinds(documents) == {LANCET_REPUBLICATION: "notice", LANCET: "current_version"}
+    notice_row = next(d for d in documents if d["doi"] == LANCET_REPUBLICATION)
+    assert LANCET_COMMENTARY in {link["doi"] for link in notice_row["links"]}
+    assert LANCET_COMMENTARY not in crossref_requests(external)
+    # the current copy's updated-by list names every Lancet notice: not followed
+    assert len(crossref_requests(external)) == 2
+
+
+async def test_a_new_version_pointing_back_at_the_paper_reaches_nothing(sm, external):
+    # C6: v2's has-version and update-to name v1, the paper
+    external.crossref[F1000_V2] = "f1000_v2"
+
+    documents = await investigate_one(
+        sm,
+        external,
+        F1000_V1,
+        [alerted_change(ChangeType.OTHER, F1000_V2, notice_type="new_version")],
+    )
+
+    assert kinds(documents) == {F1000_V2: "new_version"}
+    assert crossref_requests(external) == [F1000_V2]
+
+
+# synthetic records on real DOIs (no real case goes this deep or this wide)
+NOTICE = LANCET_EOC
+B = LANCET_RETRACTION
+C = LANCET_REPUBLICATION
+D = "10.1016/s0140-6736(20)31249-6"
+
+
+def eoc_report(external, **notice_record) -> list[Change]:
+    external.records[NOTICE] = {"update-to": [{"DOI": LANCET}], **notice_record}
+    return [alerted_change(ChangeType.EXPRESSION_OF_CONCERN, NOTICE)]
+
+
+def updated_by(*dois: str) -> dict:
+    return {"updated-by": [{"DOI": doi} for doi in dois]}
+
+
+async def test_an_untyped_doi_is_followed_only_when_its_record_names_the_paper(sm, external):
+    in_lineage, unrelated = "10.1093/evolut/qpad094", "10.1111/evo.14496"
+    changes = eoc_report(external)
+    external.full_texts[NOTICE] = notice_text(in_lineage, unrelated)
+    external.records[in_lineage] = {"update-to": [{"DOI": LANCET}]}
+    external.records[unrelated] = {"update-to": [{"DOI": "10.1/someone-else"}]}
+
+    documents = await investigate_one(sm, external, LANCET, changes)
+
+    assert kinds(documents) == {NOTICE: "notice", in_lineage: "related"}
+    # one Crossref request each: the check's record is the related document's record
+    assert crossref_requests(external) == [NOTICE, in_lineage, unrelated]
+    related = next(d for d in documents if d["doi"] == in_lineage)
+    assert related["crossref_status"] == "ok"
+
+
+async def test_a_check_naming_a_document_already_in_the_report_is_followed(sm, external):
+    candidate = "10.1093/evolut/qpad094"
+    changes = eoc_report(external)
+    external.full_texts[NOTICE] = notice_text(candidate)
+    external.records[candidate] = {
+        "relation": {"is-related-to": [{"id-type": "doi", "id": NOTICE}]}
+    }
+
+    documents = await investigate_one(sm, external, LANCET, changes)
+
+    assert kinds(documents)[candidate] == "related"
+
+
+async def test_links_are_followed_two_deep_and_no_further(sm, external):
+    changes = eoc_report(external, **updated_by(B))
+    external.records[B] = updated_by(C)
+    external.records[C] = updated_by(D)
+
+    documents = await investigate_one(sm, external, LANCET, changes)
+
+    assert kinds(documents) == {NOTICE: "notice", B: "related", C: "related"}
+    assert D not in crossref_requests(external)
+    # C is stored with its links, unclassified
+    assert next(d for d in documents if d["doi"] == C)["links"][0]["doi"] == D
+
+
+async def test_a_cycle_fetches_each_doi_once(sm, external):
+    changes = eoc_report(external, **updated_by(B))
+    external.records[B] = updated_by(NOTICE, LANCET)
+
+    documents = await investigate_one(sm, external, LANCET, changes)
+
+    assert kinds(documents) == {NOTICE: "notice", B: "related"}
+    assert crossref_requests(external) == [NOTICE, B]
+
+
+def many_dois(count: int) -> list[str]:
+    return [f"10.5555/candidate.{n}" for n in range(count)]
+
+
+async def test_at_most_ten_related_documents_are_stored(sm, external):
+    changes = eoc_report(external, **updated_by(*many_dois(12)))
+
+    documents = await investigate_one(sm, external, LANCET, changes)
+
+    assert [d["doi"] for d in documents if d["kind"] == "related"] == many_dois(12)[:10]
+    assert crossref_requests(external) == [NOTICE, *many_dois(12)[:10]]
+
+
+async def test_at_most_twenty_untyped_dois_are_checked(sm, external):
+    changes = eoc_report(external)
+    external.full_texts[NOTICE] = notice_text(*many_dois(25))
+
+    documents = await investigate_one(sm, external, LANCET, changes)
+
+    assert kinds(documents) == {NOTICE: "notice"}
+    assert crossref_requests(external) == [NOTICE, *many_dois(25)[:20]]
+    # all 25 stay in the notice's links
+    assert len([link for link in documents[0]["links"] if link["source"] == "europepmc_text"]) == 25
+
+
+async def test_url_links_never_count_and_are_never_fetched(sm, external):
+    urls = [f"https://data.example/{n}" for n in range(5)]
+    changes = eoc_report(external, **updated_by(*many_dois(10)), link=[{"URL": u} for u in urls])
+
+    documents = await investigate_one(sm, external, LANCET, changes)
+
+    assert len([d for d in documents if d["kind"] == "related"]) == 10
+    assert {request.url.host for request in external.requests} == {
+        "api.crossref.org",
+        "www.ebi.ac.uk",
+    }
+    assert [link["url"] for link in documents[0]["links"] if link["url"]] == urls
+
+
+async def test_the_current_copys_links_are_stored_but_not_followed(sm, external):
+    external.records[LANCET] = updated_by(B)
+
+    documents = await investigate_one(
+        sm, external, LANCET, [alerted_change(ChangeType.RETRACTION, None)]
+    )
+
+    assert kinds(documents) == {LANCET: "current_version"}
+    assert documents[0]["links"][0]["doi"] == B
+    assert crossref_requests(external) == [LANCET]
+
+
+async def test_a_failed_related_store_fails_the_report(sm, external):
+    changes = eoc_report(external, **updated_by(B))
+    stored = sm.transport.handle_async_request
+
+    async def related_fails(request):
+        if request.url.path == "/internal/documents" and b'"related"' in request.content:
+            return httpx.Response(500, json={"detail": "injected"}, request=request)
+        return await stored(request)
+
+    sm.transport.handle_async_request = related_fails
+
+    with pytest.raises(ValueError):  # no report finished
+        await investigate_one(sm, external, LANCET, changes)

@@ -328,12 +328,12 @@ sources found nothing has `[]`.
   - Impact: `<document>` gets a `links:` line (JSON, defused like the record); a `related` PDF
     is attached after the new versions and labelled `RELATED, <doi>.` (user: confirmed).
 - **Acceptance criteria:**
-  - [ ] `classify_link` gives the outcome above for every listed role, for `url` links, for the
+  - [x] `classify_link` gives the outcome above for every listed role, for `url` links, for the
         paper's DOI and for a seen DOI (`test_investigate.py`, parametrised).
-  - [ ] `lineage_match` is true for `lancet_republication.json` against the paper
+  - [x] `lineage_match` is true for `lancet_republication.json` against the paper
         `10.1016/s0140-6736(20)31180-6` and false against an unrelated DOI
         (`test_investigate.py`).
-  - [ ] Real cases end with exactly these documents (`test_run.py`, `ExternalApis` requests
+  - [x] Real cases end with exactly these documents (`test_run.py`, `ExternalApis` requests
         checked):
         - R1 PLOS (`10.1371/journal.pone.0258361`, notice `…0322065`): notice and current copy,
           no `related` (the notice links only back to the paper);
@@ -343,22 +343,22 @@ sources found nothing has `[]`.
           (`has-version` → v1 is the paper);
         - E5 Lancet: a report holding only the EoC alert (notice `…31290-3`) stores the
           retraction notice `…31324-6` as `related`, reached through `relation` `erratum`.
-  - [ ] An untyped DOI in a notice's text whose Crossref record has `update-to` → the paper is
+  - [x] An untyped DOI in a notice's text whose Crossref record has `update-to` → the paper is
         fetched as `related`; one whose record names neither the paper nor a report document
         isn't (synthetic records on real DOIs, `test_run.py`).
-  - [ ] Depth (synthetic records on real DOIs; no real case is three deep): notice → B → C → D
+  - [x] Depth (synthetic records on real DOIs; no real case is three deep): notice → B → C → D
         by `follow` roles ends with B and C as `related` and no request for D (`test_run.py`).
-  - [ ] A cycle (B's record points back to the notice) fetches each DOI once (`test_run.py`).
-  - [ ] With 12 `follow` links, exactly 10 `related` documents are stored; with 25 untyped DOIs,
+  - [x] A cycle (B's record points back to the notice) fetches each DOI once (`test_run.py`).
+  - [x] With 12 `follow` links, exactly 10 `related` documents are stored; with 25 untyped DOIs,
         exactly 20 Crossref checks are made (`test_run.py`).
-  - [ ] A notice with 10 `follow` links and 5 URL links stores 10 `related` documents, and no
+  - [x] A notice with 10 `follow` links and 5 URL links stores 10 `related` documents, and no
         request goes to any URL host (`test_run.py`).
-  - [ ] A `current_version` document's links are stored but not classified (`test_run.py`).
-  - [ ] A report with no followable links stores exactly the documents it stores today
+  - [x] A `current_version` document's links are stored but not classified (`test_run.py`).
+  - [x] A report with no followable links stores exactly the documents it stores today
         (existing `test_run.py` tests pass unchanged).
-  - [ ] The step 1 prompt includes a `related` document's block with its `links:` line, and
+  - [x] The step 1 prompt includes a `related` document's block with its `links:` line, and
         its PDF labelled `RELATED, <doi>.` (`tests/research_evaluation/impact/`).
-  - [ ] `uv run pytest` and `uv run ruff check` pass.
+  - [x] `uv run pytest` and `uv run ruff check` pass.
 - **Doc deltas:**
   - `docs/EVALUATION.md`, "What to fetch, by scenario": rewrite as current behaviour (remove
     *(planned)*, replace the per-change "What to follow" table) with `classify_link`'s outcomes,
@@ -370,6 +370,29 @@ sources found nothing has `[]`.
     rules and caps. New entry: following links into the paper's own history, each DOI once per
     report, with the rejected options: a per-change follow table, following everything fetched,
     an LLM choosing links, a `via_doi` column, checking earlier reports' documents.
+  - Spec changed during S3: `backend/tests/research_evaluation/conftest.py` (the shared
+    `ExternalApis` fake) is edited too, outside the listed files: it gains `records` (synthetic
+    Crossref records on real DOIs) and `full_texts` (open-access JATS per DOI), which the
+    synthetic walk cases need. No doc needed.
+  - Decisions made during S3:
+    - The walk is `run.follow_links`, run after the planned documents are stored:
+      `docs/EVALUATION.md`, "What to fetch, by scenario".
+    - `fetch_document` takes an optional Crossref result, so a checked DOI that matches is
+      stored from the record its check fetched, not asked of Crossref again (each DOI fetched
+      once): code docstring and `docs/EVALUATION.md`.
+    - A checked DOI joins `seen` whether or not it matched, since the check fetched it:
+      `docs/EVALUATION.md`.
+    - `lineage_match`'s "DOIs already in the report" are the paper's, the planned ones and the
+      related ones stored so far, not DOIs that failed a check: `docs/EVALUATION.md`.
+    - An untyped DOI from Crossref (a `doi.org` URL in `link[]`) is kept, not checked: rule 4
+      names only XML and text: `docs/EVALUATION.md`.
+    - Reaching `MAX_RELATED` ends the walk; reaching `MAX_CHECKS` only skips further checks,
+      so `follow` links are still taken: `docs/EVALUATION.md`.
+    - Impact: a document with no links gets `links: none`; the step 1 task says what a RELATED
+      document is; PDFs go stored paper, new versions, related, current copy;
+      `PROMPT_VERSION` 3 since the wording changed: `docs/EVALUATION.md`, Impact step 1.
+    - The stub accepts `kind` `related` and "downloads" its PDF like any non-notice: code
+      docstring, no doc needed.
 
 ## Human checks
 

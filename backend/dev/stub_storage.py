@@ -55,7 +55,7 @@ class NewDocument(BaseModel):
     stub's validation answers 422."""
 
     report_id: int
-    kind: Literal["notice", "new_version", "current_version"]
+    kind: Literal["notice", "new_version", "current_version", "related"]
     doi: str = Field(min_length=1, max_length=255, pattern=r"\S")
     crossref_status: Literal["ok", "not_found", "error"]
     crossref_record: Any = None
@@ -397,9 +397,9 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
     @internal.post("/documents")
     def store_document(document: NewDocument, response: Response) -> dict[str, Any]:
         """Idempotent on (report_id, doi): 201 with the new row, or 200 with the stored one,
-        unchanged whatever the body says and downloading nothing. A new new_version or
-        current_version row gets its PDF "downloaded" first: the scripted `/dev/pdfs` result
-        for its DOI, or not_found."""
+        unchanged whatever the body says and downloading nothing. A new row of any kind but
+        notice gets its PDF "downloaded" first: the scripted `/dev/pdfs` result for its DOI, or
+        not_found."""
         if document.report_id not in store.reports:
             raise HTTPException(404, f"No report {document.report_id}")
         for stored in store.documents.values():

@@ -6,14 +6,19 @@ from support import load_fixture, load_xml_fixture
 
 from research_evaluation.changes import Change, ChangeType, Snapshot
 from research_evaluation.investigation import investigate
+from research_evaluation.investigation.crossref import CrossrefRecord, fetch_record
 from research_evaluation.investigation.europepmc import TextStatus
 from research_evaluation.investigation.http import FetchStatus
 from research_evaluation.investigation.investigate import (
     DocumentKind,
+    LinkOutcome,
     PlannedDocument,
+    classify_link,
     fetch_document,
+    lineage_match,
     plan_documents,
 )
+from research_evaluation.investigation.links import Link, LinkSource
 
 LANCET = "10.1016/s0140-6736(20)31180-6"
 LANCET_RETRACTION = "10.1016/s0140-6736(20)31324-6"
@@ -388,3 +393,125 @@ async def test_a_document_whose_sources_found_nothing_has_no_links(respx_mock, h
 
     assert document.links == []
     assert document.body(report_id=1)["links"] == []
+
+
+def doi(role: str | None, source: LinkSource = LinkSource.CROSSREF, to: str = "10.1/other") -> Link:
+    return Link(doi=to, url=None, role=role, source=source)
+
+
+FOLLOW_ROLES = [
+    "updated-by",
+    "is-replaced-by",
+    "has-version",
+    "is-version-of",
+    "retraction",
+    "correction",
+    "erratum",
+    "expression_of_concern",
+    "addendum",
+    "retraction-forward",
+    "correction-forward",
+    "concern-forward",
+    "update",
+]
+KEPT_ROLES = [
+    "references",
+    "cites",
+    "has-review",
+    "has-preprint",
+    "is-supplemented-by",
+    "is-related-material",
+    "update-to",
+    "retracted-article",
+    "corrected-article",
+    "object-of-concern",
+    "is-identical-to",
+    "expression-of-concern",
+]
+
+
+@pytest.mark.parametrize("role", FOLLOW_ROLES)
+def test_a_link_into_the_papers_history_is_followed(role):
+    assert classify_link(doi(role), LANCET, set()) is LinkOutcome.FOLLOW
+    assert classify_link(doi(role, LinkSource.EUROPEPMC_XML), LANCET, set()) is LinkOutcome.FOLLOW
+
+
+@pytest.mark.parametrize("role", KEPT_ROLES)
+def test_citations_back_pointers_and_other_roles_are_kept(role):
+    assert classify_link(doi(role), LANCET, set()) is LinkOutcome.KEEP
+
+
+@pytest.mark.parametrize("source", [LinkSource.EUROPEPMC_XML, LinkSource.EUROPEPMC_TEXT])
+def test_an_untyped_doi_from_the_xml_or_text_is_checked(source):
+    assert classify_link(doi(None, source), LANCET, set()) is LinkOutcome.CHECK
+
+
+def test_an_untyped_doi_from_crossref_is_kept():
+    # a doi.org URL in Crossref's `link` list: not one of the document's own words
+    assert classify_link(doi(None, LinkSource.CROSSREF), LANCET, set()) is LinkOutcome.KEEP
+
+
+@pytest.mark.parametrize("role", [None, "updated-by", "is-replaced-by"])
+def test_a_url_is_kept_whatever_its_role(role):
+    url = Link(doi=None, url="https://example.org/v2", role=role, source=LinkSource.CROSSREF)
+
+    assert classify_link(url, LANCET, set()) is LinkOutcome.KEEP
+
+
+@pytest.mark.parametrize("role", [None, "updated-by", "is-version-of"])
+def test_the_papers_own_doi_is_kept(role):
+    link = doi(role, LinkSource.EUROPEPMC_TEXT, to=LANCET)
+
+    assert classify_link(link, LANCET, set()) is LinkOutcome.KEEP
+    assert classify_link(link, LANCET.upper(), set()) is LinkOutcome.KEEP
+
+
+@pytest.mark.parametrize("role", [None, "updated-by"])
+def test_a_doi_already_seen_is_kept(role):
+    link = doi(role, LinkSource.EUROPEPMC_XML, to=LANCET_RETRACTION)
+
+    assert classify_link(link, LANCET, {LANCET_RETRACTION}) is LinkOutcome.KEEP
+
+
+def test_without_a_paper_doi_only_the_seen_set_counts():
+    assert classify_link(doi("updated-by"), None, set()) is LinkOutcome.FOLLOW
+
+
+async def republication_record(respx_mock, http):
+    republication = "10.1016/s0140-6736(20)31528-2"
+    crossref_returns(respx_mock, republication, "lancet_republication")
+    return await fetch_record(http, republication, mailto="")
+
+
+async def test_the_republication_is_in_the_lancet_papers_lineage(respx_mock, http):
+    record = await republication_record(respx_mock, http)
+
+    assert lineage_match(record, LANCET, set()) is True
+    assert lineage_match(record, LANCET.upper(), set()) is True
+
+
+async def test_a_record_naming_neither_the_paper_nor_the_report_is_not(respx_mock, http):
+    record = await republication_record(respx_mock, http)
+
+    assert lineage_match(record, IJAA, {IJAA_NOTICE}) is False
+    assert lineage_match(record, None, set()) is False
+
+
+async def test_naming_a_document_already_in_the_report_is_a_match(respx_mock, http):
+    record = await republication_record(respx_mock, http)
+
+    # it names the commentary (update-to), which this report already holds
+    assert lineage_match(record, IJAA, {LANCET_COMMENTARY}) is True
+
+
+def test_a_relation_alone_is_a_match():
+    record = CrossrefRecord(
+        doi=F1000_V2,
+        title=None,
+        published=None,
+        journal=None,
+        update_to=[],
+        relation={"is-version-of": [F1000_V1]},
+    )
+
+    assert lineage_match(record, F1000_V1, set()) is True

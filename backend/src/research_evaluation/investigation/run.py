@@ -1,5 +1,6 @@
 """Investigation after a nudge: per paper, open a report for its new alerts, fetch each
-document the report needs and store it in Storage Management, then mark the report
+document the report needs and store it in Storage Management, follow the links that lead into
+the paper's own history (storing what they reach as related documents), then mark the report
 investigated.
 
 It runs in the background, after Research Evaluation has replied to Updating's nudge
@@ -7,6 +8,7 @@ It runs in the background, after Research Evaluation has replied to Updating's n
 logged and leaves the report `investigating`; nothing resumes it (a later sprint's job)."""
 
 import logging
+from collections import deque
 from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
@@ -14,8 +16,19 @@ from uuid import UUID
 import httpx
 from pydantic import BaseModel
 
+from common.doi import normalize_doi
 from research_evaluation.changes import Change
-from research_evaluation.investigation.investigate import fetch_document, plan_documents
+from research_evaluation.investigation.crossref import CrossrefRecord, fetch_record
+from research_evaluation.investigation.investigate import (
+    DocumentKind,
+    FetchedDocument,
+    LinkOutcome,
+    PlannedDocument,
+    classify_link,
+    fetch_document,
+    lineage_match,
+    plan_documents,
+)
 from research_evaluation.storage import (
     OpenedReport,
     PaperGone,
@@ -25,6 +38,13 @@ from research_evaluation.storage import (
 )
 
 log = logging.getLogger(__name__)
+
+# a related document this many links from a planned one is stored, but its links aren't followed
+MAX_DEPTH = 2
+# related documents per report (planned ones don't count)
+MAX_RELATED = 10
+# untyped DOIs whose Crossref record is checked, per report
+MAX_CHECKS = 20
 
 
 @dataclass(frozen=True)
@@ -95,11 +115,13 @@ async def investigate_paper(
 async def investigate_report(
     sm: httpx.AsyncClient, context: InvestigationContext, paper: PaperChanges, report: OpenedReport
 ) -> list[dict[str, Any]]:
-    """Fetches and stores each document the report needs, one at a time, and returns the rows
-    Storage Management stored. The stored row is the document from then on, whether or not it
-    differs from what was just fetched (whether that matters is a later sprint's call)."""
+    """Fetches and stores each document the report needs, one at a time, then the related
+    documents its links lead to, and returns the rows Storage Management stored. The stored row
+    is the document from then on, whether or not it differs from what was just fetched (whether
+    that matters is a later sprint's call)."""
     keys = {alert.change_key for alert in report.alerts}
     stored = []
+    fetched_planned = []
     for planned in plan_documents(paper.changes, keys, paper.paper_doi):
         fetched = await fetch_document(
             context.external, planned, paper.paper_doi, context.crossref_mailto
@@ -107,6 +129,8 @@ async def investigate_report(
         stored.append(
             await store_document(sm, fetched.body(report.id), timeout=context.pdf_timeout)
         )
+        fetched_planned.append(fetched)
+    stored += await follow_links(sm, context, paper, report, fetched_planned)
     log.info(
         "report %s for paper %s: %s",
         report.id,
@@ -117,6 +141,65 @@ async def investigate_report(
         )
         or "no documents",
     )
+    return stored
+
+
+async def follow_links(
+    sm: httpx.AsyncClient,
+    context: InvestigationContext,
+    paper: PaperChanges,
+    report: OpenedReport,
+    planned: list[FetchedDocument],
+) -> list[dict[str, Any]]:
+    """Follows the planned documents' links breadth first, by `classify_link`'s fixed rules, and
+    stores each document reached as `related`; returns the stored rows. The walk starts from
+    every planned document but the current copy. Each DOI is fetched at most once per report
+    (the paper's and the planned ones count as fetched), with at most MAX_RELATED related
+    documents, MAX_CHECKS checks and MAX_DEPTH links from a planned document. No LLM takes part,
+    and a URL is never fetched."""
+    in_report = {doc.doi for doc in planned}
+    if (paper_doi := normalize_doi(paper.paper_doi)) is not None:
+        in_report.add(paper_doi)
+    seen = set(in_report)
+    queue = deque((doc, 0) for doc in planned if doc.kind is not DocumentKind.CURRENT_VERSION)
+    stored: list[dict[str, Any]] = []
+    checks = 0
+    while queue and len(stored) < MAX_RELATED:
+        document, depth = queue.popleft()
+        if depth >= MAX_DEPTH:
+            continue
+        for link in document.links:
+            if len(stored) >= MAX_RELATED:
+                break
+            outcome = classify_link(link, paper.paper_doi, seen)
+            if outcome is LinkOutcome.KEEP:
+                continue
+            record = None
+            if outcome is LinkOutcome.CHECK:
+                if checks >= MAX_CHECKS:
+                    continue
+                checks += 1
+                seen.add(link.doi)
+                record = await fetch_record(context.external, link.doi, context.crossref_mailto)
+                # a failed check counts as no match
+                if not (
+                    isinstance(record, CrossrefRecord)
+                    and lineage_match(record, paper.paper_doi, in_report)
+                ):
+                    continue
+            seen.add(link.doi)
+            in_report.add(link.doi)
+            related = await fetch_document(
+                context.external,
+                PlannedDocument(kind=DocumentKind.RELATED, doi=link.doi),
+                paper.paper_doi,
+                context.crossref_mailto,
+                record=record,
+            )
+            stored.append(
+                await store_document(sm, related.body(report.id), timeout=context.pdf_timeout)
+            )
+            queue.append((related, depth + 1))
     return stored
 
 

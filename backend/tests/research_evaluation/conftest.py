@@ -86,11 +86,14 @@ class StubSm:
 
 class ExternalApis:
     """Crossref and Europe PMC as investigation reaches them, with no network: Crossref knows
-    only the DOIs given in `crossref` (DOI -> fixture name), and Europe PMC finds nothing.
-    `failure` makes every request fail that way. Every request is recorded."""
+    only the DOIs given in `crossref` (DOI -> fixture name) or `records` (DOI -> a synthetic
+    record's `message`), and Europe PMC finds only the open-access full texts in `full_texts`
+    (DOI -> JATS XML). `failure` makes every request fail that way. Every request is recorded."""
 
     def __init__(self) -> None:
         self.crossref: dict[str, str] = {}
+        self.records: dict[str, dict] = {}
+        self.full_texts: dict[str, bytes] = {}
         self.failure: int | Exception | None = None
         self.requests: list[httpx.Request] = []
         self.client = httpx.AsyncClient(transport=httpx.MockTransport(self._handle))
@@ -103,13 +106,28 @@ class ExternalApis:
             return httpx.Response(self.failure)
         if request.url.host == "api.crossref.org":
             doi = request.url.path.removeprefix("/works/")
+            if doi in self.records:
+                return httpx.Response(200, json={"message": {"DOI": doi, **self.records[doi]}})
             fixture = self.crossref.get(doi)
             if fixture is None:
                 return httpx.Response(404, text="Resource not found.")
             return httpx.Response(200, json=load_fixture("crossref", fixture))
         if request.url.host == "www.ebi.ac.uk":
-            return httpx.Response(200, json=load_fixture("europepmc", "search_no_match"))
+            return self._europe_pmc(request)
         return httpx.Response(599, text="not an allowed host")
+
+    def _europe_pmc(self, request: httpx.Request) -> httpx.Response:
+        """A full text is served as PMC<n>, n its place in `full_texts`."""
+        dois = list(self.full_texts)
+        if request.url.path.endswith("/fullTextXML"):
+            index = int(request.url.path.split("/")[-2].removeprefix("PMC"))
+            return httpx.Response(200, content=self.full_texts[dois[index]])
+        query = request.url.params.get("query", "")
+        doi = query.removeprefix('DOI:"').removesuffix('"')
+        if query.startswith("DOI:") and doi in self.full_texts:
+            result = {"doi": doi, "pmcid": f"PMC{dois.index(doi)}", "isOpenAccess": "Y"}
+            return httpx.Response(200, json={"resultList": {"result": [result]}})
+        return httpx.Response(200, json=load_fixture("europepmc", "search_no_match"))
 
 
 @pytest.fixture
