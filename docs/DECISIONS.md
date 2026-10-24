@@ -8,6 +8,23 @@ owned that story made.
 
 ---
 
+## 2026-10-24 — Investigation follows links into the paper's own history
+
+- **One fixed rule for every change type** (`investigate.classify_link`):
+  follow only typed links to the paper's own later notices, newer versions
+  and replacements; check an untyped DOI from XML or text with one Crossref
+  request; keep everything else in `links`. Rules and limits are in
+  EVALUATION.md, "What to fetch, by scenario".
+- **Each DOI once per report**, within this report only (the paper's earlier
+  reports are not checked). Documents reached are stored as `related`; their
+  PDFs are downloaded by Storage Management, as for every document.
+- **URLs are stored in `links`, never fetched**, in case impact wants them.
+- **Rejected**: a per-change-type follow table (too strict, and RE-changes-explained.md
+  needs one rule); following everything fetched (crawls the citation
+  graph); an LLM choosing links (fetched content would steer fetching); a
+  `via_doi` column recording which document led to which (the parent's
+  `links` names the child); checking documents of earlier reports.
+
 ## 2026-10-24 — One name per concept (GLOSSARY.md); the DOI re-key is dropped
 
 - **GLOSSARY.md is the vocabulary**, and code, endpoints, tables, the
@@ -216,6 +233,9 @@ owned that story made.
 - **Europe PMC is the only text source**: Crossref has no notice text, and
   publisher pages and PDFs are bot-blocked. Paywalled notices get none.
 - **Fetched text is data for impact, never instructions.**
+- **Amended 2026-10-24**: fetches can follow DOIs from a fetched record or
+  text, only by fixed rules and caps (see "Investigation follows links into
+  the paper's own history"); still no LLM takes part.
 
 ## 2026-09-27 — Storage Management downloads a document's PDF when it's stored
 

@@ -29,7 +29,8 @@ feature on their own.
   erratum, expression of concern, DOAJ delisting, other Crossref notices)
   and stores each as an **alert** with a rule-based alert severity.
 - It then **investigates** them (fetches each notice's Crossref record and
-  open-access text, the paper's current copy, a new version) into a
+  open-access text, the paper's current copy, a new version, and
+  documents reached by following links into the paper's history) into a
   **report**, and Gemini judges the report's **impact** on the
   researcher's draft (change severity, impact level, evaluation,
   recommendation).
@@ -146,7 +147,7 @@ diagram: [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html)):
 | `alert_notes` | note in the researcher's log on an alert | V5 |
 | `drafts` | project's draft PDF | V6, V9 |
 | `reports` | nudge that stored new alerts for a paper (status, impact's evaluation) | V7, V8 |
-| `report_documents` | DOI fetched for a report (notice, new version, current copy) | V7 |
+| `report_documents` | DOI fetched for a report (notice, new version, related document, current copy) | V7 |
 
 Everything referring to a paper is deleted with it. PDFs are files in
 `UPLOAD_DIR`, never in Postgres.
