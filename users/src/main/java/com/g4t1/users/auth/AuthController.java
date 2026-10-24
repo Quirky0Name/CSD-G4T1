@@ -21,6 +21,6 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
-        return new AuthResponse(auth.register(request));
+        return auth.register(request);
     }
 }
