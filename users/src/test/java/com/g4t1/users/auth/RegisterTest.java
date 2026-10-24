@@ -6,6 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 class RegisterTest {
 
     @LocalServerPort
@@ -38,6 +40,18 @@ class RegisterTest {
                 .jsonPath("$.user.email").isEqualTo(email)
                 .jsonPath("$.user.created_at").isNotEmpty()
                 .jsonPath("$..password").doesNotExist();
+    }
+
+    @Test
+    void anEmailThatAlreadyHasAnAccountIsAConflict() {
+        String email = newEmail();
+        register(email, "correct horse battery").expectStatus().isCreated();
+
+        register(email, "a different password")
+                .expectStatus().isEqualTo(409)
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.detail").isEqualTo("An account with this email already exists");
     }
 
     private RestTestClient.ResponseSpec register(String email, String password) {
