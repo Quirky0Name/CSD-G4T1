@@ -34,10 +34,10 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
-        User user = users.findByEmail(request.email()).orElseThrow();
-        if (!passwords.matches(request.password(), user.getPasswordHash())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong email or password");
-        }
+        // one answer for an unknown email and a wrong password, so login never shows which emails have accounts
+        User user = users.findByEmail(request.email())
+                .filter(found -> passwords.matches(request.password(), found.getPasswordHash()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong email or password"));
         return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
     }
 }
