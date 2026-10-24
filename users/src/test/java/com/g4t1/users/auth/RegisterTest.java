@@ -4,16 +4,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -22,6 +26,9 @@ class RegisterTest {
 
     @LocalServerPort
     private int port;
+
+    @Autowired
+    private JdbcTemplate jdbc;
 
     private RestTestClient client;
 
@@ -103,6 +110,20 @@ class RegisterTest {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
+    }
+
+    // The one test that reads the database directly: no reply ever contains the stored password,
+    // so this is the only way to see it's kept as a BCrypt hash (an agreed exception to HTTP-only tests).
+    @Test
+    void aPasswordIsStoredOnlyAsItsBcryptHash() {
+        String email = newEmail();
+        register(email, "correct horse battery").expectStatus().isCreated();
+
+        String stored = jdbc.queryForObject(
+                "select password_hash from users.users where email = ?", String.class, email);
+
+        assertThat(stored).isNotEqualTo("correct horse battery");
+        assertThat(new BCryptPasswordEncoder().matches("correct horse battery", stored)).isTrue();
     }
 
     private RestTestClient.ResponseSpec register(String email, String password) {
