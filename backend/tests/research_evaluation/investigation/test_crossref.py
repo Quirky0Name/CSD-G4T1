@@ -4,6 +4,7 @@ from support import load_fixture
 
 from research_evaluation.investigation.crossref import CrossrefRecord, fetch_record
 from research_evaluation.investigation.http import FetchStatus
+from research_evaluation.investigation.links import LinkSource
 
 IJAA_NOTICE = "10.1016/j.ijantimicag.2024.107416"
 IJAA_PAPER = "10.1016/j.ijantimicag.2020.105949"
@@ -11,7 +12,12 @@ LANCET_PAPER = "10.1016/s0140-6736(20)31180-6"
 LANCET_COMMENTARY = "10.1016/s0140-6736(20)31174-0"
 REPUBLICATION = "10.1016/s0140-6736(20)31528-2"
 REPUBLICATION_URL = "https://api.crossref.org/works/10.1016/s0140-6736%2820%2931528-2"
+F1000_V1 = "10.12688/f1000research.187739.1"
 F1000_V2 = "10.12688/f1000research.187739.2"
+LANCET_EOC = "10.1016/s0140-6736(20)31290-3"
+LANCET_RETRACTION = "10.1016/s0140-6736(20)31324-6"
+PLOS_NOTICE = "10.1371/journal.pone.0322065"
+PLOS_PAPER = "10.1371/journal.pone.0258361"
 
 
 def url(doi: str) -> str:
@@ -95,8 +101,17 @@ async def test_the_record_serialises_for_storage_management(respx_mock, http):
     record = await fetch_record(http, IJAA_NOTICE, mailto="")
 
     dumped = record.model_dump(mode="json")
-    assert set(dumped) == {"doi", "title", "published", "journal", "update_to", "relation"}
-    assert CrossrefRecord.model_validate(dumped) == record
+    # the links go out as the document's links, not inside its record
+    assert set(dumped) == {
+        "doi",
+        "title",
+        "published",
+        "journal",
+        "update_to",
+        "updated_by",
+        "relation",
+    }
+    assert CrossrefRecord.model_validate(dumped) == record.model_copy(update={"links": []})
 
 
 async def test_404_is_not_found(respx_mock, http):
@@ -170,6 +185,161 @@ async def test_live_the_ijaa_notice():
     assert isinstance(record, CrossrefRecord)
     assert record.title.startswith("Retraction notice to")
     assert record.updates(IJAA_PAPER)
+
+
+def doi_links(record) -> list[tuple[str, str]]:
+    return [(link.doi, link.role) for link in record.links if link.doi is not None]
+
+
+def url_links(record) -> list[str]:
+    return [link.url for link in record.links if link.url is not None]
+
+
+def lancet_url(doi: str) -> str:
+    return url(doi).replace("(", "%28").replace(")", "%29")
+
+
+async def test_the_lancet_eoc_links_to_the_paper_and_the_retraction(respx_mock, http):
+    respx_mock.get(lancet_url(LANCET_EOC)).respond(200, json=load_fixture("crossref", "lancet_eoc"))
+
+    record = await fetch_record(http, LANCET_EOC, mailto="")
+
+    # update-to names the paper; relation `retraction` and both updated-by entries repeat a DOI
+    # already linked, so the first link for it is the one kept
+    assert doi_links(record) == [(LANCET_PAPER, "update-to"), (LANCET_RETRACTION, "erratum")]
+    assert [(u.doi, u.type) for u in record.updated_by] == [
+        (LANCET_PAPER, "retraction"),
+        (LANCET_RETRACTION, "erratum"),
+    ]
+    assert all(link.source is LinkSource.CROSSREF for link in record.links)
+
+
+async def test_the_republication_links_each_doi_once_and_reads_no_references(respx_mock, http):
+    respx_mock.get(REPUBLICATION_URL).respond(
+        200, json=load_fixture("crossref", "lancet_republication")
+    )
+
+    record = await fetch_record(http, REPUBLICATION, mailto="")
+
+    assert doi_links(record) == [(LANCET_COMMENTARY, "update-to"), (LANCET_PAPER, "update-to")]
+    # its 12 references give nothing
+    assert len(load_fixture("crossref", "lancet_republication")["message"]["reference"]) == 12
+    assert len(record.links) == 4
+
+
+async def test_f1000_v1_links_to_its_newer_version(respx_mock, http):
+    respx_mock.get(url(F1000_V1)).respond(200, json=load_fixture("crossref", "f1000_v1"))
+
+    record = await fetch_record(http, F1000_V1, mailto="")
+
+    # relation comes before updated-by, so v2 is linked by `is-version-of`; the review too
+    assert doi_links(record) == [
+        ("10.5256/f1000research.207205.r512930", "has-review"),
+        (F1000_V2, "is-version-of"),
+    ]
+    assert [(u.doi, u.type) for u in record.updated_by] == [(F1000_V2, "new_version")]
+
+
+async def test_the_ijaa_notice_links_the_paper_once(respx_mock, http):
+    respx_mock.get(url(IJAA_NOTICE)).respond(200, json=load_fixture("crossref", "ijaa_notice"))
+
+    record = await fetch_record(http, IJAA_NOTICE, mailto="")
+
+    # Crossref lists it twice (retraction and erratum)
+    assert doi_links(record) == [(IJAA_PAPER, "update-to")]
+
+
+@pytest.mark.parametrize(
+    ("fixture", "doi"),
+    [
+        ("ijaa_notice", IJAA_NOTICE),
+        ("lancet_eoc", LANCET_EOC),
+        ("lancet_republication", REPUBLICATION),
+        ("f1000_v1", F1000_V1),
+        ("plos_retraction_notice", PLOS_NOTICE),
+        ("evolution_eoc", "10.1093/evolut/qpad094"),
+    ],
+)
+async def test_every_records_link_urls_are_url_links(respx_mock, http, fixture, doi):
+    respx_mock.get(lancet_url(doi)).respond(200, json=load_fixture("crossref", fixture))
+
+    record = await fetch_record(http, doi, mailto="")
+
+    message = load_fixture("crossref", fixture)["message"]
+    assert url_links(record) == list(dict.fromkeys(item["URL"] for item in message["link"]))
+    assert all(link.role is None for link in record.links if link.url is not None)
+
+
+async def test_the_plos_notice_links_the_paper_and_its_dx_plos_url(respx_mock, http):
+    respx_mock.get(url(PLOS_NOTICE)).respond(
+        200, json=load_fixture("crossref", "plos_retraction_notice")
+    )
+
+    record = await fetch_record(http, PLOS_NOTICE, mailto="")
+
+    assert doi_links(record) == [(PLOS_PAPER, "update-to")]
+    assert url_links(record) == ["https://dx.plos.org/10.1371/journal.pone.0322065"]
+
+
+async def test_uri_relations_are_url_links_and_doi_urls_become_doi_links(respx_mock, http):
+    body = minimal_record(
+        relation={
+            "is-supplemented-by": [{"id-type": "uri", "id": "https://example.org/data"}],
+            "is-replaced-by": [{"id-type": "uri", "id": "https://doi.org/10.1/NEWER"}],
+        },
+        link=[{"URL": "https://doi.org/10.1/LINKED"}, {"URL": "https://example.org/pdf"}],
+    )
+    respx_mock.get(url(IJAA_NOTICE)).respond(200, json=body)
+
+    record = await fetch_record(http, IJAA_NOTICE, mailto="")
+
+    assert [(link.doi, link.url, link.role) for link in record.links] == [
+        (None, "https://example.org/data", "is-supplemented-by"),
+        ("10.1/newer", None, "is-replaced-by"),
+        ("10.1/linked", None, None),
+        (None, "https://example.org/pdf", None),
+    ]
+
+
+@pytest.mark.parametrize(
+    "item",
+    [
+        {"id-type": "doi"},
+        {"id-type": "uri", "id": "not a url"},
+        {"id-type": "uri", "id": 5},
+        {"id": "10.1/no-type"},
+        ["10.1/in-a-list"],
+        None,
+    ],
+    ids=["no id", "uri not a url", "uri not text", "no id-type", "a list", "null"],
+)
+async def test_a_malformed_relation_item_gives_no_link_and_no_exception(respx_mock, http, item):
+    body = minimal_record(relation={"is-replaced-by": [item]}, link=[item, {"URL": None}, "x"])
+    respx_mock.get(url(IJAA_NOTICE)).respond(200, json=body)
+
+    record = await fetch_record(http, IJAA_NOTICE, mailto="")
+
+    assert isinstance(record, CrossrefRecord)
+    assert record.links == []
+
+
+async def test_updated_by_entries_are_links_after_relations(respx_mock, http):
+    body = minimal_record(
+        **{
+            "update-to": [{"DOI": IJAA_PAPER, "type": "retraction"}],
+            "updated-by": [{"DOI": "10.1/LATER", "type": "correction"}],
+            "relation": {"has-version": [{"id-type": "doi", "id": "10.1/v2"}]},
+        }
+    )
+    respx_mock.get(url(IJAA_NOTICE)).respond(200, json=body)
+
+    record = await fetch_record(http, IJAA_NOTICE, mailto="")
+
+    assert doi_links(record) == [
+        (IJAA_PAPER, "update-to"),
+        ("10.1/v2", "has-version"),
+        ("10.1/later", "updated-by"),
+    ]
 
 
 def minimal_record(**fields) -> dict:

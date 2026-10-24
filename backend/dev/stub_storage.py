@@ -63,6 +63,8 @@ class NewDocument(BaseModel):
     text_status: Literal["ok", "not_indexed", "not_open_access", "error"]
     text: str | None = None
     text_truncated: bool
+    # stored and returned as sent, never looked inside
+    links: Any = None
 
 
 class ReportStatusChange(BaseModel):

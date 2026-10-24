@@ -2,7 +2,7 @@
 
 `plan_documents` turns the detected changes behind a report's alerts into the DOIs to fetch;
 `fetch_document` fetches one DOI's Crossref record (S3) and open-access text (S4) side by
-side. Neither touches Storage Management: the caller stores the result
+side, and keeps the links both point at. Neither touches Storage Management: the caller stores the result
 (`POST /internal/documents`), and Storage Management downloads the PDF then."""
 
 import asyncio
@@ -19,6 +19,7 @@ from research_evaluation.changes import Change, ChangeType
 from research_evaluation.investigation.crossref import CrossrefRecord, fetch_record
 from research_evaluation.investigation.europepmc import DocumentText, TextStatus, fetch_text
 from research_evaluation.investigation.http import FetchStatus
+from research_evaluation.investigation.links import Link, unique
 
 log = logging.getLogger(__name__)
 
@@ -60,6 +61,8 @@ class FetchedDocument(BaseModel):
     text_status: TextStatus
     text: str | None
     text_truncated: bool
+    # the DOIs and URLs its record and full text point at; [] when its sources found nothing
+    links: list[Link]
 
     def body(self, report_id: int) -> dict[str, Any]:
         return {"report_id": report_id, **self.model_dump(mode="json")}
@@ -102,8 +105,9 @@ def plan_documents(
 async def fetch_document(
     http: httpx.AsyncClient, planned: PlannedDocument, paper_doi: str | None, mailto: str
 ) -> FetchedDocument:
-    """The document's Crossref record and open-access text, fetched side by side. One failing
-    never stops the other, and nothing raises: a failure is a status."""
+    """The document's Crossref record and open-access text, fetched side by side, and their
+    links (Crossref's first, each DOI and URL once). One failing never stops the other, and
+    nothing raises: a failure is a status."""
     record, text = await asyncio.gather(
         fetch_record(http, planned.doi, mailto),
         fetch_text(http, planned.doi),
@@ -125,6 +129,7 @@ async def fetch_document(
         text_status=text.status,
         text=text.text,
         text_truncated=text.truncated,
+        links=unique([*(record.links if found else []), *text.links]),
     )
 
 

@@ -89,6 +89,9 @@ class DocumentInReport(BaseModel):
     pdf_status: str
     pdf_source_url: str | None = None
     pdf_fetched_at: datetime | None = None
+    # the DOIs and URLs it points at, as investigation sent them; None for documents stored
+    # before links were sent
+    links: list[dict[str, Any]] | None = None
 
 
 class Report(BaseModel):

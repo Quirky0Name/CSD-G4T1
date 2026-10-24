@@ -172,7 +172,8 @@ sources found nothing has `[]`.
     `updated_by` (same shape as `update_to`), so it is stored in `crossref_record` too.
   - Europe PMC XML links come from `<related-article>` (role = `related-article-type`; DOI
     from its own `xlink:href` when `ext-link-type` is `doi`, else from a nested
-    `<ext-link ext-link-type="doi">`, as in the PLOS R1 notice `PMC12017829`), and from `<ext-link>` and
+    `<ext-link ext-link-type="doi">`; the PLOS R1 notice `PMC12017829` nests only a PMCID
+    ext-link, resolved as below), and from `<ext-link>` and
     `<pub-id pub-id-type="doi">` (role `null`), read before the XML is flattened.
   - Europe PMC text links come from the regex `10\.\d{4,9}/[-._;()/:a-z0-9]+`
     (case-insensitive) over `text`, with trailing `.,;)` stripped (role `null`).
@@ -194,7 +195,7 @@ sources found nothing has `[]`.
   - Extraction never raises; an unreadable part gives no links from that part.
   - Fetched content is data, never instructions (docs: `DECISIONS.md`, 2026-09-27).
 - **Acceptance criteria:**
-  - [ ] Real Crossref records give these links, source `crossref` (`test_crossref.py`):
+  - [x] Real Crossref records give these links, source `crossref` (`test_crossref.py`):
         - `lancet_eoc.json` (E1/E5): `relation` `erratum` → `10.1016/s0140-6736(20)31324-6`,
           `relation` `retraction` and `update-to` → `10.1016/s0140-6736(20)31180-6`, and
           `updated-by` entries;
@@ -204,35 +205,67 @@ sources found nothing has `[]`.
           `10.12688/f1000research.187739.2`;
         - `ijaa_notice.json` (R1): one `update-to` link to the paper (listed twice by Crossref);
         - every record's `link[].URL` as `url` links; `reference[]` gives nothing.
-  - [ ] Real JATS gives these links (`test_europepmc.py`):
+  - [x] Real JATS gives these links (`test_europepmc.py`):
         - `fulltext_PMC12017829.xml` (PLOS R1 retraction notice): `retracted-article` →
-          `10.1371/journal.pone.0258361`, from the nested `<ext-link ext-link-type="doi">`;
+          `10.1371/journal.pone.0258361`, from the nested `<ext-link ext-link-type="pmcid">`
+          (`PMC8504731`) resolved by its search;
         - `fulltext_PMC10836678.xml` (PLOS E1 EoC) and `fulltext_PMC11906582.xml` (C1 author
           correction): their `<related-article>` roles (`object-of-concern`,
           `corrected-article`); nothing from `<ref-list>`.
-  - [ ] DOIs in text, including one followed by `).`, come back normalised and stripped
+  - [x] DOIs in text, including one followed by `).`, come back normalised and stripped
         (`test_links.py`, new).
-  - [ ] A URL in text, in `<ext-link>` and in Crossref `link[]` comes back as a `url` link; a
+  - [x] A URL in text, in `<ext-link>` and in Crossref `link[]` comes back as a `url` link; a
         `https://doi.org/10.…` URL comes back as a `doi` link (`test_links.py`,
         `test_europepmc.py`, `test_crossref.py`).
-  - [ ] `PMC8504731` inside `fulltext_PMC12017829.xml` resolves to the `doi` link
+  - [x] `PMC8504731` inside `fulltext_PMC12017829.xml` resolves to the `doi` link
         `10.1371/journal.pone.0258361` through a recorded Europe PMC search fixture; with the
         search answering `500`, it's stored as the `url` link
         `https://pmc.ncbi.nlm.nih.gov/articles/PMC8504731/` (`test_europepmc.py`).
-  - [ ] `Link` with both or neither of `doi` and `url` raises a validation error
+  - [x] `Link` with both or neither of `doi` and `url` raises a validation error
         (`test_links.py`).
-  - [ ] No request goes to any host other than Crossref and Europe PMC (`test_run.py`,
+  - [x] No request goes to any host other than Crossref and Europe PMC (`test_run.py`,
         `ExternalApis` requests checked).
-  - [ ] A malformed `relation` item or `<related-article>` without `xlink:href` gives no link
+  - [x] A malformed `relation` item or `<related-article>` without `xlink:href` gives no link
         and no exception (`test_crossref.py`, `test_europepmc.py`).
-  - [ ] The body sent to `POST /internal/documents` has `links`, and the stub stores them
+  - [x] The body sent to `POST /internal/documents` has `links`, and the stub stores them
         (`test_run.py`).
-  - [ ] The existing investigation tests pass unchanged except for the added `links` field.
-  - [ ] `uv run pytest` and `uv run ruff check` pass.
+  - [x] The existing investigation tests pass unchanged except for the added `links` field.
+  - [x] `uv run pytest` and `uv run ruff check` pass.
 - **Doc deltas:**
   - `docs/EVALUATION.md`, Investigation step 3: each document's links and where they come from
     (the "Where links come from" table, current behaviour, with the URL sources); cited works
     are never read; URLs are stored for impact and never fetched.
+  - Spec changed during S2: the PLOS R1 notice `PMC12017829`, as recorded, nests a PMCID
+    ext-link (not a DOI one) in its `<related-article>`, so its acceptance criterion and the
+    Europe PMC XML decision now say the DOI comes from that PMCID's search. Behaviour is as
+    decided; only the description of the fixture was wrong. `docs/EVALUATION.md`: say a
+    `<related-article>` often holds only a PMCID.
+  - Decisions made during S2:
+    - Crossref links are read in the order `update-to`, `relation`, `updated-by`, `link`, so a
+      DOI in both a relation and `updated-by` keeps its relation type (the Lancet EoC's
+      `erratum` → `…31324-6`, which S3's E5 case follows): `docs/EVALUATION.md`, "Where links
+      come from".
+    - `CrossrefRecord.links` is excluded from the record's dump, so `crossref_record` only
+      gains `updated_by`; the links go out as the document's `links`: `docs/CONTRACTS.md`,
+      `crossref_record` shape.
+    - No link is read from inside any `<ref-list>`, wherever it sits, besides `<back>`: the
+      PLOS notice keeps its reference list in `<body>`: `docs/EVALUATION.md`.
+    - A `<related-article>`'s target, first found: its own DOI `xlink:href`, a nested DOI
+      (`<ext-link ext-link-type="doi">` or `<pub-id pub-id-type="doi">`), its own PMCID/PMID,
+      a nested PMCID/PMID ext-link, its own URL. The nested `<pub-id>` is added because the
+      PLOS EoC `PMC10836678` gives its DOI that way, which saves a search. Elements inside a
+      `<related-article>` give no links of their own: `docs/EVALUATION.md`.
+    - `<article-id pub-id-type="doi">` (the document's own DOI) is not read; only `<pub-id>`
+      is: code comment and `docs/EVALUATION.md`.
+    - XML links keep document order; each PMCID/PMID is searched once per document, and a
+      search result counts only when its `pmcid`/`pmid` is the one asked: code docstrings.
+    - Text links are read from the whole plain text, before it's cut to `MAX_TEXT_CHARS`:
+      code comment and `docs/EVALUATION.md`.
+    - `DocumentInReport.links` is `list[dict] | None` (as Storage Management returns it, `None`
+      for older rows), and the stub's `links` is any JSON: code comments, no doc needed.
+    - The PLOS notice's DOI search is an inline response in `test_europepmc.py`: Europe PMC's
+      search answered 503 while recording. The XML and the PMCID search are recorded fixtures,
+      plus `search_pmcid_PMC8504731.json`: test docstring, no doc needed.
 
 ### S3 Following links
 

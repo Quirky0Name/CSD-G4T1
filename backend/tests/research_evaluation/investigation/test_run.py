@@ -7,6 +7,7 @@ from uuid import UUID
 import httpx
 import pytest
 from research_evaluation_support import notice, nudge
+from support import load_fixture
 
 from research_evaluation.changes import Change, ChangeType
 from research_evaluation.investigation.run import (
@@ -88,6 +89,34 @@ async def test_a_nudge_with_new_alerts_gives_one_investigated_report_with_its_do
     assert documents[CORRECTION_NOTICE]["crossref_status"] == "not_found"
     assert documents[PAPER_DOI]["kind"] == "current_version"
     assert documents[PAPER_DOI]["pdf_status"] == "ok"
+
+
+async def test_each_document_is_stored_with_its_links_and_only_crossref_and_europe_pmc_are_asked(
+    client, sm, external
+):
+    external.crossref[RETRACTION_NOTICE] = "ijaa_notice"
+    paper = await changed_paper(sm, **retraction_and_correction())
+
+    await nudge(client, [paper])
+
+    [report_id] = await report_ids(sm, paper)
+    documents = {d["doi"]: d for d in (await read_report(sm, paper, report_id))["documents"]}
+    elsevier = [
+        item["URL"] for item in load_fixture("crossref", "ijaa_notice")["message"]["link"]
+    ]
+    # the stub stores links as sent: the notice's from its Crossref record (Europe PMC finds
+    # nothing here), none for the others
+    assert documents[RETRACTION_NOTICE]["links"] == [
+        {"doi": PAPER_DOI, "url": None, "role": "update-to", "source": "crossref"},
+        *({"doi": None, "url": url, "role": None, "source": "crossref"} for url in elsevier),
+    ]
+    assert documents[CORRECTION_NOTICE]["links"] == []
+    assert documents[PAPER_DOI]["links"] == []
+    # the URLs are stored, never fetched
+    assert {request.url.host for request in external.requests} == {
+        "api.crossref.org",
+        "www.ebi.ac.uk",
+    }
 
 
 async def test_the_stored_row_is_used_even_when_it_differs_from_what_was_fetched(sm, external):

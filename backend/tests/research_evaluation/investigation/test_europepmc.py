@@ -4,12 +4,16 @@ from support import load_fixture, load_xml_fixture
 
 from research_evaluation.investigation import europepmc
 from research_evaluation.investigation.europepmc import TextStatus, fetch_text, plain_text
+from research_evaluation.investigation.links import LinkSource
 
 BASE = "https://www.ebi.ac.uk/europepmc/webservices/rest"
 SEARCH = f"{BASE}/search"
 AUTHOR_CORRECTION = "10.1038/s41598-025-93099-x"
 PLOS_EOC = "10.1371/journal.pone.0298436"
 IJAA_NOTICE = "10.1016/j.ijantimicag.2024.107416"
+PLOS_NOTICE = "10.1371/journal.pone.0322065"
+PLOS_PAPER = "10.1371/journal.pone.0258361"
+CC_BY = "https://creativecommons.org/licenses/by/4.0/"
 
 
 @pytest.fixture
@@ -197,6 +201,201 @@ async def test_no_request_carries_auth(respx_mock, http):
 
     assert "authorization" not in search.calls.last.request.headers
     assert "authorization" not in full_text.calls.last.request.headers
+
+
+def links_of(result) -> list[tuple]:
+    return [(link.doi, link.url, link.role, link.source) for link in result.links]
+
+
+def id_search_returns(respx_mock, query: str, **response):
+    """A Europe PMC search for one PMCID or PMID; added before the DOI search's route, which
+    would otherwise answer it."""
+    return respx_mock.get(url__startswith=SEARCH, params__contains={"query": query}).respond(
+        **response
+    )
+
+
+def open_access_search(doi: str, pmcid: str) -> dict:
+    """What Europe PMC's search answers for an open-access DOI (the PLOS notice's search
+    couldn't be recorded: the live search was down)."""
+    return {
+        "hitCount": 1,
+        "resultList": {"result": [{"doi": doi, "pmcid": pmcid, "isOpenAccess": "Y"}]},
+    }
+
+
+async def fetch_xml(respx_mock, http, xml: bytes, doi: str = "10.1/doc"):
+    respx_mock.get(url__startswith=SEARCH, params__contains={"query": f'DOI:"{doi}"'}).respond(
+        200, json=open_access_search(doi, "PMC1")
+    )
+    full_text_returns(respx_mock, "PMC1", status_code=200, content=xml)
+    return await fetch_text(http, doi)
+
+
+async def test_the_plos_notice_links_the_retracted_article_through_its_pmcid(respx_mock, http):
+    pmcid = id_search_returns(
+        respx_mock,
+        "PMCID:PMC8504731",
+        status_code=200,
+        json=load_fixture("europepmc", "search_pmcid_PMC8504731"),
+    )
+
+    result = await fetch_xml(
+        respx_mock, http, load_xml_fixture("europepmc", "fulltext_PMC12017829"), PLOS_NOTICE
+    )
+
+    assert result.status is TextStatus.OK
+    # the license URL, then the retracted article: its <related-article> holds only a PMCID
+    # ext-link, found by one search. The reference list (in the body here) gives nothing:
+    # neither its DOI, PMID and Google Scholar ext-links nor its retraction-forward pointer
+    assert links_of(result) == [
+        (None, CC_BY, None, LinkSource.EUROPEPMC_XML),
+        (PLOS_PAPER, None, "retracted-article", LinkSource.EUROPEPMC_XML),
+    ]
+    assert pmcid.call_count == 1
+
+
+async def test_a_pmcid_that_cant_be_resolved_is_kept_as_its_pmc_url(respx_mock, http):
+    id_search_returns(respx_mock, "PMCID:PMC8504731", status_code=500)
+
+    result = await fetch_xml(
+        respx_mock, http, load_xml_fixture("europepmc", "fulltext_PMC12017829"), PLOS_NOTICE
+    )
+
+    assert result.status is TextStatus.OK
+    assert (
+        None,
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC8504731/",
+        "retracted-article",
+        LinkSource.EUROPEPMC_XML,
+    ) in links_of(result)
+    assert all(link.doi != PLOS_PAPER for link in result.links)
+
+
+async def test_the_plos_eoc_links_its_object_of_concern_and_nothing_from_its_references(
+    respx_mock, http
+):
+    search_returns(respx_mock, "search_plos_eoc")
+    full_text_returns(
+        respx_mock,
+        "PMC10836678",
+        status_code=200,
+        content=load_xml_fixture("europepmc", "fulltext_PMC10836678"),
+    )
+
+    result = await fetch_text(http, PLOS_EOC)
+
+    # the DOI is in the <related-article> itself, so its PMC link needs no search; the
+    # reference list's pointer back at this EoC (PMC10836678) gives nothing
+    assert links_of(result) == [
+        (None, CC_BY, None, LinkSource.EUROPEPMC_XML),
+        ("10.1371/journal.pone.0035065", None, "object-of-concern", LinkSource.EUROPEPMC_XML),
+    ]
+
+
+async def test_the_author_correction_links_its_corrected_article(respx_mock, http):
+    id_search_returns(
+        respx_mock,
+        "PMCID:PMC11607393",
+        status_code=200,
+        json=load_fixture("europepmc", "search_no_match"),
+    )
+    search_returns(respx_mock, "search_author_correction")
+    full_text_returns(
+        respx_mock,
+        "PMC11906582",
+        status_code=200,
+        content=load_xml_fixture("europepmc", "fulltext_PMC11906582"),
+    )
+
+    result = await fetch_text(http, AUTHOR_CORRECTION)
+
+    assert [(link.url, link.role) for link in result.links if link.role is not None] == [
+        ("https://pmc.ncbi.nlm.nih.gov/articles/PMC11607393/", "corrected-article")
+    ]
+
+
+async def test_jats_links_by_element(respx_mock, http):
+    pmid = id_search_returns(
+        respx_mock,
+        "EXT_ID:12345 AND SRC:MED",
+        status_code=200,
+        json={"resultList": {"result": [{"pmid": "12345", "doi": "10.1/FROM-PMID"}]}},
+    )
+    xml = b"""<article xmlns:xlink="http://www.w3.org/1999/xlink">
+      <front><article-meta>
+        <article-id pub-id-type="doi">10.1/doc</article-id>
+        <title-group><article-title>Correction</article-title></title-group>
+        <self-uri xlink:href="doc.pdf"/>
+        <self-uri xlink:href="https://example.org/self"/>
+        <related-article related-article-type="corrected-article" ext-link-type="doi"
+          xlink:href="10.1/OWN-HREF"/>
+        <related-article related-article-type="retraction-forward">
+          <ext-link ext-link-type="doi" xlink:href="10.1/nested"/></related-article>
+        <related-article related-article-type="update">No link at all.</related-article>
+      </article-meta></front>
+      <body>
+        <p>See <ext-link ext-link-type="uri" xlink:href="https://doi.org/10.1/FROM-URI">x</ext-link>,
+          <ext-link xlink:href="https://example.org/data.">data</ext-link>,
+          <ext-link ext-link-type="pmid" xlink:href="12345">a PubMed record</ext-link>,
+          <ext-link ext-link-type="google-scholar" xlink:href="title=x">scholar</ext-link>
+          and <pub-id pub-id-type="doi">10.1/PUB-ID</pub-id>.</p>
+        <ref-list><ref><ext-link ext-link-type="doi" xlink:href="10.1/cited-in-body"/></ref></ref-list>
+      </body>
+      <back><ref-list><ref><pub-id pub-id-type="doi">10.1/cited</pub-id></ref></ref-list></back>
+    </article>"""
+
+    result = await fetch_xml(respx_mock, http, xml)
+
+    xml_links = [
+        (link.doi, link.url, link.role)
+        for link in result.links
+        if link.source is LinkSource.EUROPEPMC_XML
+    ]
+    assert xml_links == [
+        (None, "https://example.org/self", None),
+        ("10.1/own-href", None, "corrected-article"),
+        ("10.1/nested", None, "retraction-forward"),
+        ("10.1/from-uri", None, None),
+        (None, "https://example.org/data", None),
+        ("10.1/from-pmid", None, None),
+        ("10.1/pub-id", None, None),
+    ]
+    assert pmid.call_count == 1
+
+
+async def test_text_links_come_after_xml_links_and_repeat_none(respx_mock, http):
+    xml = b"""<article xmlns:xlink="http://www.w3.org/1999/xlink"><body>
+      <p>The original <ext-link ext-link-type="doi" xlink:href="10.1234/orig">article</ext-link>
+        (doi: 10.1234/orig). Data: https://example.org/text-data; also 10.1234/ONLY-IN-TEXT).</p>
+    </body></article>"""
+
+    result = await fetch_xml(respx_mock, http, xml)
+
+    assert links_of(result) == [
+        ("10.1234/orig", None, None, LinkSource.EUROPEPMC_XML),
+        (None, "https://example.org/text-data", None, LinkSource.EUROPEPMC_TEXT),
+        ("10.1234/only-in-text", None, None, LinkSource.EUROPEPMC_TEXT),
+    ]
+
+
+async def test_a_related_article_without_a_link_gives_none_and_no_exception(respx_mock, http):
+    xml = b"""<article xmlns:xlink="http://www.w3.org/1999/xlink"><front><article-meta>
+      <related-article related-article-type="retracted-article"/>
+      <related-article related-article-type="corrected-article" ext-link-type="doi"/>
+      <related-article related-article-type="update" xlink:href="   "/>
+      </article-meta></front><body><p>Retraction.</p></body></article>"""
+
+    result = await fetch_xml(respx_mock, http, xml)
+
+    assert result.status is TextStatus.OK
+    assert result.links == []
+
+
+async def test_a_paywalled_document_has_no_links(respx_mock, http):
+    search_returns(respx_mock, "search_ijaa_notice")
+
+    assert (await fetch_text(http, IJAA_NOTICE)).links == []
 
 
 def test_plain_text_keeps_title_abstract_body_and_captions_but_not_references():

@@ -330,4 +330,61 @@ async def test_the_body_is_what_storage_management_takes(respx_mock, http):
         "text_status": "not_open_access",
         "text": None,
         "text_truncated": False,
+        # a paywalled notice: links from its Crossref record only
+        "links": [
+            {"doi": IJAA, "url": None, "role": "update-to", "source": "crossref"},
+            *(
+                {"doi": None, "url": item["URL"], "role": None, "source": "crossref"}
+                for item in load_fixture("crossref", "ijaa_notice")["message"]["link"]
+            ),
+        ],
     }
+
+
+async def test_links_come_from_crossref_then_the_xml_then_the_text_each_once(respx_mock, http):
+    doi = "10.1038/s41598-025-93099-x"
+    respx_mock.get(CROSSREF + doi).respond(
+        200,
+        json={
+            "message": {
+                "DOI": doi,
+                # also written in the text: the Crossref link is the one kept
+                "update-to": [{"DOI": "10.1038/s41598-024-79772-7", "type": "correction"}],
+                # also the license ext-link in the XML: the Crossref link is the one kept
+                "link": [{"URL": "https://creativecommons.org/licenses/by-nc-nd/4.0/"}],
+            }
+        },
+    )
+    respx_mock.get(url__startswith=EUROPE_PMC_SEARCH).respond(
+        200, json=load_fixture("europepmc", "search_author_correction")
+    )
+    respx_mock.get(
+        url__startswith="https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11906582"
+    ).respond(200, content=load_xml_fixture("europepmc", "fulltext_PMC11906582"))
+
+    document = await fetch_document(
+        http, PlannedDocument(kind=NOTICE, doi=doi), "10.1/p", mailto=""
+    )
+
+    assert [(link.doi, link.url, link.role, link.source) for link in document.links] == [
+        ("10.1038/s41598-024-79772-7", None, "update-to", "crossref"),
+        (None, "https://creativecommons.org/licenses/by-nc-nd/4.0/", None, "crossref"),
+        # its PMCID's search (the same canned answer) finds no DOI for it
+        (
+            None,
+            "https://pmc.ncbi.nlm.nih.gov/articles/PMC11607393/",
+            "corrected-article",
+            "europepmc_xml",
+        ),
+    ]
+
+
+async def test_a_document_whose_sources_found_nothing_has_no_links(respx_mock, http):
+    respx_mock.route().mock(side_effect=httpx.ConnectError("offline"))
+
+    document = await fetch_document(
+        http, PlannedDocument(kind=CURRENT, doi=LANCET), LANCET, mailto=""
+    )
+
+    assert document.links == []
+    assert document.body(report_id=1)["links"] == []
