@@ -67,6 +67,17 @@ class LoginTest {
                 .jsonPath("$.detail").isEqualTo("Wrong email or password");
     }
 
+    @Test
+    void anEmailLogsInWhateverItsLetterCase() {
+        String email = newEmail();
+        String id = JsonPath.read(registered(email, "correct horse battery"), "$.user.id");
+
+        login(email.toUpperCase(), "correct horse battery")
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.user.id").isEqualTo(id);
+    }
+
     // the same answer as a wrong password, so login never shows which emails have accounts
     @Test
     void anUnknownEmailIsUnauthorizedLikeAWrongPassword() {
