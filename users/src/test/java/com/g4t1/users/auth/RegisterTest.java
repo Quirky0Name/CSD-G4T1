@@ -54,6 +54,18 @@ class RegisterTest {
                 .jsonPath("$.detail").isEqualTo("An account with this email already exists");
     }
 
+    @Test
+    void anEmailIsOneAccountWhateverItsLetterCase() {
+        String email = newEmail();
+
+        register(email.toUpperCase(), "correct horse battery")
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.user.email").isEqualTo(email);
+
+        register(email, "a different password").expectStatus().isEqualTo(409);
+    }
+
     private RestTestClient.ResponseSpec register(String email, String password) {
         return client.post().uri("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
