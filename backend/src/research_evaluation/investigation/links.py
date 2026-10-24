@@ -73,7 +73,8 @@ def url_link(raw: object, role: str | None, source: LinkSource) -> Link | None:
 
 def text_links(text: str) -> list[Link]:
     """The DOIs and URLs written in plain text, in the order they appear, all untyped, each
-    once (a doi.org URL and the DOI inside it are the same link)."""
+    once: a doi.org URL and the DOI inside it are usually the same link (not when the URL has
+    characters the DOI regex stops at, e.g. a query string)."""
     found = [
         (match.start(), url_link(match.group(), None, LinkSource.EUROPEPMC_TEXT))
         for match in _URL_IN_TEXT.finditer(text)

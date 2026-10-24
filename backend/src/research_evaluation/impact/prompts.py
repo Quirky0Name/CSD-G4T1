@@ -320,8 +320,8 @@ def change_prompt(inputs: ReportInputs) -> ChangePrompt:
                 inputs.paper_pdf,
             )
         )
-    order = {"new_version": 0, "related": 1}
-    ordered = sorted(inputs.document_pdfs, key=lambda pair: order.get(pair[0].kind, 2))
+    pdf_order = {"new_version": 0, "related": 1}  # then the current copy
+    ordered = sorted(inputs.document_pdfs, key=lambda pair: pdf_order.get(pair[0].kind, 2))
     pdfs += [(label(document), _pdf_label(document), data) for document, data in ordered]
 
     attached_pdfs: list[tuple[str, bytes]] = []

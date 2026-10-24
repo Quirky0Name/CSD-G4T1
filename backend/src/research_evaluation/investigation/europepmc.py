@@ -42,7 +42,7 @@ _BLOCKS = {"article-title", "title", "p"}
 _NOT_LINKED = {"back", "ref-list"}
 _XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
 # JATS ext-link types naming a PubMed Central or PubMed record, which a search turns into a DOI
-_ID_TYPES = {"pmcid": "pmcid", "pmc": "pmcid", "pmid": "pmid"}
+_ID_TYPES: dict[str, Literal["pmcid", "pmid"]] = {"pmcid": "pmcid", "pmc": "pmcid", "pmid": "pmid"}
 
 log = logging.getLogger(__name__)
 
@@ -236,7 +236,9 @@ def _related_article(element: ET.Element) -> Link | _RecordId | None:
     return next((c for c in candidates if c is not None), None)
 
 
-def _record_id(kind: str, raw: str | None, role: str | None) -> _RecordId | None:
+def _record_id(
+    kind: Literal["pmcid", "pmid"], raw: str | None, role: str | None
+) -> _RecordId | None:
     """A PMCID (with or without its "PMC") or a PMID, checked to be one."""
     value = (raw or "").strip().upper()
     if kind == "pmcid":
