@@ -130,6 +130,87 @@ Notice PDFs aren't fetched (bot-blocked). A notice about another article
 only its title ("RETRACTED: <another article>") shows it, which impact
 judges.
 
+### What to fetch, by scenario
+
+Steps 2–4 as one flow, plus link following. Link following is **planned,
+not built yet**: everything marked *(planned)* is the proposal, the rest is
+what `plan_documents` and `fetch_document` do today.
+
+```
+for each change behind one of the report's alerts:
+  doaj_delisting ────────────────────────────▶ nothing (it's about the journal)
+  retraction from OpenAlex's flag only ──────▶ current_version
+  no notice DOI ─────────────────────────────▶ current_version if the type can alter the paper
+  notice DOI is the paper's own (R3) ────────▶ current_version, no notice
+  other: new_version / new_edition ──────────▶ new_version (the notice DOI)
+  retraction, correction, erratum, other ────▶ notice + current_version
+  expression_of_concern ─────────────────────▶ notice only (it doesn't change the paper)
+
+for each planned DOI (each once per report):
+  ├─ Crossref /works/{doi}     → crossref_record (metadata, never body text)
+  ├─ Europe PMC search by DOI
+  │    ├─ no result with that DOI   → text_status not_indexed
+  │    ├─ no PMCID, or not OA       → text_status not_open_access
+  │    └─ fullTextXML               → text (≤ 60,000 chars)
+  │                                   (planned) + links, read before flattening
+  ├─ notice only: update_to_includes_paper
+  └─ POST /internal/documents  → Storage Management downloads the PDF
+                                 (new_version, current_version; never a notice)
+
+(planned) for each stored document, while depth < MAX_DEPTH:
+  its links (Crossref record + XML)
+    ├─ the paper's DOI, or already in the report ─▶ skip
+    ├─ role in FOLLOW_ROLES[root change] ─────────▶ fetch as `related`, depth + 1
+    └─ any other role, or untyped ────────────────▶ keep in `links`, don't fetch
+```
+
+**Where links come from** *(planned)*:
+
+| Source | Field | Typed? | Kept today |
+|---|---|---|---|
+| Crossref | `update-to[].DOI`: the articles the notice updates | yes | yes |
+| Crossref | `relation`: `is-replaced-by`, `has-version`, `is-version-of`, `is-supplemented-by`, `references`, … | yes | yes |
+| Crossref | `updated-by[].DOI`: notices on this document (a correction of a retraction) | yes | no |
+| Crossref | `reference[].DOI`: the document's cited works | no | no |
+| Europe PMC XML | `<related-article related-article-type="…" xlink:href="…">`: `retracted-article`, `corrected-article`, `object-of-concern`, … | yes | no (flattened away) |
+| Europe PMC XML | `<ext-link>`, `<pub-id pub-id-type="doi">` | no | no |
+| Europe PMC text | DOI regex `10\.\d{4,9}/[-._;()/:a-z0-9]+`, case-insensitive, trailing `.,;)` stripped | no | no |
+
+A paywalled notice has no XML, so its Crossref record is its only source of
+links. Publisher URLs aren't followed: they're bot-blocked.
+
+**What to follow, by the root change** *(planned)*. The root change is the
+change that planned the first document. Every document fetched from it
+inherits that change, so the walk only fetches evidence for its own alert:
+
+| Root change | Follow | Why |
+|---|---|---|
+| Retraction | `updated-by`, `is-replaced-by` | a retraction reversed or corrected; retract-and-replace |
+| Expression of concern | `updated-by` | an EoC often ends in a retraction or correction |
+| Correction, erratum | `updated-by`, `has-version`, `is-replaced-by` | the corrected version; a later notice |
+| `other`: `new_version` / `new_edition` | `has-version`, `is-replaced-by`, `updated-by` | a still newer version; notices on the new one |
+| `other`, any other type | `updated-by`, `has-version`, `is-replaced-by` | |
+| DOAJ delisting | nothing | it plans no documents |
+
+Never followed: `references`, `reference[]` and untyped links. Following
+them crawls the citation graph. Links that point back (`update-to`,
+`retracted-article`, `corrected-article`, `object-of-concern`) usually name
+the paper, so they're skipped. When one names another article (R5), it's
+kept in `links` for impact to judge, not fetched.
+
+**Limits** *(planned)*: a `seen` set seeded with the paper's DOI and the
+planned DOIs, `MAX_DEPTH` 2 and a cap of about 10 documents per report.
+Storage Management's `unique (report_id, doi)` backs this up across retries.
+
+**Storage** *(planned)*:
+
+- Each document gets a `links` list (DOI, role, source).
+- A new kind, `related`, goes in both `DocumentKind`s (Python and
+  `storage/…/DocumentKind.java`). It fits `kind varchar(16)`.
+- `inputs.gather_inputs` decides whether a `related` document gets a PDF.
+- Which document led to which isn't stored: the parent's `links` names
+  the child.
+
 ## Impact
 
 `impact/run.py` `assess_reports(sm, context, report_ids)`, one report at
