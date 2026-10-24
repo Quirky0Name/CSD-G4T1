@@ -67,6 +67,16 @@ class LoginTest {
                 .jsonPath("$.detail").isEqualTo("Wrong email or password");
     }
 
+    // the same answer as a wrong password, so login never shows which emails have accounts
+    @Test
+    void anUnknownEmailIsUnauthorizedLikeAWrongPassword() {
+        login(newEmail(), "correct horse battery")
+                .expectStatus().isUnauthorized()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.detail").isEqualTo("Wrong email or password");
+    }
+
     // checked the way the contract describes it: HS256 (the Python services accept nothing else) with
     // the base64-decoded JWT_SECRET, sub the user's id, 24 hours to live, and no service role
     private void assertIsTokenFor(String token, String userId) {
