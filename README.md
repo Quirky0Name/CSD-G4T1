@@ -5,8 +5,8 @@ meaningful change in a tracked paper → assess its impact → recommend an
 action → the researcher decides.**
 
 The services sit behind one React frontend and talk to each other over
-REST, trusting a single JWT (issued by User Management once login is
-built; a demo token stands in for now). See
+REST, trusting a single JWT (issued by User Management at login; the
+frontend still uses a demo token until it has a login page). See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
 
 ## Where to look
@@ -34,7 +34,7 @@ built; a demo token stands in for now). See
 | Storage Management | Java + Spring Boot | `storage/` |
 | Research Evaluation | Python (FastAPI) | `backend/` |
 | Updating | Python (FastAPI) | `backend/` |
-| User Management | Java + Spring Boot (scaffold only; register and login next, see docs/ROADMAP.md) | `users/` |
+| User Management | Java + Spring Boot (register and login; projects next, see docs/ROADMAP.md) | `users/` |
 
 Research Evaluation and Updating share one Python project in `backend/`
 (two FastAPI apps, a Dockerfile each).
