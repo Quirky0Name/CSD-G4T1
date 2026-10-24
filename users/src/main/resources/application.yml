@@ -1,4 +1,16 @@
 spring:
+  # datasource comes from SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        # With flyway.schemas below: tables and Flyway's history live in a users schema, so on a
+        # Postgres shared with storage (public schema) neither service's tables or history collide.
+        default_schema: users
+  flyway:
+    schemas: users
   jackson:
     property-naming-strategy: SNAKE_CASE
   mvc:
