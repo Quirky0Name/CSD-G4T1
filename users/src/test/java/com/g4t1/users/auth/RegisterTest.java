@@ -2,6 +2,8 @@ package com.g4t1.users.auth;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -84,6 +86,21 @@ class RegisterTest {
     @Test
     void aPasswordOverSeventyTwoBytesIsABadRequest() {
         register(newEmail(), "é".repeat(37))
+                .expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "{\"password\": \"correct horse battery\"}",
+            "{\"email\": \"someone@example.com\"}",
+            "{\"email\": \"\", \"password\": \"correct horse battery\"}",
+            "{\"email\": \"someone@example.com\", \"password\": \"        \"}"})
+    void aMissingOrBlankEmailOrPasswordIsABadRequest(String body) {
+        client.post().uri("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .exchange()
                 .expectStatus().isBadRequest()
                 .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
     }
