@@ -26,12 +26,12 @@ most needed first within each.
 
 ## User Management and auth
 
-- [ ] **User Management service**: `users` and `projects`, register
-  (BCrypt), login issuing the JWT, project CRUD
-  (`GET/POST/PUT/DELETE /projects…`). Only a scaffold exists (`users/`:
-  no endpoints or database yet); a hand-made demo token stands in.
+- [ ] **User Management projects**: a `projects` table and project CRUD
+  (`GET/POST/PUT/DELETE /projects…`). Register and login, which issue the
+  JWT, are built (`users/`).
 - [ ] Frontend login, auth state and a JWT-attaching interceptor in place
-  of `VITE_DEMO_TOKEN`.
+  of `VITE_DEMO_TOKEN`, plus a Vite proxy entry for User Management (it
+  sends no CORS headers).
 - [ ] `POST /run-poll` takes the user's JWT (CG-99).
 - [ ] Real project ids from the frontend for papers and drafts.
 - [ ] Notifications to the paper's owner instead of one hard-coded
@@ -134,6 +134,8 @@ Gemini, so pick the provider again when they're started.
 
 - [ ] Host the compose stack on one VM; PDFs on a persistent volume (S3
   later if it outgrows one VM).
+- [ ] A Dockerfile for User Management and a place in the compose stack
+  (CG-135); `users/docker-compose.yml` runs only its Postgres today.
 - [ ] Postgres on Supabase (session pooler, port 5432; it starts empty and
   runs every migration).
 - [ ] CI that builds each image on merge to `main` and redeploys (today CI

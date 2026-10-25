@@ -6,7 +6,7 @@ This is the single source of truth for every interface between services.
 ## Auth
 
 - JWT: HS256, `sub` = user id, plus `exp`. Issued by User Management at
-  login.
+  register and login (below), valid 24 hours.
 - `JWT_SECRET` is shared as base64 of 32+ random bytes (`openssl rand -base64 32`;
   Storage Management's JWT library rejects shorter keys, and Updating checks at
   startup). **Every service
@@ -24,12 +24,50 @@ This is the single source of truth for every interface between services.
   Evaluation's `POST /evaluate/changes`, which accepts any service token
   (`role=service`) and rejects user tokens, the same way Storage
   Management treats `/internal/**`.
-- **Sprint 1:** there is no User Management yet, and everything runs
-  locally. `JWT_SECRET` is a shared throwaway value (base64 of 32+ bytes like
-  the real one, the same in every service's local config), and Updating still
-  mints service tokens with it. Updating's own endpoints take no token or key;
-  `POST /run-poll` will take the user's JWT once User Management exists
-  (CG-99).
+- **For now** everything runs locally with a shared throwaway `JWT_SECRET`
+  (base64 of 32+ bytes like the real one, the same in every service's local
+  config). The frontend has no login page yet, so it still uses a hand-made
+  demo token. Updating's own endpoints take no token or key; `POST /run-poll`
+  will take the user's JWT (CG-99).
+
+## Frontend ↔ User Management
+
+Owned by: User Management (`users/`). Consumed by: the frontend. No token
+needed for either call. User Management sends no CORS headers, so the
+frontend calls it through a Vite proxy entry like Storage Management's (not
+added yet). Both answer with the same shape, so the frontend handles them
+alike:
+
+```json
+{"token": "eyJ...", "user": {"id": "uuid", "email": "someone@example.com", "created_at": "2026-10-24T08:00:00Z"}}
+```
+
+`token` is the user JWT above; send it as `Authorization: Bearer <token>`
+to Storage Management. `user.id` is its `sub`. Emails are stored and
+returned in lowercase, and are one account whatever their letter case.
+
+### `POST /auth/register`
+
+Creates an account and logs it straight in. **Request:**
+`{"email": "...", "password": "..."}`.
+
+**Response `201`:** the shape above.
+
+Errors, as problem details: `400` an email that isn't an address, a
+password under 8 characters or over 72 bytes (BCrypt's limit), or a
+missing or blank field; `409` an account with this email already exists
+(any letter case).
+
+### `POST /auth/login`
+
+**Request:** `{"email": "...", "password": "..."}`. **Response `200`:** the
+shape above.
+
+Errors, as problem details: `400` a missing or blank field; `401` with
+`detail` `Wrong email or password` for an unknown email and a wrong
+password alike, answered in about the same time, so login doesn't show
+which emails have accounts. Register's `409` does, which is accepted:
+sign-up has to say the email is taken.
 
 ## Projects
 
@@ -1055,7 +1093,7 @@ UPDATING.md. The poll summary below is the poll's contract.
 
 ### `POST /run-poll?paper_id=`
 
-No auth in sprint 1 (see "Auth"). Runs the poll job synchronously (used for
+No auth for now (see "Auth"). Runs the poll job synchronously (used for
 the demo and for testing, since a real change won't reliably land inside a
 10-minute slot) and returns the poll summary. It is recorded in `polls`
 with trigger `manual`, so it never moves the schedule of the automatic polls.
@@ -1105,7 +1143,7 @@ logged by Updating, not returned.
 
 | Var | Used by | Notes |
 |---|---|---|
-| `JWT_SECRET` | all | base64-encoded, 32+ bytes (`openssl rand -base64 32`); every service decodes before use. Sprint 1: a shared throwaway value in that format |
+| `JWT_SECRET` | all | base64-encoded, 32+ bytes (`openssl rand -base64 32`); every service decodes before use. For now: a shared throwaway value in that format |
 | `SM_BASE_URL` | Research Evaluation, Updating | Storage Management's base URL (`http://localhost:8081` locally) |
 | `RE_BASE_URL` | Updating | Research Evaluation's base URL (Updating's nudge goes here). Storage Management never calls Research Evaluation |
 

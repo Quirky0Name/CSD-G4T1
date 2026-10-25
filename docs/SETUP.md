@@ -2,8 +2,9 @@
 
 Accounts, keys and env vars, and how to run each service locally, alone or
 together. Ports: Research Evaluation 8000, Updating 8001, GROBID 8070,
-User Management 8080, Storage Management 8081, Postgres 5432 (backend)
-and 5433 (Storage Management in compose), frontend 5173.
+User Management 8080, Storage Management 8081, Postgres 5432 (backend),
+5433 (Storage Management in compose) and 5434 (User Management), frontend
+5173.
 
 ## Accounts and API keys
 
@@ -58,6 +59,9 @@ value), and optionally `CROSSREF_MAILTO`, `OPENALEX_API_KEY`, `S2_API_KEY`.
 Outside compose it also reads `SPRING_DATASOURCE_URL`, `_USERNAME`,
 `_PASSWORD`, `GROBID_URL` (default `http://localhost:8070`), `UPLOAD_DIR`
 (default `uploads/` in the working directory) and `PORT` (default 8081).
+
+User Management (`users/`) reads `JWT_SECRET` (the same value) and
+`SPRING_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD`.
 
 ## Running everything in Docker
 
@@ -121,16 +125,27 @@ token, or a service token for `/internal`).
 
 ## User Management
 
-Only a scaffold so far: no endpoints of its own and no database. From
-`users/`, `./mvnw spring-boot:run` (`.\mvnw.cmd spring-boot:run` on
-Windows) starts it on 8080, where any unknown path answers `404` as
-problem details.
+Register and login (`POST /auth/register`, `/auth/login`, CONTRACTS.md).
+Not containerised yet (CG-135): its Postgres runs in Docker, the service
+with `./mvnw`. From `users/`:
+
+```
+docker compose up -d
+```
+
+Then set `JWT_SECRET`, `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5434/users`,
+`SPRING_DATASOURCE_USERNAME=users_app` and
+`SPRING_DATASOURCE_PASSWORD=users_app`, and run `./mvnw spring-boot:run`
+(`.\mvnw.cmd spring-boot:run` on Windows). It listens on 8080; Flyway
+creates the `users` schema and its tables. `docker compose down -v` wipes
+its database.
 
 ## A demo user token
 
-User Management doesn't issue tokens yet, so make one "demo user" token
-and use it for everything; whatever you create belongs to that user. It
-only works against services with the same `JWT_SECRET`. Don't commit it.
+The frontend has no login page yet, so make one "demo user" token and use
+it for everything; whatever you create belongs to that user. (A token from
+User Management's register or login works too.) It only works against
+services with the same `JWT_SECRET`. Don't commit it.
 
 PowerShell, with `$env:JWT_SECRET` set (lasts 30 days; change `sub` for
 another user):
@@ -238,7 +253,7 @@ cd storage
 ./mvnw test                   # H2, network mocked
 
 cd users
-./mvnw test                   # no database; real HTTP on a random port
+./mvnw test                   # H2, even with SPRING_DATASOURCE_* set; real HTTP on a random port
 
 cd frontend/csd-frontend-vite
 npm run build && npm run lint
