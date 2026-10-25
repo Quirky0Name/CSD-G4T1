@@ -124,13 +124,18 @@ investigation fetched (documents) and impact's evaluation. Status:
   two reports.
 - **Documents** (`ReportDocumentService.store`): one per (`report_id`,
   `doi`), DOIs compared exactly. A new `notice` is `skipped`; a new
-  `new_version` or `current_version` is saved `pending`, then its PDF is
-  downloaded (`OpenAccessPdfClient.downloadWithSource`, which also gives
+  `new_version`, `related` or `current_version` is saved `pending`, then its
+  PDF is downloaded (`OpenAccessPdfClient.downloadWithSource`, which also gives
   the link that worked) and recorded `ok` (with `file_key`, `sha256`,
   `pdf_source_url`, `pdf_fetched_at`) or `not_found`. **Only the request
   that creates the row downloads**; an existing row comes back as stored,
   whatever its status. `store` isn't `@Transactional`, so a slow download
-  holds no transaction.
+  holds no transaction. `DocumentKind.RELATED.hasPdf()` is true, and a
+  `related` PDF is stored locally in `LocalFileStore` like every other.
+- **`links`** (V10, `report_documents.links` text): the DOIs and URLs a
+  document points at, stored as text and returned as JSON exactly as sent,
+  like `crossref_record` (any JSON value, not checked to be an array; a JSON
+  `null` is stored as SQL null). Null for rows stored before V10.
 - **The evaluation** (`ReportService.recordEvaluation`): shape checked
   (`none` → the other three null; otherwise all present), then one
   conditional update `where status = investigated` that also sets

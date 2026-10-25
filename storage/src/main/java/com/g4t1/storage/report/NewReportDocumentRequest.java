@@ -6,7 +6,8 @@ import jakarta.validation.constraints.Size;
 import tools.jackson.databind.JsonNode;
 
 // The body of POST /internal/documents: what investigation fetched for one DOI of a report.
-// crossref_record is stored as-is, so storage doesn't break when Crossref's shape changes.
+// crossref_record and links are stored as-is, so storage doesn't break when Crossref's shape or the
+// link shape changes.
 public record NewReportDocumentRequest(
         @NotNull Long reportId,
         @NotNull DocumentKind kind,
@@ -16,5 +17,6 @@ public record NewReportDocumentRequest(
         Boolean updateToIncludesPaper,
         @NotNull TextStatus textStatus,
         String text,
-        @NotNull Boolean textTruncated) {
+        @NotNull Boolean textTruncated,
+        JsonNode links) {
 }

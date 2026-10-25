@@ -36,6 +36,7 @@ const DOCUMENT_KIND_LABEL: Record<DocumentKind, string> = {
   notice: 'Notice',
   new_version: 'Newer version',
   current_version: 'Current copy',
+  related: 'Related document',
 }
 
 function Spinner({ label }: { label: string }) {

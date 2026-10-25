@@ -17,7 +17,7 @@ from research_evaluation.impact.llm import Part, Pdf
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 2
+PROMPT_VERSION = 3
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -52,8 +52,11 @@ The ALERTS were raised by fixed rules from Crossref (the DOI registry) and
 OpenAlex metadata: they say a notice exists, not what it says. The
 DOCUMENTS are what was fetched for them: each notice's Crossref record and,
 when it is open access, its text; and, when one could be downloaded, the
-paper as it is now (CURRENT COPY) or its NEW VERSION. STORED PAPER is the
-paper as it was when the researcher started tracking it.
+paper as it is now (CURRENT COPY) or its NEW VERSION. A RELATED document was
+reached by following a notice's or new version's links (a later notice, a
+newer version or a replacement); it has no alert of its own. Each document's
+links are the DOIs and URLs it points at. STORED PAPER is the paper as it was
+when the researcher started tracking it.
 
 For each alert:
 1. about_this_paper: is it really about the tracked paper?
@@ -280,6 +283,11 @@ def document_block(
         lines.append(f"text{truncated}: {_defuse(document.text)}")
     else:
         lines.append(f"text: none ({document.text_status})")
+    if document.links:
+        links = json.dumps(document.links, ensure_ascii=False, sort_keys=True)
+        lines.append(f"links: {_defuse(links)}")
+    else:
+        lines.append("links: none")
     if pdf_note is not None:
         lines.append(f"pdf: {pdf_note}")
     lines.append("</document>")
@@ -293,12 +301,14 @@ def _pdf_label(document: DocumentInReport) -> str:
             f"CURRENT COPY, the paper's DOI as downloaded on {fetched} from "
             f"{document.pdf_source_url or 'an open-access link'}."
         )
+    if document.kind == "related":
+        return f"RELATED, {document.doi}."
     return f"NEW VERSION, {document.doi}."
 
 
 def change_prompt(inputs: ReportInputs) -> ChangePrompt:
     """Step 1: the paper, the alerts, the documents, then the PDFs (stored paper, new versions,
-    current copy, as far as MAX_INLINE_PDF_BYTES goes), then the task."""
+    related documents, current copy, as far as MAX_INLINE_PDF_BYTES goes), then the task."""
     prompt = ChangePrompt(parts=[], left_out=list(inputs.missing))
     budget = MAX_INLINE_PDF_BYTES
     pdfs: list[tuple[str, str, bytes]] = []  # (label for the result, label for the model, bytes)
@@ -310,7 +320,8 @@ def change_prompt(inputs: ReportInputs) -> ChangePrompt:
                 inputs.paper_pdf,
             )
         )
-    ordered = sorted(inputs.document_pdfs, key=lambda pair: pair[0].kind != "new_version")
+    pdf_order = {"new_version": 0, "related": 1}  # then the current copy
+    ordered = sorted(inputs.document_pdfs, key=lambda pair: pdf_order.get(pair[0].kind, 2))
     pdfs += [(label(document), _pdf_label(document), data) for document, data in ordered]
 
     attached_pdfs: list[tuple[str, bytes]] = []

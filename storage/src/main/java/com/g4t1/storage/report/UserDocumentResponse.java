@@ -18,6 +18,7 @@ public record UserDocumentResponse(
         TextStatus textStatus,
         String text,
         boolean textTruncated,
+        JsonNode links,
         PdfStatus pdfStatus,
         String pdfSourceUrl,
         Instant createdAt,

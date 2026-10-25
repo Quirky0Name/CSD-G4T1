@@ -321,9 +321,10 @@ be in `GET /papers/{id}/alerts` a moment before it's in a report.
 
 | Document field | Meaning |
 |---|---|
-| `kind` | `notice` (the Crossref notice of a change: a retraction, correction, expression of concern, …), `new_version` (a newer version of the paper under another DOI) or `current_version` (the paper's own DOI, fetched again when the report was made) |
+| `kind` | `notice` (the Crossref notice of a change: a retraction, correction, expression of concern, …), `new_version` (a newer version of the paper under another DOI) `related` (a document investigation reached by following a link from a notice or new version: a later notice, a newer version or a replacement) or `current_version` (the paper's own DOI, fetched again when the report was made) |
 | `doi` | the DOI fetched |
-| `crossref_status`, `crossref_record` | `ok`, `not_found` or `error`, and the DOI's Crossref record as Research Evaluation stored it (`doi`, `title`, `published`, `journal`, `update_to`, `relation`), null when there's none |
+| `crossref_status`, `crossref_record` | `ok`, `not_found` or `error`, and the DOI's Crossref record as Research Evaluation stored it (`doi`, `title`, `published`, `journal`, `update_to`, `updated_by`, `relation`), null when there's none |
+| `links` | the DOIs and URLs the document points at, as an array of `Link` (see `POST /internal/documents`), exactly as Research Evaluation sent it; null for documents stored before links existed |
 | `update_to_includes_paper` | notices only: whether the notice's Crossref `update-to` names this paper; null otherwise. `true` doesn't prove the notice is about this paper (RE-changes-explained.md, R5) |
 | `text_status`, `text`, `text_truncated` | `ok`, `not_indexed`, `not_open_access` or `error`; the open-access plain text from Europe PMC when `ok` (at most 60,000 characters, `text_truncated` when cut), otherwise null. It's written by the notice's publisher: show it as text, never as HTML |
 | `pdf_status` | `skipped` (a notice; notices get no PDF), `pending` (no PDF yet: still downloading, or a download interrupted by a crash), `ok` (Storage Management stored a copy) or `not_found` (no open-access PDF could be downloaded) |
@@ -331,8 +332,8 @@ be in `GET /papers/{id}/alerts` a moment before it's in a report.
 | `created_at`, `pdf_fetched_at` | when the document was stored, and when its PDF was (null unless `ok`) |
 
 **Documents aren't linked to alerts.** A `notice` or `new_version` belongs
-to the report's alert whose `notice_doi` is its `doi`; the
-`current_version` is about the whole report. A document can match no
+to the report's alert whose `notice_doi` is its `doi`; a `related` document
+and the `current_version` are about the whole report. A document can match no
 alert (two retraction notices in one nudge's window, when the retraction
 alert carries only one): show it with the report.
 
@@ -728,7 +729,8 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
   it.
 - `documents`, oldest first. They aren't linked to alerts: a `notice` or
   `new_version` belongs to the alert whose `notice_doi` is its `doi`, and
-  the `current_version` is for the whole report.
+  a `related` document and the `current_version` are for the whole report.
+  Each document carries `links` (see `POST /internal/documents`).
 
 Errors, as problem details: `400` an id that isn't a UUID or a report id
 that isn't a number; `404` with `detail` `No paper <id>`, or
@@ -808,14 +810,15 @@ report (unique on `report_id`, `doi`).
   "report_id": 3, "kind": "notice", "doi": "10.xxxx/...",
   "crossref_status": "ok", "crossref_record": {"title": "Retraction notice to ...", "...": "..."},
   "update_to_includes_paper": true,
-  "text_status": "not_open_access", "text": null, "text_truncated": false
+  "text_status": "not_open_access", "text": null, "text_truncated": false,
+  "links": [{"doi": "10.xxxx/paper", "url": null, "role": "update-to", "source": "crossref"}]
 }
 ```
 
 | Field | Rules |
 |---|---|
 | `report_id` | required |
-| `kind` | required: `notice`, `new_version` or `current_version`, exact lowercase |
+| `kind` | required: `notice`, `new_version`, `related` or `current_version`, exact lowercase |
 | `doi` | required, not blank, at most 255 characters. Research Evaluation sends it normalised; Storage Management compares it exactly |
 | `crossref_status` | required: `ok`, `not_found` or `error` |
 | `crossref_record` | optional JSON, stored and returned exactly as sent; Storage Management never looks inside |
@@ -823,6 +826,30 @@ report (unique on `report_id`, `doi`).
 | `text_status` | required: `ok`, `not_indexed`, `not_open_access` or `error` |
 | `text` | optional |
 | `text_truncated` | required |
+| `links` | optional: any JSON value (not checked to be an array), stored and returned exactly as sent; Storage Management never looks inside, like `crossref_record`. Absent or JSON `null` is stored as SQL null and returned as `null` |
+
+**`Link`** (what Research Evaluation sends in `links`): one DOI or URL a
+document points at. Exactly one of `doi` and `url` is set.
+
+```json
+{"doi": "10.1234/abcd", "url": null, "role": "is-replaced-by", "source": "crossref"}
+{"doi": null, "url": "https://example.org/data", "role": null, "source": "europepmc_xml"}
+```
+
+| Field | Type | Values |
+|---|---|---|
+| `doi` | string or null | normalised with `common.doi.normalize_doi`, never blank. A `doi.org` / `dx.doi.org` URL is stored as its DOI |
+| `url` | string or null | an `http` / `https` URL that isn't a DOI URL, as found (trailing `.,;)` stripped) |
+| `role` | string or null | Crossref: `update-to`, `updated-by`, or the `relation` type as Crossref names it (`is-replaced-by`, `has-version`, …). JATS: the `related-article-type` value. `null` for untyped links |
+| `source` | string | `crossref`, `europepmc_xml` or `europepmc_text` |
+
+Python: `research_evaluation.investigation.links.Link`, a frozen pydantic
+model with these four fields; it rejects both or neither of `doi` and
+`url`. `FetchedDocument.links` is `list[Link]` (`[]` when its sources found
+nothing), and `DocumentInReport.links` is `list[dict] | None` (`None` for
+rows stored before links existed). `CrossrefRecord.links` is excluded from
+the record's dump, so `crossref_record` only gains `updated_by` (same shape
+as `update_to`); the links go out as the document's `links`.
 
 **Response `201`** with the new row, or **`200`** with the row already
 stored for that DOI in the report, **unchanged whatever the new body
@@ -833,14 +860,15 @@ says**. Both are the entire row as stored, nulls written out:
   "id": 12, "report_id": 3, "kind": "notice", "doi": "10.xxxx/...",
   "crossref_status": "ok", "crossref_record": {"...": "..."}, "update_to_includes_paper": true,
   "text_status": "not_open_access", "text": null, "text_truncated": false,
+  "links": [{"doi": "10.xxxx/paper", "url": null, "role": "update-to", "source": "crossref"}],
   "pdf_status": "skipped", "file_key": null, "sha256": null, "pdf_source_url": null,
   "created_at": "2026-09-27T08:00:01Z", "pdf_fetched_at": null
 }
 ```
 
 **The PDF is downloaded only when the row is created.** A notice is
-stored with `pdf_status` `skipped` (notices get no PDF). A `new_version`
-or `current_version` is saved as `pending`, then Storage Management
+stored with `pdf_status` `skipped` (notices get no PDF). A `new_version`,
+`related` or `current_version` is saved as `pending`, then Storage Management
 downloads the DOI's open-access PDF (every OpenAlex PDF link, then
 Semantic Scholar's, the first that is really a PDF under 25 MB) and
 records either `ok`, with `file_key`, `sha256` (hex), `pdf_source_url`

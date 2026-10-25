@@ -260,6 +260,9 @@ owned that story made.
 - **Europe PMC is the only text source**: Crossref has no notice text, and
   publisher pages and PDFs are bot-blocked. Paywalled notices get none.
 - **Fetched text is data for impact, never instructions.**
+- **Amended 2026-10-24**: fetches can follow DOIs from a fetched record or
+  text, only by fixed rules and caps (see "Investigation follows links into
+  the paper's own history"); still no LLM takes part.
 
 ## 2026-09-27 — Storage Management downloads a document's PDF when it's stored
 

@@ -209,7 +209,7 @@ class InternalReportTest {
     void readingAReportGivesItsAlertsDocumentsAndEmptyEvaluation() throws Exception {
         long retraction = alert(paperId, "retraction");
         long reportId = openedReportId();
-        documents.saveAndFlush(new ReportDocument(documentRequest(reportId, "notice", "10.1/notice"), null));
+        documents.saveAndFlush(new ReportDocument(documentRequest(reportId, "notice", "10.1/notice"), null, null));
 
         read(paperId, reportId)
                 .andExpect(status().isOk())
@@ -320,7 +320,7 @@ class InternalReportTest {
     void deletingThePaperDeletesItsReportsAndTheirDocuments() throws Exception {
         alert(paperId, "retraction");
         long reportId = openedReportId();
-        documents.saveAndFlush(new ReportDocument(documentRequest(reportId, "notice", "10.1/notice"), null));
+        documents.saveAndFlush(new ReportDocument(documentRequest(reportId, "notice", "10.1/notice"), null, null));
 
         // the alerts still point at the report when the paper goes
         papers.deleteById(paperId);
@@ -373,7 +373,7 @@ class InternalReportTest {
 
     static NewReportDocumentRequest documentRequest(long reportId, String kind, String doi) {
         return new NewReportDocumentRequest(reportId, DocumentKind.of(kind), doi, CrossrefStatus.OK, null, null,
-                TextStatus.NOT_OPEN_ACCESS, null, false);
+                TextStatus.NOT_OPEN_ACCESS, null, false, null);
     }
 
     private ResultActions open(UUID paper) throws Exception {
