@@ -8,6 +8,7 @@ import { useToast, type ToastTone } from '../components/Toasts'
 import TrackedPaperList from '../components/TrackedPaperList'
 import TrackPaperDialog from '../components/TrackPaperDialog'
 import DraftCard from '../components/DraftCard'
+import Signin from './Signin'
 
 function pollSummaryToast(summary: PollSummary): { tone: ToastTone; message: string } {
   const polled = summary.stored.length

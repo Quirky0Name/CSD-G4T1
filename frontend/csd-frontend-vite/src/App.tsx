@@ -5,6 +5,8 @@ import { TrackingProvider } from './tracking'
 import Alerts from './pages/Alerts'
 import Project from './pages/Project'
 import Projects from './pages/Projects'
+import Register from './pages/Register'
+import Signin from './pages/Signin'
 
 function AppLayout() {
   return (
@@ -23,6 +25,8 @@ function App() {
       <ToastProvider>
         <TrackingProvider>
           <Routes>
+            <Route path="/signin" element={<Signin />} />
+            <Route path="/register" element={<Register />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Projects />} />
               <Route path="/project" element={<Project />} />
