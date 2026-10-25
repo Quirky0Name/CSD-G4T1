@@ -34,9 +34,10 @@ This is the single source of truth for every interface between services.
 
 Owned by: User Management (`users/`). Consumed by: the frontend. No token
 needed for either call. User Management sends no CORS headers, so the
-frontend calls it through a Vite proxy entry like Storage Management's (not
-added yet). Both answer with the same shape, so the frontend handles them
-alike:
+frontend calls it at `/auth` on its own address: the root stack's web
+server already routes it, and in development `vite.config.ts` needs a
+proxy entry like Storage Management's (not added yet). Both answer with
+the same shape, so the frontend handles them alike:
 
 ```json
 {"token": "eyJ...", "user": {"id": "uuid", "email": "someone@example.com", "created_at": "2026-10-24T08:00:00Z"}}
@@ -90,8 +91,9 @@ See DECISIONS.md, 2026-09-27.
 
 ## Frontend ↔ Storage Management
 
-Owned by: Storage Management. Consumed by: the frontend, through the
-Vite proxy (`/api/...`, SETUP.md), with the user's token.
+Owned by: Storage Management. Consumed by: the frontend, at `/api/...`
+(the Vite proxy in development, the web server in the root stack;
+SETUP.md), with the user's token.
 
 | Frontend feature | Call |
 |---|---|
@@ -1115,8 +1117,8 @@ Updating's snapshots: a failed source produces `null`, never a default
 ## Updating
 
 Updating calls Storage Management (`/internal/**`) and Research Evaluation
-(`/evaluate/changes`); the frontend calls only `POST /run-poll`, through the
-Vite proxy. The poll job, the outage gate and when it nudges are in
+(`/evaluate/changes`); the frontend calls only `POST /run-poll`, at
+`/updating/...` (the Vite proxy or the root stack's web server). The poll job, the outage gate and when it nudges are in
 UPDATING.md. The poll summary below is the poll's contract.
 
 ### `POST /run-poll?paper_id=`

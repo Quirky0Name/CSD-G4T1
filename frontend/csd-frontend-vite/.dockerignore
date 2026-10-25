@@ -1,0 +1,5 @@
+node_modules/
+dist/
+# a developer's .env files stay out of the build
+.env
+.env.*

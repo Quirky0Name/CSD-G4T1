@@ -8,6 +8,35 @@ owned that story made.
 
 ---
 
+## 2026-10-24 — One compose stack, one Postgres, one web server
+
+- **The root `docker-compose.yml` runs the whole app** (the story
+  owner's call, CG-134): every service from its own Dockerfile, GROBID and
+  one Postgres. Services find each other by name, and only the web server
+  is published.
+- **One shared Postgres, each service in its own schema** (the story
+  owner's call: Storage Management `public`, Updating `updating`, User
+  Management `users`), as the schema decision below allows. On the server
+  it's a container on the same VM, not Supabase: it costs nothing extra,
+  it sits next to the PDFs it has to be backed up with, and it doesn't
+  pause before a demo. For now one role owns all three schemas, so any
+  service's credentials can read the others' tables; a role per service
+  is on ROADMAP.md.
+- **Caddy serves the built frontend now** (the story owner's call), so
+  the frontend can be tried against the whole stack. It routes `/api` and
+  `/updating` like the Vite dev proxy, plus `/auth`, so the frontend's
+  code doesn't change and no service needs CORS.
+- **Updating waits until Storage Management's port is open.** A poll
+  that's due runs at startup, and without the wait the first one failed
+  against a Storage Management still starting. An open port is the
+  readiness check until there's a health endpoint (CG-133). The wait only
+  holds for `docker compose up`: after a host reboot Docker restarts the
+  containers in no set order, so Updating itself has to retry (ROADMAP.md).
+- Rejected: one Postgres per service (three volumes to back up together
+  with the PDFs); Supabase (its free tier pauses after a week idle, caps
+  the database at 500 MB, and keeps it apart from the PDFs); publishing
+  every service's port.
+
 ## 2026-10-24 — Register logs you in; how tokens and passwords are handled
 
 - **Register and login answer with the same shape**, `{token, user}`

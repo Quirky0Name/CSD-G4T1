@@ -1,0 +1,112 @@
+# The whole app on one machine: every service, one shared Postgres and GROBID, behind the web
+# server that serves the frontend. Only the web server is published; everything else is reachable
+# only by its service name on the compose network. Settings come from .env next to this file
+# (copy .env.example). docs/SETUP.md, "Running the whole stack".
+# A fixed name, so the volumes are named the same on every machine whatever the folder is called
+name: research-assistant
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: research_assistant
+      # Each service keeps its tables in its own schema (Storage public, Updating updating, User
+      # Management users). The role isn't named like any of them, or Postgres's "$user" search
+      # path would find that schema's tables for unqualified SQL.
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d research_assistant"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  grobid:
+    image: grobid/grobid:0.9.1-crf
+    mem_limit: 2g
+    restart: unless-stopped
+
+  storage:
+    build: ./storage
+    depends_on:
+      db:
+        condition: service_healthy
+      grobid:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/research_assistant
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      GROBID_URL: http://grobid:8070
+      CROSSREF_MAILTO: ${CROSSREF_MAILTO:-}
+      OPENALEX_API_KEY: ${OPENALEX_API_KEY:-}
+      S2_API_KEY: ${S2_API_KEY:-}
+      UPLOAD_DIR: /data/uploads
+    # the PDFs and the database belong together: back up or reset both volumes at once
+    volumes:
+      - uploads:/data/uploads
+    # Spring Boot opens its port only once startup has finished, so an open port means ready
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/8081"]
+      interval: 5s
+      retries: 30
+    restart: unless-stopped
+
+  users:
+    build: ./users
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/research_assistant
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+    restart: unless-stopped
+
+  research-evaluation:
+    build:
+      context: ./backend
+      dockerfile: research-evaluation.Dockerfile
+    env_file: .env
+    environment:
+      SM_BASE_URL: http://storage:8081
+    depends_on:
+      - storage
+    restart: unless-stopped
+
+  updating:
+    build:
+      context: ./backend
+      dockerfile: updating.Dockerfile
+    env_file: .env
+    environment:
+      SM_BASE_URL: http://storage:8081
+      RE_BASE_URL: http://research-evaluation:8000
+      DATABASE_URL: postgresql+asyncpg://app:${POSTGRES_PASSWORD}@db:5432/research_assistant
+    # a poll that's due runs as soon as Updating starts, so Storage has to be ready by then
+    depends_on:
+      db:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
+      research-evaluation:
+        condition: service_started
+    restart: unless-stopped
+
+  web:
+    build: ./frontend/csd-frontend-vite
+    ports:
+      - "${WEB_PORT:-8088}:80"
+    depends_on:
+      - storage
+      - users
+      - updating
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  uploads:

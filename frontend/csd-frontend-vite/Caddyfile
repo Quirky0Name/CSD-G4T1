@@ -1,0 +1,35 @@
+# Serves the built frontend and passes API calls on to the services by their compose names:
+# the /api and /updating routes vite.config.ts's dev proxy has, plus /auth for User Management.
+:80 {
+	encode zstd gzip
+
+	# just above Storage Management's own 30 MiB upload limit, so an oversized PDF gets its
+	# readable 413 rather than an empty one from here
+	request_body {
+		max_size 31MiB
+	}
+
+	handle_path /api/* {
+		reverse_proxy storage:8081
+	}
+	handle_path /updating/* {
+		reverse_proxy updating:8001
+	}
+	# User Management's paths already start with /auth, so nothing is stripped
+	handle /auth/* {
+		reverse_proxy users:8080
+	}
+
+	# a build file that isn't there is a 404, so a stale page after a redeploy fails plainly
+	handle /assets/* {
+		root * /srv
+		file_server
+	}
+
+	# the app does its own routing, so any other path that isn't a file gets index.html
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}
