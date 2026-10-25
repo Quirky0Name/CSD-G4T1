@@ -1,5 +1,5 @@
-# User Management's own Postgres. The service itself isn't containerised yet
-# (CG-135); docs/SETUP.md, "User Management", has the run steps.
+# User Management's own Postgres, for running the service with ./mvnw while working on it
+# (docs/SETUP.md, "User Management"). The root docker-compose.yml runs both.
 services:
   users-db:
     image: postgres:17

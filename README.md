@@ -39,6 +39,10 @@ frontend still uses a demo token until it has a login page). See
 Research Evaluation and Updating share one Python project in `backend/`
 (two FastAPI apps, a Dockerfile each).
 
+`docker compose up -d --build` at the repo root runs the whole app, the
+website included, on `localhost:8088` (docs/SETUP.md, "Running the whole
+stack").
+
 ## Status
 
 Week 7 (midterm) scope is built (docs/ARCHITECTURE.md); what's left is in

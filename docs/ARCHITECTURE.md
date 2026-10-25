@@ -48,7 +48,7 @@ deployment, new related papers, topic discovery) is in
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
 | User Management | Java 25 + Spring Boot, Postgres, Flyway | `users`, `projects`, register, login and the JWTs. Register and login are built; projects aren't yet | `users/` |
-| Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls Storage Management and Updating through the Vite proxy | `frontend/csd-frontend-vite/` |
+| Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls the services at `/api`, `/auth` and `/updating` on its own address (the Vite proxy in development, Caddy in the root stack) | `frontend/csd-frontend-vite/` |
 | Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts and notes, reports and documents, drafts | `storage/` |
 | Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact, notification); no database of its own | `backend/src/research_evaluation/` |
 | Updating | Python 3.13, FastAPI, APScheduler | the polling job and its small state (`tracked_papers`, `polls`) in its own schema | `backend/src/updating/` |
@@ -162,12 +162,16 @@ User Management's own schema (`users`, Flyway, `users/src/main/resources/db/migr
 
 ## Deployment
 
-What exists: one Dockerfile per service but User Management
-(`storage/Dockerfile`, `backend/research-evaluation.Dockerfile`,
-`backend/updating.Dockerfile`), two compose files that run every service
-but the frontend and User Management locally, and `users/docker-compose.yml`,
-which runs only User Management's Postgres (SETUP.md; containerising it is
-CG-135). CI (`.github/workflows/`) is a Trivy vulnerability scan on
-PRs, pushes to `main` and weekly, plus Telegram messages when a PR is
-opened or approved. Nothing is hosted; the planned target (one VM running
-the compose stack, Postgres on Supabase) is in ROADMAP.md.
+What exists: a Dockerfile per service (`storage/`, `users/`,
+`backend/research-evaluation.Dockerfile`, `backend/updating.Dockerfile`)
+and one for the website (`frontend/csd-frontend-vite/`: the built frontend
+served by Caddy, which also passes `/api`, `/auth` and `/updating` on to
+the services, so the browser talks to one address and no service needs
+CORS). The root `docker-compose.yml` runs all of them with GROBID and one
+shared Postgres, each service in its own schema, and publishes only the
+web server (SETUP.md, "Running the whole stack"). The per-service compose
+files stay for development. CI (`.github/workflows/`) is a Trivy
+vulnerability scan on PRs, pushes to `main` and weekly, plus Telegram
+messages when a PR is opened or approved. Nothing is hosted yet; the
+target is one EC2 VM running the root compose stack, with the database
+and PDF volumes on its disk (ROADMAP.md).
