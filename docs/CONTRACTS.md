@@ -26,16 +26,17 @@ This is the single source of truth for every interface between services.
   Management treats `/internal/**`.
 - **For now** everything runs locally with a shared throwaway `JWT_SECRET`
   (base64 of 32+ bytes like the real one, the same in every service's local
-  config). The frontend has no login page yet, so it still uses a hand-made
-  demo token. Updating's own endpoints take no token or key; `POST /run-poll`
+  config). The frontend signs in through User Management, keeps the token
+  in `localStorage` and sends it to Storage Management and Updating.
+  Updating's own endpoints still check nothing; `POST /run-poll`
   will take the user's JWT (CG-99).
 
 ## Frontend ↔ User Management
 
 Owned by: User Management (`users/`). Consumed by: the frontend. No token
 needed for either call. User Management sends no CORS headers, so the
-frontend calls it through a Vite proxy entry like Storage Management's (not
-added yet). Both answer with the same shape, so the frontend handles them
+frontend calls it through a Vite proxy entry (`/auth`) like Storage
+Management's. Both answer with the same shape, so the frontend handles them
 alike:
 
 ```json

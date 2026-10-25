@@ -3,6 +3,7 @@
 // the Vite dev proxy (vite.config.ts), which is also where their base URLs
 // live for real deployments.
 import axios from 'axios'
+import { getToken, notifyUnauthorized, type Session } from './session'
 
 export type AlertSeverity = 'high' | 'medium' | 'low'
 export type AlertStatus = 'new' | 'acknowledged' | 'dismissed'
@@ -117,14 +118,33 @@ export type PollSummary = {
   nudge_error: { paper_ids: string[]; reason: string } | null
 }
 
-const storage = axios.create({
-  baseURL: '/api',
-  headers: { Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTExMTEtMTExMS0xMTExMTExMTExMTEiLCJleHAiOjE3OTMxNzA3NDN9.xMwctT54euBxMseX5UtB56zpTa-CpRV4l9ubthstrU8` },
-})
-
-// No token in sprint 1: docs/CONTRACTS.md, "Auth" — POST /run-poll takes
-// the user's JWT once User Management exists (CG-99).
+const storage = axios.create({ baseURL: '/api' })
 const updating = axios.create({ baseURL: '/updating' })
+// User Management; its register and login take no token
+const authApi = axios.create({ baseURL: '/auth' })
+
+// every call to Storage and Updating carries the signed-in user's token
+for (const client of [storage, updating]) {
+  client.interceptors.request.use((config) => {
+    const token = getToken()
+    if (token) config.headers.Authorization = `Bearer ${token}`
+    return config
+  })
+  client.interceptors.response.use(undefined, (err: unknown) => {
+    if (axios.isAxiosError(err) && err.response?.status === 401) notifyUnauthorized()
+    return Promise.reject(err)
+  })
+}
+
+export async function login(email: string, password: string): Promise<Session> {
+  const res = await authApi.post<Session>('/login', { email, password })
+  return res.data
+}
+
+export async function register(email: string, password: string): Promise<Session> {
+  const res = await authApi.post<Session>('/register', { email, password })
+  return res.data
+}
 
 export async function listPapers(): Promise<Paper[]> {
   const res = await storage.get<{ papers: Paper[] }>('/papers')
@@ -200,11 +220,9 @@ export async function deleteDraft(): Promise<void> {
 // `detail` (docs/CONTRACTS.md errors sections).
 export function errorMessage(err: unknown): string {
   if (axios.isAxiosError(err)) {
-    if (err.response?.status === 401) {
-      return 'Not authorized — check VITE_DEMO_TOKEN in .env.local.'
-    }
     const detail: unknown = err.response?.data?.detail
     if (typeof detail === 'string') return detail
+    if (err.response?.status === 401) return 'Please sign in again.'
     if (err.response) return `Request failed (${err.response.status})`
     return err.message
   }

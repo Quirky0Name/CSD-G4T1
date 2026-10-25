@@ -7,12 +7,17 @@ import { defineConfig } from 'vite'
 // See docs/SETUP.md, "Frontend".
 const STORAGE_MANAGEMENT_URL = 'http://localhost:8081'
 const UPDATING_URL = 'http://localhost:8001'
+const USER_MANAGEMENT_URL = 'http://localhost:8080'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
+      '/auth': {
+        target: USER_MANAGEMENT_URL,
+        changeOrigin: true,
+      },
       '/api': {
         target: STORAGE_MANAGEMENT_URL,
         changeOrigin: true,

@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { errorMessage } from '../api'
+import { useAuth } from '../auth'
 
 // matches User Management's register validation (docs/CONTRACTS.md)
 const MIN_PASSWORD_LENGTH = 8
@@ -8,15 +10,26 @@ const inputClasses =
   'block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500'
 
 export default function Register() {
+  const { register } = useAuth()
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   const mismatch = confirmPassword.length > 0 && password !== confirmPassword
   const tooShort = password.length > 0 && password.length < MIN_PASSWORD_LENGTH
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    if (password.length < MIN_PASSWORD_LENGTH || password !== confirmPassword) {
-      e.preventDefault()
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (password.length < MIN_PASSWORD_LENGTH || password !== confirmPassword) return
+    setError(null)
+    setSubmitting(true)
+    try {
+      await register(email, password)
+    } catch (err) {
+      setError(errorMessage(err))
+      setSubmitting(false)
     }
   }
 
@@ -48,7 +61,7 @@ export default function Register() {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form action="#" method="POST" onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900 dark:text-gray-100">
                 Email address
@@ -60,6 +73,8 @@ export default function Register() {
                   type="email"
                   required
                   autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className={inputClasses}
                 />
               </div>
@@ -119,10 +134,17 @@ export default function Register() {
               )}
             </div>
 
+            {error && (
+              <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+                {error}
+              </p>
+            )}
+
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-500 dark:shadow-none dark:hover:bg-indigo-400 dark:focus-visible:outline-indigo-500"
+                disabled={submitting}
+                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-60 dark:bg-indigo-500 dark:shadow-none dark:hover:bg-indigo-400 dark:focus-visible:outline-indigo-500"
               >
                 Create account
               </button>

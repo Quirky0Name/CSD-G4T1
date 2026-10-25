@@ -7,6 +7,7 @@ import Project from './pages/Project'
 import Projects from './pages/Projects'
 import Register from './pages/Register'
 import Signin from './pages/Signin'
+import { AuthProvider, GuestOnly, RequireAuth } from './auth'
 
 function AppLayout() {
   return (
@@ -23,17 +24,23 @@ function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <TrackingProvider>
-          <Routes>
-            <Route path="/signin" element={<Signin />} />
-            <Route path="/register" element={<Register />} />
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<Projects />} />
-              <Route path="/project" element={<Project />} />
-              <Route path="/alerts" element={<Alerts />} />
-            </Route>
-          </Routes>
-        </TrackingProvider>
+        <AuthProvider>
+          <TrackingProvider>
+            <Routes>
+              <Route element={<GuestOnly />}>
+                <Route path="/signin" element={<Signin />} />
+                <Route path="/register" element={<Register />} />
+              </Route>
+              <Route element={<RequireAuth />}>
+                <Route element={<AppLayout />}>
+                  <Route path="/" element={<Projects />} />
+                  <Route path="/project" element={<Project />} />
+                  <Route path="/alerts" element={<Alerts />} />
+                </Route>
+              </Route>
+            </Routes>
+          </TrackingProvider>
+        </AuthProvider>
       </ToastProvider>
     </BrowserRouter>
   )

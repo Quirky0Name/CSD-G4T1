@@ -7,6 +7,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '../auth'
 
 const navigationItems = [
   { label: 'Projects', to: '/', icon: FolderIcon },
@@ -23,6 +24,7 @@ type SidebarContentProps = {
 }
 
 function SidebarContent({ onClose, onNavigate }: SidebarContentProps) {
+  const { session, logout } = useAuth()
   return (
     <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-white/10 bg-gray-900 px-6 pb-4 text-gray-100">
       <div className="flex h-16 shrink-0 items-center justify-between">
@@ -85,10 +87,17 @@ function SidebarContent({ onClose, onNavigate }: SidebarContentProps) {
         <div className="mt-auto border-t border-white/10 pt-4">
           <div className="flex items-center gap-x-3 px-2 py-2 text-sm font-semibold text-white">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/5 text-sm text-gray-300">
-              U
+              {(session?.user.email[0] ?? 'U').toUpperCase()}
             </span>
-            <span>Your account</span>
+            <span className="min-w-0 flex-1 truncate">{session?.user.email ?? 'Your account'}</span>
           </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="mt-1 w-full rounded-md px-2 py-2 text-left text-sm/6 font-semibold text-gray-400 hover:bg-white/5 hover:text-white"
+          >
+            Sign out
+          </button>
         </div>
       </nav>
     </div>
