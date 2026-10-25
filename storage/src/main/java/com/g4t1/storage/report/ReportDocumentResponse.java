@@ -18,6 +18,7 @@ public record ReportDocumentResponse(
         TextStatus textStatus,
         String text,
         boolean textTruncated,
+        JsonNode links,
         PdfStatus pdfStatus,
         String fileKey,
         String sha256,

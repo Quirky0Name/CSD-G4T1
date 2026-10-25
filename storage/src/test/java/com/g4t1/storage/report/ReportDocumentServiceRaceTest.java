@@ -30,7 +30,7 @@ class ReportDocumentServiceRaceTest {
 
     @Test
     void theLoserOfARaceGetsTheWinnersRow() {
-        ReportDocument winner = new ReportDocument(request, null);
+        ReportDocument winner = new ReportDocument(request, null, null);
         when(reports.existsById(7L)).thenReturn(true);
         when(documents.findByReportIdAndDoi(7L, "10.1016/j.ijantimicag.2024.107416"))
                 .thenReturn(Optional.empty())
@@ -50,7 +50,7 @@ class ReportDocumentServiceRaceTest {
         when(reports.existsById(7L)).thenReturn(true);
         when(documents.findByReportIdAndDoi(7L, "10.1016/j.ijantimicag.2020.105949"))
                 .thenReturn(Optional.empty())
-                .thenReturn(Optional.of(new ReportDocument(currentCopy, null)));
+                .thenReturn(Optional.of(new ReportDocument(currentCopy, null, null)));
         when(documents.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException("uq_report_documents"));
 
         assertThat(service.store(currentCopy).created()).isFalse();

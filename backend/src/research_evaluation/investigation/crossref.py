@@ -3,7 +3,10 @@
 Updating already reads the *paper's* record (its `updated-by` list gives the notice DOIs);
 this reads the record behind any DOI, a notice's or a new version's. The request is the same
 as Updating's `fetch_crossref` (same URL, `mailto` polite pool, ok / not found / error), but
-Research Evaluation doesn't import from `updating/`, and it keeps different fields."""
+Research Evaluation doesn't import from `updating/`, and it keeps different fields.
+
+The record's links (the DOIs and URLs it points at) come from `update-to`, `relation`,
+`updated-by` and `link`, in that order; its `reference` list (cited works) is never read."""
 
 import logging
 from typing import Any
@@ -14,6 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from common.doi import normalize_doi
 from research_evaluation.investigation.http import FetchStatus, get
+from research_evaluation.investigation.links import Link, LinkSource, doi_link, unique, url_link
 
 CROSSREF_WORKS_URL = "https://api.crossref.org/works/"
 
@@ -57,17 +61,21 @@ class _Work(_Payload):
     container_title: list[str] = Field(default_factory=list, alias="container-title")
     published: _Date | None = None
     update_to: list[_UpdateTo] = Field(default_factory=list, alias="update-to")
-    # items are checked one by one in _relation_dois, so one odd item doesn't lose the record
+    updated_by: list[_UpdateTo] = Field(default_factory=list, alias="updated-by")
+    # items are checked one by one in _relation_dois and _links, so one odd item doesn't lose
+    # the record
     relation: dict[str, list[Any]] = Field(default_factory=dict)
+    link: list[Any] = Field(default_factory=list)
 
-    @field_validator("title", "container_title", mode="before")
+    @field_validator("title", "container_title", "updated_by", "link", mode="before")
     @classmethod
     def _none_is_empty(cls, value: object) -> object:
         return [] if value is None else value
 
 
 class UpdateTo(BaseModel):
-    """One article the record says it updates, and how (Crossref's `update-to`)."""
+    """One article the record says it updates, and how (Crossref's `update-to`); or, in
+    `updated_by`, one that updates it."""
 
     doi: str | None
     type: str | None
@@ -85,14 +93,24 @@ class CrossrefRecord(BaseModel):
     published: str | None
     journal: str | None
     update_to: list[UpdateTo]
+    updated_by: list[UpdateTo] = Field(default_factory=list)
     # relation type (e.g. "has-version") -> the DOIs it points at
     relation: dict[str, list[str]]
+    # sent as the document's links, so not part of the stored record
+    links: list[Link] = Field(default_factory=list, exclude=True)
 
     def updates(self, doi: str) -> bool:
         """Whether `update_to` names this DOI (compared normalised). An entry with no DOI never
         matches."""
         target = normalize_doi(doi)
         return target is not None and any(entry.doi == target for entry in self.update_to)
+
+    def names_any(self, dois: set[str]) -> bool:
+        """Whether `update_to`, `updated_by` or a relation names one of these (normalised)
+        DOIs."""
+        named = {entry.doi for entry in [*self.update_to, *self.updated_by]}
+        named.update(doi for targets in self.relation.values() for doi in targets)
+        return not named.isdisjoint(dois)
 
 
 CrossrefResult = CrossrefRecord | FetchStatus  # NOT_FOUND or ERROR when there's no record
@@ -116,21 +134,47 @@ async def fetch_record(http: httpx.AsyncClient, doi: str, mailto: str) -> Crossr
             title=work.title[0] if work.title else None,
             published=_format_date(work.published),
             journal=work.container_title[0] if work.container_title else None,
-            update_to=[
-                UpdateTo(
-                    doi=normalize_doi(entry.doi),
-                    type=entry.type,
-                    label=entry.label,
-                    source=entry.source,
-                    date=_format_date(entry.updated),
-                )
-                for entry in work.update_to
-            ],
+            update_to=[_update(entry) for entry in work.update_to],
+            updated_by=[_update(entry) for entry in work.updated_by],
             relation={kind: _relation_dois(items) for kind, items in work.relation.items()},
+            links=_links(work),
         )
     except (ValueError, KeyError, TypeError, AttributeError, ValidationError) as exc:
         log.warning("crossref returned an unreadable record for %s: %s", doi, type(exc).__name__)
         return FetchStatus.ERROR
+
+
+def _update(entry: _UpdateTo) -> UpdateTo:
+    return UpdateTo(
+        doi=normalize_doi(entry.doi),
+        type=entry.type,
+        label=entry.label,
+        source=entry.source,
+        date=_format_date(entry.updated),
+    )
+
+
+def _links(work: _Work) -> list[Link]:
+    """The record's links, each DOI and URL once. Relations come before `updated-by`, so a DOI
+    that's both keeps its relation type (an Elsevier EoC's `erratum` relation, say). An item
+    that's neither a DOI nor an http(s) URL gives nothing."""
+    found: list[Link | None] = []
+    found += [doi_link(entry.doi, "update-to", LinkSource.CROSSREF) for entry in work.update_to]
+    for kind, items in work.relation.items():
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            if item.get("id-type") == "doi":
+                found.append(doi_link(item.get("id"), kind, LinkSource.CROSSREF))
+            elif item.get("id-type") == "uri":
+                found.append(url_link(item.get("id"), kind, LinkSource.CROSSREF))
+    found += [doi_link(entry.doi, "updated-by", LinkSource.CROSSREF) for entry in work.updated_by]
+    found += [
+        url_link(item.get("URL"), None, LinkSource.CROSSREF)
+        for item in work.link
+        if isinstance(item, dict)
+    ]
+    return unique(found)
 
 
 def _relation_dois(items: list[Any]) -> list[str]:

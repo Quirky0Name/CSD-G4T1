@@ -17,7 +17,7 @@ export type ChangeType =
 
 export type ReportStatus = 'investigating' | 'investigated' | 'assessed'
 export type AssessmentLevel = 'none' | 'low' | 'medium' | 'high'
-export type DocumentKind = 'notice' | 'new_version' | 'current_version'
+export type DocumentKind = 'notice' | 'new_version' | 'current_version' | 'related'
 
 // the Crossref record as Research Evaluation stored it (docs/CONTRACTS.md, GET /papers/{id}/reports)
 export type CrossrefRecord = {
@@ -25,6 +25,14 @@ export type CrossrefRecord = {
   title?: string | null
   published?: string | null
   journal?: string | null
+}
+
+// a DOI or URL a document points at (docs/CONTRACTS.md, POST /internal/documents); exactly one of doi and url is set
+export type DocumentLink = {
+  doi: string | null
+  url: string | null
+  role: string | null
+  source: 'crossref' | 'europepmc_xml' | 'europepmc_text'
 }
 
 export type UserDocument = {
@@ -41,6 +49,7 @@ export type UserDocument = {
   pdf_source_url: string | null
   created_at: string
   pdf_fetched_at: string | null
+  links: DocumentLink[] | null
 }
 
 // a report comes with its alerts and documents, so this one call loads everything the details show

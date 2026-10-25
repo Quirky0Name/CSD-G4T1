@@ -95,7 +95,7 @@ class ReportDocumentPdfTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"current_version", "new_version"})
+    @ValueSource(strings = {"current_version", "new_version", "related"})
     void aNewRowIsDownloadedOnceAndStored(String kind) throws Exception {
         when(openAccess.downloadWithSource(PAPER_DOI)).thenReturn(Optional.of(new DownloadedPdf(PDF, SOURCE)));
 
@@ -163,7 +163,7 @@ class ReportDocumentPdfTest {
     void aRowLeftPendingIsNeverDownloadedAgain() throws Exception {
         // what a crash between saving the row and downloading leaves behind
         ReportDocument pending = documents.saveAndFlush(new ReportDocument(
-                InternalReportTest.documentRequest(reportId, "current_version", PAPER_DOI), null));
+                InternalReportTest.documentRequest(reportId, "current_version", PAPER_DOI), null, null));
 
         store(body("current_version"))
                 .andExpect(status().isOk())
@@ -185,10 +185,11 @@ class ReportDocumentPdfTest {
         assertThat(left.getSha256()).isNull();
     }
 
-    @Test
-    void theStoredPdfIsReadBackWithoutDownloading() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"current_version", "related"})
+    void theStoredPdfIsReadBackWithoutDownloading(String kind) throws Exception {
         when(openAccess.downloadWithSource(PAPER_DOI)).thenReturn(Optional.of(new DownloadedPdf(PDF, SOURCE)));
-        long id = json.readTree(store(body("current_version")).andReturn().getResponse().getContentAsString())
+        long id = json.readTree(store(body(kind)).andReturn().getResponse().getContentAsString())
                 .get("id").asLong();
 
         readPdf(id)
@@ -201,14 +202,14 @@ class ReportDocumentPdfTest {
     @Test
     void aDocumentWithNoStoredPdfIs404WithItsOwnDetail() throws Exception {
         long notFound = documents.saveAndFlush(new ReportDocument(
-                InternalReportTest.documentRequest(reportId, "current_version", PAPER_DOI), null)).getId();
+                InternalReportTest.documentRequest(reportId, "current_version", PAPER_DOI), null, null)).getId();
         ReportDocument foundNothing = documents.findById(notFound).orElseThrow();
         foundNothing.recordNoPdf();
         documents.saveAndFlush(foundNothing);
         long pending = documents.saveAndFlush(new ReportDocument(
-                InternalReportTest.documentRequest(reportId, "new_version", "10.1/v2"), null)).getId();
+                InternalReportTest.documentRequest(reportId, "new_version", "10.1/v2"), null, null)).getId();
         long notice = documents.saveAndFlush(new ReportDocument(
-                InternalReportTest.documentRequest(reportId, "notice", "10.1/notice"), null)).getId();
+                InternalReportTest.documentRequest(reportId, "notice", "10.1/notice"), null, null)).getId();
 
         for (long id : new long[]{notFound, pending, notice}) {
             readPdf(id)

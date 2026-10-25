@@ -38,6 +38,9 @@ _Avoid_: Background info, background metadata, background-info history
 A statement a journal publishes about a tracked paper, such as a retraction or a correction. Crossref calls it an update.
 _Avoid_: Update (on its own)
 
+**Related document**:
+A document investigation reached by following a typed link from a notice or new version, not from the paper's own notices.
+
 **Alert severity**:
 How serious a change of that type usually is. Fixed by the change type alone.
 _Avoid_: Severity (on its own)

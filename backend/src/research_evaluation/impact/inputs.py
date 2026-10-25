@@ -29,7 +29,8 @@ class ReportInputs:
     report: Report
     paper: PaperDetails
     paper_pdf: bytes | None
-    # each document with a stored PDF (new versions and current copies), in the report's order
+    # each document with a stored PDF (new versions, related documents and current copies), in
+    # the report's order
     document_pdfs: list[tuple[DocumentInReport, bytes]] = field(default_factory=list)
     missing: list[MissingPdf] = field(default_factory=list)
 
