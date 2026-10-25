@@ -1,0 +1,24 @@
+# User Management's own Postgres. The service itself isn't containerised yet
+# (CG-135); docs/SETUP.md, "User Management", has the run steps.
+services:
+  users-db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: users
+      # with a role named like the schema, Postgres's "$user" search path would make
+      # unqualified SQL work here and fail on a shared database
+      POSTGRES_USER: users_app
+      POSTGRES_PASSWORD: users_app
+    # 5434 on the host, since backend's Postgres takes 5432 and storage's 5433;
+    # loopback only, since the password is a placeholder
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - users_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U users_app -d users"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  users_db:

@@ -8,22 +8,49 @@ owned that story made.
 
 ---
 
-## 2026-10-24 — Investigation follows links into the paper's own history
+## 2026-10-24 — Register logs you in; how tokens and passwords are handled
 
-- **One fixed rule for every change type** (`investigate.classify_link`):
-  follow only typed links to the paper's own later notices, newer versions
-  and replacements; check an untyped DOI from XML or text with one Crossref
-  request; keep everything else in `links`. Rules and limits are in
-  EVALUATION.md, "What to fetch, by scenario".
-- **Each DOI once per report**, within this report only (the paper's earlier
-  reports are not checked). Documents reached are stored as `related`; their
-  PDFs are downloaded by Storage Management, as for every document.
-- **URLs are stored in `links`, never fetched**, in case impact wants them.
-- **Rejected**: a per-change-type follow table (too strict, and RE-changes-explained.md
-  needs one rule); following everything fetched (crawls the citation
-  graph); an LLM choosing links (fetched content would steer fetching); a
-  `via_doi` column recording which document led to which (the parent's
-  `links` names the child); checking documents of earlier reports.
+- **Register and login answer with the same shape**, `{token, user}`
+  (the story owner's call), so the frontend needs one code path and gets
+  the user's details without decoding the token.
+- **Tokens: HS256 forced, 24 hours, no refresh token.** The JWT library
+  picks the algorithm from the key's length, and a long `JWT_SECRET` would
+  give HS512. The contract says HS256, and the Python services' check
+  accepts nothing else (Research Evaluation's today, Updating's with
+  CG-99). `sub` is the user's uuid, as Storage Management requires.
+- **Emails are stored lowercase**: one account per address whatever its
+  letter case, enforced by the unique constraint, so two registrations of
+  one email at once get a `201` and a `409`, never a second account.
+- **Passwords: 8 characters to 72 bytes.** BCrypt can't hash more than 72
+  bytes (the encoder refuses), so a longer one is a `400`, not a `500`.
+- **An unknown email gets the same `401` as a wrong password, in about the
+  same time**: it's checked against a stand-in BCrypt hash, so login shows
+  nothing about which emails have accounts. Register's `409` does give it
+  away; that's accepted, since sign-up has to say the email is taken.
+- **One test reads the database directly** (that the stored password is a
+  BCrypt hash), the one exception to testing at the HTTP seam, since no
+  response ever contains it.
+- Rejected: register returning only the user (a second call to log in);
+  `{token}` only (the frontend would decode it for the email).
+
+## 2026-10-24 — User Management is its own service, with its own schema
+
+- **A separate Spring Boot service, `users/`** (the story owner's call),
+  as ARCHITECTURE.md planned. It issues the JWT the other services already
+  check on their own, so none of them depends on it at runtime.
+- **Its tables and Flyway history live in a `users` schema**, as
+  Updating's do in `updating` (2026-09-18), so in deployment it can share
+  one Postgres with Storage Management (`public`) without either's tables
+  or migration history colliding.
+- **Locally, its own Postgres container**, with a login role (`users_app`)
+  named differently from the schema: a role named like the schema would
+  make Postgres's `"$user"` search path find unqualified tables locally
+  but not on a shared database.
+- Rejected: building it inside Storage Management (against the documented
+  architecture); a second database instead of a schema (one more
+  connection and backup on the same server); sharing Storage Management's
+  Postgres locally (User Management couldn't start on its own, and Storage
+  Management's reset would wipe it).
 
 ## 2026-10-24 — One name per concept (GLOSSARY.md); the DOI re-key is dropped
 

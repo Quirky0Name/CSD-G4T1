@@ -39,15 +39,16 @@ feature on their own.
   reports, the draft upload, a manual poll, deleting a paper.
 - Demo tools in Storage Management to replay a change on a real paper.
 
-Everything else from the original plan (User Management, notes per paper,
-stance and claims checks, GROBID COI text, citation metrics, deployment,
-new related papers, topic discovery) is in [ROADMAP.md](ROADMAP.md).
+Everything else from the original plan (User Management's projects, notes
+per paper, stance and claims checks, GROBID COI text, citation metrics,
+deployment, new related papers, topic discovery) is in
+[ROADMAP.md](ROADMAP.md).
 
 ## Services
 
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
-| User Management | Java 25 + Spring Boot | `users`, `projects`, login and JWTs. **Scaffold only** (no endpoints or database yet): a hand-made demo token stands in (SETUP.md) | `users/` |
+| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users`, `projects`, register, login and the JWTs. Register and login are built; projects aren't yet | `users/` |
 | Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls Storage Management and Updating through the Vite proxy | `frontend/csd-frontend-vite/` |
 | Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts and notes, reports and documents, drafts | `storage/` |
 | Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact, notification); no database of its own | `backend/src/research_evaluation/` |
@@ -113,8 +114,8 @@ Rules that hold across the flow:
 
 ## Auth
 
-- One JWT (HS256, `sub` = user id, `exp`), meant to be issued by User
-  Management at login. Every service validates the signature itself with
+- One JWT (HS256, `sub` = user id, `exp`), issued by User Management at
+  register and login. Every service validates the signature itself with
   the shared `JWT_SECRET` (base64 of 32+ bytes, decoded before use); none
   calls back to User Management.
 - **Service tokens:** Updating (`svc:updating`) and Research Evaluation
@@ -122,8 +123,9 @@ Rules that hold across the flow:
   (`common/service_token.py`). Storage Management's `/internal/**` takes
   only service tokens; everything else takes only user tokens.
   `POST /evaluate/changes` and `/evaluate/reports` take any service token.
-- **Sprint 1:** no User Management, so one hand-made "demo user" token is
-  used for everything, and Updating's `POST /run-poll` takes no token.
+- **For now** the frontend has no login page, so one hand-made "demo user"
+  token is used for everything, and Updating's `POST /run-poll` takes no
+  token.
 
 ## Projects
 
@@ -155,12 +157,18 @@ Everything referring to a paper is deleted with it. PDFs are files in
 Updating's own schema (`updating`, Alembic): `tracked_papers` (`paper_id`,
 `doi`, `last_snapshot_id`, `nudge_pending`) and `polls`.
 
+User Management's own schema (`users`, Flyway, `users/src/main/resources/db/migration/`):
+`users` (`id`, the JWT's `sub`; lowercase `email`, unique; BCrypt
+`password_hash`; `created_at`).
+
 ## Deployment
 
-What exists: one Dockerfile per service (`storage/Dockerfile`,
-`backend/research-evaluation.Dockerfile`, `backend/updating.Dockerfile`)
-and two compose files that run every service but the frontend locally
-(SETUP.md). CI (`.github/workflows/`) is a Trivy vulnerability scan on
+What exists: one Dockerfile per service but User Management
+(`storage/Dockerfile`, `backend/research-evaluation.Dockerfile`,
+`backend/updating.Dockerfile`), two compose files that run every service
+but the frontend and User Management locally, and `users/docker-compose.yml`,
+which runs only User Management's Postgres (SETUP.md; containerising it is
+CG-135). CI (`.github/workflows/`) is a Trivy vulnerability scan on
 PRs, pushes to `main` and weekly, plus Telegram messages when a PR is
 opened or approved. Nothing is hosted; the planned target (one VM running
 the compose stack, Postgres on Supabase) is in ROADMAP.md.

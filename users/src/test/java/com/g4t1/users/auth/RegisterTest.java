@@ -1,0 +1,174 @@
+package com.g4t1.users.auth;
+
+import com.jayway.jsonpath.JsonPath;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.client.RestTestClient;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+class RegisterTest {
+
+    @LocalServerPort
+    private int port;
+
+    @Autowired
+    private JdbcTemplate jdbc;
+
+    @Value("${users.jwt-secret}")
+    private String jwtSecret;
+
+    private RestTestClient client;
+
+    @BeforeEach
+    void setUp() {
+        client = RestTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
+    }
+
+    @Test
+    void registeringCreatesAnAccount() {
+        String email = newEmail();
+
+        register(email, "correct horse battery")
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.user.id").value(String.class,
+                        id -> assertThatCode(() -> UUID.fromString(id)).doesNotThrowAnyException())
+                .jsonPath("$.user.email").isEqualTo(email)
+                .jsonPath("$.user.created_at").isNotEmpty()
+                .jsonPath("$..password").doesNotExist();
+    }
+
+    @Test
+    void anEmailThatAlreadyHasAnAccountIsAConflict() {
+        String email = newEmail();
+        register(email, "correct horse battery").expectStatus().isCreated();
+
+        register(email, "a different password")
+                .expectStatus().isEqualTo(409)
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.detail").isEqualTo("An account with this email already exists");
+    }
+
+    @Test
+    void anEmailIsOneAccountWhateverItsLetterCase() {
+        String email = newEmail();
+
+        register(email.toUpperCase(), "correct horse battery")
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.user.email").isEqualTo(email);
+
+        register(email, "a different password").expectStatus().isEqualTo(409);
+    }
+
+    // a double-click on sign-up: both requests get past the "already taken?" check before either is saved
+    @Test
+    void anEmailRegisteredTwiceAtOnceIsStillOneAccount() throws InterruptedException {
+        String email = newEmail();
+        Callable<Integer> attempt = () -> register(email, "correct horse battery")
+                .expectBody(String.class).returnResult().getStatus().value();
+
+        List<Integer> statuses;
+        try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
+            statuses = pool.invokeAll(List.of(attempt, attempt)).stream().map(Future::resultNow).toList();
+        }
+
+        assertThat(statuses).containsExactlyInAnyOrder(201, 409);
+    }
+
+    @Test
+    void anEmailThatIsNotAnAddressIsABadRequest() {
+        register("not-an-email", "correct horse battery")
+                .expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
+    }
+
+    @Test
+    void aPasswordUnderEightCharactersIsABadRequest() {
+        register(newEmail(), "seven77")
+                .expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
+    }
+
+    // BCrypt can't hash past 72 bytes; "é" is 2 bytes, so this is 37 characters but 74 bytes
+    @Test
+    void aPasswordOverSeventyTwoBytesIsABadRequest() {
+        register(newEmail(), "é".repeat(37))
+                .expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "{\"password\": \"correct horse battery\"}",
+            "{\"email\": \"someone@example.com\"}",
+            "{\"email\": \"\", \"password\": \"correct horse battery\"}",
+            "{\"email\": \"someone@example.com\", \"password\": \"        \"}"})
+    void aMissingOrBlankEmailOrPasswordIsABadRequest(String body) {
+        client.post().uri("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
+    }
+
+    // The one test that reads the database directly: no reply ever contains the stored password,
+    // so this is the only way to see it's kept as a BCrypt hash (an agreed exception to HTTP-only tests).
+    @Test
+    void aPasswordIsStoredOnlyAsItsBcryptHash() {
+        String email = newEmail();
+        register(email, "correct horse battery").expectStatus().isCreated();
+
+        String stored = jdbc.queryForObject(
+                "select password_hash from users.users where email = ?", String.class, email);
+
+        assertThat(stored).isNotEqualTo("correct horse battery");
+        assertThat(new BCryptPasswordEncoder().matches("correct horse battery", stored)).isTrue();
+    }
+
+    @Test
+    void registeringLogsTheResearcherIn() {
+        String body = register(newEmail(), "correct horse battery")
+                .expectStatus().isCreated()
+                .expectBody(String.class).returnResult().getResponseBody();
+
+        TokenAssertions.assertIsTokenFor(JsonPath.read(body, "$.token"), JsonPath.read(body, "$.user.id"), jwtSecret);
+    }
+
+    private RestTestClient.ResponseSpec register(String email, String password) {
+        return client.post().uri("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("email", email, "password", password))
+                .exchange();
+    }
+
+    // a fresh address per test, so tests never collide in the shared database
+    private static String newEmail() {
+        return "researcher-" + UUID.randomUUID() + "@example.com";
+    }
+}
