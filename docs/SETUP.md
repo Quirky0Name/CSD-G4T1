@@ -198,12 +198,12 @@ uv run python -c "import base64, os, time, jwt; print(jwt.encode({'sub': '111111
 
 ## Frontend
 
-From `frontend/csd-frontend-vite/`: copy `.env.example` to `.env.local`
-and set `VITE_DEMO_TOKEN` to a demo user token, then `npm install` and
-`npm run dev`. Storage Management and Updating send no CORS headers, so
-`vite.config.ts` proxies `/api` → `localhost:8081` and `/updating` →
-`localhost:8001`. `VITE_` values are baked into the built JavaScript:
-fine for a local demo token, never for a real secret.
+From `frontend/csd-frontend-vite/`: `npm install` and `npm run dev`, with
+User Management, Storage Management and Updating running on the same
+`JWT_SECRET`. Open the app, register, and you're signed in; the token is
+kept in `localStorage`. None of the services send CORS headers, so
+`vite.config.ts` proxies `/auth` → `localhost:8080`, `/api` →
+`localhost:8081` and `/updating` → `localhost:8001`.
 
 ## Telegram bot
 
