@@ -47,7 +47,7 @@ topic discovery) is in [ROADMAP.md](ROADMAP.md).
 
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
-| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users` and `projects`: register, login and the JWTs, and each researcher's projects | `users/` |
+| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users` and `projects`: register, login and the JWTs, each researcher's projects, and deleting an account | `users/` |
 | Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls the services at `/api`, `/auth`, `/projects` and `/updating` on its own address (the Vite proxy in development, Caddy in the root stack) | `frontend/csd-frontend-vite/` |
 | Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts and notes, reports and documents, drafts | `storage/` |
 | Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact, notification); no database of its own | `backend/src/research_evaluation/` |
@@ -120,9 +120,14 @@ Rules that hold across the flow:
 - **Service tokens:** Updating (`svc:updating`) and Research Evaluation
   (`svc:research-evaluation`) mint short-lived tokens with `role=service`
   (`common/service_token.py`), and so does User Management (`svc:users`)
-  to clear a deleted project. Storage Management's `/internal/**` takes
+  to clear a deleted project or account. Storage Management's `/internal/**` takes
   only service tokens; everything else takes only user tokens.
   `POST /evaluate/changes` and `/evaluate/reports` take any service token.
+- **Deleting an account** (`DELETE /auth/me`, with the password) has
+  Storage Management delete everything the user owns first
+  (`DELETE /internal/users/{id}`), then deletes the user and, through the
+  foreign key, their projects. Tokens aren't revoked, so one outlives its
+  account by up to 24 hours.
 - **For now** Updating's `POST /run-poll` takes no token (CG-99).
 
 ## Projects
@@ -161,7 +166,7 @@ Updating's own schema (`updating`, Alembic): `tracked_papers` (`paper_id`,
 User Management's own schema (`users`, Flyway, `users/src/main/resources/db/migration/`):
 `users` (`id`, the JWT's `sub`; lowercase `email`, unique; BCrypt
 `password_hash`; `created_at`) and `projects` (`id`; `owner_id`, the user's
-id; `name`, one of each per owner; `created_at`).
+id, deleted with the user; `name`, one of each per owner; `created_at`).
 
 ## Deployment
 
