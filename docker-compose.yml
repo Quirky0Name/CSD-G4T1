@@ -65,6 +65,8 @@ services:
       SPRING_DATASOURCE_USERNAME: app
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      # deleting a project clears its papers and draft there first
+      SM_BASE_URL: http://storage:8081
     restart: unless-stopped
 
   research-evaluation:
