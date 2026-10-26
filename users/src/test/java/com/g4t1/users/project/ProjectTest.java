@@ -92,6 +92,21 @@ class ProjectTest {
     }
 
     @Test
+    void aNameYouAlreadyUseIsAConflictEvenWithSpacesAroundIt() {
+        String mine = registeredToken();
+        create(mine, "Thesis").expectStatus().isCreated();
+
+        create(mine, " Thesis  ").expectStatus().isEqualTo(409)
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody().jsonPath("$.detail").isEqualTo("You already have a project called Thesis");
+        // the spaces aren't kept; apart from them names are exact, and each researcher has their own
+        create(mine, " Draft ").expectStatus().isCreated()
+                .expectBody().jsonPath("$.name").isEqualTo("Draft");
+        create(mine, "thesis").expectStatus().isCreated();
+        create(registeredToken(), "Thesis").expectStatus().isCreated();
+    }
+
+    @Test
     void projectsNeedAUserToken() {
         String someProject = "/projects/" + UUID.randomUUID();
         client.get().uri("/projects").exchange().expectStatus().isUnauthorized();
