@@ -92,16 +92,14 @@ class ProjectTest {
     @Test
     void theListShowsYourProjectsNewestFirst() throws InterruptedException {
         String token = registeredToken();
-        String first = "First " + UUID.randomUUID();
-        String second = "Second " + UUID.randomUUID();
-        create(token, first).expectStatus().isCreated();
+        create(token, "First").expectStatus().isCreated();
         // created_at is set as each request arrives; keep the two apart so the order is certain
         Thread.sleep(5);
-        create(token, second).expectStatus().isCreated();
+        create(token, "Second").expectStatus().isCreated();
 
         List<String> names = JsonPath.read(listBody(token), "$.projects[*].name");
 
-        assertThat(names).containsSubsequence(second, first);
+        assertThat(names).containsExactly("Second", "First");
     }
 
     @Test

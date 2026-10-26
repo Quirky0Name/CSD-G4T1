@@ -21,24 +21,23 @@ public class ProjectService {
     }
 
     public ProjectResponse create(UUID ownerId, ProjectRequest request) {
-        // the spaces around a name are typing noise, not part of it
-        String name = request.name().strip();
-        if (projects.existsByOwnerIdAndName(ownerId, name)) {
-            throw nameTaken(name);
-        }
+        String name = nameOf(request);
+        requireFree(ownerId, name);
         return saveNamed(new Project(ownerId, name), name);
+    }
+
+    public List<ProjectResponse> list(UUID ownerId) {
+        return projects.findByOwnerIdOrderByCreatedAtDesc(ownerId).stream().map(ProjectResponse::from).toList();
     }
 
     public ProjectResponse rename(UUID ownerId, UUID projectId, ProjectRequest request) {
         Project project = requireOwn(ownerId, projectId);
-        String name = request.name().strip();
+        String name = nameOf(request);
         // keeping its own name isn't a clash with itself
         if (name.equals(project.getName())) {
             return ProjectResponse.from(project);
         }
-        if (projects.existsByOwnerIdAndName(ownerId, name)) {
-            throw nameTaken(name);
-        }
+        requireFree(ownerId, name);
         project.rename(name);
         return saveNamed(project, name);
     }
@@ -55,8 +54,15 @@ public class ProjectService {
         projects.deleteById(projectId);
     }
 
-    public List<ProjectResponse> list(UUID ownerId) {
-        return projects.findByOwnerIdOrderByCreatedAtDesc(ownerId).stream().map(ProjectResponse::from).toList();
+    // the spaces around a name are typing noise, not part of it
+    private static String nameOf(ProjectRequest request) {
+        return request.name().strip();
+    }
+
+    private void requireFree(UUID ownerId, String name) {
+        if (projects.existsByOwnerIdAndName(ownerId, name)) {
+            throw nameTaken(name);
+        }
     }
 
     // another create or rename can take the name between the check and this save; the unique constraint catches it
