@@ -164,6 +164,15 @@ class DeleteAccountTest {
                 .expectBody().jsonPath("$.detail").isEqualTo("Your account no longer exists");
     }
 
+    @Test
+    void deletingAnAccountThatsAlreadyGoneIsUnauthorized() {
+        Account account = registered();
+        deleteAccount(account.token(), PASSWORD).expectStatus().isNoContent();
+
+        deleteAccount(account.token(), PASSWORD).expectStatus().isUnauthorized()
+                .expectBody().jsonPath("$.detail").isEqualTo("Your account no longer exists");
+    }
+
     private record Account(String token, String id, String email) {
     }
 
