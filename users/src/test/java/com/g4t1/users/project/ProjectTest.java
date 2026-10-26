@@ -21,10 +21,15 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -123,6 +128,21 @@ class ProjectTest {
                 .expectBody().jsonPath("$.name").isEqualTo("Draft");
         create(mine, "thesis").expectStatus().isCreated();
         create(registeredToken(), "Thesis").expectStatus().isCreated();
+    }
+
+    // a double-clicked create, or two renames at once: the database has the final say, as it does for emails
+    @Test
+    void aNameCantEndUpTwiceEvenWhenSentAtOnce() throws InterruptedException {
+        String token = registeredToken();
+        String draft = createdId(token, "Draft");
+        String notes = createdId(token, "Notes");
+
+        List<Integer> creates = atOnce(Collections.nCopies(4, () -> status(create(token, "Thesis"))));
+        List<Integer> renames = atOnce(List.of(
+                () -> status(rename(token, draft, "Final")), () -> status(rename(token, notes, "Final"))));
+
+        assertThat(creates).containsExactlyInAnyOrder(201, 409, 409, 409);
+        assertThat(renames).containsExactlyInAnyOrder(200, 409);
     }
 
     @Test
@@ -281,6 +301,16 @@ class ProjectTest {
         return client.delete().uri("/projects/{id}", id)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .exchange();
+    }
+
+    private static int status(RestTestClient.ResponseSpec response) {
+        return response.expectBody(String.class).returnResult().getStatus().value();
+    }
+
+    private static List<Integer> atOnce(List<Callable<Integer>> requests) throws InterruptedException {
+        try (ExecutorService pool = Executors.newFixedThreadPool(requests.size())) {
+            return pool.invokeAll(requests).stream().map(Future::resultNow).toList();
+        }
     }
 
     private String listBody(String token) {
