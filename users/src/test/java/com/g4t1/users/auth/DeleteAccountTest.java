@@ -76,6 +76,26 @@ class DeleteAccountTest {
         login(account.email()).expectStatus().isUnauthorized();
     }
 
+    @Test
+    void deletingYourAccountDeletesYourProjects() {
+        Account account = registered();
+        client.post().uri("/projects")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + account.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("name", "Thesis"))
+                .exchange()
+                .expectStatus().isCreated();
+
+        deleteAccount(account.token(), PASSWORD).expectStatus().isNoContent();
+
+        // the token outlives the account by up to a day, and finds nothing left
+        client.get().uri("/projects")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + account.token())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.projects").isEmpty();
+    }
+
     private record Account(String token, String id, String email) {
     }
 
