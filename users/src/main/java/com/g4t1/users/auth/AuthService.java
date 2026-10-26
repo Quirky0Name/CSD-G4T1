@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Locale;
@@ -54,7 +55,13 @@ public class AuthService {
         if (!passwords.matches(request.password(), user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong password");
         }
-        storage.clearUser(userId);
+        // Storage first: if clearing the papers and drafts fails, the account is still here to delete again
+        try {
+            storage.clearUser(userId);
+        } catch (RestClientException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                    "Storage Management couldn't clear your account, so it wasn't deleted");
+        }
         users.deleteById(userId);
     }
 
