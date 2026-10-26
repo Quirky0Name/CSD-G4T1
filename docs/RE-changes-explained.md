@@ -556,8 +556,7 @@ Then pick the action:
 separate from the alert severity instead of overwriting it. That keeps
 "whether a paper was retracted never depends on an LLM" true, and it matches
 the docs' plan for new columns holding the proposal and its validation. The
-researcher still makes the final call, through acknowledge/dismiss and the
-alert notes log.
+researcher still makes the final call, through acknowledge/dismiss.
 
 **Build order for this**, if you're choosing what to do next:
 
