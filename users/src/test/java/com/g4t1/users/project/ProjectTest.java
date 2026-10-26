@@ -164,6 +164,16 @@ class ProjectTest {
         assertThat(names).containsExactlyInAnyOrder("Final draft", "Thesis");
     }
 
+    // what a rename box sends back when it's saved without a change
+    @Test
+    void renamingAProjectToItsOwnNameIsFine() {
+        String token = registeredToken();
+        String id = createdId(token, "Thesis");
+
+        rename(token, id, " Thesis ").expectStatus().isOk()
+                .expectBody().jsonPath("$.name").isEqualTo("Thesis");
+    }
+
     @Test
     void deletingAProjectClearsItInStorageThenRemovesIt() {
         Account account = registered();
