@@ -20,6 +20,7 @@ Spring Data repository, the entity, and response records.
 |---|---|
 | `paper/` | tracked papers: upload, track by DOI, list (`PaperService`), the internal list and PDF read, deleting a paper with everything that refers to it (`PaperDeletion`) |
 | `project/` | clearing a project User Management deleted: its papers and its draft (`ProjectService`, `DELETE /internal/projects/{id}`) |
+| `user/` | clearing an account User Management deleted: the user's papers and drafts in every project (`UserService`, `DELETE /internal/users/{id}`) |
 | `snapshot/` | `snapshots`: store a snapshot, read the snapshot history (`after_id`, `last`, `limit`) |
 | `alert/` | alerts (internal store, change keys; user list, status), alert notes; `LowercaseEnumConverter` |
 | `report/` | reports and documents: open, read, mark investigated, store the evaluation (`ReportService`), store a document and download its PDF (`ReportDocumentService`), the user's report list |
