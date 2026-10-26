@@ -24,12 +24,10 @@ public class AlertService {
             .thenComparing(Alert::getId, Comparator.reverseOrder());
 
     private final AlertRepository alerts;
-    private final AlertNoteRepository notes;
     private final PaperRepository papers;
 
-    public AlertService(AlertRepository alerts, AlertNoteRepository notes, PaperRepository papers) {
+    public AlertService(AlertRepository alerts, PaperRepository papers) {
         this.alerts = alerts;
-        this.notes = notes;
         this.papers = papers;
     }
 
@@ -118,23 +116,6 @@ public class AlertService {
             alert.setStatusChangedAt(Instant.now().truncatedTo(ChronoUnit.MICROS));
         }
         return AlertResponse.from(alert);
-    }
-
-    /**
-     * Adds a note to the researcher's log on an alert, e.g. what they did about it. Notes are
-     * separate from the status: adding one never changes it.
-     */
-    public AlertNoteResponse addNote(UUID userId, long alertId, String text) {
-        Alert alert = requireOwnAlert(userId, alertId);
-        return AlertNoteResponse.from(notes.save(new AlertNote(alert.getId(), text)));
-    }
-
-    /**
-     * The alert's notes, newest first.
-     */
-    public List<AlertNoteResponse> notes(UUID userId, long alertId) {
-        requireOwnAlert(userId, alertId);
-        return notes.findByAlertIdOrderByCreatedAtDescIdDesc(alertId).stream().map(AlertNoteResponse::from).toList();
     }
 
     // a missing alert and one on another user's paper are the same 404

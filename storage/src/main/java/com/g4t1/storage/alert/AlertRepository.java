@@ -39,7 +39,7 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     List<Alert> findByReportIdIn(Collection<Long> reportIds);
 
     // A late retraction notice replaces a notice-less retraction alert and makes it new again: the
-    // row keeps its id (and so its notes), leaves its report so the next one takes it, and gets the
+    // row keeps its id, leaves its report so the next one takes it, and gets the
     // notice's assessment. Conditional on the notice still missing, so only one request replaces it.
     @Transactional
     @Modifying(flushAutomatically = true, clearAutomatically = true)

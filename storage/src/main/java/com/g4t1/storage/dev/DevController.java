@@ -39,7 +39,7 @@ public class DevController {
         dev.clearHistory(userId, paperId);
     }
 
-    // the paper and everything that refers to it: snapshots, alerts and notes, reports and documents, PDFs
+    // the paper and everything that refers to it: snapshots, alerts, reports and documents, PDFs
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePaper(@AuthenticationPrincipal UUID userId, @PathVariable UUID paperId) {
