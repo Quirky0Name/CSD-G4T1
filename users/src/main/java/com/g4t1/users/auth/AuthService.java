@@ -1,5 +1,6 @@
 package com.g4t1.users.auth;
 
+import com.g4t1.users.project.StorageClient;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -9,19 +10,22 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
 
     private final UserRepository users;
     private final TokenService tokens;
+    private final StorageClient storage;
     private final PasswordEncoder passwords = new BCryptPasswordEncoder();
     // checked when an email has no account, so that answer takes as long as a wrong password
     private final String hashForUnknownEmails = passwords.encode("no account has this password");
 
-    public AuthService(UserRepository users, TokenService tokens) {
+    public AuthService(UserRepository users, TokenService tokens, StorageClient storage) {
         this.users = users;
         this.tokens = tokens;
+        this.storage = storage;
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -43,6 +47,11 @@ public class AuthService {
         }
         User user = found.get();
         return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
+    }
+
+    public void deleteAccount(UUID userId) {
+        storage.clearUser(userId);
+        users.deleteById(userId);
     }
 
     // another registration of the same email can be saved between the check and this insert

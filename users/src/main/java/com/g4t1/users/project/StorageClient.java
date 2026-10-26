@@ -8,7 +8,7 @@ import org.springframework.web.client.RestClient;
 
 import java.util.UUID;
 
-// Storage Management's internal clear-a-project call (docs/CONTRACTS.md)
+// Storage Management's internal clear-a-project and clear-a-user calls (docs/CONTRACTS.md)
 @Component
 public class StorageClient {
 
@@ -24,6 +24,14 @@ public class StorageClient {
     public void clearProject(UUID ownerId, UUID projectId) {
         rest.delete()
                 .uri(uri -> uri.path("/internal/projects/{id}").queryParam("owner_id", ownerId).build(projectId))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.issueServiceToken())
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    public void clearUser(UUID userId) {
+        rest.delete()
+                .uri("/internal/users/{id}", userId)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.issueServiceToken())
                 .retrieve()
                 .toBodilessEntity();
