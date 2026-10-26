@@ -1,5 +1,6 @@
 package com.g4t1.users.project;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -23,19 +24,19 @@ public class ProjectService {
         // the spaces around a name are typing noise, not part of it
         String name = request.name().strip();
         if (projects.existsByOwnerIdAndName(ownerId, name)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "You already have a project called " + name);
+            throw nameTaken(name);
         }
-        return ProjectResponse.from(projects.save(new Project(ownerId, name)));
+        return saveNamed(new Project(ownerId, name), name);
     }
 
     public ProjectResponse rename(UUID ownerId, UUID projectId, ProjectRequest request) {
         Project project = requireOwn(ownerId, projectId);
         String name = request.name().strip();
         if (projects.existsByOwnerIdAndName(ownerId, name)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "You already have a project called " + name);
+            throw nameTaken(name);
         }
         project.rename(name);
-        return ProjectResponse.from(projects.save(project));
+        return saveNamed(project, name);
     }
 
     // Storage first: if clearing its papers and draft fails, the project is still here to delete again
@@ -52,6 +53,19 @@ public class ProjectService {
 
     public List<ProjectResponse> list(UUID ownerId) {
         return projects.findByOwnerIdOrderByCreatedAtDesc(ownerId).stream().map(ProjectResponse::from).toList();
+    }
+
+    // another create or rename can take the name between the check and this save; the unique constraint catches it
+    private ProjectResponse saveNamed(Project project, String name) {
+        try {
+            return ProjectResponse.from(projects.saveAndFlush(project));
+        } catch (DataIntegrityViolationException e) {
+            throw nameTaken(name);
+        }
+    }
+
+    private static ResponseStatusException nameTaken(String name) {
+        return new ResponseStatusException(HttpStatus.CONFLICT, "You already have a project called " + name);
     }
 
     // someone else's project gets the same 404 as a missing one, so an id never shows whose it is
