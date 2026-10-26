@@ -106,8 +106,9 @@ def test_a_null_notice_list_is_never_compared(side):
         ("openalex", {"is_retracted": False}, {"is_retracted": True}),
         ("openalex", {"in_doaj": True}, {"in_doaj": False}),
         ("crossref", {"crossref_updates": []}, {"crossref_updates": [notice("10.1/n")]}),
+        ("openalex", {"cited_by_count": 100}, {"cited_by_count": 200}),
     ],
-    ids=["is_retracted", "in_doaj", "crossref_updates"],
+    ids=["is_retracted", "in_doaj", "crossref_updates", "cited_by_count"],
 )
 def test_a_field_whose_source_was_not_ok_is_never_compared(side, source, before, after):
     previous, new = snap(**before), snap(**after)
@@ -145,3 +146,17 @@ def test_a_switch_from_the_journal_to_a_repository_still_nudges():
     }
 
     assert nudge_reasons(snap(), snap(**repository)) == ["in_doaj true -> false"]
+
+
+def test_a_citation_jump_nudges():
+    assert nudge_reasons(snap(cited_by_count=952), snap(cited_by_count=1252)) == [
+        "cited_by_count 952 -> 1252"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("previous", "new"),
+    [(1247, 1252), (1252, 1252), (1252, 952), (None, 1252), (952, None), (None, None)],
+)
+def test_a_small_rise_no_change_a_drop_or_a_null_count_does_not_nudge(previous, new):
+    assert nudge_reasons(snap(cited_by_count=previous), snap(cited_by_count=new)) == []
