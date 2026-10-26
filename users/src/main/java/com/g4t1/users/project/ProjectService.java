@@ -32,6 +32,10 @@ public class ProjectService {
     public ProjectResponse rename(UUID ownerId, UUID projectId, ProjectRequest request) {
         Project project = requireOwn(ownerId, projectId);
         String name = request.name().strip();
+        // keeping its own name isn't a clash with itself
+        if (name.equals(project.getName())) {
+            return ProjectResponse.from(project);
+        }
         if (projects.existsByOwnerIdAndName(ownerId, name)) {
             throw nameTaken(name);
         }
