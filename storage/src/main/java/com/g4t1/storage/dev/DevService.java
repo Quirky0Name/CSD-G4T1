@@ -2,6 +2,7 @@ package com.g4t1.storage.dev;
 
 import com.g4t1.storage.file.LocalFileStore;
 import com.g4t1.storage.paper.Paper;
+import com.g4t1.storage.paper.PaperDeletion;
 import com.g4t1.storage.paper.PaperRepository;
 import com.g4t1.storage.snapshot.Snapshot;
 import com.g4t1.storage.snapshot.SnapshotRepository;
@@ -10,7 +11,6 @@ import com.g4t1.storage.snapshot.SnapshotResponse;
 import com.g4t1.storage.snapshot.SnapshotService;
 import org.springframework.data.domain.Limit;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,7 +19,6 @@ import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -33,16 +32,16 @@ public class DevService {
     private final PaperRepository papers;
     private final SnapshotRepository snapshots;
     private final SnapshotService snapshotService;
-    private final JdbcTemplate jdbc;
+    private final PaperDeletion deletion;
     private final LocalFileStore files;
     private final JsonMapper json;
 
     public DevService(PaperRepository papers, SnapshotRepository snapshots, SnapshotService snapshotService,
-                      JdbcTemplate jdbc, LocalFileStore files, JsonMapper json) {
+                      PaperDeletion deletion, LocalFileStore files, JsonMapper json) {
         this.papers = papers;
         this.snapshots = snapshots;
         this.snapshotService = snapshotService;
-        this.jdbc = jdbc;
+        this.deletion = deletion;
         this.files = files;
         this.json = json;
     }
@@ -87,32 +86,11 @@ public class DevService {
     @Transactional
     public void clearHistory(UUID ownerId, UUID paperId) {
         requireOwnPaper(ownerId, paperId);
-        deleteHistory(paperId).forEach(files::delete);
+        deletion.deleteHistory(paperId).forEach(files::delete);
     }
 
-    // Everything that points at the paper, then the paper and its PDF. Updating drops it from
-    // its own tracking on the next poll, since storage no longer lists it.
-    @Transactional
     public void deletePaper(UUID ownerId, UUID paperId) {
-        Paper paper = requireOwnPaper(ownerId, paperId);
-        List<String> documentFiles = deleteHistory(paperId);
-        jdbc.update("delete from papers where id = ?", paperId);
-        documentFiles.forEach(files::delete);
-        if (paper.getFileKey() != null) {
-            files.delete(paper.getFileKey());
-        }
-    }
-
-    // returns the report documents' files, to delete once their rows are gone
-    private List<String> deleteHistory(UUID paperId) {
-        List<String> documentFiles = jdbc.queryForList("""
-                select d.file_key from report_documents d join reports r on r.id = d.report_id
-                where r.paper_id = ? and d.file_key is not null""", String.class, paperId);
-        // documents cascade with their report, notes with their alert
-        jdbc.update("delete from reports where paper_id = ?", paperId);
-        jdbc.update("delete from alerts where paper_id = ?", paperId);
-        jdbc.update("delete from snapshots where paper_id = ?", paperId);
-        return documentFiles;
+        deletion.delete(requireOwnPaper(ownerId, paperId));
     }
 
     // someone else's paper gets the same 404 as a missing one
