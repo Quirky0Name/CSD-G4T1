@@ -107,6 +107,25 @@ class ProjectTest {
     }
 
     @Test
+    void renamingChangesTheNameUnlessYouAlreadyUseIt() {
+        String token = registeredToken();
+        String id = createdId(token, "Draft");
+        create(token, "Thesis").expectStatus().isCreated();
+
+        rename(token, id, " Final draft ").expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.id").isEqualTo(id)
+                .jsonPath("$.name").isEqualTo("Final draft");
+        rename(token, id, "Thesis").expectStatus().isEqualTo(409)
+                .expectBody().jsonPath("$.detail").isEqualTo("You already have a project called Thesis");
+        rename(token, id, "   ").expectStatus().isBadRequest();
+        rename(token, id, "x".repeat(101)).expectStatus().isBadRequest();
+
+        List<String> names = JsonPath.read(listBody(token), "$.projects[*].name");
+        assertThat(names).containsExactlyInAnyOrder("Final draft", "Thesis");
+    }
+
+    @Test
     void projectsNeedAUserToken() {
         String someProject = "/projects/" + UUID.randomUUID();
         client.get().uri("/projects").exchange().expectStatus().isUnauthorized();
@@ -155,6 +174,20 @@ class ProjectTest {
 
     private RestTestClient.ResponseSpec create(String token, String name) {
         return client.post().uri("/projects")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("name", name))
+                .exchange();
+    }
+
+    private String createdId(String token, String name) {
+        String body = create(token, name).expectStatus().isCreated()
+                .expectBody(String.class).returnResult().getResponseBody();
+        return JsonPath.read(body, "$.id");
+    }
+
+    private RestTestClient.ResponseSpec rename(String token, String id, String name) {
+        return client.put().uri("/projects/{id}", id)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("name", name))
