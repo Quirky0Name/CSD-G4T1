@@ -1,6 +1,6 @@
 package com.g4t1.users.auth;
 
-import com.g4t1.users.project.StorageClient;
+import com.g4t1.users.storage.StorageClient;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

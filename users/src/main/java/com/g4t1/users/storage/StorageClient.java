@@ -1,4 +1,4 @@
-package com.g4t1.users.project;
+package com.g4t1.users.storage;
 
 import com.g4t1.users.auth.TokenService;
 import org.springframework.beans.factory.annotation.Value;

@@ -2,6 +2,7 @@ package com.g4t1.users.project;
 
 import com.g4t1.users.auth.AccountGoneException;
 import com.g4t1.users.auth.UserRepository;
+import com.g4t1.users.storage.StorageClient;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
