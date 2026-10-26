@@ -36,6 +36,10 @@ public class Project {
         this.createdAt = Instant.now();
     }
 
+    public void rename(String newName) {
+        this.name = newName;
+    }
+
     public UUID getId() {
         return id;
     }

@@ -25,6 +25,16 @@ public class ProjectService {
         return ProjectResponse.from(projects.save(new Project(ownerId, name)));
     }
 
+    public ProjectResponse rename(UUID ownerId, UUID projectId, ProjectRequest request) {
+        String name = request.name().strip();
+        if (projects.existsByOwnerIdAndName(ownerId, name)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "You already have a project called " + name);
+        }
+        Project project = projects.findById(projectId).orElseThrow();
+        project.rename(name);
+        return ProjectResponse.from(projects.save(project));
+    }
+
     public List<ProjectResponse> list(UUID ownerId) {
         return projects.findByOwnerIdOrderByCreatedAtDesc(ownerId).stream().map(ProjectResponse::from).toList();
     }
