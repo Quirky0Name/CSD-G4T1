@@ -65,9 +65,6 @@ most needed first within each.
 - [ ] Download a report document's stored PDF (a user endpoint next to
   `GET /internal/documents/{id}/pdf`, ownership through report and paper),
   if `pdf_source_url` isn't enough.
-- [ ] Notes per paper: one editable text per paper (`notes` table,
-  `PUT /papers/{id}/notes`), and `GET /papers/{id}` with the paper's
-  details and notes joined. Not the alert notes, which are built.
 
 ## Pipeline robustness
 
