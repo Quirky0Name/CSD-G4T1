@@ -26,15 +26,15 @@ most needed first within each.
 
 ## User Management and auth
 
-- [ ] **User Management projects**: a `projects` table and project CRUD
-  (`GET/POST/PUT/DELETE /projects…`). Register and login, which issue the
-  JWT, are built (`users/`).
+- [ ] **Projects in the frontend** (UM-B): the projects page lists, creates,
+  renames and deletes through `/projects` instead of its one hard-coded
+  project, and papers and drafts are sent with the chosen project's id.
+  User Management's side is built.
 - [ ] Frontend login, auth state and a JWT-attaching interceptor in place
   of the demo token hard-coded in `api.ts`, which expires on 2026-10-28.
   Plus a Vite proxy entry for User Management in development (it sends no
   CORS headers; the root stack's web server already routes `/auth`).
 - [ ] `POST /run-poll` takes the user's JWT (CG-99).
-- [ ] Real project ids from the frontend for papers and drafts.
 - [ ] Notifications to the paper's owner instead of one hard-coded
   Telegram chat (needs users and contact details).
 
@@ -83,6 +83,9 @@ most needed first within each.
   an alert after repeated failures). Optionally: Updating keeps the flag
   only on `failed_paper_ids` (a contract change), and retries sooner than
   the next poll.
+- [ ] Timeouts on User Management's call to clear a project:
+  `StorageClient` sets none, so a Storage Management that takes the
+  connection but never answers holds the project delete open.
 - [ ] Raise `EVALUATION_SNAPSHOT_WINDOW` (e.g. 30) before deployment.
 - [ ] Close the Gemini client at shutdown; record `model_version` per
   step, not step 1's only.
