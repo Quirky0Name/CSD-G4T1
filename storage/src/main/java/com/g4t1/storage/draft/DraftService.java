@@ -110,6 +110,11 @@ public class DraftService {
         }
     }
 
+    // one project at a time through deleteIfPresent, so a clear running alongside can't make this fail
+    public void deleteAllFor(UUID ownerId) {
+        drafts.findByOwnerId(ownerId).forEach(draft -> deleteIfPresent(ownerId, draft.getProjectId()));
+    }
+
     /**
      * The PDF of the draft in a tracked paper's project: the paper's owner plus its project, or
      * the owner's default project when it has none. For Research Evaluation, which evaluates one
