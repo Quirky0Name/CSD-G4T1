@@ -24,8 +24,8 @@ This is the single source of truth for every interface between services.
   Evaluation's `POST /evaluate/changes`, which accepts any service token
   (`role=service`) and rejects user tokens, the same way Storage
   Management treats `/internal/**`. User Management mints one too
-  (`sub=svc:users`, five minutes) to clear a deleted project in Storage
-  Management.
+  (`sub=svc:users`, five minutes) to clear a deleted project or account in
+  Storage Management.
 - **For now** everything runs locally with a shared throwaway `JWT_SECRET`
   (base64 of 32+ bytes like the real one, the same in every service's local
   config). The frontend signs in through User Management, keeps the token
@@ -38,9 +38,9 @@ This is the single source of truth for every interface between services.
 Owned by: User Management (`users/`). Consumed by: the frontend, at `/auth`
 and `/projects` on its own address, since User Management sends no CORS
 headers: the Vite proxy in development, Caddy in the root stack. Register
-and login need no token; the project calls need the user's token, as
-Storage Management's do. Register and login answer with the same shape, so
-the frontend handles them alike:
+and login need no token; the project calls and deleting the account need
+the user's token, as Storage Management's do. Register and login answer
+with the same shape, so the frontend handles them alike:
 
 ```json
 {"token": "eyJ...", "user": {"id": "uuid", "email": "someone@example.com", "created_at": "2026-10-24T08:00:00Z"}}
@@ -73,6 +73,25 @@ password alike, answered in about the same time, so login doesn't show
 which emails have accounts. Register's `409` does, which is accepted:
 sign-up has to say the email is taken.
 
+### `DELETE /auth/me`
+
+User JWT required. Deletes the caller's account. **Request:**
+`{"password": "..."}`, the account's password. First asks Storage
+Management to clear everything the user owns (`DELETE /internal/users/{id}`,
+below), then deletes the account and its projects. **Response `204`.**
+
+Errors, as problem details: `400` a missing or blank password; `401`
+missing or bad token, or `Your account no longer exists` for an account
+already deleted; `403` with `detail` `Wrong password` (not a `401`, since
+the token is fine and the frontend signs out on any `401`), or a service
+token; `502` with `detail` `Storage Management couldn't clear your account,
+so it wasn't deleted`. Nothing was deleted, so it can simply be tried again.
+
+Tokens aren't revoked: a deleted account's token stays valid for up to 24
+hours. User Management then lists no projects for it, answers `PUT` and
+`DELETE /projects/{id}` with `404`, and `POST /projects` with `401` `Your
+account no longer exists`.
+
 ### `POST /projects`
 
 User JWT required. **Request:** `{"name": "..."}`. **Response `201`:**
@@ -86,7 +105,8 @@ unique, exactly as typed apart from those spaces, so "Thesis" and "thesis"
 are two names.
 
 Errors, as problem details: `400` a missing or blank name, or one over
-100 characters; `409` with `detail` `You already have a project called <name>`.
+100 characters; `401` `Your account no longer exists` for a deleted
+account's token; `409` with `detail` `You already have a project called <name>`.
 
 ### `GET /projects`
 
@@ -155,6 +175,17 @@ delete User Management retries after a failure still goes through.
 
 Errors, as problem details: `400` an id or `owner_id` that isn't a UUID, or
 no `owner_id`; `401` missing or bad token, `403` a user token.
+
+### `DELETE /internal/users/{id}`
+
+Deletes everything the user owns: their papers in every project, the
+default one included, each with everything that refers to it (as above),
+then all their drafts and their PDFs. **Response `204`**, also when there's
+nothing to delete, so an account delete User Management retries still
+goes through.
+
+Errors, as problem details: `400` an id that isn't a UUID; `401` missing or
+bad token, `403` a user token.
 
 ## Frontend ↔ Storage Management
 
