@@ -8,6 +8,16 @@ owned that story made.
 
 ---
 
+## 2026-10-27 — No notes: researchers don't keep notes on alerts or papers
+
+- **Notes are dropped entirely** (the story owner's call). The append-only
+  notes on an alert (2026-09-26) go: `POST` and `GET /alerts/{id}/notes`,
+  the frontend's notes panel, and the `alert_notes` table, which V11 drops
+  with any notes in it. The planned notes per paper won't be built either.
+  A researcher's say on an alert is its status: acknowledged or dismissed.
+- V5 stays as it was, since Flyway checks the checksums of migrations
+  already applied; V11 drops what it made.
+
 ## 2026-10-27 — Deleting an account clears Storage Management first, then the user and their projects
 
 - **`DELETE /auth/me`, confirmed with the password** (the story owner's
