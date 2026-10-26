@@ -99,7 +99,7 @@
   <!-- ② Frontend -> Storage: act on alerts -->
   <path class="ln" d="M236 170 H366" marker-end="url(#a)"/>
   <rect class="lbl-bg" x="244" y="162" width="112" height="16" rx="2"/>
-  <text class="lbl" x="300" y="173.5" text-anchor="middle">status, note → alerts</text>
+  <text class="lbl" x="300" y="173.5" text-anchor="middle">status → alerts</text>
 
   <!-- ③ Frontend -> Storage: read reports -->
   <path class="ln" d="M236 282 H366" marker-end="url(#a)"/>
@@ -160,7 +160,7 @@
   <div class="r s"><span>② Alerts page</span><span></span></div>
   <div class="r d"><span>each paper's alerts, newest first</span><span></span></div>
   <div class="r d"><span>acknowledge or dismiss an alert</span><span></span></div>
-  <div class="r d"><span>keep notes on what was done</span><span></span></div>
+  <div class="r"><span></span><span></span></div>
   <div class="r"><span></span><span></span></div>
   <div class="r"><span></span><span></span></div>
   <div class="r"><span></span><span></span></div>
@@ -197,8 +197,8 @@
   <div class="r d"><span>returns {alerts: [id, change_type, alert_severity, description, recommendation, status, …]}</span><span></span></div>
   <div class="r e"><span>PATCH /alerts/{id}</span><span></span></div>
   <div class="r d"><span>sends {status: acknowledged | dismissed} · returns the alert with status_changed_at</span><span></span></div>
-  <div class="r e"><span>POST /alerts/{id}/notes · GET /alerts/{id}/notes</span><span></span></div>
-  <div class="r d"><span>sends {text} · returns {text, created_at}; GET returns {notes: [...]}, newest first</span><span></span></div>
+  <div class="r"><span></span><span></span></div>
+  <div class="r"><span></span><span></span></div>
 
   <div class="r s"><span>③ Read reports</span><span class="tag">user JWT</span></div>
   <div class="r e"><span>GET /papers/{id}/reports</span><span></span></div>
@@ -305,7 +305,7 @@
     <li>⑦ <b>Review changes.</b> Research Evaluation compares recent snapshots, skips changes it already has, and stores each new one as an alert with an alert severity and recommendation.</li>
     <li>⑧ <b>Investigate.</b> In the background it opens a report for the new alerts and stores the evidence: notices, new versions and the current copy (Crossref, Europe PMC), whose PDFs Storage downloads.</li>
     <li>⑨ <b>Assess impact.</b> Gemini reads the paper, the evidence and the researcher's draft, and the evaluation is written into the report.</li>
-    <li>② ③ <b>Act.</b> The researcher sees the alerts and reports, acknowledges or dismisses alerts and keeps notes.</li>
+    <li>② ③ <b>Act.</b> The researcher sees the alerts and reports, acknowledges or dismisses alerts.</li>
     <li>④ <b>Draft.</b> The researcher's own draft, one per project, is what ⑨ judges the change against.</li>
   </ol>
 
