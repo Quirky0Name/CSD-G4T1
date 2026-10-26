@@ -121,6 +121,19 @@ class DeleteAccountTest {
         assertThat(storage.requests()).isEmpty();
     }
 
+    @Test
+    void anAccountStorageCannotClearIsNotDeleted() {
+        Account account = registered();
+        storage.answerWith(500);
+
+        deleteAccount(account.token(), PASSWORD).expectStatus().isEqualTo(502)
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody().jsonPath("$.detail")
+                .isEqualTo("Storage Management couldn't clear your account, so it wasn't deleted");
+
+        login(account.email()).expectStatus().isOk();
+    }
+
     private record Account(String token, String id, String email) {
     }
 
