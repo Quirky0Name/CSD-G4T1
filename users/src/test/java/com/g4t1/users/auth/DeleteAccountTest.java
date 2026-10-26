@@ -27,6 +27,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -173,7 +177,23 @@ class DeleteAccountTest {
                 .expectBody().jsonPath("$.detail").isEqualTo("Your account no longer exists");
     }
 
-    private record Account(String token, String id, String email) {
+    // a double-clicked delete: both reach Storage Management before either removes the account
+    @Test
+    void twoDeletesOfTheSameAccountAtOnceAreBothNoContent() throws InterruptedException {
+        Account account = registered();
+        storage.answerAfter(Duration.ofMillis(300));
+        Callable<Integer> attempt = () -> deleteAccount(account.token(), PASSWORD)
+                .expectBody(String.class).returnResult().getStatus().value();
+
+        List<Integer> statuses;
+        try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
+            statuses = pool.invokeAll(List.of(attempt, attempt)).stream().map(Future::resultNow).toList();
+        }
+
+        assertThat(statuses).containsExactly(204, 204);
+    }
+
+        private record Account(String token, String id, String email) {
     }
 
     private Account registered() {
