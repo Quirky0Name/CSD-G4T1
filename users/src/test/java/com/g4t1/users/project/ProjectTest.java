@@ -11,9 +11,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -43,6 +45,21 @@ class ProjectTest {
                 .jsonPath("$.created_at").isNotEmpty();
     }
 
+    @Test
+    void theListShowsYourProjectsNewestFirst() throws InterruptedException {
+        String token = registeredToken();
+        String first = "First " + UUID.randomUUID();
+        String second = "Second " + UUID.randomUUID();
+        create(token, first).expectStatus().isCreated();
+        // created_at is set as each request arrives; keep the two apart so the order is certain
+        Thread.sleep(5);
+        create(token, second).expectStatus().isCreated();
+
+        List<String> names = JsonPath.read(listBody(token), "$.projects[*].name");
+
+        assertThat(names).containsSubsequence(second, first);
+    }
+
     // a fresh account per test, through the same register call the frontend makes
     private String registeredToken() {
         String body = client.post().uri("/auth/register")
@@ -61,5 +78,13 @@ class ProjectTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("name", name))
                 .exchange();
+    }
+
+    private String listBody(String token) {
+        return client.get().uri("/projects")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class).returnResult().getResponseBody();
     }
 }
