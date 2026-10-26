@@ -1,13 +1,13 @@
 package com.g4t1.storage.alert;
 
+import java.util.Locale;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.Locale;
-
 // the kinds of change Research Evaluation classifies; OTHER is a Crossref notice type it doesn't classify yet
 public enum ChangeType {
-    RETRACTION, CORRECTION, ERRATUM, EXPRESSION_OF_CONCERN, DOAJ_DELISTING, OTHER;
+    RETRACTION, CORRECTION, ERRATUM, EXPRESSION_OF_CONCERN, DOAJ_DELISTING, CITATION_JUMP, OTHER;
 
     @JsonValue
     public String value() {
@@ -27,6 +27,7 @@ public enum ChangeType {
 
     @jakarta.persistence.Converter
     public static class Converter extends LowercaseEnumConverter<ChangeType> {
+
         public Converter() {
             super(ChangeType.class);
         }

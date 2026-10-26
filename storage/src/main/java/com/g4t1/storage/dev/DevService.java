@@ -1,5 +1,17 @@
 package com.g4t1.storage.dev;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import org.springframework.data.domain.Limit;
+import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.g4t1.storage.file.LocalFileStore;
 import com.g4t1.storage.paper.Paper;
 import com.g4t1.storage.paper.PaperRepository;
@@ -8,20 +20,10 @@ import com.g4t1.storage.snapshot.SnapshotRepository;
 import com.g4t1.storage.snapshot.SnapshotRequest;
 import com.g4t1.storage.snapshot.SnapshotResponse;
 import com.g4t1.storage.snapshot.SnapshotService;
-import org.springframework.data.domain.Limit;
-import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 // Sets a paper up for a demo or a rehearsal. On for everyone for now; take out before a real deployment.
 @Service
@@ -29,6 +31,8 @@ public class DevService {
 
     // Crossref's updated-by types, as they appear in a snapshot's crossref_updates
     private static final Set<String> CHANGES = Set.of("retraction", "correction", "erratum", "expression_of_concern");
+    // undone by dropping the count to 0, so the next poll's real count is a jump (if it's at least 10)
+    private static final String CITATION_JUMP = "citation_jump";
 
     private final PaperRepository papers;
     private final SnapshotRepository snapshots;
@@ -38,7 +42,7 @@ public class DevService {
     private final JsonMapper json;
 
     public DevService(PaperRepository papers, SnapshotRepository snapshots, SnapshotService snapshotService,
-                      JdbcTemplate jdbc, LocalFileStore files, JsonMapper json) {
+            JdbcTemplate jdbc, LocalFileStore files, JsonMapper json) {
         this.papers = papers;
         this.snapshots = snapshots;
         this.snapshotService = snapshotService;
@@ -51,13 +55,17 @@ public class DevService {
     // which fetches the real data, finds that change again and nudges Research Evaluation.
     public SnapshotResponse undoChange(UUID ownerId, UUID paperId, String change) {
         requireOwnPaper(ownerId, paperId);
-        if (!CHANGES.contains(change)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "change must be one of " + CHANGES);
+        if (!CHANGES.contains(change) && !change.equals(CITATION_JUMP)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "change must be one of " + CHANGES + " or " + CITATION_JUMP);
         }
         Snapshot latest = snapshots.findByPaperIdAndSnapshotIdGreaterThanOrderBySnapshotIdDesc(paperId, 0, Limit.of(1))
                 .stream().findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
                         "Paper " + paperId + " has no snapshot yet; poll it once first so there's real data to copy"));
+        if (change.equals(CITATION_JUMP)) {
+            return undoCitationJump(paperId, latest);
+        }
 
         boolean undoRetraction = change.equals("retraction") && Boolean.TRUE.equals(latest.getIsRetracted());
         JsonNode updates = latest.getCrossrefUpdates() == null ? null : json.readTree(latest.getCrossrefUpdates());
@@ -74,13 +82,29 @@ public class DevService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Paper " + paperId + " has no " + change + " to undo");
         }
 
-        SnapshotRequest before = new SnapshotRequest(latest.getDoi(), Instant.now(), latest.getOpenalexId(),
-                latest.getTitle(), latest.getPublicationYear(),
-                undoRetraction ? Boolean.FALSE : latest.getIsRetracted(),
-                updates == null ? null : kept, latest.getInDoaj(), latest.getJournalSourceId(),
-                latest.getJournalSourceType(), latest.getJournal(), latest.getIssnL(), latest.getPublisher(),
-                toNode(latest.getAuthors()), latest.getCitedByCount(), toNode(latest.getSourceStatus()));
-        return snapshotService.store(paperId, before);
+        return snapshotService.store(paperId, copyOf(latest,
+                undoRetraction ? Boolean.FALSE : latest.getIsRetracted(), updates == null ? null : kept,
+                latest.getCitedByCount()));
+    }
+
+    private SnapshotResponse undoCitationJump(UUID paperId, Snapshot latest) {
+        Integer citedByCount = latest.getCitedByCount();
+        if (citedByCount == null || citedByCount == 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Paper " + paperId + " has no " + CITATION_JUMP + " to undo");
+        }
+        return snapshotService.store(paperId,
+                copyOf(latest, latest.getIsRetracted(), toNode(latest.getCrossrefUpdates()), 0));
+    }
+
+    // the latest snapshot as a new one fetched now, with the fields a change lives in replaced
+    private SnapshotRequest copyOf(Snapshot latest, Boolean isRetracted, JsonNode crossrefUpdates,
+            Integer citedByCount) {
+        return new SnapshotRequest(latest.getDoi(), Instant.now(), latest.getOpenalexId(),
+                latest.getTitle(), latest.getPublicationYear(), isRetracted, crossrefUpdates,
+                latest.getInDoaj(), latest.getJournalSourceId(), latest.getJournalSourceType(),
+                latest.getJournal(), latest.getIssnL(), latest.getPublisher(),
+                toNode(latest.getAuthors()), citedByCount, toNode(latest.getSourceStatus()));
     }
 
     // Research Evaluation never raises the same change twice, so a rehearsal needs the old alerts gone
