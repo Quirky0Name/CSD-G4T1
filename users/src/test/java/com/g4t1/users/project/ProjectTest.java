@@ -77,6 +77,18 @@ class ProjectTest {
                 .jsonPath("$.created_at").isNotEmpty();
     }
 
+    // the list reads the project back from the database, which keeps microseconds
+    @Test
+    void aNewProjectLooksTheSameWhenListed() {
+        String token = registeredToken();
+        String created = create(token, "Thesis").expectStatus().isCreated()
+                .expectBody(String.class).returnResult().getResponseBody();
+
+        Object listed = JsonPath.read(listBody(token), "$.projects[0]");
+
+        assertThat(listed).isEqualTo(JsonPath.read(created, "$"));
+    }
+
     @Test
     void theListShowsYourProjectsNewestFirst() throws InterruptedException {
         String token = registeredToken();
