@@ -1,4 +1,6 @@
 package com.g4t1.users.auth;
 
-public record DeleteAccountRequest(String password) {
+import jakarta.validation.constraints.NotBlank;
+
+public record DeleteAccountRequest(@NotBlank String password) {
 }
