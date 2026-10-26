@@ -162,6 +162,21 @@ class ProjectTest {
     }
 
     @Test
+    void aProjectStorageCannotClearIsNotDeleted() {
+        String token = registeredToken();
+        String projectId = createdId(token, "Thesis");
+        storage.answerWith(500);
+
+        delete(token, projectId).expectStatus().isEqualTo(502)
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody().jsonPath("$.detail")
+                .isEqualTo("Storage Management couldn't clear project " + projectId + ", so it wasn't deleted");
+
+        List<String> names = JsonPath.read(listBody(token), "$.projects[*].name");
+        assertThat(names).containsExactly("Thesis");
+    }
+
+    @Test
     void projectsNeedAUserToken() {
         String someProject = "/projects/" + UUID.randomUUID();
         client.get().uri("/projects").exchange().expectStatus().isUnauthorized();

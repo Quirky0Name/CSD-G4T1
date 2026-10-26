@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 // A real HTTP server on a random port standing in for Storage Management; it records every request
+// and answers with whatever status the test last set
 final class StorageStub {
 
     record Request(String method, String path, String query, String authorization) {
@@ -16,6 +17,7 @@ final class StorageStub {
 
     private final HttpServer server;
     private final List<Request> requests = new CopyOnWriteArrayList<>();
+    private volatile int status = 204;
 
     StorageStub() {
         try {
@@ -26,7 +28,7 @@ final class StorageStub {
         server.createContext("/", exchange -> {
             requests.add(new Request(exchange.getRequestMethod(), exchange.getRequestURI().getPath(),
                     exchange.getRequestURI().getQuery(), exchange.getRequestHeaders().getFirst("Authorization")));
-            exchange.sendResponseHeaders(204, -1);
+            exchange.sendResponseHeaders(status, -1);
             exchange.close();
         });
         server.start();
@@ -40,8 +42,13 @@ final class StorageStub {
         return requests;
     }
 
+    void answerWith(int status) {
+        this.status = status;
+    }
+
     void reset() {
         requests.clear();
+        status = 204;
     }
 
     void stop() {
