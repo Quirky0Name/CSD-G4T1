@@ -101,11 +101,6 @@ export type Alert = {
   status_changed_at: string | null
 }
 
-export type AlertNote = {
-  text: string
-  created_at: string
-}
-
 export type Draft = {
   id: string
   project_id: string | null
@@ -184,16 +179,6 @@ export async function setAlertStatus(
   status: Extract<AlertStatus, 'acknowledged' | 'dismissed'>,
 ): Promise<Alert> {
   const res = await storage.patch<Alert>(`/alerts/${alertId}`, { status })
-  return res.data
-}
-
-export async function listAlertNotes(alertId: number): Promise<AlertNote[]> {
-  const res = await storage.get<{ notes: AlertNote[] }>(`/alerts/${alertId}/notes`)
-  return res.data.notes
-}
-
-export async function addAlertNote(alertId: number, text: string): Promise<AlertNote> {
-  const res = await storage.post<AlertNote>(`/alerts/${alertId}/notes`, { text })
   return res.data
 }
 
