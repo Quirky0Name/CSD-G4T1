@@ -95,6 +95,22 @@ public class DraftService {
     }
 
     /**
+     * The same, but quiet when the project has no draft: clearing a deleted project can't fail
+     * because another clear of it got to the draft first.
+     */
+    public void deleteIfPresent(UUID ownerId, UUID projectId) {
+        String key = tx.execute(status -> drafts.findForUpdateByOwnerIdAndProjectId(ownerId, projectId)
+                .map(current -> {
+                    drafts.delete(current);
+                    return current.getFileKey();
+                })
+                .orElse(null));
+        if (key != null) {
+            files.delete(key);
+        }
+    }
+
+    /**
      * The PDF of the draft in a tracked paper's project: the paper's owner plus its project, or
      * the owner's default project when it has none. For Research Evaluation, which evaluates one
      * tracked paper at a time. An unknown paper is the same "No paper" 404 as the other internal endpoints.
