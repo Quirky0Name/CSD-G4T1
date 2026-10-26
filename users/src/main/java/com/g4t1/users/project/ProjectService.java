@@ -1,5 +1,7 @@
 package com.g4t1.users.project;
 
+import com.g4t1.users.auth.AccountGoneException;
+import com.g4t1.users.auth.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -14,13 +16,19 @@ public class ProjectService {
 
     private final ProjectRepository projects;
     private final StorageClient storage;
+    private final UserRepository users;
 
-    public ProjectService(ProjectRepository projects, StorageClient storage) {
+    public ProjectService(ProjectRepository projects, StorageClient storage, UserRepository users) {
         this.projects = projects;
         this.storage = storage;
+        this.users = users;
     }
 
     public ProjectResponse create(UUID ownerId, ProjectRequest request) {
+        // otherwise the insert breaks the owner foreign key and comes back as a misleading 409
+        if (!users.existsById(ownerId)) {
+            throw new AccountGoneException();
+        }
         String name = nameOf(request);
         requireFree(ownerId, name);
         return saveNamed(new Project(ownerId, name), name);
