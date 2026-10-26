@@ -59,7 +59,7 @@ public class ProjectService {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
                     "Storage Management couldn't clear project " + projectId + ", so it wasn't deleted");
         }
-        projects.deleteById(projectId);
+        projects.deleteIfPresent(projectId);
     }
 
     // the spaces around a name are typing noise, not part of it
