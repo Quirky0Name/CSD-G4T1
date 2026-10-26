@@ -23,7 +23,9 @@ This is the single source of truth for every interface between services.
   real user. Updating also sends its service token to Research
   Evaluation's `POST /evaluate/changes`, which accepts any service token
   (`role=service`) and rejects user tokens, the same way Storage
-  Management treats `/internal/**`.
+  Management treats `/internal/**`. User Management mints one too
+  (`sub=svc:users`, five minutes) to clear a deleted project in Storage
+  Management.
 - **For now** everything runs locally with a shared throwaway `JWT_SECRET`
   (base64 of 32+ bytes like the real one, the same in every service's local
   config). The frontend signs in through User Management, keeps the token
@@ -33,11 +35,12 @@ This is the single source of truth for every interface between services.
 
 ## Frontend ↔ User Management
 
-Owned by: User Management (`users/`). Consumed by: the frontend. No token
-needed for either call. User Management sends no CORS headers, so the
-frontend calls it through a Vite proxy entry (`/auth`) like Storage
-Management's. Both answer with the same shape, so the frontend handles them
-alike:
+Owned by: User Management (`users/`). Consumed by: the frontend, at `/auth`
+and `/projects` on its own address, since User Management sends no CORS
+headers: the Vite proxy in development, Caddy in the root stack. Register
+and login need no token; the project calls need the user's token, as
+Storage Management's do. Register and login answer with the same shape, so
+the frontend handles them alike:
 
 ```json
 {"token": "eyJ...", "user": {"id": "uuid", "email": "someone@example.com", "created_at": "2026-10-24T08:00:00Z"}}
@@ -70,6 +73,49 @@ password alike, answered in about the same time, so login doesn't show
 which emails have accounts. Register's `409` does, which is accepted:
 sign-up has to say the email is taken.
 
+### `POST /projects`
+
+User JWT required. **Request:** `{"name": "..."}`. **Response `201`:**
+
+```json
+{"id": "uuid", "name": "Thesis", "created_at": "2026-10-26T08:00:00Z"}
+```
+
+The name is kept without the spaces around it. Each user's names are
+unique, exactly as typed apart from those spaces, so "Thesis" and "thesis"
+are two names.
+
+Errors, as problem details: `400` a missing or blank name, or one over
+100 characters; `409` with `detail` `You already have a project called <name>`.
+
+### `GET /projects`
+
+User JWT required. **Response `200`:** `{"projects": [...]}`, each in the
+shape above: the caller's own projects, newest first. The default project
+isn't listed (see "Projects").
+
+### `PUT /projects/{id}`
+
+User JWT required. Renames the project. **Request:** `{"name": "..."}`, with
+the same rules as `POST`. **Response `200`:** the project, renamed. Its
+own current name is fine too, and leaves it as it was.
+
+Errors, as problem details: `400` as for `POST`; `404` with `detail`
+`No project <id>` for an unknown project and another user's alike; `409` a
+name the caller already uses.
+
+### `DELETE /projects/{id}`
+
+User JWT required. First asks Storage Management to clear the project
+(`DELETE /internal/projects/{id}`, below), then deletes it. **Response `204`.**
+
+Errors, as problem details: `404` as for `PUT`; `502` with `detail`
+`Storage Management couldn't clear project <id>, so it wasn't deleted`.
+Nothing was deleted on User Management's side, so the delete can simply be
+tried again.
+
+All four project calls: `401` missing or bad token, `403` a service token.
+
 ## Projects
 
 Projects belong to User Management; other services hold only a bare
@@ -86,8 +132,29 @@ belongs to the caller.
   is two projects.
 - **A tracked paper is in exactly one project:** its owner plus its
   `project_id`.
+- **The default project has no row in User Management**, so it can't be
+  listed, renamed or deleted.
+- **Deleting a project clears it in Storage Management first**: its papers,
+  with everything that refers to them, and its draft.
 
-See DECISIONS.md, 2026-09-27.
+See DECISIONS.md, 2026-09-27 and 2026-10-26.
+
+## Storage Management ↔ User Management
+
+Owned by: Storage Management. Consumed by: User Management, with its
+service token (`svc:users`), like every other `/internal/**` call.
+
+### `DELETE /internal/projects/{id}?owner_id=`
+
+Deletes the owner's papers in that project, each with everything that
+refers to it (snapshots, alerts and their notes, reports and their
+documents, and the PDFs), then the project's draft and its PDF. Only that
+owner's: another user's project with the same id is untouched (see
+"Projects"). **Response `204`**, also when there's nothing to delete, so a
+delete User Management retries after a failure still goes through.
+
+Errors, as problem details: `400` an id or `owner_id` that isn't a UUID, or
+no `owner_id`; `401` missing or bad token, `403` a user token.
 
 ## Frontend ↔ Storage Management
 
@@ -1174,7 +1241,7 @@ logged by Updating, not returned.
 | Var | Used by | Notes |
 |---|---|---|
 | `JWT_SECRET` | all | base64-encoded, 32+ bytes (`openssl rand -base64 32`); every service decodes before use. For now: a shared throwaway value in that format |
-| `SM_BASE_URL` | Research Evaluation, Updating | Storage Management's base URL (`http://localhost:8081` locally) |
+| `SM_BASE_URL` | Research Evaluation, Updating, User Management | Storage Management's base URL (`http://localhost:8081` locally) |
 | `RE_BASE_URL` | Updating | Research Evaluation's base URL (Updating's nudge goes here). Storage Management never calls Research Evaluation |
 
 See [SETUP.md](SETUP.md) for the full env var list including the
