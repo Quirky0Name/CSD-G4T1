@@ -81,6 +81,17 @@ class ProjectTest {
     }
 
     @Test
+    void aBlankOrOverLongNameIsABadRequest() {
+        String token = registeredToken();
+
+        create(token, "").expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
+        create(token, "   ").expectStatus().isBadRequest();
+        create(token, "x".repeat(101)).expectStatus().isBadRequest();
+        create(token, "x".repeat(100)).expectStatus().isCreated();
+    }
+
+    @Test
     void projectsNeedAUserToken() {
         String someProject = "/projects/" + UUID.randomUUID();
         client.get().uri("/projects").exchange().expectStatus().isUnauthorized();
