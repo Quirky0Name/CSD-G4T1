@@ -1,9 +1,11 @@
 package com.g4t1.users.project;
 
 import com.jayway.jsonpath.JsonPath;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,8 +15,12 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +33,18 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 @ActiveProfiles("test")
 class ProjectTest {
 
+    private static final StorageStub storage = new StorageStub();
+
+    @DynamicPropertySource
+    static void pointAtTheStub(DynamicPropertyRegistry registry) {
+        registry.add("users.storage-url", storage::url);
+    }
+
+    @AfterAll
+    static void stopStorage() {
+        storage.stop();
+    }
+
     @LocalServerPort
     private int port;
 
@@ -38,6 +56,7 @@ class ProjectTest {
     @BeforeEach
     void setUp() {
         client = RestTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
+        storage.reset();
     }
 
     @Test
@@ -126,6 +145,23 @@ class ProjectTest {
     }
 
     @Test
+    void deletingAProjectClearsItInStorageThenRemovesIt() {
+        Account account = registered();
+        String projectId = createdId(account.token(), "Thesis");
+
+        delete(account.token(), projectId).expectStatus().isNoContent();
+
+        assertThat(storage.requests()).singleElement().satisfies(request -> {
+            assertThat(request.method()).isEqualTo("DELETE");
+            assertThat(request.path()).isEqualTo("/internal/projects/" + projectId);
+            assertThat(request.query()).isEqualTo("owner_id=" + account.id());
+            assertIsServiceToken(request.authorization());
+        });
+        List<String> names = JsonPath.read(listBody(account.token()), "$.projects[*].name");
+        assertThat(names).isEmpty();
+    }
+
+    @Test
     void projectsNeedAUserToken() {
         String someProject = "/projects/" + UUID.randomUUID();
         client.get().uri("/projects").exchange().expectStatus().isUnauthorized();
@@ -142,8 +178,11 @@ class ProjectTest {
                 .exchange().expectStatus().isForbidden();
     }
 
+    private record Account(String token, String id) {
+    }
+
     // a fresh account per test, through the same register call the frontend makes
-    private String registeredToken() {
+    private Account registered() {
         String body = client.post().uri("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("email", "researcher-" + UUID.randomUUID() + "@example.com",
@@ -151,7 +190,21 @@ class ProjectTest {
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(String.class).returnResult().getResponseBody();
-        return JsonPath.read(body, "$.token");
+        return new Account(JsonPath.read(body, "$.token"), JsonPath.read(body, "$.user.id"));
+    }
+
+    private String registeredToken() {
+        return registered().token();
+    }
+
+    // what Storage Management's /internal/** takes: a service token signed with the shared secret, short-lived
+    private void assertIsServiceToken(String authorization) {
+        assertThat(authorization).startsWith("Bearer ");
+        Claims claims = Jwts.parser().verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret))).build()
+                .parseSignedClaims(authorization.substring("Bearer ".length())).getPayload();
+        assertThat(claims.get("role")).isEqualTo("service");
+        assertThat(claims.getSubject()).isEqualTo("svc:users");
+        assertThat(claims.getExpiration()).isBefore(Date.from(Instant.now().plus(Duration.ofMinutes(10))));
     }
 
     // what Updating and Research Evaluation mint for themselves: valid, but not a researcher
@@ -191,6 +244,12 @@ class ProjectTest {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("name", name))
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec delete(String token, String id) {
+        return client.delete().uri("/projects/{id}", id)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .exchange();
     }
 
