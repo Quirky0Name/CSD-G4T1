@@ -14,6 +14,7 @@ export const CHANGE_TYPE_LABEL: Record<ChangeType, string> = {
   erratum: 'Erratum',
   expression_of_concern: 'Expression of concern',
   doaj_delisting: 'DOAJ delisting',
+  citation_jump: 'Citation jump',
   other: 'Other notice',
 }
 

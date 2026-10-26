@@ -13,6 +13,7 @@ export type ChangeType =
   | 'erratum'
   | 'expression_of_concern'
   | 'doaj_delisting'
+  | 'citation_jump'
   | 'other'
 
 export type ReportStatus = 'investigating' | 'investigated' | 'assessed'
