@@ -11,9 +11,11 @@ import java.util.UUID;
 public class ProjectService {
 
     private final ProjectRepository projects;
+    private final StorageClient storage;
 
-    public ProjectService(ProjectRepository projects) {
+    public ProjectService(ProjectRepository projects, StorageClient storage) {
         this.projects = projects;
+        this.storage = storage;
     }
 
     public ProjectResponse create(UUID ownerId, ProjectRequest request) {
@@ -33,6 +35,12 @@ public class ProjectService {
         Project project = projects.findById(projectId).orElseThrow();
         project.rename(name);
         return ProjectResponse.from(projects.save(project));
+    }
+
+    // Storage first: if clearing its papers and draft fails, the project is still here to delete again
+    public void delete(UUID ownerId, UUID projectId) {
+        storage.clearProject(ownerId, projectId);
+        projects.deleteById(projectId);
     }
 
     public List<ProjectResponse> list(UUID ownerId) {

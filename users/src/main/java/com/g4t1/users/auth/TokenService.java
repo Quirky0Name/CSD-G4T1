@@ -17,6 +17,8 @@ import java.util.UUID;
 public class TokenService {
 
     private static final Duration LIFETIME = Duration.ofHours(24);
+    // as long as the Python services' own service tokens last (backend/src/common/service_token.py)
+    private static final Duration SERVICE_LIFETIME = Duration.ofMinutes(5);
 
     private final SecretKey key;
 
@@ -31,6 +33,17 @@ public class TokenService {
                 .subject(userId.toString())
                 .expiration(Date.from(now.plus(LIFETIME)))
                 // HS256 whatever the key's length: the contract says so, and the Python services check for nothing else
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+    }
+
+    // for User Management's own calls into Storage Management's /internal/**, which only takes service tokens
+    public String issueServiceToken() {
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .subject("svc:users")
+                .claim("role", "service")
+                .expiration(Date.from(now.plus(SERVICE_LIFETIME)))
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }

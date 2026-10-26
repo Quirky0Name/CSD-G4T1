@@ -38,6 +38,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+        <!-- calls Storage Management to clear a deleted project -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
+        </dependency>
         <!-- BCrypt, and the token check on /projects; SecurityConfig leaves every other path open -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
