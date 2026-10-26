@@ -7,5 +7,5 @@ import java.util.UUID;
 
 public interface ProjectRepository extends JpaRepository<Project, UUID> {
 
-    List<Project> findAllByOrderByCreatedAtDesc();
+    List<Project> findByOwnerIdOrderByCreatedAtDesc(UUID ownerId);
 }
