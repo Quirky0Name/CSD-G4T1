@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Entity
@@ -33,7 +34,8 @@ public class Project {
     public Project(UUID ownerId, String name) {
         this.ownerId = ownerId;
         this.name = name;
-        this.createdAt = Instant.now();
+        // Postgres keeps microseconds; truncating makes the create response match later reads
+        this.createdAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
     }
 
     public void rename(String newName) {
