@@ -69,6 +69,18 @@ class ProjectTest {
     }
 
     @Test
+    void theListShowsOnlyYourProjects() {
+        String mine = registeredToken();
+        String theirs = registeredToken();
+        create(mine, "Mine").expectStatus().isCreated();
+        create(theirs, "Theirs").expectStatus().isCreated();
+
+        List<String> names = JsonPath.read(listBody(mine), "$.projects[*].name");
+
+        assertThat(names).containsExactly("Mine");
+    }
+
+    @Test
     void projectsNeedAUserToken() {
         String someProject = "/projects/" + UUID.randomUUID();
         client.get().uri("/projects").exchange().expectStatus().isUnauthorized();
