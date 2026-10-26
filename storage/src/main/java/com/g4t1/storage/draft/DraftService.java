@@ -110,7 +110,7 @@ public class DraftService {
         }
     }
 
-    // one project at a time through deleteIfPresent, so a clear running alongside can't make this fail
+    // one project at a time through deleteIfPresent, which already copes with another clear getting there first
     public void deleteAllFor(UUID ownerId) {
         drafts.findByOwnerId(ownerId).forEach(draft -> deleteIfPresent(ownerId, draft.getProjectId()));
     }
