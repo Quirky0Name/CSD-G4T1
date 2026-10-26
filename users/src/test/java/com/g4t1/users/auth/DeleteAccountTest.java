@@ -1,11 +1,7 @@
 package com.g4t1.users.auth;
 
-import com.g4t1.users.project.StorageStub;
+import com.g4t1.users.StorageStub;
 import com.jayway.jsonpath.JsonPath;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,8 +18,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -32,6 +26,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static com.g4t1.users.TestTokens.assertIsServiceToken;
+import static com.g4t1.users.TestTokens.badTokens;
+import static com.g4t1.users.TestTokens.serviceToken;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // DELETE /auth/me: a researcher deleting their own account, with Storage Management clearing it out first
@@ -76,7 +73,7 @@ class DeleteAccountTest {
         assertThat(storage.requests()).singleElement().satisfies(request -> {
             assertThat(request.method()).isEqualTo("DELETE");
             assertThat(request.path()).isEqualTo("/internal/users/" + account.id());
-            assertIsServiceToken(request.authorization());
+            assertIsServiceToken(request.authorization(), jwtSecret);
         });
         login(account.email()).expectStatus().isUnauthorized();
     }
@@ -145,10 +142,10 @@ class DeleteAccountTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("password", PASSWORD))
                 .exchange().expectStatus().isUnauthorized();
-        for (String token : badTokens()) {
+        for (String token : badTokens(jwtSecret)) {
             deleteAccount(token, PASSWORD).expectStatus().isUnauthorized();
         }
-        deleteAccount(serviceToken(), PASSWORD).expectStatus().isForbidden();
+        deleteAccount(serviceToken(jwtSecret), PASSWORD).expectStatus().isForbidden();
 
         assertThat(storage.requests()).isEmpty();
     }
@@ -224,32 +221,5 @@ class DeleteAccountTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
                 .exchange();
-    }
-
-    private void assertIsServiceToken(String authorization) {
-        assertThat(authorization).startsWith("Bearer ");
-        Claims claims = Jwts.parser().verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret))).build()
-                .parseSignedClaims(authorization.substring("Bearer ".length())).getPayload();
-        assertThat(claims.get("role")).isEqualTo("service");
-        assertThat(claims.getSubject()).isEqualTo("svc:users");
-        assertThat(claims.getExpiration()).isBefore(Date.from(Instant.now().plus(Duration.ofMinutes(10))));
-    }
-
-    // what Updating and Research Evaluation mint for themselves: valid, but not a researcher
-    private String serviceToken() {
-        return Jwts.builder().subject("svc:updating").claim("role", "service")
-                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret))).compact();
-    }
-
-    // garbage, expired, signed with another key, a sub that isn't a user id, and no sub at all
-    private List<String> badTokens() {
-        var key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
-        String user = UUID.randomUUID().toString();
-        return List.of(
-                "not-a-jwt",
-                Jwts.builder().subject(user).expiration(new Date(System.currentTimeMillis() - 60_000)).signWith(key).compact(),
-                Jwts.builder().subject(user).signWith(Keys.hmacShaKeyFor(new byte[32])).compact(),
-                Jwts.builder().subject("svc:updating").signWith(key).compact(),
-                Jwts.builder().claim("role", "user").signWith(key).compact());
     }
 }

@@ -1,4 +1,4 @@
-package com.g4t1.users.project;
+package com.g4t1.users;
 
 import com.sun.net.httpserver.HttpServer;
 
