@@ -2,6 +2,8 @@ package com.g4t1.users.project;
 
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class ProjectService {
 
@@ -13,5 +15,9 @@ public class ProjectService {
 
     public ProjectResponse create(ProjectRequest request) {
         return ProjectResponse.from(projects.save(new Project(request.name())));
+    }
+
+    public List<ProjectResponse> list() {
+        return projects.findAllByOrderByCreatedAtDesc().stream().map(ProjectResponse::from).toList();
     }
 }
