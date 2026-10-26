@@ -51,7 +51,7 @@ public class AuthService {
     }
 
     public void deleteAccount(UUID userId, DeleteAccountRequest request) {
-        User user = users.findById(userId).orElseThrow();
+        User user = users.findById(userId).orElseThrow(AccountGoneException::new);
         if (!passwords.matches(request.password(), user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong password");
         }
