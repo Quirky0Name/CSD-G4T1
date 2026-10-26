@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -134,6 +135,20 @@ class DeleteAccountTest {
         login(account.email()).expectStatus().isOk();
     }
 
+    @Test
+    void deletingAnAccountNeedsAUserToken() {
+        client.method(HttpMethod.DELETE).uri("/auth/me")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("password", PASSWORD))
+                .exchange().expectStatus().isUnauthorized();
+        for (String token : badTokens()) {
+            deleteAccount(token, PASSWORD).expectStatus().isUnauthorized();
+        }
+        deleteAccount(serviceToken(), PASSWORD).expectStatus().isForbidden();
+
+        assertThat(storage.requests()).isEmpty();
+    }
+
     private record Account(String token, String id, String email) {
     }
 
@@ -174,5 +189,23 @@ class DeleteAccountTest {
         assertThat(claims.get("role")).isEqualTo("service");
         assertThat(claims.getSubject()).isEqualTo("svc:users");
         assertThat(claims.getExpiration()).isBefore(Date.from(Instant.now().plus(Duration.ofMinutes(10))));
+    }
+
+    // what Updating and Research Evaluation mint for themselves: valid, but not a researcher
+    private String serviceToken() {
+        return Jwts.builder().subject("svc:updating").claim("role", "service")
+                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret))).compact();
+    }
+
+    // garbage, expired, signed with another key, a sub that isn't a user id, and no sub at all
+    private List<String> badTokens() {
+        var key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        String user = UUID.randomUUID().toString();
+        return List.of(
+                "not-a-jwt",
+                Jwts.builder().subject(user).expiration(new Date(System.currentTimeMillis() - 60_000)).signWith(key).compact(),
+                Jwts.builder().subject(user).signWith(Keys.hmacShaKeyFor(new byte[32])).compact(),
+                Jwts.builder().subject("svc:updating").signWith(key).compact(),
+                Jwts.builder().claim("role", "user").signWith(key).compact());
     }
 }
