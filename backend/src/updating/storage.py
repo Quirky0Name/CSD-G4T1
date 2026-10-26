@@ -29,6 +29,7 @@ class SmPaper(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     id: PaperId
+    owner_id: UUID
     doi: Doi | None  # already normalised by Storage Management
 
 

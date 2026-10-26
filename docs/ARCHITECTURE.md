@@ -123,9 +123,8 @@ Rules that hold across the flow:
   (`common/service_token.py`). Storage Management's `/internal/**` takes
   only service tokens; everything else takes only user tokens.
   `POST /evaluate/changes` and `/evaluate/reports` take any service token.
-- **For now** the frontend has no login page, so one hand-made "demo user"
-  token is used for everything, and Updating's `POST /run-poll` takes no
-  token.
+- Updating's `POST /run-poll` takes the user's token and polls only that
+  user's papers.
 
 ## Projects
 

@@ -29,6 +29,10 @@ function Project() {
 
   const poll = async (paperId?: string) => {
     if (polling) return
+    if (state.status === 'ready' && state.papers.length === 0) {
+      showToast({ tone: 'info', message: 'Nothing to poll. Track a paper first.' })
+      return
+    }
     setPolling(true)
     try {
       const summary = await runPoll(paperId)

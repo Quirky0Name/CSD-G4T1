@@ -111,9 +111,10 @@ class PollSummary(_Frozen):
 
 
 async def run_poll(
-    deps: PollDeps, trigger: PollTrigger, paper_id: PaperId | None = None
+    deps: PollDeps, trigger: PollTrigger, paper_id: PaperId | None = None, owner_id: UUID | None = None
 ) -> PollSummary:
-    """Poll every tracked paper, or only `paper_id`. Waits if another poll is running."""
+    """Poll every tracked paper, or only `paper_id`; with `owner_id`, only that user's papers.
+    Waits if another poll is running."""
     # the poll's row is created inside the lock, so a poll that waits (or is cancelled while
     # waiting, at shutdown) leaves no `running` row behind
     async with deps.lock:
@@ -125,7 +126,7 @@ async def run_poll(
             poll_id = poll.id
 
         try:
-            summary = await _poll(deps, poll_id, trigger, paper_id, started_at)
+            summary = await _poll(deps, poll_id, trigger, paper_id, owner_id, started_at)
         except Exception as exc:  # a cancelled poll (shutdown) is a BaseException and stays `running`
             error = str(exc) if isinstance(exc, PollFailed) else type(exc).__name__
             await _close_poll(deps, poll_id, PollStatus.FAILED, summary=None, error=error)
@@ -134,18 +135,25 @@ async def run_poll(
         return summary
 
 
-async def run_manual_poll(deps: PollDeps, paper_id: PaperId | None) -> PollSummary:
+async def run_manual_poll(
+    deps: PollDeps, paper_id: PaperId | None, owner_id: UUID | None = None
+) -> PollSummary:
     """The manual trigger: refuses instead of waiting, so a busy poller answers at once."""
     if deps.lock.locked():
         raise PollAlreadyRunning
     # No await sits between the check and run_poll taking the lock. The one gap: a scheduled
     # tick that is waiting is handed the lock at release, and `locked()` stays False until it
     # runs, so a manual call in that instant queues behind that poll instead of being refused.
-    return await run_poll(deps, PollTrigger.MANUAL, paper_id)
+    return await run_poll(deps, PollTrigger.MANUAL, paper_id, owner_id)
 
 
 async def _poll(
-    deps: PollDeps, poll_id: int, trigger: PollTrigger, only_paper: PaperId | None, started_at: datetime
+    deps: PollDeps,
+    poll_id: int,
+    trigger: PollTrigger,
+    only_paper: PaperId | None,
+    owner_id: UUID | None,
+    started_at: datetime,
 ) -> PollSummary:
     try:
         papers = await list_papers(deps.sm)
@@ -154,9 +162,11 @@ async def _poll(
             f"could not list papers from Storage Management: {type(exc).__name__}"
         ) from exc
 
-    if only_paper is not None and only_paper not in {paper.id for paper in papers}:
+    # another user's paper is "unknown" to the caller
+    in_scope = [paper for paper in papers if owner_id in (None, paper.owner_id)]
+    if only_paper is not None and only_paper not in {paper.id for paper in in_scope}:
         raise UnknownPaper(f"Storage Management has no paper {only_paper}")
-    polled = [paper for paper in papers if only_paper in (None, paper.id)]
+    polled = [paper for paper in in_scope if only_paper in (None, paper.id)]
     # every paper feeds the sync, so a single-paper poll can't drop the other papers' rows
     all_dois = {paper.id: paper.doi for paper in papers if paper.doi}
     dois = {paper.id: paper.doi for paper in polled if paper.doi}
