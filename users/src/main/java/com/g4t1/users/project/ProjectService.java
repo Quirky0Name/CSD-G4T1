@@ -2,6 +2,7 @@ package com.g4t1.users.project;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -39,7 +40,12 @@ public class ProjectService {
 
     // Storage first: if clearing its papers and draft fails, the project is still here to delete again
     public void delete(UUID ownerId, UUID projectId) {
-        storage.clearProject(ownerId, projectId);
+        try {
+            storage.clearProject(ownerId, projectId);
+        } catch (RestClientException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                    "Storage Management couldn't clear project " + projectId + ", so it wasn't deleted");
+        }
         projects.deleteById(projectId);
     }
 
