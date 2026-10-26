@@ -8,6 +8,32 @@ owned that story made.
 
 ---
 
+## 2026-10-27 — Deleting an account clears Storage Management first, then the user and their projects
+
+- **`DELETE /auth/me`, confirmed with the password** (the story owner's
+  call). It sits with register and login, so the web server and the Vite
+  proxy already route it. The password goes in a JSON body on the
+  `DELETE`.
+- **A wrong password is a `403`, not a `401`**: the token is fine, and the
+  frontend signs out on any `401`, so a mistyped password would log the
+  researcher out.
+- **Storage Management first, as for a project.** If its clear fails, the
+  answer is a `502` and the account stays, so a retry finishes the job.
+  Its clear answers `204` even when there's nothing left.
+- **Projects go with their user through a foreign key** (`on delete
+  cascade`), added now that there's a delete for it to follow.
+- **A double-clicked delete answers `204` twice**, for an account and for
+  a project alike. Both requests get past the checks and clear Storage
+  Management, so the row is removed with one delete statement that does
+  nothing when the other request got there first; deleting through the
+  entity failed the second request with a `500`.
+- **No token revocation** (the story owner's call): a token outlives its
+  account by up to 24 hours. User Management answers it with no projects,
+  and with a `401` `Your account no longer exists` to creating one or
+  deleting the account again, so the frontend signs it out. Rejected for
+  now: checking the account on every request, or a revocation list, in
+  every service.
+
 ## 2026-10-26 — Projects live in User Management; deleting one clears Storage Management first
 
 - **Names are unique per user, trimmed but otherwise exact** (the story
