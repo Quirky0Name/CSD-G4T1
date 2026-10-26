@@ -34,7 +34,7 @@ frontend still uses a demo token until it has a login page). See
 | Storage Management | Java + Spring Boot | `storage/` |
 | Research Evaluation | Python (FastAPI) | `backend/` |
 | Updating | Python (FastAPI) | `backend/` |
-| User Management | Java + Spring Boot (register, login and projects) | `users/` |
+| User Management | Java + Spring Boot (register, login, projects and deleting an account) | `users/` |
 
 Research Evaluation and Updating share one Python project in `backend/`
 (two FastAPI apps, a Dockerfile each).
