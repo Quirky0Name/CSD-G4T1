@@ -177,6 +177,21 @@ class ProjectTest {
     }
 
     @Test
+    void anotherUsersProjectLooksTheSameAsAMissingOne() {
+        String theirs = createdId(registeredToken(), "Their thesis");
+        String missing = UUID.randomUUID().toString();
+        String token = registeredToken();
+
+        for (String id : List.of(theirs, missing)) {
+            rename(token, id, "Mine now").expectStatus().isNotFound()
+                    .expectBody().jsonPath("$.detail").isEqualTo("No project " + id);
+            delete(token, id).expectStatus().isNotFound()
+                    .expectBody().jsonPath("$.detail").isEqualTo("No project " + id);
+        }
+        assertThat(storage.requests()).isEmpty();
+    }
+
+    @Test
     void projectsNeedAUserToken() {
         String someProject = "/projects/" + UUID.randomUUID();
         client.get().uri("/projects").exchange().expectStatus().isUnauthorized();
