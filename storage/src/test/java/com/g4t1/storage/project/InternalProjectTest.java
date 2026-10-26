@@ -99,6 +99,12 @@ class InternalProjectTest {
         assertThat(files.read(someoneElsesDraftFile)).isPresent();
     }
 
+    // safe to repeat, so User Management can retry a delete that failed halfway
+    @Test
+    void clearingAProjectWithNothingInItIsStillNoContent() throws Exception {
+        clear(project, owner).andExpect(status().isNoContent());
+    }
+
     private ResultActions clear(UUID projectId, UUID ownerId) throws Exception {
         return mvc.perform(delete("/internal/projects/{id}", projectId).param("owner_id", ownerId.toString())
                 .header(HttpHeaders.AUTHORIZATION, TestTokens.service()));
