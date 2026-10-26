@@ -96,6 +96,19 @@ class DeleteAccountTest {
                 .expectBody().jsonPath("$.projects").isEmpty();
     }
 
+    // not a 401: the token is fine, and the frontend signs out on any 401
+    @Test
+    void aWrongPasswordIsForbiddenAndDeletesNothing() {
+        Account account = registered();
+
+        deleteAccount(account.token(), "not my password").expectStatus().isForbidden()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody().jsonPath("$.detail").isEqualTo("Wrong password");
+
+        assertThat(storage.requests()).isEmpty();
+        login(account.email()).expectStatus().isOk();
+    }
+
     private record Account(String token, String id, String email) {
     }
 
