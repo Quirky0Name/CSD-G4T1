@@ -216,6 +216,18 @@ class ProjectTest {
         assertThat(names).containsExactly("Thesis");
     }
 
+    // a double-clicked delete: both reach Storage Management before either removes the project
+    @Test
+    void twoDeletesOfTheSameProjectAtOnceAreBothNoContent() throws InterruptedException {
+        String token = registeredToken();
+        String projectId = createdId(token, "Thesis");
+        storage.answerAfter(Duration.ofMillis(300));
+
+        List<Integer> statuses = atOnce(Collections.nCopies(2, () -> status(delete(token, projectId))));
+
+        assertThat(statuses).containsExactly(204, 204);
+    }
+
     @Test
     void anotherUsersProjectLooksTheSameAsAMissingOne() {
         String theirs = createdId(registeredToken(), "Their thesis");
