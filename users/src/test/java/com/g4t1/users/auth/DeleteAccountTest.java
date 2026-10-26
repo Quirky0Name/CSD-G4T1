@@ -109,6 +109,18 @@ class DeleteAccountTest {
         login(account.email()).expectStatus().isOk();
     }
 
+    @Test
+    void aMissingOrBlankPasswordIsABadRequest() {
+        Account account = registered();
+
+        deleteAccount(account.token(), Map.of()).expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
+        deleteAccount(account.token(), "").expectStatus().isBadRequest();
+        deleteAccount(account.token(), "   ").expectStatus().isBadRequest();
+
+        assertThat(storage.requests()).isEmpty();
+    }
+
     private record Account(String token, String id, String email) {
     }
 
@@ -131,10 +143,14 @@ class DeleteAccountTest {
     }
 
     private RestTestClient.ResponseSpec deleteAccount(String token, String password) {
+        return deleteAccount(token, Map.of("password", password));
+    }
+
+    private RestTestClient.ResponseSpec deleteAccount(String token, Map<String, String> body) {
         return client.method(HttpMethod.DELETE).uri("/auth/me")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("password", password))
+                .body(body)
                 .exchange();
     }
 
