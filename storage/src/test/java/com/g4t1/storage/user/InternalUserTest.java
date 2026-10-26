@@ -58,6 +58,7 @@ class InternalUserTest {
         jdbc.update("delete from reports");
         jdbc.update("delete from alerts");
         jdbc.update("delete from snapshots");
+        jdbc.update("delete from drafts");
         papers.deleteAll();
     }
 
@@ -84,6 +85,23 @@ class InternalUserTest {
         assertThat(files.read(documentFile)).isEmpty();
 
         assertThat(papers.existsById(someoneElsesPaper)).isTrue();
+    }
+
+    @Test
+    void clearingAUserDeletesTheirDraftsInEveryProject() throws Exception {
+        String draftFile = saveDraft(user, UUID.randomUUID());
+        String defaultProjectDraftFile = saveDraft(user, null);
+        UUID someoneElse = UUID.randomUUID();
+        String someoneElsesDraftFile = saveDraft(someoneElse, null);
+
+        clear(user).andExpect(status().isNoContent());
+
+        assertThat(drafts(user)).isZero();
+        assertThat(files.read(draftFile)).isEmpty();
+        assertThat(files.read(defaultProjectDraftFile)).isEmpty();
+
+        assertThat(drafts(someoneElse)).isEqualTo(1);
+        assertThat(files.read(someoneElsesDraftFile)).isPresent();
     }
 
     // safe to repeat, so User Management can retry a delete that failed halfway
@@ -126,7 +144,18 @@ class InternalUserTest {
         return documentFile;
     }
 
+    private String saveDraft(UUID owner, UUID project) {
+        String file = files.save(PDF);
+        jdbc.update("insert into drafts (id, owner_id, project_id, file_key, filename, uploaded_at) values (?, ?, ?, ?, 'draft.pdf', current_timestamp)",
+                UUID.randomUUID(), owner, project, file);
+        return file;
+    }
+
     private int count(String table, UUID paper) {
         return jdbc.queryForObject("select count(*) from " + table + " where paper_id = ?", Integer.class, paper);
+    }
+
+    private int drafts(UUID owner) {
+        return jdbc.queryForObject("select count(*) from drafts where owner_id = ?", Integer.class, owner);
     }
 }
