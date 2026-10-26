@@ -171,7 +171,6 @@ class DevToolsTest {
         long snapshotId = storeSnapshot(paperId, true);
         storeSnapshot(otherPaper, true);
         addAlertAndReport(paperId, snapshotId);
-        jdbc.update("insert into alert_notes (alert_id, text, created_at) select id, 'a note', current_timestamp from alerts where paper_id = ?", paperId);
         String documentFile = files.save(PDF);
         jdbc.update("""
                 insert into report_documents (report_id, kind, doi, crossref_status, text_status, pdf_status, file_key, created_at)
@@ -185,7 +184,6 @@ class DevToolsTest {
         assertThat(count("snapshots", paperId)).isZero();
         assertThat(count("alerts", paperId)).isZero();
         assertThat(count("reports", paperId)).isZero();
-        assertThat(jdbc.queryForObject("select count(*) from alert_notes", Integer.class)).isZero();
         assertThat(jdbc.queryForObject("select count(*) from report_documents", Integer.class)).isZero();
         assertThat(files.read(paperFile)).isEmpty();
         assertThat(files.read(documentFile)).isEmpty();

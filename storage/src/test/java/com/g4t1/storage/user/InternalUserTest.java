@@ -79,7 +79,6 @@ class InternalUserTest {
         assertThat(count("snapshots", paper)).isZero();
         assertThat(count("alerts", paper)).isZero();
         assertThat(count("reports", paper)).isZero();
-        assertThat(jdbc.queryForObject("select count(*) from alert_notes", Integer.class)).isZero();
         assertThat(jdbc.queryForObject("select count(*) from report_documents", Integer.class)).isZero();
         assertThat(files.read(paperFile)).isEmpty();
         assertThat(files.read(documentFile)).isEmpty();
@@ -123,7 +122,7 @@ class InternalUserTest {
         return papers.save(paper).getId();
     }
 
-    // a snapshot, an alert with a note, and a report with a stored document; returns the document's file
+    // a snapshot, an alert, and a report with a stored document; returns the document's file
     private String addHistory(UUID paper) {
         jdbc.update("""
                 insert into snapshots (paper_id, doi, fetched_at, source_status)
@@ -134,7 +133,6 @@ class InternalUserTest {
                                     detected_at, snapshot_id, previous_snapshot_id, created_at)
                 values (?, 'retraction', 'openalex:is_retracted', 'high', 'd', 'r', current_timestamp, ?, ?, current_timestamp)
                 """, paper, snapshotId, snapshotId);
-        jdbc.update("insert into alert_notes (alert_id, text, created_at) select id, 'a note', current_timestamp from alerts where paper_id = ?", paper);
         jdbc.update("insert into reports (paper_id, created_at) values (?, current_timestamp)", paper);
         String documentFile = files.save(PDF);
         jdbc.update("""
