@@ -1,6 +1,5 @@
 package com.g4t1.storage.dev;
 
-import com.g4t1.storage.file.LocalFileStore;
 import com.g4t1.storage.paper.Paper;
 import com.g4t1.storage.paper.PaperDeletion;
 import com.g4t1.storage.paper.PaperRepository;
@@ -33,16 +32,14 @@ public class DevService {
     private final SnapshotRepository snapshots;
     private final SnapshotService snapshotService;
     private final PaperDeletion deletion;
-    private final LocalFileStore files;
     private final JsonMapper json;
 
     public DevService(PaperRepository papers, SnapshotRepository snapshots, SnapshotService snapshotService,
-                      PaperDeletion deletion, LocalFileStore files, JsonMapper json) {
+                      PaperDeletion deletion, JsonMapper json) {
         this.papers = papers;
         this.snapshots = snapshots;
         this.snapshotService = snapshotService;
         this.deletion = deletion;
-        this.files = files;
         this.json = json;
     }
 
@@ -86,7 +83,7 @@ public class DevService {
     @Transactional
     public void clearHistory(UUID ownerId, UUID paperId) {
         requireOwnPaper(ownerId, paperId);
-        deletion.deleteHistory(paperId).forEach(files::delete);
+        deletion.clearHistory(paperId);
     }
 
     public void deletePaper(UUID ownerId, UUID paperId) {

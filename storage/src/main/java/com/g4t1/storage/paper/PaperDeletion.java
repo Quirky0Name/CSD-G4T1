@@ -2,7 +2,7 @@ package com.g4t1.storage.paper;
 
 import com.g4t1.storage.file.LocalFileStore;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.UUID;
 
 // Deleting a tracked paper and everything that refers to it. The demo tools and a deleted project
 // both use it, so it lives here rather than with the demo tools, which a deployment can switch off.
-@Component
+@Service
 public class PaperDeletion {
 
     private final JdbcTemplate jdbc;
@@ -33,8 +33,14 @@ public class PaperDeletion {
         }
     }
 
+    // the paper's snapshots, alerts and reports, and its documents' PDFs, but not the paper
+    @Transactional
+    public void clearHistory(UUID paperId) {
+        deleteHistory(paperId).forEach(files::delete);
+    }
+
     // returns the report documents' files, to delete once their rows are gone
-    public List<String> deleteHistory(UUID paperId) {
+    private List<String> deleteHistory(UUID paperId) {
         List<String> documentFiles = jdbc.queryForList("""
                 select d.file_key from report_documents d join reports r on r.id = d.report_id
                 where r.paper_id = ? and d.file_key is not null""", String.class, paperId);
