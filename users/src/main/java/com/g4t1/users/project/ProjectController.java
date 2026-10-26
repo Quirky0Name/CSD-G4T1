@@ -1,5 +1,6 @@
 package com.g4t1.users.project;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +24,7 @@ public class ProjectController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProjectResponse create(@AuthenticationPrincipal UUID userId, @RequestBody ProjectRequest request) {
+    public ProjectResponse create(@AuthenticationPrincipal UUID userId, @Valid @RequestBody ProjectRequest request) {
         return projects.create(userId, request);
     }
 
