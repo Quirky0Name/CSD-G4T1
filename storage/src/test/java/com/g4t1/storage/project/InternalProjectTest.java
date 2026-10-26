@@ -19,7 +19,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -103,6 +108,21 @@ class InternalProjectTest {
     @Test
     void clearingAProjectWithNothingInItIsStillNoContent() throws Exception {
         clear(project, owner).andExpect(status().isNoContent());
+    }
+
+    // a double-clicked delete in the frontend reaches here twice
+    @Test
+    void twoClearsOfTheSameProjectAtOnceAreBothNoContent() throws Exception {
+        savePaper(owner, project);
+        saveDraft(owner, project);
+        Callable<Integer> attempt = () -> clear(project, owner).andReturn().getResponse().getStatus();
+
+        List<Integer> statuses;
+        try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
+            statuses = pool.invokeAll(List.of(attempt, attempt)).stream().map(Future::resultNow).toList();
+        }
+
+        assertThat(statuses).containsExactly(204, 204);
     }
 
     private ResultActions clear(UUID projectId, UUID ownerId) throws Exception {
