@@ -62,7 +62,7 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
                     "Storage Management couldn't clear your account, so it wasn't deleted");
         }
-        users.deleteById(userId);
+        users.deleteIfPresent(userId);
     }
 
     // another registration of the same email can be saved between the check and this insert
