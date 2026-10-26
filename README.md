@@ -14,7 +14,7 @@ frontend still uses a demo token until it has a login page). See
 | Doc | What's in it |
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The system map: week-7 scope, services and ownership, data flow, auth, projects, data model, deployment |
-| [docs/STORAGE.md](docs/STORAGE.md) | Storage Management inside: papers and PDFs, drafts, snapshots, alerts and notes, reports and documents, demo tools, code layout, gotchas |
+| [docs/STORAGE.md](docs/STORAGE.md) | Storage Management inside: papers and PDFs, drafts, snapshots, alerts, reports and documents, demo tools, code layout, gotchas |
 | [docs/EVALUATION.md](docs/EVALUATION.md) | Research Evaluation inside: detection and rules, investigation, Gemini impact and its fallback, the Telegram notification, code layout, gotchas |
 | [docs/UPDATING.md](docs/UPDATING.md) | Updating inside: the poll, the outage gate, when it nudges, the schedule, snapshots, code layout, gotchas |
 | [docs/CONTRACTS.md](docs/CONTRACTS.md) | Every endpoint between services and the frontend: request and response shapes, errors, auth |
