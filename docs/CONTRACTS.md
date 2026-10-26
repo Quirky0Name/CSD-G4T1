@@ -167,8 +167,8 @@ service token (`svc:users`), like every other `/internal/**` call.
 ### `DELETE /internal/projects/{id}?owner_id=`
 
 Deletes the owner's papers in that project, each with everything that
-refers to it (snapshots, alerts and their notes, reports and their
-documents, and the PDFs), then the project's draft and its PDF. Only that
+refers to it (snapshots, alerts, reports and their documents, and the
+PDFs), then the project's draft and its PDF. Only that
 owner's: another user's project with the same id is untouched (see
 "Projects"). **Response `204`**, also when there's nothing to delete, so a
 delete User Management retries after a failure still goes through.
@@ -201,7 +201,6 @@ SETUP.md), with the user's token.
 | Poll a paper now | Updating's `POST /run-poll?paper_id=` (`/updating/...`) |
 | A paper's alerts | `GET /papers/{id}/alerts` (one call per paper; no cross-paper list yet) |
 | Acknowledge / dismiss | `PATCH /alerts/{id}` |
-| Notes on an alert | `POST` / `GET /alerts/{id}/notes` |
 | A paper's reports (alerts, documents, evaluation) | `GET /papers/{id}/reports` |
 | A paper's alert severity | not a field: the highest `alert_severity` among its `new` alerts |
 | New-alert toast | no push: re-fetch alerts and toast unseen `new` ids |
@@ -315,58 +314,6 @@ acknowledged or dismissed"), a missing or unknown status, a body that
 isn't JSON, or an id that isn't a number; `401` missing or bad token;
 `403` a service token; `404` no alert with that id **or** an alert on
 another user's paper (the same `detail` for both).
-
-### `POST /alerts/{id}/notes`
-
-User JWT required, and only the owner of the alert's paper can add a
-note. Adds a note to the researcher's log on an alert, e.g. what they did
-about it. These aren't the paper's own notes (`PUT /papers/{id}/notes`).
-Adding a note never changes the alert's `status` or `status_changed_at`,
-and any alert can get one, dismissed or not. Notes can't be edited or
-deleted.
-
-**Request:**
-
-```json
-{"text": "Removed the citation from my draft."}
-```
-
-`text` is required: 1 to 2000 characters, not blank. The limit counts
-UTF-16 code units, like JavaScript's `length`, so an emoji counts as 2.
-
-**Response `201`:**
-
-```json
-{"text": "Removed the citation from my draft.", "created_at": "2026-09-26T10:00:00Z"}
-```
-
-Errors, as problem details: `400` a missing or blank `text`, one over
-2000 characters, a body that isn't JSON, or an id that isn't a number;
-`401` missing or bad token; `403` a service token; `404` no alert with
-that id **or** an alert on another user's paper (the same `detail` as
-`PATCH /alerts/{id}`). A refused request stores nothing.
-
-### `GET /alerts/{id}/notes`
-
-User JWT required, and only the owner of the alert's paper can read its
-notes. Returns the alert's notes, **newest first** (by `created_at`, then
-the newer note).
-
-**Response `200`:**
-
-```json
-{"notes": [
-  {"text": "Emailed my co-author.", "created_at": "2026-09-27T09:00:00Z"},
-  {"text": "Removed the citation from my draft.", "created_at": "2026-09-26T10:00:00Z"}
-]}
-```
-
-An alert with no notes gives `{"notes": []}`. The alert list
-(`GET /papers/{id}/alerts`) doesn't include notes; they're read per alert.
-
-Errors, as problem details: `400` an id that isn't a number; `401`
-missing or bad token; `403` a service token; `404` as for
-`POST /alerts/{id}/notes`.
 
 ### `GET /papers/{id}/reports`
 
@@ -538,7 +485,7 @@ STORAGE.md, "Demo tools", and DEMO.md.
   `change`; `409` the paper has no snapshot yet (poll it once first), or
   has no such change to undo.
 - **`DELETE /dev/papers/{id}/history`**: deletes the paper's snapshots,
-  alerts (and their notes) and reports (and their documents and PDFs), so
+  alerts and reports (and their documents and PDFs), so
   a rehearsal raises the same change again. **`204`**.
 - **`DELETE /dev/papers/{id}`**: deletes the paper and everything above,
   plus its stored PDF. Updating stops tracking it on its next poll.
@@ -730,8 +677,8 @@ first) and the request is a `retraction` with a `notice_doi`, the row is
 replaced with the request's `alert_severity`, `description`, `recommendation`,
 `notice_doi`, `detected_at` and snapshot ids, and treated as a new alert:
 `status` goes back to `new`, `status_changed_at` is cleared, and it leaves
-its report so the paper's next report takes it. Its `id` stays, so the
-researcher's notes on it stay. The answer is `201`, like a new alert. A
+its report so the paper's next report takes it. Its `id` stays. The
+answer is `201`, like a new alert. A
 `retraction` that already has a notice is never replaced (`200`). See
 EVALUATION.md, "The nudge".
 
