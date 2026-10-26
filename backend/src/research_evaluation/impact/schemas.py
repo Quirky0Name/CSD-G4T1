@@ -37,7 +37,7 @@ class AlertJudgment(_Answer):
     alert_id: int
     about_this_paper: Literal["yes", "no", "unclear"]
     what_changed: str
-    scope: Literal["whole_paper", "specific_parts", "administrative", "journal_only", "unclear"]
+    scope: Literal["whole_paper", "specific_parts", "administrative", "journal_only", "citations_only", "unclear"]
     affected_parts: list[AffectedPart]
     severity: Level
     reason: str

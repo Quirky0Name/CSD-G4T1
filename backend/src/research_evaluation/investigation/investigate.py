@@ -27,7 +27,8 @@ log = logging.getLogger(__name__)
 # Crossref types whose notice DOI *is* the newer version of the paper
 _NEW_VERSION_TYPES = {"new_version", "new_edition"}
 # changes that can alter the paper at its own DOI, so the report fetches its current copy
-# (an EoC doesn't change the paper; a DOAJ delisting is about the journal)
+# (an EoC doesn't change the paper; a DOAJ delisting is about the journal; a citation jump is about
+# who cites it)
 _CHANGES_THE_PAPER = {
     ChangeType.RETRACTION,
     ChangeType.CORRECTION,

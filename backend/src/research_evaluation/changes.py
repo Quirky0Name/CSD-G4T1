@@ -7,6 +7,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
+from common.citations import is_citation_jump
+
 OK = "ok"
 JOURNAL = "journal"
 
@@ -17,6 +19,7 @@ class ChangeType(StrEnum):
     ERRATUM = "erratum"
     EXPRESSION_OF_CONCERN = "expression_of_concern"
     DOAJ_DELISTING = "doaj_delisting"
+    CITATION_JUMP = "citation_jump"
     OTHER = "other"  # a Crossref notice type we don't classify yet; the later LLM evaluation (insight) will judge these
 
 
@@ -64,6 +67,7 @@ class Snapshot(_Payload):
     journal_source_id: str | None = None
     journal_source_type: str | None = None
     journal: str | None = None
+    cited_by_count: int | None = None
     source_status: SourceStatuses
 
 
@@ -81,6 +85,8 @@ class Change(BaseModel):
     notice_label: str | None = None
     notice_date: str | None = None
     journal: str | None = None
+    previous_cited_by_count: int | None = None
+    cited_by_count: int | None = None
 
 
 def find_changes(previous: Snapshot, current: Snapshot) -> list[Change]:
@@ -105,6 +111,8 @@ def find_changes(previous: Snapshot, current: Snapshot) -> list[Change]:
         found.insert(0, retraction)
     if (delisting := _doaj_delisting(previous, current)) is not None:
         found.append(delisting)
+    if (jump := _citation_jump(previous, current)) is not None:
+        found.append(jump)
     return found
 
 
@@ -179,6 +187,25 @@ def _doaj_delisting(previous: Snapshot, current: Snapshot) -> Change | None:
         snapshot_id=current.snapshot_id,
         previous_snapshot_id=previous.snapshot_id,
         journal=current.journal,
+    )
+
+
+def _citation_jump(previous: Snapshot, current: Snapshot) -> Change | None:
+    if not _both_ok(previous, current, "openalex"):
+        return None
+    if previous.cited_by_count is None or current.cited_by_count is None:
+        return None
+    if not is_citation_jump(previous.cited_by_count, current.cited_by_count):
+        return None
+    # keyed by snapshot: a paper can jump again
+    return Change(
+        change_type=ChangeType.CITATION_JUMP,
+        change_key=f"citation_jump:{current.snapshot_id}",
+        detected_at=current.fetched_at,
+        snapshot_id=current.snapshot_id,
+        previous_snapshot_id=previous.snapshot_id,
+        previous_cited_by_count=previous.cited_by_count,
+        cited_by_count=current.cited_by_count,
     )
 
 
