@@ -176,7 +176,7 @@ A paper with no alerts gives `{"alerts": []}`.
 
 | Field | Meaning |
 |---|---|
-| `change_type` | `retraction`, `correction`, `erratum`, `expression_of_concern`, `doaj_delisting` or `other` |
+| `change_type` | `retraction`, `correction`, `erratum`, `expression_of_concern`, `doaj_delisting`, `citation_jump` or `other` |
 | `alert_severity` | `high`, `medium` or `low` |
 | `description` | what changed and how it affects the researcher |
 | `recommendation` | what to do about it |
@@ -432,13 +432,15 @@ on the caller's own papers: another user's paper gets the same `404`
 STORAGE.md, "Demo tools", and DEMO.md.
 
 - **`POST /dev/papers/{id}/undo-change?change=`** (`retraction`,
-  `correction`, `erratum` or `expression_of_concern`): stores a copy of
-  the paper's latest snapshot with that change taken out (for a
-  retraction, `is_retracted` set back to false too), so the next poll
-  finds the change again. **`201`** with the new snapshot, in the shape
+  `correction`, `erratum`, `expression_of_concern` or `citation_jump`):
+  stores a copy of the paper's latest snapshot with that change taken out
+  (for a retraction, `is_retracted` set back to false too; for a citation
+  jump, `cited_by_count` set to 0), so the next poll finds the change
+  again. A citation jump needs at least 10 citations now to be found. **`201`** with the new snapshot, in the shape
   `POST /internal/papers/{id}/snapshots` returns. `400` an unknown
   `change`; `409` the paper has no snapshot yet (poll it once first), or
-  has no such change to undo.
+  has no such change to undo (for `citation_jump`, a count that is null or
+  0).
 - **`DELETE /dev/papers/{id}/history`**: deletes the paper's snapshots,
   alerts (and their notes) and reports (and their documents and PDFs), so
   a rehearsal raises the same change again. **`204`**.
@@ -597,7 +599,7 @@ re-sent nudge can't store the same change twice.
 
 | Field | Rules |
 |---|---|
-| `change_type` | required: `retraction`, `correction`, `erratum`, `expression_of_concern`, `doaj_delisting` or `other` (a Crossref notice type Research Evaluation doesn't classify yet), exact lowercase |
+| `change_type` | required: `retraction`, `correction`, `erratum`, `expression_of_concern`, `doaj_delisting`, `citation_jump` or `other` (a Crossref notice type Research Evaluation doesn't classify yet), exact lowercase |
 | `change_key` | required, at most 512 characters. Identifies the change within the paper (e.g. `retraction`, `correction:<notice_doi>`) |
 | `alert_severity` | required: `high`, `medium` or `low`, exact lowercase |
 | `description`, `recommendation` | required, not blank |
@@ -929,7 +931,7 @@ for those two sources a null field means the source didn't know the DOI
 | `journal_source_id`, `journal_source_type` | text | OpenAlex `primary_location.source.id` / `.type` | guard for the DOAJ alert, journal context |
 | `journal`, `issn_l`, `publisher` | text | OpenAlex source `display_name` / `issn_l` / `host_organization_name` | journal context |
 | `authors` | JSON array, first 10, in authorship order | OpenAlex `authorships` plus one batched `/authors` lookup | author context |
-| `cited_by_count` | int, nullable | OpenAlex only (Crossref's count differs) | stored, no alert |
+| `cited_by_count` | int, nullable | OpenAlex only (Crossref's count differs) | citation jump alert |
 | `title`, `publication_year` | text, int | OpenAlex | display |
 | `source_status` | JSON `{crossref, openalex, openalex_authors}`, each `ok` / `not_found` / `error` | Updating | real change vs outage |
 
@@ -995,6 +997,7 @@ Classification, from the sprint's alert stories:
 | Correction | a new `crossref_updates` entry of type `correction` | `medium` | `correction:<notice_doi>` |
 | Erratum | a new `crossref_updates` entry of type `erratum` | `low` | `erratum:<notice_doi>` |
 | DOAJ delisting | `in_doaj` true → false, with the same `journal_source_id` and a `journal_source_type` of `journal` | `low` | `doaj_delisting:<snapshot_id>` |
+| Citation jump | `cited_by_count` rises by at least 10 and at least 20 % of the previous count | `low` | `citation_jump:<snapshot_id>` |
 | Other | a new `crossref_updates` entry of any other type (`withdrawal`, `removal`, `partial_retraction`, ...) | `medium` | `other:<type>:<notice_doi>` |
 
 Entries are identified by (`notice_doi`, `type`), and nulls are never

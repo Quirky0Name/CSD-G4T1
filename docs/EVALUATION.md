@@ -50,8 +50,13 @@ another. For each paper:
 - A DOAJ delisting needs `in_doaj` true → false with the same
   `journal_source_id` and a `journal` source type (a switch to a
   repository location also flips `in_doaj`).
+- A citation jump is a rise in `cited_by_count` of at least 10 and at
+  least 20 % of the previous count, between two consecutive snapshots
+  (`common/citations.py`, the same rule Updating nudges on). A drop never
+  counts, and neither does a slow climb of small rises.
 - The change key is set here: `retraction`, `<type>:<notice_doi>`,
-  `other:<type>:<notice_doi>`, `doaj_delisting:<snapshot_id>`.
+  `other:<type>:<notice_doi>`, `doaj_delisting:<snapshot_id>`,
+  `citation_jump:<snapshot_id>`.
 - `detected_at` is the `fetched_at` of the first snapshot the change shows
   up in.
 
@@ -64,8 +69,8 @@ changes nothing (`200`), so a notice that arrives after OpenAlex's flag
 still gets investigated.
 
 **Rules** (`rules.py`): fixed alert severity per type (retraction `high`; EoC,
-correction, `other` `medium`; erratum, DOAJ delisting `low`) and template
-text. Every alert is complete before any LLM runs.
+correction, `other` `medium`; erratum, DOAJ delisting, citation jump `low`)
+and template text; a citation jump's description names both counts. Every alert is complete before any LLM runs.
 
 **The reply:** `202` once every paper's alerts are stored; `503` if any
 paper failed (the others are still stored), with a summary
@@ -97,6 +102,7 @@ finished. Per paper:
    | `other` of type `new_version` / `new_edition` | — | ✓ (the notice DOI) | — |
    | `other`, any other type | ✓ | — | ✓ |
    | DOAJ delisting | — | — | — |
+   | Citation jump | — | — | — |
 
    Each DOI once, normalised. A notice whose DOI is the paper's own (R3)
    gets no notice document; the current copy covers it. No paper DOI, no
@@ -142,6 +148,7 @@ after the planned documents are stored.
 ```
 for each change behind one of the report's alerts:
   doaj_delisting ────────────────────────────▶ nothing (it's about the journal)
+  citation_jump ─────────────────────────────▶ nothing (it's about who cites the paper)
   retraction from OpenAlex's flag only ──────▶ current_version
   no notice DOI ─────────────────────────────▶ current_version if the type can alter the paper
   notice DOI is the paper's own (R3) ────────▶ current_version, no notice
@@ -304,7 +311,11 @@ Per report:
    that order up to `MAX_INLINE_PDF_BYTES` (40 MB); one that doesn't fit is
    left out and recorded. Step 1's task says what a RELATED document is
    (reached by following a notice's or new version's links; no alert of its
-   own). `PROMPT_VERSION` is 3 since that wording changed.
+   own). A citation jump has no document: its alert line carries the rule's
+   description (the counts), and step 1's task says to judge it as new
+   attention, scope `citations_only`, severity `low`, so the gate lets it
+   through to steps 2 and 3. `PROMPT_VERSION` is 4 since that wording
+   changed.
 4. `PUT /internal/reports/{id}/evaluation`, once; the report becomes
    `assessed`. Nothing is written between steps, so an `assessed` report is
    always complete.

@@ -162,8 +162,9 @@ Always on (take them out, or put them behind a setting, before a real
 deployment). User token, own papers only. `DevService`:
 
 - `undoChange`: stores a copy of the latest snapshot with one change type
-  removed (and `is_retracted` false for a retraction), so the next poll
-  finds it again. Needs one real poll first.
+  removed (and `is_retracted` false for a retraction, `cited_by_count` 0
+  for a citation jump), so the next poll finds it again. Needs one real
+  poll first.
 - `clearHistory`: deletes the paper's reports (documents cascade), alerts
   (notes cascade) and snapshots, then the documents' PDFs, so a
   rehearsal raises the same change again.

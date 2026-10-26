@@ -26,7 +26,8 @@ feature on their own.
   per paper per poll, and nudges Research Evaluation when a snapshot
   differs in a field the alerts depend on.
 - Research Evaluation detects the changes (retraction, correction,
-  erratum, expression of concern, DOAJ delisting, other Crossref notices)
+  erratum, expression of concern, DOAJ delisting, citation jump, other
+  Crossref notices)
   and stores each as an **alert** with a rule-based alert severity.
 - It then **investigates** them (fetches each notice's Crossref record and
   open-access text, the paper's current copy, a new version, and

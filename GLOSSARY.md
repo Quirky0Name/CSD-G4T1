@@ -41,6 +41,10 @@ _Avoid_: Update (on its own)
 **Related document**:
 A document investigation reached by following a typed link from a notice or new version, not from the paper's own notices.
 
+**Citation jump**:
+A rise in a tracked paper's citation count between two polls large enough to alert on: at least 10 new citations and at least 20 % more than before.
+_Avoid_: Citation spike, citation change
+
 **Alert severity**:
 How serious a change of that type usually is. Fixed by the change type alone.
 _Avoid_: Severity (on its own)
