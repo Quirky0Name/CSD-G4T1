@@ -35,7 +35,7 @@ public class AuthController {
 
     @DeleteMapping("/me")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteAccount(@AuthenticationPrincipal UUID userId) {
-        auth.deleteAccount(userId);
+    public void deleteAccount(@AuthenticationPrincipal UUID userId, @RequestBody DeleteAccountRequest request) {
+        auth.deleteAccount(userId, request);
     }
 }

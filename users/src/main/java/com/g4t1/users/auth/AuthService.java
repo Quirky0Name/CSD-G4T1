@@ -49,7 +49,11 @@ public class AuthService {
         return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
     }
 
-    public void deleteAccount(UUID userId) {
+    public void deleteAccount(UUID userId, DeleteAccountRequest request) {
+        User user = users.findById(userId).orElseThrow();
+        if (!passwords.matches(request.password(), user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong password");
+        }
         storage.clearUser(userId);
         users.deleteById(userId);
     }
