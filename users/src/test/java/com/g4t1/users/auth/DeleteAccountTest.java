@@ -149,6 +149,21 @@ class DeleteAccountTest {
         assertThat(storage.requests()).isEmpty();
     }
 
+    // a 401, so the frontend signs out whoever is still holding the token
+    @Test
+    void aDeletedAccountsTokenCantMakeProjects() {
+        Account account = registered();
+        deleteAccount(account.token(), PASSWORD).expectStatus().isNoContent();
+
+        client.post().uri("/projects")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + account.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("name", "Thesis"))
+                .exchange()
+                .expectStatus().isUnauthorized()
+                .expectBody().jsonPath("$.detail").isEqualTo("Your account no longer exists");
+    }
+
     private record Account(String token, String id, String email) {
     }
 
