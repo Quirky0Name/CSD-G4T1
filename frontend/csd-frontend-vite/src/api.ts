@@ -225,5 +225,5 @@ export function errorMessage(err: unknown): string {
 }
 
 export async function deletePaper(paperId: string): Promise<void> {
-  await storage.delete(`/dev/papers/${paperId}`)
+  await storage.delete(`/papers/${paperId}`)
 }
