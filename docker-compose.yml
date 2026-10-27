@@ -45,6 +45,7 @@ services:
       OPENALEX_API_KEY: ${OPENALEX_API_KEY:-}
       S2_API_KEY: ${S2_API_KEY:-}
       UPLOAD_DIR: /data/uploads
+      DEV_TOOLS: ${DEV_TOOLS:-true}
     # the PDFs and the database belong together: back up or reset both volumes at once
     volumes:
       - uploads:/data/uploads
