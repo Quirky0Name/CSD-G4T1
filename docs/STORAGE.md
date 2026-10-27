@@ -18,7 +18,7 @@ Spring Data repository, the entity, and response records.
 
 | Package | What |
 |---|---|
-| `paper/` | tracked papers: upload, track by DOI, list (`PaperService`), the internal list and PDF read, deleting a paper with everything that refers to it (`PaperDeletion`) |
+| `paper/` | tracked papers: upload, track by DOI, list, delete (`PaperService`), the internal list and PDF read, deleting a paper with everything that refers to it (`PaperDeletion`) |
 | `project/` | clearing a project User Management deleted: its papers and its draft (`ProjectService`, `DELETE /internal/projects/{id}`) |
 | `user/` | clearing an account User Management deleted: the user's papers and drafts in every project (`UserService`, `DELETE /internal/users/{id}`) |
 | `snapshot/` | `snapshots`: store a snapshot, read the snapshot history (`after_id`, `last`, `limit`) |
@@ -48,7 +48,7 @@ project (owner + `project_id`). A user can't track a DOI twice
 
 - Every tracked paper has a PDF (`file_key`, a `<uuid>.pdf` in
   `UPLOAD_DIR`). The file never changes; it's deleted only with the paper
-  (`DELETE /dev/papers/{id}`). The frontend sees only `file_available`.
+  (`DELETE /papers/{id}`). The frontend sees only `file_available`.
 - `papers.title` is set once at ingest and goes stale (Crossref later
   prefixes "RETRACTED:"); the newest snapshot has the current one.
 - `GET /internal/papers/{id}/pdf` (`PaperService.storedPdf`) serves any
@@ -159,8 +159,8 @@ investigation fetched (documents) and impact's evaluation. Status:
 
 ## Demo tools (`/dev/papers/{id}/...`)
 
-Always on (take them out, or put them behind a setting, before a real
-deployment). User token, own papers only. `DevService`:
+On unless `DEV_TOOLS=false` (`storage.dev-tools`), which takes them and
+Swagger off a server. User token, own papers only. `DevService`:
 
 - `undoChange`: stores a copy of the latest snapshot with one change type
   removed (and `is_retracted` false for a retraction, `cited_by_count` 0
@@ -170,13 +170,14 @@ deployment). User token, own papers only. `DevService`:
   snapshots, then the documents' PDFs, so a
   rehearsal raises the same change again.
 - `deletePaper`: the above plus the paper row and its PDF. Updating drops
-  it from `tracked_papers` on its next poll. The frontend uses this to
-  delete a paper.
+  it from `tracked_papers` on its next poll. Kept for the demo; the
+  frontend deletes through `DELETE /papers/{id}` (`PaperService.delete`).
 
-The deleting in both is `PaperDeletion`'s, which clearing a deleted project
-uses too, so switching the demo tools off can't break that.
+The deleting in both is `PaperDeletion`'s, which `DELETE /papers/{id}` and
+clearing a deleted project use too, so switching the demo tools off can't
+break either.
 
-Swagger UI is at `/swagger-ui.html` (also always on).
+Swagger UI is at `/swagger-ui.html`, on and off with the demo tools.
 
 ## Gotchas
 
