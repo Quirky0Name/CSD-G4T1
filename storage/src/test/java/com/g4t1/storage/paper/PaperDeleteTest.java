@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // DELETE /papers/{id}: the researcher stops tracking one of their papers
@@ -75,6 +76,20 @@ class PaperDeleteTest {
         assertThat(jdbc.queryForObject("select count(*) from report_documents", Integer.class)).isZero();
         assertThat(files.read(paperFile)).isEmpty();
         assertThat(files.read(documentFile)).isEmpty();
+    }
+
+    // someone else's paper looks the same as a missing one, so an id never shows whose it is
+    @Test
+    void anotherUsersPaperLooksTheSameAsAMissingOne() throws Exception {
+        UUID theirs = savePaper(UUID.randomUUID());
+        UUID missing = UUID.randomUUID();
+
+        for (UUID id : new UUID[] {theirs, missing}) {
+            deletePaper(user, id).andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.detail").value("No paper " + id));
+        }
+
+        assertThat(papers.existsById(theirs)).isTrue();
     }
 
     private ResultActions deletePaper(UUID caller, UUID paperId) throws Exception {
