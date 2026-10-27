@@ -197,7 +197,7 @@ SETUP.md), with the user's token.
 |---|---|
 | List tracked papers | `GET /papers` |
 | Track a paper | `POST /papers`, multipart PDF or JSON `{"doi"}` |
-| Delete a paper | `DELETE /dev/papers/{id}` (a demo tool for now) |
+| Delete a paper | `DELETE /papers/{id}` |
 | Poll a paper now | Updating's `POST /run-poll?paper_id=` (`/updating/...`) |
 | A paper's alerts | `GET /papers/{id}/alerts` (one call per paper; no cross-paper list yet) |
 | Acknowledge / dismiss | `PATCH /alerts/{id}` |
@@ -243,6 +243,17 @@ disk, so Research Evaluation can read it later through
 Errors come back as problem details, with the reason in `detail`:
 `400` not a PDF, `401` missing or bad token, `403` service token,
 `409` you already track a paper with that DOI, `413` over 25 MB.
+
+### `DELETE /papers/{id}`
+
+User JWT required, and only the paper's owner can delete it. Stops
+tracking the paper: deletes it with everything that refers to it
+(snapshots, alerts, reports and their documents, and the PDFs). Updating
+stops tracking it on its next poll. **Response `204`.**
+
+Errors, as problem details: `400` an id that isn't a UUID; `401` missing or
+bad token; `403` a service token; `404` `No paper <id>` for a missing paper
+and another user's alike. A refused request deletes nothing.
 
 ### `GET /papers/{id}/alerts?include_dismissed=false`
 
@@ -470,8 +481,8 @@ Errors: as for `GET /draft`. A `404` deletes nothing.
 
 ### Demo tools: `/dev/papers/{id}/...`
 
-Always on for now, for the demo and testing; they should come out (or go
-behind a setting) before a real deployment. User JWT required, and only
+On unless `DEV_TOOLS=false`, for the demo and testing; with it off, they
+and Swagger answer `404`. User JWT required, and only
 on the caller's own papers: another user's paper gets the same `404`
 `No paper <id>` as a missing one. How to use them for a demo is in
 STORAGE.md, "Demo tools", and DEMO.md.
@@ -491,7 +502,8 @@ STORAGE.md, "Demo tools", and DEMO.md.
   a rehearsal raises the same change again. **`204`**.
 - **`DELETE /dev/papers/{id}`**: deletes the paper and everything above,
   plus its stored PDF. Updating stops tracking it on its next poll.
-  **`204`**. The frontend calls this to delete a tracked paper.
+  **`204`**, the same as `DELETE /papers/{id}`, which is what the frontend
+  calls.
 
 Errors, as problem details: `401` missing or bad token; `403` a service
 token; `404` as above.
