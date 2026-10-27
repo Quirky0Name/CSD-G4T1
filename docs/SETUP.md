@@ -37,6 +37,7 @@ comments into the value.
 | Var | Read by | Value |
 |---|---|---|
 | `JWT_SECRET` | every service | base64 of 32+ random bytes (`openssl rand -base64 32`), the same everywhere. Storage Management's JWT library rejects shorter keys; the Python apps check at startup |
+| `DEV_TOOLS` | Storage Management | `true` (the default) serves the `/dev` demo tools and Swagger; `false` takes both away, for a public server |
 | `SM_BASE_URL` | RE, Updating | `http://localhost:8081` (compose overrides it) |
 | `RE_BASE_URL` | Updating | `http://localhost:8000` |
 | `DATABASE_URL` | Updating | `postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` (the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres |
@@ -74,8 +75,9 @@ The whole stack (below) reads one `.env` at the repo root instead (copy
 
 Everything, the website included. From the repo root:
 
-1. Copy `.env.example` to `.env`. Set `JWT_SECRET` to the same value as in
-   `backend/.env`, and `POSTGRES_PASSWORD` to any letters and digits.
+1. Copy `.env.example` to `.env`. Set `JWT_SECRET` to base64 of 32+
+   random bytes (`openssl rand -base64 32`), and `POSTGRES_PASSWORD` to any
+   letters and digits.
 2. `docker compose up -d --build`
 3. Open `http://localhost:8088`.
 
@@ -85,9 +87,6 @@ stored PDFs.
 
 Good to know:
 
-- The frontend's demo token (hard-coded in `api.ts`) only works with the
-  team's shared `JWT_SECRET`, and expires on 2026-10-28. Never use that
-  value on a public server: anyone can read the token from the site.
 - `POSTGRES_PASSWORD` is set when the database is first created; to
   change it later, `down -v` (losing the data) and start again.
 - Only the website is reachable; it passes `/api`, `/auth` and
