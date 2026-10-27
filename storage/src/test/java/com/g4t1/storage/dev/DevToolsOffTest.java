@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -64,5 +65,11 @@ class DevToolsOffTest {
                 .andExpect(status().isNotFound());
 
         assertThat(papers.existsById(paperId)).isTrue();
+    }
+
+    @Test
+    void swaggerIsGone() throws Exception {
+        mvc.perform(get("/swagger-ui/index.html")).andExpect(status().isNotFound());
+        mvc.perform(get("/v3/api-docs")).andExpect(status().isNotFound());
     }
 }
