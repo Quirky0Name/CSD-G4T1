@@ -61,8 +61,10 @@ Outside compose it also reads `SPRING_DATASOURCE_URL`, `_USERNAME`,
 `_PASSWORD`, `GROBID_URL` (default `http://localhost:8070`), `UPLOAD_DIR`
 (default `uploads/` in the working directory) and `PORT` (default 8081).
 
-User Management (`users/`) reads `JWT_SECRET` (the same value) and
-`SPRING_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD`.
+User Management (`users/`) reads `JWT_SECRET` (the same value),
+`SPRING_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD`, and `SM_BASE_URL`
+(Storage Management, which it asks to clear a deleted project; default
+`http://localhost:8081`, and the root stack sets it).
 
 The whole stack (below) reads one `.env` at the repo root instead (copy
 `.env.example`): the same variables, plus `POSTGRES_PASSWORD` and
