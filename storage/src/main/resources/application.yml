@@ -24,6 +24,8 @@ storage:
   openalex-api-key: ${OPENALEX_API_KEY:}
   semantic-scholar-api-key: ${S2_API_KEY:}
   upload-dir: ${UPLOAD_DIR:uploads}
+  # the /dev demo tools and Swagger; on unless DEV_TOOLS=false
+  dev-tools: ${DEV_TOOLS:true}
   max-pdf-size: 25MB
 
 server:
