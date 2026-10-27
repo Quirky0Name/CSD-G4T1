@@ -19,8 +19,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // register and login are how a researcher gets a token, so only projects need one
-                        .requestMatchers("/projects", "/projects/**").hasRole("USER")
+                        // register and login are how a researcher gets a token, so only these need one
+                        .requestMatchers("/projects", "/projects/**", "/auth/me").hasRole("USER")
                         .anyRequest().permitAll())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(new JwtAuthFilter(jwtSecret), UsernamePasswordAuthenticationFilter.class)

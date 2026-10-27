@@ -1,10 +1,7 @@
 package com.g4t1.users.project;
 
+import com.g4t1.users.StorageStub;
 import com.jayway.jsonpath.JsonPath;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,9 +17,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,6 +26,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static com.g4t1.users.TestTokens.assertIsServiceToken;
+import static com.g4t1.users.TestTokens.badTokens;
+import static com.g4t1.users.TestTokens.serviceToken;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
@@ -195,7 +193,7 @@ class ProjectTest {
             assertThat(request.method()).isEqualTo("DELETE");
             assertThat(request.path()).isEqualTo("/internal/projects/" + projectId);
             assertThat(request.query()).isEqualTo("owner_id=" + account.id());
-            assertIsServiceToken(request.authorization());
+            assertIsServiceToken(request.authorization(), jwtSecret);
         });
         List<String> names = JsonPath.read(listBody(account.token()), "$.projects[*].name");
         assertThat(names).isEmpty();
@@ -214,6 +212,18 @@ class ProjectTest {
 
         List<String> names = JsonPath.read(listBody(token), "$.projects[*].name");
         assertThat(names).containsExactly("Thesis");
+    }
+
+    // a double-clicked delete: both reach Storage Management before either removes the project
+    @Test
+    void twoDeletesOfTheSameProjectAtOnceAreBothNoContent() throws InterruptedException {
+        String token = registeredToken();
+        String projectId = createdId(token, "Thesis");
+        storage.answerAfter(Duration.ofMillis(300));
+
+        List<Integer> statuses = atOnce(Collections.nCopies(2, () -> status(delete(token, projectId))));
+
+        assertThat(statuses).containsExactly(204, 204);
     }
 
     @Test
@@ -240,11 +250,11 @@ class ProjectTest {
         client.put().uri(someProject).contentType(MediaType.APPLICATION_JSON).body(Map.of("name", "Thesis"))
                 .exchange().expectStatus().isUnauthorized();
         client.delete().uri(someProject).exchange().expectStatus().isUnauthorized();
-        for (String token : badTokens()) {
+        for (String token : badTokens(jwtSecret)) {
             client.get().uri("/projects").header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                     .exchange().expectStatus().isUnauthorized();
         }
-        client.get().uri("/projects").header(HttpHeaders.AUTHORIZATION, "Bearer " + serviceToken())
+        client.get().uri("/projects").header(HttpHeaders.AUTHORIZATION, "Bearer " + serviceToken(jwtSecret))
                 .exchange().expectStatus().isForbidden();
     }
 
@@ -265,34 +275,6 @@ class ProjectTest {
 
     private String registeredToken() {
         return registered().token();
-    }
-
-    // what Storage Management's /internal/** takes: a service token signed with the shared secret, short-lived
-    private void assertIsServiceToken(String authorization) {
-        assertThat(authorization).startsWith("Bearer ");
-        Claims claims = Jwts.parser().verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret))).build()
-                .parseSignedClaims(authorization.substring("Bearer ".length())).getPayload();
-        assertThat(claims.get("role")).isEqualTo("service");
-        assertThat(claims.getSubject()).isEqualTo("svc:users");
-        assertThat(claims.getExpiration()).isBefore(Date.from(Instant.now().plus(Duration.ofMinutes(10))));
-    }
-
-    // what Updating and Research Evaluation mint for themselves: valid, but not a researcher
-    private String serviceToken() {
-        return Jwts.builder().subject("svc:updating").claim("role", "service")
-                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret))).compact();
-    }
-
-    // garbage, expired, signed with another key, a sub that isn't a user id, and no sub at all
-    private List<String> badTokens() {
-        var key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
-        String user = UUID.randomUUID().toString();
-        return List.of(
-                "not-a-jwt",
-                Jwts.builder().subject(user).expiration(new Date(System.currentTimeMillis() - 60_000)).signWith(key).compact(),
-                Jwts.builder().subject(user).signWith(Keys.hmacShaKeyFor(new byte[32])).compact(),
-                Jwts.builder().subject("svc:updating").signWith(key).compact(),
-                Jwts.builder().claim("role", "user").signWith(key).compact());
     }
 
     private RestTestClient.ResponseSpec create(String token, String name) {

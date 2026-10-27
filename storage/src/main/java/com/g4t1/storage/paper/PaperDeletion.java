@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-// Deleting a tracked paper and everything that refers to it. The demo tools and a deleted project
-// both use it, so it lives here rather than with the demo tools, which a deployment can switch off.
+// Deleting a tracked paper and everything that refers to it. DELETE /papers/{id}, the demo tools and a
+// deleted project all use it, so it lives here rather than with the demo tools, which DEV_TOOLS can switch off.
 @Service
 public class PaperDeletion {
 
@@ -44,7 +44,7 @@ public class PaperDeletion {
         List<String> documentFiles = jdbc.queryForList("""
                 select d.file_key from report_documents d join reports r on r.id = d.report_id
                 where r.paper_id = ? and d.file_key is not null""", String.class, paperId);
-        // documents cascade with their report, notes with their alert
+        // documents cascade with their report
         jdbc.update("delete from reports where paper_id = ?", paperId);
         jdbc.update("delete from alerts where paper_id = ?", paperId);
         jdbc.update("delete from snapshots where paper_id = ?", paperId);

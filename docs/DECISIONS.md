@@ -8,6 +8,55 @@ owned that story made.
 
 ---
 
+## 2026-10-27 — Papers are deleted through their own endpoint; the demo tools can be switched off
+
+- **`DELETE /papers/{id}`** (the story owner's call) is how the frontend
+  deletes a tracked paper, instead of the demo tools' `DELETE
+  /dev/papers/{id}`, so a server can turn the demo tools off without
+  breaking deletes. Both go through `PaperDeletion`.
+- **`DEV_TOOLS=false` takes the demo tools and Swagger away** (`404`). It
+  defaults to on everywhere, the server included, while the demo still
+  uses them on the live site. Off, nobody can fake a change on a paper,
+  which would spend Gemini calls and send a Telegram message.
+- Deferred (ROADMAP.md): running Storage Management as a non-root user,
+  and a health endpoint for the compose check (the port check works).
+
+## 2026-10-27 — No notes: researchers don't keep notes on alerts or papers
+
+- **Notes are dropped entirely** (the story owner's call). The append-only
+  notes on an alert (2026-09-26) go: `POST` and `GET /alerts/{id}/notes`,
+  the frontend's notes panel, and the `alert_notes` table, which V11 drops
+  with any notes in it. The planned notes per paper won't be built either.
+  A researcher's say on an alert is its status: acknowledged or dismissed.
+- V5 stays as it was, since Flyway checks the checksums of migrations
+  already applied; V11 drops what it made.
+
+## 2026-10-27 — Deleting an account clears Storage Management first, then the user and their projects
+
+- **`DELETE /auth/me`, confirmed with the password** (the story owner's
+  call). It sits with register and login, so the web server and the Vite
+  proxy already route it. The password goes in a JSON body on the
+  `DELETE`.
+- **A wrong password is a `403`, not a `401`**: the token is fine, and the
+  frontend signs out on any `401`, so a mistyped password would log the
+  researcher out.
+- **Storage Management first, as for a project.** If its clear fails, the
+  answer is a `502` and the account stays, so a retry finishes the job.
+  Its clear answers `204` even when there's nothing left.
+- **Projects go with their user through a foreign key** (`on delete
+  cascade`), added now that there's a delete for it to follow.
+- **A double-clicked delete answers `204` twice**, for an account and for
+  a project alike. Both requests get past the checks and clear Storage
+  Management, so the row is removed with one delete statement that does
+  nothing when the other request got there first; deleting through the
+  entity failed the second request with a `500`.
+- **No token revocation** (the story owner's call): a token outlives its
+  account by up to 24 hours. User Management answers it with no projects,
+  and with a `401` `Your account no longer exists` to creating one or
+  deleting the account again, so the frontend signs it out. Rejected for
+  now: checking the account on every request, or a revocation list, in
+  every service.
+
 ## 2026-10-26 — Citation jumps alert, through the whole pipeline
 
 - **A citation jump is a rise in OpenAlex's `cited_by_count` of at least
