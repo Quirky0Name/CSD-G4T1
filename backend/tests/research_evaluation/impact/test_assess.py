@@ -468,6 +468,33 @@ async def test_a_related_document_has_its_links_line_and_its_pdf_after_the_new_v
     assert "pdf: attached below" in block
 
 
+def test_a_citation_jumps_alert_line_carries_its_counts_and_a_notices_does_not_carry_its_text():
+    jump = AlertInReport(
+        id=8,
+        change_type="citation_jump",
+        change_key="citation_jump:2",
+        alert_severity="low",
+        description="OpenAlex counted 300 new citations of this paper (from 952 to 1252).",
+        detected_at=datetime(2026, 9, 24, 12, tzinfo=UTC),
+    )
+    retraction = report(UUID(int=1), []).alerts[0]
+
+    lines = prompts.alerts_block([retraction, jump]).splitlines()
+
+    assert lines[1] == f"- alert 7: retraction, notice {NOTICE}, detected 2026-09-24, alert severity high"
+    assert lines[2] == (
+        "- alert 8: citation_jump, no notice, detected 2026-09-24, alert severity low: "
+        "OpenAlex counted 300 new citations of this paper (from 952 to 1252)."
+    )
+
+
+def test_gemini_may_judge_a_citation_jump_as_about_citations_only():
+    answer = change_answer(severity="low").model_dump()
+    answer["alerts"][0]["scope"] = "citations_only"
+
+    assert ChangeAssessment.model_validate(answer).alerts[0].scope == "citations_only"
+
+
 def test_a_document_without_links_says_so():
     assert "\nlinks: none\n" in prompts.document_block(notice(), [], None)
     assert "\nlinks: none\n" in prompts.document_block(notice(links=[]), [], None)

@@ -33,6 +33,8 @@ EXPECTED_REASONS = {
         "new erratum notice 10.1016/s0140-6736(20)31249-6",
     ],
     Scenario.DOAJ_DELISTING: ["in_doaj true -> false"],
+    Scenario.CITATION_JUMP: ["cited_by_count 952 -> 1252"],
+    Scenario.SMALL_CITATION_RISE: [],
     Scenario.NO_CHANGE: [],
 }
 
@@ -49,6 +51,11 @@ def apis(request):
         for name in ("ijaa", "lancet", "jbc"):
             sources.serve(name)
     return request.param
+
+
+def without_live_count(reason: str) -> str:
+    """A citation reason ends in today's count, so a live run compares only what comes before it."""
+    return reason.rsplit(" ", 1)[0] if reason.startswith("cited_by_count ") else reason
 
 
 def logged_reasons(caplog, paper: UUID) -> list[str]:
@@ -78,7 +85,7 @@ async def test_the_scenarios_rule_fires_and_a_second_trigger_does_not_nudge_agai
         assert summary["nudged"] == ([str(paper)] if expected else [])
         assert await re.received() == ([[paper]] if expected else [])
     elif expected:  # live data may have drifted (new notices), so the intended reasons must be present
-        assert set(expected) <= set(reasons)
+        assert set(map(without_live_count, expected)) <= set(map(without_live_count, reasons))
         assert str(paper) in summary["nudged"]
     # live NO_CHANGE only proves that a poll fetches and stores against the live APIs
 

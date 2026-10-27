@@ -46,6 +46,7 @@ async def test_a_retraction_becomes_a_stored_alert(client, sm):
         ({"crossref_updates": [notice("10.1/n", "correction")]}, "correction", "medium"),
         ({"crossref_updates": [notice("10.1/n", "erratum")]}, "erratum", "low"),
         ({"in_doaj": False}, "doaj_delisting", "low"),
+        ({"cited_by_count": 1600}, "citation_jump", "low"),
         ({"crossref_updates": [notice("10.1/n", "withdrawal")]}, "other", "medium"),
     ],
 )
@@ -71,6 +72,24 @@ async def test_an_other_change_is_stored_with_its_rule_based_assessment(client, 
     assert (alert["change_type"], alert["alert_severity"]) == ("other", "medium")
     assert alert["change_key"] == "other:withdrawal:10.1/w"
     assert "a 'Withdrawal' notice" in alert["description"]
+
+
+async def test_a_citation_jump_is_stored_with_both_counts_and_a_small_rise_is_not(client, sm):
+    jumped, crept = await sm.add_paper(), await sm.add_paper()
+    first = await sm.add_snapshot(jumped, 1, cited_by_count=952)
+    second = await sm.add_snapshot(jumped, 2, cited_by_count=1252)
+    await sm.add_snapshot(crept, 1, cited_by_count=1247)
+    await sm.add_snapshot(crept, 2, cited_by_count=1252)
+
+    response = await nudge(client, [jumped, crept])
+
+    assert response.json()["alerts_created"] == 1
+    [alert] = await sm.alerts(jumped)
+    assert alert["change_key"] == f"citation_jump:{second['snapshot_id']}"
+    assert alert["previous_snapshot_id"] == first["snapshot_id"]
+    assert "300 new citations" in alert["description"]
+    assert await sm.alerts(crept) == []
+    assert (await nudge(client, [jumped])).json()["alerts_created"] == 0
 
 
 async def test_a_second_nudge_for_the_same_papers_stores_nothing_new(client, sm):

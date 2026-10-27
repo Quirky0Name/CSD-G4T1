@@ -52,12 +52,15 @@ Evaluation's):
 - a new `crossref_updates` entry, identified by (`notice_doi`, `type`), of
   type `retraction`, `correction`, `erratum` or `expression_of_concern`
   (a new source for a known pair isn't new);
-- `in_doaj` true → false.
+- `in_doaj` true → false;
+- a citation jump: `cited_by_count` rises by at least 10 and at least 20 %
+  of the previous count (`common/citations.py`, shared with Research
+  Evaluation so the nudge can't miss an alert).
 
 Nulls and fields whose source wasn't `ok` are never compared. A paper's
-first snapshot is a baseline. Citation counts, authors and titles are
-stored but never nudge, and neither does an unclassified Crossref type on
-its own (it's only seen when it arrives with a known change).
+first snapshot is a baseline. Authors and titles are stored but never
+nudge, and neither does an unclassified Crossref type on its own (it's
+only seen when it arrives with a known change).
 
 ## Schedule
 
