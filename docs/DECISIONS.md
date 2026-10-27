@@ -36,6 +36,35 @@ owned that story made.
 
 ---
 
+## 2026-10-26 — Projects live in User Management; deleting one clears Storage Management first
+
+- **Names are unique per user, trimmed but otherwise exact** (the story
+  owner's call), so "Thesis" and "thesis" can both exist. Rejected:
+  ignoring letter case, as emails do. A unique constraint on owner and
+  name backs the check, so two creates or renames sent at once can't both
+  take a name; the second gets the same `409`. Renaming a project to the
+  name it already has isn't a clash, and answers `200`.
+- **The default project stays implicit**: `project_id` null in Storage
+  Management, with no row in User Management, so it's never listed and
+  can't be renamed or deleted. Storage Management's rule for it stands
+  (2026-09-27).
+- **Deleting a project asks Storage Management to clear it before the row
+  goes.** If that call fails, the answer is a `502` and the project stays,
+  so nothing is left half-deleted where the researcher can't see it, and a
+  retry finishes the job. Storage Management's clear answers `204` even
+  when there's nothing left, which is what makes the retry safe.
+- **User Management checks tokens the way Storage Management does** (the
+  same filter), but only on `/projects`: register and login are how a
+  researcher gets a token.
+- **To call Storage Management it mints its own service token**
+  (`svc:users`, five minutes, as the Python services' are).
+- **Deleting a paper moved out of the demo tools** into `PaperDeletion`,
+  which the demo tools and the project clear both use, so turning the demo
+  tools off for a deployment can't break deleting a project.
+- **Tests** run User Management against a small stub HTTP server standing
+  in for Storage Management (the story owner's call), so the call really
+  goes over HTTP; Storage Management's side has its own tests.
+
 ## 2026-10-24 — One compose stack, one Postgres, one web server
 
 - **The root `docker-compose.yml` runs the whole app** (the story

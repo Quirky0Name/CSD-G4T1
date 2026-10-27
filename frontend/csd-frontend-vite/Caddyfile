@@ -1,5 +1,5 @@
-# Serves the built frontend and passes API calls on to the services by their compose names:
-# the /api and /updating routes vite.config.ts's dev proxy has, plus /auth for User Management.
+# Serves the built frontend and passes API calls on to the services by their compose names,
+# the same routes vite.config.ts's dev proxy has: /api, /updating, and /auth and /projects.
 :80 {
 	encode zstd gzip
 
@@ -15,8 +15,9 @@
 	handle_path /updating/* {
 		reverse_proxy updating:8001
 	}
-	# User Management's paths already start with /auth, so nothing is stripped
-	handle /auth/* {
+	# User Management's own paths, so nothing is stripped
+	@users path /auth/* /projects /projects/*
+	handle @users {
 		reverse_proxy users:8080
 	}
 

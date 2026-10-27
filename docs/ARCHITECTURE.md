@@ -40,17 +40,16 @@ feature on their own.
   reports, the draft upload, a manual poll, deleting a paper.
 - Demo tools in Storage Management to replay a change on a real paper.
 
-Everything else from the original plan (User Management's projects, notes
-per paper, stance and claims checks, GROBID COI text, citation metrics,
-deployment, new related papers, topic discovery) is in
-[ROADMAP.md](ROADMAP.md).
+Everything else from the original plan (notes per paper, stance and claims
+checks, GROBID COI text, citation metrics, deployment, new related papers,
+topic discovery) is in [ROADMAP.md](ROADMAP.md).
 
 ## Services
 
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
-| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users`, `projects`, register, login and the JWTs. Register and login are built; projects aren't yet | `users/` |
-| Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls the services at `/api`, `/auth` and `/updating` on its own address (the Vite proxy in development, Caddy in the root stack) | `frontend/csd-frontend-vite/` |
+| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users` and `projects`: register, login and the JWTs, and each researcher's projects | `users/` |
+| Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls the services at `/api`, `/auth`, `/projects` and `/updating` on its own address (the Vite proxy in development, Caddy in the root stack) | `frontend/csd-frontend-vite/` |
 | Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts and notes, reports and documents, drafts | `storage/` |
 | Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact, notification); no database of its own | `backend/src/research_evaluation/` |
 | Updating | Python 3.13, FastAPI, APScheduler | the polling job and its small state (`tracked_papers`, `polls`) in its own schema | `backend/src/updating/` |
@@ -121,21 +120,23 @@ Rules that hold across the flow:
   calls back to User Management.
 - **Service tokens:** Updating (`svc:updating`) and Research Evaluation
   (`svc:research-evaluation`) mint short-lived tokens with `role=service`
-  (`common/service_token.py`). Storage Management's `/internal/**` takes
+  (`common/service_token.py`), and so does User Management (`svc:users`)
+  to clear a deleted project. Storage Management's `/internal/**` takes
   only service tokens; everything else takes only user tokens.
   `POST /evaluate/changes` and `/evaluate/reports` take any service token.
-- **For now** the frontend has no login page, so one hand-made "demo user"
-  token is used for everything, and Updating's `POST /run-poll` takes no
-  token.
+- **For now** Updating's `POST /run-poll` takes no token (CG-99).
 
 ## Projects
 
-Projects will belong to User Management; Storage Management holds only a
-bare `project_id` with no FK and no check. `project_id` null is the user's
-default project. Storage Management keys a project by (owner,
-`project_id`), so the same project id from two users is two projects. A
-tracked paper is in exactly one project, and its project's draft is the
-one impact reads. Details in CONTRACTS.md, "Projects".
+Projects belong to User Management (`GET/POST/PUT/DELETE /projects`);
+Storage Management holds only a bare `project_id` with no FK and no check.
+`project_id` null is the user's default project, which has no row in User
+Management. Storage Management keys a project by (owner, `project_id`), so
+the same project id from two users is two projects. A tracked paper is in
+exactly one project, and its project's draft is the one impact reads.
+Deleting a project first has Storage Management delete its papers and
+draft (`DELETE /internal/projects/{id}`); if that fails, the project stays
+and can be deleted again. Details in CONTRACTS.md, "Projects".
 
 ## Data model
 
@@ -160,7 +161,8 @@ Updating's own schema (`updating`, Alembic): `tracked_papers` (`paper_id`,
 
 User Management's own schema (`users`, Flyway, `users/src/main/resources/db/migration/`):
 `users` (`id`, the JWT's `sub`; lowercase `email`, unique; BCrypt
-`password_hash`; `created_at`).
+`password_hash`; `created_at`) and `projects` (`id`; `owner_id`, the user's
+id; `name`, one of each per owner; `created_at`).
 
 ## Deployment
 

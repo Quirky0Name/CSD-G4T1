@@ -18,7 +18,8 @@ Spring Data repository, the entity, and response records.
 
 | Package | What |
 |---|---|
-| `paper/` | tracked papers: upload, track by DOI, list (`PaperService`), the internal list and PDF read |
+| `paper/` | tracked papers: upload, track by DOI, list (`PaperService`), the internal list and PDF read, deleting a paper with everything that refers to it (`PaperDeletion`) |
+| `project/` | clearing a project User Management deleted: its papers and its draft (`ProjectService`, `DELETE /internal/projects/{id}`) |
 | `snapshot/` | `snapshots`: store a snapshot, read the snapshot history (`after_id`, `last`, `limit`) |
 | `alert/` | alerts (internal store, change keys; user list, status), alert notes; `LowercaseEnumConverter` |
 | `report/` | reports and documents: open, read, mark investigated, store the evaluation (`ReportService`), store a document and download its PDF (`ReportDocumentService`), the user's report list |
@@ -171,6 +172,9 @@ deployment). User token, own papers only. `DevService`:
 - `deletePaper`: the above plus the paper row and its PDF. Updating drops
   it from `tracked_papers` on its next poll. The frontend uses this to
   delete a paper.
+
+The deleting in both is `PaperDeletion`'s, which clearing a deleted project
+uses too, so switching the demo tools off can't break that.
 
 Swagger UI is at `/swagger-ui.html` (also always on).
 

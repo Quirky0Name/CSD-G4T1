@@ -20,3 +20,5 @@ spring:
 users:
   # the same base64 secret every service shares; it signs the tokens they check
   jwt-secret: ${JWT_SECRET}
+  # Storage Management, which clears a project's papers and draft when the project is deleted
+  storage-url: ${SM_BASE_URL:http://localhost:8081}

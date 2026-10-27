@@ -10,4 +10,6 @@ public interface PaperRepository extends JpaRepository<Paper, UUID> {
     boolean existsByOwnerIdAndDoi(UUID ownerId, String doi);
 
     List<Paper> findByOwnerIdOrderByCreatedAtDesc(UUID ownerId);
+
+    List<Paper> findByOwnerIdAndProjectId(UUID ownerId, UUID projectId);
 }
