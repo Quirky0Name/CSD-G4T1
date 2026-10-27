@@ -136,8 +136,12 @@ public class PaperService {
         return papers.findByOwnerIdOrderByCreatedAtDesc(ownerId).stream().map(PaperResponse::from).toList();
     }
 
+    // someone else's paper gets the same 404 as a missing one
     public void delete(UUID ownerId, UUID paperId) {
-        papers.findById(paperId).ifPresent(deletion::delete);
+        Paper paper = papers.findById(paperId)
+                .filter(found -> found.getOwnerId().equals(ownerId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId));
+        deletion.delete(paper);
     }
 
     private void rejectDuplicate(UUID ownerId, String doi) {
