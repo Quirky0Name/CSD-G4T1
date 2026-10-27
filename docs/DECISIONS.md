@@ -8,6 +8,19 @@ owned that story made.
 
 ---
 
+## 2026-10-27 — Papers are deleted through their own endpoint; the demo tools can be switched off
+
+- **`DELETE /papers/{id}`** (the story owner's call) is how the frontend
+  deletes a tracked paper, instead of the demo tools' `DELETE
+  /dev/papers/{id}`, so a server can turn the demo tools off without
+  breaking deletes. Both go through `PaperDeletion`.
+- **`DEV_TOOLS=false` takes the demo tools and Swagger away** (`404`). It
+  defaults to on everywhere, the server included, while the demo still
+  uses them on the live site. Off, nobody can fake a change on a paper,
+  which would spend Gemini calls and send a Telegram message.
+- Deferred (ROADMAP.md): running Storage Management as a non-root user,
+  and a health endpoint for the compose check (the port check works).
+
 ## 2026-10-27 — No notes: researchers don't keep notes on alerts or papers
 
 - **Notes are dropped entirely** (the story owner's call). The append-only
