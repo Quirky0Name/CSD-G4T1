@@ -16,6 +16,7 @@ import {
 import { ALERT_STATUS_LABEL, CHANGE_TYPE_LABEL, ALERT_SEVERITY_LABEL, compareAlerts, formatDateTime } from '../format'
 import { useTracking } from '../tracking'
 import { useToast } from './Toasts'
+import DebugJson from './DebugJson'
 
 // docs/CONTRACTS.md, POST /alerts/{id}/notes: "1 to 2000 characters".
 const ALERT_NOTE_MAX_LENGTH = 2000
@@ -51,6 +52,12 @@ export default function AlertList() {
         )}
       </div>
 
+      {state.status === 'ready' && (
+        <DebugJson
+          label="alerts (GET /papers/{id}/alerts)"
+          data={state.alerts.filter((alert) => !paperFilter || alert.paper_id === paperFilter)}
+        />
+      )}
       {state.status === 'loading' && <p className="text-sm text-gray-400">Loading alerts…</p>}
       {state.status === 'error' && (
         <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">

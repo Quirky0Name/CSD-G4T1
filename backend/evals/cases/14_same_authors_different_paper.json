@@ -1,0 +1,31 @@
+{
+  "category": "same authors, different paper",
+  "tier": "hard",
+  "paper": {"doi": "10.9999/fake.2018.014", "title": "High-yield ethanol extraction of curcumin from turmeric", "publication_year": 2018, "journal": "J. Fake Chemistry", "authors": ["Okonkwo, C.", "Eze, P."]},
+  "paper_text": "High-yield ethanol extraction of curcumin from turmeric\nOkonkwo, C., Eze, P.  J. Fake Chemistry, 2018\n\nAbstract\nA single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+  "alerts": [{"id": 141, "change_type": "retraction", "change_key": "retraction:10.9999/fake.2018.014r", "alert_severity": "high", "description": "A retraction notice was published for this paper.", "notice_doi": "10.9999/fake.2018.014r", "detected_at": "2026-10-01T00:00:00Z"}],
+  "documents": [
+    {"kind": "notice", "doi": "10.9999/fake.2018.014r", "update_to_includes_paper": true, "text": "Retraction: High-yield ethanol extraction of curcumin from turmeric\n\nThis article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered."}
+  ],
+  "draft_text": "Green solvents for natural-product extraction\n\n1. Introduction\nGreen solvents are increasingly used to extract bioactive compounds, as reviewed by Okonkwo and Eze (2021). Extraction yields above 90% from a single ethanol step have been claimed for turmeric, although these claims have since been questioned.\n\nReferences\nOkonkwo, C., & Eze, P. (2021). Green solvents for curcumin extraction: a review. J. Fake Chemistry, 12, 40-62.\nTan, W. (2019). Supercritical CO2 extraction. Fake Process Eng.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["high"], "ordered": true},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "impact.cited": {"accept": [false]},
+      "impact.impact_level": {"accept": ["none"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "impact.impact_level == high", "impact.impact_level == medium", "impact.cited == true"],
+    "facts": {
+      "must_include": [
+        "says the draft does not cite the retracted paper",
+        "says no action is needed for the draft"
+      ],
+      "must_not_include": [
+        "says the draft cites the retracted paper",
+        "recommends removing the 2021 review from the reference list"
+      ]
+    },
+    "why": "Rubric: 'A different paper by the same authors doesn't count' and impact is none when the draft doesn't cite the paper. The draft cites the authors' 2021 review (a different paper) and even mentions the retracted claim uncited, so a careless match on authors or topic gives a false positive."
+  }
+}

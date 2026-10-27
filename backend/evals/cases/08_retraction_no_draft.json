@@ -1,0 +1,30 @@
+{
+  "category": "no draft",
+  "paper": {"doi": "10.9999/fake.2019.008", "title": "Vitamin D supplements and bone density in older women", "publication_year": 2019, "journal": "J. Fake Medicine", "authors": ["Rossi, E.", "Wang, H."]},
+  "paper_text": "Vitamin D supplements and bone density in older women\nRossi, E., Wang, H.  J. Fake Medicine, 2019\n\nAbstract\nIn 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.\n\nResults\nSee Figure 2.",
+  "alerts": [{"id": 81, "change_type": "retraction", "change_key": "retraction:10.9999/fake.2019.008r", "alert_severity": "high", "description": "A retraction notice was published for this paper.", "notice_doi": "10.9999/fake.2019.008r", "detected_at": "2026-10-01T00:00:00Z"}],
+  "notice": {"doi": "10.9999/fake.2019.008r", "update_to_includes_paper": true, "text": "Retraction: Vitamin D supplements and bone density in older women\n\nThis article has been retracted after the authors found a coding error in the analysis that invalidates the main result. The reported 2.1% increase in bone density was not reproducible."},
+  "draft_text": null,
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["high"], "ordered": true},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "alert.scope": {"accept": ["whole_paper"]},
+      "impact.cited": {"accept": [false]},
+      "impact.impact_level": {"accept": ["high"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "impact.impact_level == none", "impact.impact_level == low"],
+    "facts": {
+      "must_include": [
+        "says the paper was retracted because of an analysis error that invalidates the main result",
+        "says the impact judgment is general because there is no draft",
+        "recommends uploading the draft so future changes can be judged against it"
+      ],
+      "must_not_include": [
+        "names a section of the researcher's draft",
+        "says the draft cites the paper"
+      ]
+    },
+    "why": "Rubric: with NO DRAFT, uses are empty and cited false, and impact is judged for a typical researcher using the paper as key_evidence: key_evidence x high = high. The actions prompt says to add an upload-the-draft action."
+  }
+}

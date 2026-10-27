@@ -1,0 +1,35 @@
+{
+  "category": "flag only, watermark on current copy",
+  "tier": "hard",
+  "paper": {"doi": "10.9999/fake.2018.019", "title": "Soil carbon gains after winter cover cropping", "publication_year": 2018, "journal": "J. Fake Agronomy", "authors": ["Haugen, S.", "Rao, V."]},
+  "paper_text": "Soil carbon gains after winter cover cropping\nHaugen, S., Rao, V.  J. Fake Agronomy, 2018\n\nAbstract\nWinter cover crops raised topsoil carbon by 6% over three years.\n\nMethods\nSoil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2.",
+  "alerts": [{"id": 191, "change_type": "retraction", "change_key": "retraction:openalex", "alert_severity": "high", "description": "OpenAlex marks this paper as retracted; no notice was found.", "notice_doi": null, "detected_at": "2026-10-01T00:00:00Z"}],
+  "documents": [
+    {"kind": "current_version", "doi": "10.9999/fake.2018.019", "text": null, "pdf_source_url": "https://example.org/haugen2018.pdf", "pdf_text": "RETRACTED - this article has been withdrawn by the publisher.\n\nSoil carbon gains after winter cover cropping\nHaugen, S., Rao, V.  J. Fake Agronomy, 2018\n\nAbstract\nWinter cover crops raised topsoil carbon by 6% over three years.\n\nMethods\nSoil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2."}
+  ],
+  "draft_text": "Cover crops and carbon in clay soils\n\n2. Methods\nWe sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.\n\nReferences\n[5] Haugen, S., Rao, V. (2018). Soil carbon gains after winter cover cropping. J. Fake Agronomy.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["high"], "ordered": true},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "alert.scope": {"accept": ["whole_paper", "unclear"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use.role": {"accept": ["methods_or_data"]},
+      "impact.use.affected": {"accept": ["yes"]},
+      "impact.impact_level": {"accept": ["high"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "change.severity == low", "impact.impact_level == none", "impact.impact_level == low"],
+    "facts": {
+      "must_include": [
+        "says the current copy of the paper carries a retraction or withdrawal banner",
+        "says the reason for the retraction is not stated",
+        "tells the researcher to stop and raise it with co-authors or supervisor because the draft's methods depend on the paper"
+      ],
+      "must_not_include": [
+        "states a specific reason for the retraction such as fabrication or error",
+        "claims a retraction notice was found or quotes one"
+      ]
+    },
+    "why": "Rubric: a retraction alert from OpenAlex's flag alone is 'unclear' unless the current copy shows a retraction watermark or banner, which this one does, so about_this_paper is 'yes' (contrast case 04). With metadata only, take the usual level for the type (high) and say so. The draft follows the protocol exactly: methods_or_data x high = high; the action is to stop and raise it, not to edit the text."
+  }
+}

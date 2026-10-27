@@ -1,0 +1,32 @@
+{
+  "category": "overclaiming draft",
+  "paper": {"doi": "10.9999/fake.2020.006", "title": "Peer tutoring and maths scores in primary school", "publication_year": 2020, "journal": "J. Fake Education", "authors": ["Hughes, L.", "Patel, N."]},
+  "paper_text": "Peer tutoring and maths scores in primary school\nHughes, L., Patel, N.  J. Fake Education, 2020\n\nAbstract\nIn 24 classes, weekly peer tutoring was associated with higher maths scores.\n\nResults\nTable 3 gives the mean gain: 8.4 points over a term.\n\nLimitations\nClasses were not randomised, so the association may not be causal.",
+  "alerts": [{"id": 61, "change_type": "correction", "change_key": "correction:10.9999/fake.2020.006c", "alert_severity": "medium", "description": "A correction notice was published for this paper.", "notice_doi": "10.9999/fake.2020.006c", "detected_at": "2026-10-01T00:00:00Z"}],
+  "notice": {"doi": "10.9999/fake.2020.006c", "update_to_includes_paper": true, "text": "Correction to: Peer tutoring and maths scores in primary school\n\nThe mean gain in Table 3 was reported as 8.4 points. The correct value is 3.1 points. The association remains statistically significant."},
+  "draft_text": "Scaling peer tutoring\n\n1. Introduction\nHughes and Patel [4] proved that peer tutoring raises maths scores by 8.4 points, so every school should adopt it.\n\nReferences\n[4] Hughes, L., Patel, N. (2020). Peer tutoring and maths scores in primary school. J. Fake Education.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["medium"], "ordered": true},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "alert.scope": {"accept": ["specific_parts"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use.role": {"accept": ["key_evidence"]},
+      "impact.use.affected": {"accept": ["yes"]},
+      "impact.impact_level": {"accept": ["medium"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "impact.impact_level == none"],
+    "facts": {
+      "must_include": [
+        "says the mean gain changed from 8.4 to 3.1 points",
+        "says the draft's Introduction is affected",
+        "points out that the draft's wording ('proved', causal) is stronger than the paper supports, which reported an association"
+      ],
+      "must_not_include": [
+        "claims the paper was retracted",
+        "mentions a gain other than 8.4 or 3.1 points"
+      ]
+    },
+    "why": "A corrected main number = medium; the draft rests on it as key evidence so medium. The last must_include fact is a stretch goal: the prompt doesn't ask for it, so failing it tells you about the prompt, not a bug."
+  }
+}
