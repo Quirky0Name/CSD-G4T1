@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-// Deleting a tracked paper and everything that refers to it. The demo tools and a deleted project
-// both use it, so it lives here rather than with the demo tools, which a deployment can switch off.
+// Deleting a tracked paper and everything that refers to it. DELETE /papers/{id}, the demo tools and a
+// deleted project all use it, so it lives here rather than with the demo tools, which DEV_TOOLS can switch off.
 @Service
 public class PaperDeletion {
 

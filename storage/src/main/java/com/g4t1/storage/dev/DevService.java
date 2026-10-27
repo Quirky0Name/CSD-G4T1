@@ -21,7 +21,7 @@ import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
-// Sets a paper up for a demo or a rehearsal. On for everyone for now; take out before a real deployment.
+// Sets a paper up for a demo or a rehearsal. DEV_TOOLS=false takes its endpoints off (DevController).
 @Service
 public class DevService {
 
