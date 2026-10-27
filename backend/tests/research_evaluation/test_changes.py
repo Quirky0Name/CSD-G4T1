@@ -266,6 +266,37 @@ def test_in_doaj_is_not_compared_unless_openalex_was_ok_in_both():
     assert find_changes(previous, snap(2, in_doaj=False)) == []
 
 
+# --- citation jump ---
+
+
+def test_a_citation_jump_is_keyed_by_snapshot_and_carries_both_counts():
+    [change] = find_changes(snap(1, cited_by_count=952), snap(2, cited_by_count=1252))
+
+    assert change.change_type is ChangeType.CITATION_JUMP
+    assert change.change_key == "citation_jump:2"
+    assert (change.previous_cited_by_count, change.cited_by_count) == (952, 1252)
+    assert change.detected_at == snap(2).fetched_at
+    assert (change.snapshot_id, change.previous_snapshot_id) == (2, 1)
+
+
+def test_a_paper_that_jumps_again_is_a_new_change():
+    first = find_changes(snap(1, cited_by_count=100), snap(2, cited_by_count=200))
+    second = find_changes(snap(3, cited_by_count=200), snap(4, cited_by_count=300))
+
+    assert [c.change_key for c in first + second] == ["citation_jump:2", "citation_jump:4"]
+
+
+@pytest.mark.parametrize(("previous", "current"), [(1247, 1252), (1252, 1252), (1252, 952), (None, 1252), (952, None)])
+def test_a_small_rise_no_change_a_drop_or_a_null_count_is_not_a_citation_jump(previous, current):
+    assert find_changes(snap(1, cited_by_count=previous), snap(2, cited_by_count=current)) == []
+
+
+def test_citation_counts_are_not_compared_unless_openalex_was_ok_in_both():
+    previous = snap(1, cited_by_count=952, source_status={"crossref": "ok", "openalex": "not_found"})
+
+    assert find_changes(previous, snap(2, cited_by_count=1252)) == []
+
+
 # --- several at once, and Updating's real snapshot shape ---
 
 

@@ -92,6 +92,21 @@ async def test_a_nudge_with_new_alerts_gives_one_investigated_report_with_its_do
     assert documents[PAPER_DOI]["pdf_status"] == "ok"
 
 
+async def test_a_citation_jump_gives_an_investigated_report_with_no_documents(client, sm, external):
+    paper = await sm.add_paper()
+    await sm.add_snapshot(paper, 1, cited_by_count=952)
+    await sm.add_snapshot(paper, 2, cited_by_count=1252)
+
+    assert (await nudge(client, [paper])).status_code == 202
+
+    [report_id] = await report_ids(sm, paper)
+    report = await read_report(sm, paper, report_id)
+    assert report["status"] == "investigated"
+    assert [a["change_type"] for a in report["alerts"]] == ["citation_jump"]
+    assert report["documents"] == []
+    assert external.requests == []
+
+
 async def test_each_document_is_stored_with_its_links_and_only_crossref_and_europe_pmc_are_asked(
     client, sm, external
 ):

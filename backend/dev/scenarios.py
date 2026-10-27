@@ -37,6 +37,8 @@ class Scenario(StrEnum):
     CROSSREF_RETRACTION = auto()  # IJAA: Crossref lists no retraction notice yet
     CORRECTIONS = auto()  # Lancet: no correction, erratum or expression of concern yet
     DOAJ_DELISTING = auto()  # Lancet: its journal was still in DOAJ
+    CITATION_JUMP = auto()  # Lancet: 300 fewer citations than now (1252)
+    SMALL_CITATION_RISE = auto()  # Lancet: 5 fewer citations than now, too few to alert on
     NO_CHANGE = auto()  # JBC: nothing has changed since
     NO_DOI = auto()  # a paper Updating can't poll
 
@@ -85,6 +87,10 @@ def before_snapshot(scenario: Scenario) -> Snapshot | None:
             return _without_updates("lancet", CORRECTION_TYPES)
         case Scenario.DOAJ_DELISTING:
             return fixture_snapshot("lancet", in_doaj=True)
+        case Scenario.CITATION_JUMP:
+            return fixture_snapshot("lancet", cited_by_count=952)
+        case Scenario.SMALL_CITATION_RISE:
+            return fixture_snapshot("lancet", cited_by_count=1247)
         case Scenario.NO_CHANGE:
             return fixture_snapshot("jbc")
         case Scenario.NO_DOI:

@@ -264,6 +264,8 @@ To see a nudge without waiting for a real change, seed a paper whose
 | `crossref_retraction` | IJAA | a new `retraction` notice |
 | `corrections` | Lancet | new `correction`, `erratum`, `expression_of_concern` notices |
 | `doaj_delisting` | Lancet | `in_doaj true -> false` |
+| `citation_jump` | Lancet | `cited_by_count 952 -> <today's count>` |
+| `small_citation_rise` | Lancet | none: 5 citations is too few |
 | `no_change` | JBC | none |
 | `no_doi` | none | none: `skipped_no_doi` |
 

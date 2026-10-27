@@ -132,7 +132,10 @@ Gemini, so pick the provider again when they're started.
   candidate) for stance.
 - [ ] **Newly appearing related papers** (Updating), topic-based
   discovery, and highlighting the most relevant passages in a paper.
-- [ ] Alerting on citation counts (stored, never compared).
+- [ ] Alert on a slow, steady rise in citations too, against the count at
+  the paper's last citation jump rather than the previous poll's.
+- [ ] List the newly citing works in a citation jump's report, so impact
+  can judge what the new attention is.
 
 ## Deployment
 

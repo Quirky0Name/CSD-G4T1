@@ -8,6 +8,34 @@ owned that story made.
 
 ---
 
+## 2026-10-26 — Citation jumps alert, through the whole pipeline
+
+- **A citation jump is a rise in OpenAlex's `cited_by_count` of at least
+  10 and at least 20 % of the previous count, between two consecutive
+  snapshots** (the story owner's call, CG-88). The absolute floor stops a
+  paper going from 1 to 2 citations counting as +100 %; the relative floor
+  stops a heavily cited paper's ordinary growth counting as a jump. A drop
+  never counts. The numbers are constants, not settings.
+- **Updating and Research Evaluation share the rule** (`common/citations.py`).
+  Updating otherwise only does plain comparisons, but nudging on every
+  rise would nudge most papers on every poll, and a threshold of its own
+  could drift from Research Evaluation's and miss alerts.
+- **Keyed by snapshot** (`citation_jump:<snapshot_id>`), like a DOAJ
+  delisting, because a paper can jump again. Alert severity `low`.
+- **It goes through investigation, impact and Telegram like any other
+  alert** (the story owner's call). Investigation fetches nothing for it.
+  Impact's step 1 is told it's new attention, not a change to the content,
+  with severity `low`, so the gate lets it through and steps 2 and 3 say
+  what to do. Rejected: a Telegram message straight from the rule text
+  that skips Gemini (impact judges integrity changes and would mostly
+  answer "nothing to do", but the story owner wanted one path for every
+  alert), and a stored alert with no message.
+- Rejected: comparing against the count at the last citation alert, so a
+  slow, steady climb alerts eventually. It needs a baseline per paper
+  beyond the snapshot window Research Evaluation reads; it's on ROADMAP.md.
+
+---
+
 ## 2026-10-26 — Projects live in User Management; deleting one clears Storage Management first
 
 - **Names are unique per user, trimmed but otherwise exact** (the story
@@ -569,7 +597,8 @@ owned that story made.
   nothing changed**: each user gets their own baseline, differences can be
   worked out and replayed after the fact. Keying by DOI was rejected
   (fan-out logic for a few rows saved).
-- **Citation counts stored, not alerted on.**
+- *Superseded (2026-10-26, citation jumps alert):* **Citation counts
+  stored, not alerted on.**
 - Facts from live responses that shape the rules: `updated-by` lists one
   notice per source, sometimes under different types (identify entries by
   `notice_doi`, `type`); DOAJ status belongs to the journal, and repository

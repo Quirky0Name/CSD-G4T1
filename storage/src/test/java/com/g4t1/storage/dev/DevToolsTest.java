@@ -12,6 +12,9 @@ import com.g4t1.storage.snapshot.SnapshotService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -113,6 +116,26 @@ class DevToolsTest {
                 .andExpect(jsonPath("$.is_retracted").value(true))
                 .andExpect(jsonPath("$.crossref_updates[*].type").value(
                         containsInAnyOrder("retraction", "retraction", "erratum")));
+    }
+
+    @Test
+    void undoingACitationJumpStoresTheSameDataWithNoCitations() throws Exception {
+        storeSnapshot(paperId, true);
+
+        undo(paperId, "citation_jump", user).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.cited_by_count").value(0))
+                .andExpect(jsonPath("$.is_retracted").value(true))
+                .andExpect(jsonPath("$.crossref_updates.length()").value(4));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = 0)
+    void aPaperWithNoCitationsHasNoCitationJumpToUndo(Integer citedByCount) throws Exception {
+        storeSnapshot(paperId, false, citedByCount);
+
+        undo(paperId, "citation_jump", user).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value("Paper " + paperId + " has no citation_jump to undo"));
     }
 
     @Test
@@ -223,10 +246,14 @@ class DevToolsTest {
     }
 
     private long storeSnapshot(UUID paper, boolean retracted) {
+        return storeSnapshot(paper, retracted, 1252);
+    }
+
+    private long storeSnapshot(UUID paper, boolean retracted, Integer citedByCount) {
         return snapshotService.store(paper, new SnapshotRequest("10.1016/s0140-6736(20)31180-6",
                 Instant.parse("2026-09-27T12:00:00Z"), "W3027680906", "Hydroxychloroquine or chloroquine", 2020,
                 retracted, json.readTree(NOTICES), false, "S49861241", "journal", "The Lancet", "0140-6736",
-                "Elsevier BV", json.readTree("[]"), 1252,
+                "Elsevier BV", json.readTree("[]"), citedByCount,
                 json.readTree("{\"crossref\": \"ok\", \"openalex\": \"ok\", \"openalex_authors\": \"ok\"}"))).snapshotId();
     }
 

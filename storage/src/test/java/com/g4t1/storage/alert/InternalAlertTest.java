@@ -123,6 +123,19 @@ class InternalAlertTest {
                 .andExpect(jsonPath("$.notice_doi").value(nullValue()));
     }
 
+    @Test
+    void aCitationJumpIsAccepted() throws Exception {
+        Map<String, Object> body = body();
+        body.put("change_type", "citation_jump");
+        body.put("change_key", "citation_jump:42");
+        body.put("alert_severity", "low");
+        body.remove("notice_doi");
+
+        store(paperId, body)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.change_type").value("citation_jump"));
+    }
+
     @ParameterizedTest
     @EnumSource(ChangeType.class)
     void everyChangeTypeIsAccepted(ChangeType type) throws Exception {

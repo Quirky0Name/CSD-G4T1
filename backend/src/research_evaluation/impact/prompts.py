@@ -12,12 +12,13 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from research_evaluation.changes import ChangeType
 from research_evaluation.impact.inputs import MissingPdf, ReportInputs, label
 from research_evaluation.impact.llm import Part, Pdf
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 3
+PROMPT_VERSION = 4
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -58,6 +59,12 @@ newer version or a replacement); it has no alert of its own. Each document's
 links are the DOIs and URLs it points at. STORED PAPER is the paper as it was
 when the researcher started tracking it.
 
+A citation_jump alert is different: OpenAlex counted a sudden rise in the
+works citing the paper, and its line gives the counts. It has no notice and
+no document, and it means new attention, not a change to the paper's
+content: about_this_paper "yes", what_changed the rise, scope
+citations_only, severity low, evidence empty.
+
 For each alert:
 1. about_this_paper: is it really about the tracked paper?
    - "no" when the notice's DOI is the paper's own DOI and nothing else
@@ -75,7 +82,7 @@ For each alert:
 3. scope: whole_paper, specific_parts, administrative (authors,
    affiliations, funding, conflict-of-interest statements, typos, licence,
    references), journal_only (for example, the journal left the DOAJ
-   directory), or unclear.
+   directory), citations_only (a citation_jump), or unclear.
    affected_parts: for specific_parts, each part (a figure, table, section,
    dataset, analysis or claim) and the paper's findings that rest on it,
    written so they can be matched against a sentence that cites the paper.
@@ -93,7 +100,7 @@ For each alert:
    - low: something a careful reader should know, but the main findings
      stand: a correction to a secondary number, figure or method detail; a
      clarification; a new version with minor changes; a journal-level
-     change such as leaving the DOAJ directory.
+     change such as leaving the DOAJ directory; a citation jump.
    - none (not meaningful): typos, author names or affiliations, funding or
      conflict-of-interest statements, formatting; a notice about another
      article; a notice whose DOI is the paper's own with no other sign of a
@@ -242,10 +249,14 @@ def alerts_block(alerts: list[AlertInReport]) -> str:
     ]
     for alert in alerts:
         notice = f"notice {alert.notice_doi}" if alert.notice_doi else "no notice"
-        lines.append(
+        line = (
             f"- alert {alert.id}: {alert.change_type}, {notice}, "
             f"detected {alert.detected_at.date().isoformat()}, alert severity {alert.alert_severity}"
         )
+        # the counts are only in the rule's description; other alerts' descriptions are generic
+        if alert.change_type == ChangeType.CITATION_JUMP:
+            line += f": {alert.description}"
+        lines.append(line)
     return "\n".join(lines)
 
 
