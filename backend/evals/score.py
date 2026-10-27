@@ -1,27 +1,28 @@
-"""Eval scorer: compares saved runner results with each case's expected answers. No LLM calls.
+"""Eval scorer & viewer: compares saved runner results with expected answers. No LLM calls.
 
     python evals/score.py                 # newest results folder
     python evals/score.py results/<stamp> # a specific one
 
-Per run it scores the fixed-choice tags (exact match; one level off on an ordered level is half
-credit), flags hard failures, and checks that quoted evidence appears in the case's own text.
-If judge.py has been run on the folder, the free-text score is added."""
+Per run it scores tags, flags hard failures, checks quotes, and displays a rich terminal grid
+alongside advanced actionable diagnostics for prompt engineering."""
 
 import json
 import re
 import sys
-from collections import defaultdict
+from collections import defaultdict, Counter
 from pathlib import Path
+
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 
 ROOT = Path(__file__).parent
 LEVELS = ["none", "low", "medium", "high"]
+console = Console()
 
 
 def resolve(ev: dict, path: str) -> list:
-    """The model's value(s) for a tag path. A list because a draft can have several uses.
-
-    change.severity | change.has_relations | alert.<field> (first alert) | alert#<id>.<field>
-    impact.<field> | impact.use.<field> (any use) | impact.use@<section text>.<field>"""
+    """The model's value(s) for a tag path."""
     a = ev["assessment"]
     change, impact = a.get("change") or {}, a.get("impact")
     if path == "change.severity":
@@ -76,8 +77,6 @@ def norm(text: str) -> str:
 def ungrounded_quotes(ev: dict, case: dict) -> tuple[int, int]:
     docs = ([case["notice"]] if case.get("notice") else []) + list(case.get("documents") or [])
     doc_text = [t or "" for d in docs for t in (d.get("text"), d.get("title"), d.get("pdf_text"))]
-    # the model also quotes what the prompt shows besides the texts: the alert lines and the
-    # notice's Crossref title
     alert_lines = [
         f"{a['change_type']}, {'notice ' + a['notice_doi'] if a.get('notice_doi') else 'no notice'}, "
         f"detected {a['detected_at'][:10]}"
@@ -100,14 +99,16 @@ def score_run(path: Path, case: dict) -> dict:
     expected = case["expected"]
     out = {"case": path.name.split("__")[0], "category": case["category"], "path": path}
     if ev["assessment"]["placeholder"]:
-        return {**out, "failed": True, "tag": 0.0, "hard": [], "bad_quotes": 0, "quotes": 0, "detail": {}}
+        return {**out, "failed": True, "tag": 0.0, "hard": [], "bad_quotes": 0, "quotes": 0, "detail": {}, "failed_facts": []}
     detail = {t: score_tag(spec, resolve(ev, t)) for t, spec in expected["tags"].items()}
     bad, total = ungrounded_quotes(ev, case)
     judge_path = path.with_suffix(".judge.json")
     text = None
+    failed_facts = []
     if judge_path.exists():
         items = json.loads(judge_path.read_text())["items"]
         text = sum(i["pass"] for i in items) / len(items) if items else None
+        failed_facts = [i["fact"] for i in items if not i["pass"]]
     return {
         **out,
         "failed": False,
@@ -117,48 +118,165 @@ def score_run(path: Path, case: dict) -> dict:
         "quotes": total,
         "text": text,
         "detail": detail,
+        "failed_facts": failed_facts,
     }
+
+
+def colour(s: float) -> str:
+    return "green" if s == 1 else "yellow" if s > 0 else "red"
+
+
+def short(value) -> str:
+    return "null" if value is None else str(value).lower() if isinstance(value, bool) else str(value)
 
 
 def main() -> None:
     folders = sorted((ROOT / "results").glob("*"))
     folder = Path(sys.argv[1]) if len(sys.argv) > 1 else folders[-1]
     cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
+    
     runs = [
         score_run(p, cases[p.name.split("__")[0]])
         for p in sorted(folder.glob("*__run*.json"))
         if not p.name.endswith(".judge.json")
     ]
-    print(f"results: {folder}\n")
-    for r in runs:
-        flags = []
-        if r["failed"]:
-            flags.append("PLACEHOLDER (failed run)")
-        if r["hard"]:
-            flags.append("HARD FAIL: " + ", ".join(r["hard"]))
-        if r["bad_quotes"]:
-            flags.append(f"{r['bad_quotes']}/{r['quotes']} quotes not in input")
-        miss = [f"{t}={s}" for t, s in r["detail"].items() if s < 1]
-        text = f" text={r['text']:.2f}" if r.get("text") is not None else ""
-        print(f"{Path(r['path']).stem:<48} tag={r['tag']:.2f}{text}  {'; '.join(flags + miss)}")
 
+    # --- 1. RICH GRID ---
+    counts: dict[str, int] = {}
+    for c in cases.values():
+        for t in c["expected"]["tags"]:
+            counts[t] = counts.get(t, 0) + 1
+
+    tags = [t for t, n in counts.items() if n >= 5]
+    grid_table = Table(title=f"Results Grid: {folder.name}  (green = match, yellow = one level off, red = wrong)")
+    grid_table.add_column("case", no_wrap=True, min_width=30)
+    for t in tags:
+        grid_table.add_column(t.replace("impact.", "i.").replace("alert.", "a.").replace("change.", "c."), justify="center")
+    grid_table.add_column("tag", justify="right")
+    grid_table.add_column("text", justify="right")
+    grid_table.add_column("flags", style="red")
+    grid_table.add_column("misses (tag: got)", overflow="fold")
+
+    for path in sorted(folder.glob("*__run?.json")):
+        ev = json.loads(path.read_text())
+        r = next((run for run in runs if run["path"] == path), None)
+        if not r:
+            continue
+            
+        row_cells = [path.name.split("__")[0][:30]]
+        for t in tags:
+            if t not in r["detail"]:
+                row_cells.append("[dim]-[/]")
+                continue
+            got = "/".join(dict.fromkeys(short(v) for v in resolve(ev, t)))
+            row_cells.append(f"[{colour(r['detail'][t])}]{got}[/]")
+        
+        flags = ["PLACEHOLDER"] * r["failed"] + [f"HARD: {h}" for h in r["hard"]]
+        if r["bad_quotes"]:
+            flags.append(f"{r['bad_quotes']} bad quote")
+        misses = [
+            f"{t}: {'/'.join(dict.fromkeys(short(v) for v in resolve(ev, t)))}"
+            for t, sc in r["detail"].items()
+            if sc < 1 and t not in tags
+        ]
+        row_cells += [
+            f"{r['tag']:.2f}",
+            f"{r['text']:.2f}" if r.get("text") is not None else "-",
+            "; ".join(flags),
+            "; ".join(misses),
+        ]
+        grid_table.add_row(*row_cells)
+    
+    console.print(grid_table)
+
+    # --- 2. CATEGORY SUMMARY TABLE ---
     by_cat = defaultdict(list)
     for r in runs:
         by_cat[r["category"]].append(r)
-    print(f"\n{'category':<30}{'runs':>5}{'tag':>7}{'text':>7}{'hard':>6}{'fail':>6}{'badquote':>9}")
+
+    cat_table = Table(title="Performance Summary by Category")
+    for col in ("Category", "Runs", "Avg Tag", "Avg Text", "Hard Fails", "Placeholders", "Bad Quotes"):
+        cat_table.add_column(col, justify="right" if col != "Category" else "left")
+
     for cat, rs in sorted(by_cat.items()):
-        print(row(cat, rs))
-    print(row("OVERALL", runs))
-
-
-def row(name: str, rs: list[dict]) -> str:
-    texts = [r["text"] for r in rs if r.get("text") is not None]
-    text = f"{sum(texts) / len(texts):.2f}" if texts else "-"
-    tag = sum(r["tag"] for r in rs) / len(rs)
-    return (
-        f"{name:<30}{len(rs):>5}{tag:>7.2f}{text:>7}{sum(bool(r['hard']) for r in rs):>6}"
-        f"{sum(r['failed'] for r in rs):>6}{sum(r['bad_quotes'] for r in rs):>9}"
+        c_valid = [r for r in rs if not r["failed"]]
+        texts = [r["text"] for r in c_valid if r.get("text") is not None]
+        text_avg = f"{sum(texts) / len(texts):.2f}" if texts else "-"
+        tag_avg = sum(r["tag"] for r in c_valid) / len(c_valid) if c_valid else 0.0
+        cat_table.add_row(
+            cat,
+            str(len(rs)),
+            f"{tag_avg:.2f}",
+            text_avg,
+            str(sum(bool(r['hard']) for r in rs)),
+            str(sum(r['failed'] for r in rs)),
+            str(sum(r['bad_quotes'] for r in rs)),
+        )
+    
+    valid_runs = [r for r in runs if not r["failed"]]
+    all_texts = [r["text"] for r in valid_runs if r.get("text") is not None]
+    overall_text_avg = f"{sum(all_texts) / len(all_texts):.2f}" if all_texts else "-"
+    overall_tag_avg = sum(r["tag"] for r in valid_runs) / len(valid_runs) if valid_runs else 0.0
+    cat_table.add_row(
+        "OVERALL",
+        str(len(runs)),
+        f"{overall_tag_avg:.2f}",
+        overall_text_avg,
+        str(sum(bool(r['hard']) for r in runs)),
+        str(sum(r['failed'] for r in runs)),
+        f"[bold]{sum(r['bad_quotes'] for r in runs)}[/bold]",
     )
+    console.print(cat_table)
+
+    # --- 3. ADVANCED ACTIONABLE DIAGNOSTICS ---
+    total_runs = len(runs)
+    if total_runs > 0:
+        diag_panel_lines = [
+            f"[bold cyan]Total Test Runs Executed:[/] {total_runs}",
+            f"[bold cyan]Successful Runs Rate:[/]    {len(valid_runs)}/{total_runs} ({len(valid_runs)/total_runs*100:.1f}%)",
+            f"[bold cyan]Average Structured Tag Score:[/] {overall_tag_avg:.3f} / 1.000",
+            f"[bold cyan]Average LLM Judge Text Score:[/] {float(overall_text_avg):.3f} / 1.000" if overall_text_avg != "-" else "[bold cyan]Average LLM Judge Text Score:[/] N/A (run judge.py first)",
+        ]
+
+        # Tag weaknesses
+        tag_misses = Counter()
+        tag_partial = Counter()
+        for r in valid_runs:
+            for t, s in r["detail"].items():
+                if s == 0.0:
+                    tag_misses[t] += 1
+                elif s == 0.5:
+                    tag_partial[t] += 1
+                    
+        if tag_misses:
+            diag_panel_lines.append("\n[bold red]❌ Top Structured Tag Misses (0.0 Score):[/]")
+            for t, count in tag_misses.most_common(5):
+                diag_panel_lines.append(f"  • {t}: completely failed in {count} runs")
+        if tag_partial:
+            diag_panel_lines.append("\n[bold yellow]⚠️ Top Partial Tag Matches (0.5 Score - Tune Levels):[/]")
+            for t, count in tag_partial.most_common(3):
+                diag_panel_lines.append(f"  • {t}: off-by-one level in {count} runs")
+
+        # Fact weaknesses
+        fact_misses = Counter()
+        for r in valid_runs:
+            for fact in r.get("failed_facts", []):
+                fact_misses[fact] += 1
+        if fact_misses:
+            diag_panel_lines.append("\n[bold yellow]📝 Top Missed Free-Text Facts:[/]")
+            for f, count in fact_misses.most_common(5):
+                diag_panel_lines.append(f"  • (Missed {count}x) {f[:80]}...")
+
+        # Quote metrics
+        total_bad = sum(r["bad_quotes"] for r in valid_runs)
+        total_quotes = sum(r["quotes"] for r in valid_runs)
+        if total_quotes > 0:
+            rate = (total_bad / total_quotes) * 100
+            diag_panel_lines.append(f"\n[bold magenta]💬 Ungrounded Quote Rate:[/] {rate:.1f}% ({total_bad}/{total_quotes})")
+            if rate > 10:
+                diag_panel_lines.append("  [bold red]Action:[/] High hallucination! Strengthen source extraction constraints in prompts.")
+
+        console.print(Panel("\n".join(diag_panel_lines), title="📈 Advanced Actionable Diagnostics & Improvement Metrics", title_align="left"))
 
 
 if __name__ == "__main__":
