@@ -36,10 +36,6 @@ most needed first within each.
   Management, which can't tell the account is gone, so it can add papers
   and drafts nobody owns any more. Shorter tokens, or Storage Management
   asking User Management, would close it.
-- [ ] Frontend login, auth state and a JWT-attaching interceptor in place
-  of the demo token hard-coded in `api.ts`, which expires on 2026-10-28.
-  Plus a Vite proxy entry for User Management in development (it sends no
-  CORS headers; the root stack's web server already routes `/auth`).
 - [ ] `POST /run-poll` takes the user's JWT (CG-99).
 - [ ] Notifications to the paper's owner instead of one hard-coded
   Telegram chat (needs users and contact details).
@@ -148,6 +144,9 @@ Gemini, so pick the provider again when they're started.
   as well as 80, and a volume for Caddy's `/data` so its certificates
   survive. Only 80 and 443 open; the database and PDF volumes on its disk
   and backed up together (S3 for the PDFs later if it outgrows one VM).
+- [ ] Turn the demo tools off on the server (`DEV_TOOLS=false`) once the
+  demo no longer needs them: any registered user can fake a change on
+  their own paper, which spends Gemini calls and sends a Telegram message.
 - [ ] Keep `/updating` off the public web server (or behind Caddy's
   `basic_auth`) until `POST /run-poll` takes the user's JWT (CG-99):
   anyone can start a poll today.
@@ -157,7 +156,6 @@ Gemini, so pick the provider again when they're started.
   day's poll.
 - [ ] CI that builds each image on merge to `main` and redeploys (today CI
   is a Trivy scan and Telegram PR pings).
-- [ ] Before a real deployment: the `/dev` tools and Swagger off by a
-  setting, real secrets, a health endpoint for Storage Management, and its
-  container not running as root (CG-133); a database role per service
-  instead of the one shared role.
+- [ ] Before a real deployment: real secrets, a health endpoint for
+  Storage Management, and its container not running as root; a database
+  role per service instead of the one shared role.
