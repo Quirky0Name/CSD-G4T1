@@ -30,3 +30,10 @@ storage:
 
 server:
   port: ${PORT:8081}
+
+# Swagger goes with the demo tools (storage.dev-tools above)
+springdoc:
+  api-docs:
+    enabled: ${storage.dev-tools}
+  swagger-ui:
+    enabled: ${storage.dev-tools}
