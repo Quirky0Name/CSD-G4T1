@@ -363,7 +363,7 @@ be in `GET /papers/{id}/alerts` a moment before it's in a report.
 | `status` | `investigating` (its documents are being fetched, or fetching stopped midway; nothing resumes it yet), `investigated` (fetching finished) or `assessed` (impact wrote its evaluation) |
 | `created_at`, `investigated_at` | when the report was opened, and when fetching finished (null until then) |
 | `evaluation`, `recommendation`, `evaluated_at` | impact's evaluation of the report's alerts together, what the researcher should do, and when it was written. Null until the report is `assessed`, and also null on an assessed report whose change impact rated `none` (not meaningful) |
-| `alerts` | the report's alerts, in the same shape and order as `GET /papers/{id}/alerts` (newest first, then most severe), **dismissed ones included**, with their status. They're the same alerts, acted on with `PATCH /alerts/{id}` and `/alerts/{id}/notes`. Can be empty: when a retraction notice arrives after a retraction alert that had none, the alert moves to the paper's next report (see `POST /internal/papers/{id}/alerts`), and the earlier report keeps its documents |
+| `alerts` | the report's alerts, in the same shape and order as `GET /papers/{id}/alerts` (newest first, then most severe), **dismissed ones included**, with their status. They're the same alerts, acted on with `PATCH /alerts/{id}`. Can be empty: when a retraction notice arrives after a retraction alert that had none, the alert moves to the paper's next report (see `POST /internal/papers/{id}/alerts`), and the earlier report keeps its documents |
 | `documents` | what investigation fetched, oldest first (the order it stored them) |
 
 | Document field | Meaning |
