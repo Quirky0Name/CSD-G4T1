@@ -38,7 +38,8 @@ feature on their own.
 - A Telegram message to one hard-coded chat when a report is assessed.
 - The frontend: tracked papers, alerts (acknowledge, dismiss),
   reports, the draft upload, a manual poll, deleting a paper.
-- Demo tools in Storage Management to replay a change on a real paper.
+- Demo tools in Storage Management to replay a change on a real paper
+  (off with `DEV_TOOLS=false`).
 
 Everything else from the original plan (stance and claims checks, GROBID COI text, citation metrics, deployment, new related papers,
 topic discovery) is in [ROADMAP.md](ROADMAP.md).
