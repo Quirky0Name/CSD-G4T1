@@ -50,6 +50,35 @@ owned that story made.
   (CG-99): `basic_auth` uses the same `Authorization` header the frontend
   sends its token in, so it would break the poll button.
 
+## 2026-10-27 — Impact is measured by an offline eval set, graded by a second model
+
+- **Hand-written cases run through the real `assess`, offline**
+  (`backend/evals/`, EVALUATION.md "Evals"), so a prompt or model change
+  gets a score to compare, not an impression from one demo paper. Cases
+  are fake papers written as text and turned into PDFs, so the expected
+  answer is known and nothing real is quoted. Rejected: pytest (the
+  answers aren't deterministic and every run spends Gemini quota) and
+  scoring by hand.
+- **Answers are saved first and scored later**, so re-scoring or changing
+  the scorer costs no quota.
+- **Structured fields are scored in code; only the free text goes to a
+  judge.** Tags compare exact values, with half marks for one level off on
+  ordered levels. Quotes are checked against the case text.
+- **The judge reports, the code decides.** The judge only says whether
+  each statement is in the answer, with a quote, and never sees a gold
+  paragraph. Pass or fail (present for `must_include`, absent for
+  `must_not_include`) is worked out in code, so the judge can't be lenient
+  and length or style earns nothing.
+- **The judge has its own key and model** (`JUDGE_API_KEY`, `JUDGE_MODEL`),
+  so it doesn't use up the tested model's daily free-tier quota and
+  doesn't grade its own answers.
+- **Several runs per case, and their spread is the noise floor**: the
+  answers vary between runs, so a change smaller than the spread means
+  nothing.
+- **Dev only:** `fpdf2` and `rich` are added per command with
+  `uv run --with`, not as project dependencies, and the services never
+  import the evals.
+
 ## 2026-10-27 — Papers are deleted through their own endpoint; the demo tools can be switched off
 
 - **`DELETE /papers/{id}`** (the story owner's call) is how the frontend

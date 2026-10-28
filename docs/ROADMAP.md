@@ -108,8 +108,13 @@ most needed first within each.
   re-fetched document that differs from its stored row matters.
 - [ ] Impact: read the paper's earlier reports as context (E5: a
   correction, EoC and retraction in three reports; E4: an EoC lifted);
-  verify quotes against PDF text; compute the impact level in code from
+  verify quotes against PDF text (the evals already check them, offline,
+  against each case's text); compute the impact level in code from
   the change severity table; cache how a draft uses a paper.
+- [ ] Evals (EVALUATION.md, "Evals"): record a baseline score for the
+  current `PROMPT_VERSION` and re-run before each prompt change. Add
+  cases from real PDFs (the cases are text turned into simple PDFs) and
+  for the investigation side (which documents get fetched).
 
 ## Original scope not built
 
