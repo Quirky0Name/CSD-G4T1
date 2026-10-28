@@ -1,0 +1,36 @@
+{
+  "category": "partial retraction, two uses",
+  "tier": "hard",
+  "paper": {"doi": "10.9999/fake.2021.016", "title": "One week of sleep restriction raises fasting glucose: primary and subgroup results", "publication_year": 2021, "journal": "J. Fake Metabolism", "authors": ["Lindqvist, E.", "Abara, N."]},
+  "paper_text": "One week of sleep restriction raises fasting glucose: primary and subgroup results\nLindqvist, E., Abara, N.  J. Fake Metabolism, 2021\n\nAbstract\nIn 90 healthy adults, one week of sleep restriction raised fasting glucose by 0.4 mmol/L. In a subgroup with BMI above 30 the rise was twice as large.\n\nResults\nTable 2 gives the primary analysis: fasting glucose rose by 0.4 mmol/L (95% CI 0.2 to 0.6).\nFigure 5 gives the subgroup analysis for participants with BMI above 30: a rise of 0.8 mmol/L.",
+  "alerts": [{"id": 161, "change_type": "retraction", "change_key": "retraction:10.9999/fake.2021.016r", "alert_severity": "high", "description": "A retraction notice was published for this paper.", "notice_doi": "10.9999/fake.2021.016r", "detected_at": "2026-10-01T00:00:00Z"}],
+  "documents": [
+    {"kind": "notice", "doi": "10.9999/fake.2021.016r", "update_to_includes_paper": true, "text": "Partial retraction: One week of sleep restriction raises fasting glucose: primary and subgroup results\n\nFigure 5 and the associated claims about participants with BMI above 30 are retracted because of a data-merging error that affected that subgroup only. The primary analysis in Table 2 and all other results are unaffected."}
+  ],
+  "draft_text": "Sleep, glucose and body weight\n\n1. Introduction\nShort sleep acutely raises fasting glucose: one week of restriction raised it by 0.4 mmol/L in healthy adults (Lindqvist and Abara [6]), which motivates our trial.\n\n4. Discussion\nThe effect may be larger in people with obesity, with a doubling reported in participants with BMI above 30 [6, 11].\n\nReferences\n[6] Lindqvist, E., Abara, N. (2021). One week of sleep restriction raises fasting glucose: primary and subgroup results. J. Fake Metabolism.\n[11] Hart, L. (2019). Obesity and glycaemic response. Fake Endocrinology.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["medium"], "ordered": false},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "alert.scope": {"accept": ["specific_parts"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use@Introduction.affected": {"accept": ["no"]},
+      "impact.use@Discussion.affected": {"accept": ["yes"]},
+      "impact.use@Discussion.role": {"accept": ["supporting"]},
+      "impact.impact_level": {"accept": ["low"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "impact.impact_level == none", "impact.impact_level == high"],
+    "facts": {
+      "must_include": [
+        "says only the BMI above 30 subgroup analysis (Figure 5) is retracted",
+        "says the primary result cited in the Introduction is not affected",
+        "says the Discussion sentence about participants with obesity relies on the retracted subgroup finding"
+      ],
+      "must_not_include": [
+        "says the whole paper is retracted",
+        "recommends removing the Introduction citation"
+      ]
+    },
+    "why": "The notice limits the retraction to a secondary subgroup (Figure 5), so the report is medium (a part in doubt), not high. The draft has two uses of the same reference: the Introduction rests on Table 2 (not affected), the Discussion on the retracted subgroup (affected, role supporting since [11] is cited too). supporting x medium = low. Tests per-use judgment, not one verdict for the whole paper."
+  }
+}

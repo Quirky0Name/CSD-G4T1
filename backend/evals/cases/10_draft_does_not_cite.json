@@ -1,0 +1,29 @@
+{
+  "category": "draft does not cite",
+  "paper": {"doi": "10.9999/fake.2018.010", "title": "Green roofs and urban cooling", "publication_year": 2018, "journal": "J. Fake Urban Studies", "authors": ["Haddad, Y.", "Berg, A."]},
+  "paper_text": "Green roofs and urban cooling\nHaddad, Y., Berg, A.  J. Fake Urban Studies, 2018\n\nAbstract\nGreen roofs lowered surface temperature by 4 C in three cities.",
+  "alerts": [{"id": 101, "change_type": "retraction", "change_key": "retraction:10.9999/fake.2018.010r", "alert_severity": "high", "description": "A retraction notice was published for this paper.", "notice_doi": "10.9999/fake.2018.010r", "detected_at": "2026-10-01T00:00:00Z"}],
+  "notice": {"doi": "10.9999/fake.2018.010r", "update_to_includes_paper": true, "text": "Retraction: Green roofs and urban cooling\n\nThis article has been retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified."},
+  "draft_text": "Street trees and heat in dense neighbourhoods\n\n1. Introduction\nStreet trees cool neighbourhoods through shade and evapotranspiration (Okoye, 2021). We measured temperatures along 12 streets.\n\nReferences\nOkoye, B. (2021). Shade and urban heat. J. Fake Urban Studies.\nFischer, L. (2016). Trees in cities. J. Fake Ecology.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["high"], "ordered": true},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "alert.scope": {"accept": ["whole_paper", "specific_parts"]},
+      "impact.cited": {"accept": [false]},
+      "impact.impact_level": {"accept": ["none"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "impact.impact_level == high", "impact.impact_level == medium"],
+    "facts": {
+      "must_include": [
+        "says the draft does not cite the retracted paper",
+        "says no action is needed for the draft or the alert can be dismissed"
+      ],
+      "must_not_include": [
+        "invents a citation of the retracted paper in the draft",
+        "recommends removing a reference from the draft"
+      ]
+    },
+    "why": "Rubric: impact is none when the draft doesn't cite the paper. The draft's reference list has two other papers by other authors, none matching the tracked paper. Tests that the model doesn't hallucinate a citation."
+  }
+}

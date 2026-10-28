@@ -1,0 +1,34 @@
+{
+  "category": "duplicate-publication retraction, group citation",
+  "tier": "hard",
+  "paper": {"doi": "10.9999/fake.2020.013", "title": "Wearable heart-rate monitoring in older adults: accuracy of wrist sensors", "publication_year": 2020, "journal": "Journal of Fake Cardiology", "authors": ["Nguyen, T.", "Cole, R."]},
+  "paper_text": "Wearable heart-rate monitoring in older adults: accuracy of wrist sensors\nNguyen, T., Cole, R.  Journal of Fake Cardiology, 2020\n\nAbstract\nWrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8 beats per minute of ECG.",
+  "alerts": [{"id": 131, "change_type": "retraction", "change_key": "retraction:10.9999/fake.2020.013r", "alert_severity": "high", "description": "A retraction notice was published for this paper.", "notice_doi": "10.9999/fake.2020.013r", "detected_at": "2026-10-01T00:00:00Z"}],
+  "documents": [
+    {"kind": "notice", "doi": "10.9999/fake.2020.013r", "update_to_includes_paper": true, "text": "Retraction: Wearable heart-rate monitoring in older adults: accuracy of wrist sensors\n\nThis article has been retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130). The data and findings are the same as in the earlier paper, which remains in the literature. The editors found no problem with the data themselves."}
+  ],
+  "draft_text": "Choosing a wearable for a falls-prevention trial\n\n1. Introduction\nWrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults (Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021).\n\nReferences\nAlvarez, M. et al. (2018). Optical heart-rate sensing at rest. J Fake Biomed Eng.\nFarouk, H. (2021). Sensors for older people. Fake Geriatrics Rev.\nNguyen, T., & Cole, R. (2020). Wearable heart rate monitoring in older adults. J Fake Cardiol, 14(2).",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["medium"], "ordered": false},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use.role": {"accept": ["supporting"]},
+      "impact.use.affected": {"accept": ["yes"]},
+      "impact.impact_level": {"accept": ["low"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "impact.impact_level == high", "impact.impact_level == none"],
+    "facts": {
+      "must_include": [
+        "says the retraction is for duplicate publication, not for errors or misconduct in the data",
+        "says the findings still stand in the original publication",
+        "advises keeping the citation and citing the retraction notice or the original paper"
+      ],
+      "must_not_include": [
+        "says the data were fabricated or unreliable",
+        "recommends deleting the sentence or the claim it supports"
+      ]
+    },
+    "why": "Rubric: a retraction for duplicate publication = medium, and the action is to keep the citation and cite the notice/original copy. The draft cites it in a group of three with an abbreviated journal name and a shortened title, so it must still be found (cited true). supporting x medium = low. The trap is 'retraction' = high = remove."
+  }
+}

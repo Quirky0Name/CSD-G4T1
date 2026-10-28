@@ -51,6 +51,8 @@ comments into the value.
 | `GEMINI_FALLBACK_MODELS` | RE | `gemini-flash-lite-latest`: comma-separated models tried in order when a call fails; empty for none |
 | `IMPACT_LLM_TIMEOUT_SECONDS` | RE | `120`, per Gemini call |
 | `TELEGRAM_BOT_TOKEN`, `NOTIFY_TELEGRAM_CHAT_ID` | RE | the bot and the one chat that gets every notification; off unless both are set |
+| `JUDGE_API_KEY` | `evals/judge.py` only | a second aistudio.google.com key (ideally another Google project) for the eval judge; empty falls back to `GEMINI_API_KEY` |
+| `JUDGE_MODEL` | `evals/judge.py` only | `gemini-flash-lite-latest`; better a different model from the one being tested |
 
 `backend/.env.example` still lists `S2_API_KEY`, `GROBID_URL`,
 `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` and `CACHE_MAX_ENTRIES`: no
@@ -299,6 +301,7 @@ uv run pytest                 # everything except live; no keys, Docker or Postg
 uv run pytest -m live         # hits real Crossref/OpenAlex/Europe PMC/Gemini/Telegram
 uv run ruff check
 uv run pytest tests/updating/test_scenarios.py   # the mock harness on recorded responses
+uv run --with fpdf2 --with rich python evals/all.py   # impact evals: real Gemini calls, needs GEMINI_API_KEY (EVALUATION.md, "Evals")
 
 cd storage
 ./mvnw test                   # H2, network mocked

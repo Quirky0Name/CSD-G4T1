@@ -15,11 +15,11 @@ login). See
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The system map: week-7 scope, services and ownership, data flow, auth, projects, data model, deployment |
 | [docs/STORAGE.md](docs/STORAGE.md) | Storage Management inside: papers and PDFs, drafts, snapshots, alerts, reports and documents, demo tools, code layout, gotchas |
-| [docs/EVALUATION.md](docs/EVALUATION.md) | Research Evaluation inside: detection and rules, investigation, Gemini impact and its fallback, the Telegram notification, code layout, gotchas |
+| [docs/EVALUATION.md](docs/EVALUATION.md) | Research Evaluation inside: detection and rules, investigation, Gemini impact and its fallback, the Telegram notification, the impact evals (purpose, how to run, reading the scores), code layout, gotchas |
 | [docs/UPDATING.md](docs/UPDATING.md) | Updating inside: the poll, the outage gate, when it nudges, the schedule, snapshots, code layout, gotchas |
 | [docs/CONTRACTS.md](docs/CONTRACTS.md) | Every endpoint between services and the frontend: request and response shapes, errors, auth |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Dated log of design decisions and why they were made |
-| [docs/SETUP.md](docs/SETUP.md) | Keys, env vars, running each service (Docker, local, stubs, mock harness), Telegram bot, tests |
+| [docs/SETUP.md](docs/SETUP.md) | Keys, env vars, running each service (Docker, local, stubs, mock harness), Telegram bot, tests and evals |
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Launching it on AWS (one EC2 instance behind CloudFront), day to day, pausing, restoring, cost |
 | [docs/DEMO.md](docs/DEMO.md) | The week-7 demo runbook |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | What isn't built yet and known gaps |

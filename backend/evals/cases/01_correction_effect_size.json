@@ -1,0 +1,33 @@
+{
+  "category": "contradiction",
+  "paper": {"doi": "10.9999/fake.2020.001", "title": "Mindfulness training reduces exam anxiety in undergraduates", "publication_year": 2020, "journal": "J. Fake Psychology", "authors": ["Smith, J.", "Lee, K.", "Tan, M."]},
+  "paper_text": "Mindfulness training reduces exam anxiety in undergraduates\nSmith, J., Lee, K., Tan, M.  J. Fake Psychology, 2020\n\nAbstract\nWe randomised 120 undergraduates to eight weeks of mindfulness training or a waitlist control. Training reduced self-reported exam anxiety relative to control.\n\nResults\nTable 2 reports the anxiety scores. Mindfulness training produced a large reduction in exam anxiety (d = 1.8, 95% CI 1.4 to 2.2).\n\nDiscussion\nThe effect was large and was not explained by age or course. The sample came from a single university.",
+  "alerts": [{"id": 12, "change_type": "correction", "change_key": "correction:10.9999/fake.2020.001c", "alert_severity": "medium", "description": "A correction notice was published for this paper.", "notice_doi": "10.9999/fake.2020.001c", "detected_at": "2026-10-01T00:00:00Z"}],
+  "notice": {"doi": "10.9999/fake.2020.001c", "update_to_includes_paper": true, "text": "Correction to: Mindfulness training reduces exam anxiety in undergraduates\n\nIn the original article, the effect size in Table 2 was reported incorrectly because of a calculation error. The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8. The direction of the effect and the conclusion that training reduced anxiety are unchanged. The authors apologise for the error."},
+  "draft_text": "Brief mindfulness programmes for exam stress\n\n1. Introduction\nExam anxiety harms performance and wellbeing. Smith et al. [12] found a large effect (d = 1.8), so we expect mindfulness to strongly reduce anxiety. We test a four-week version of the programme.\n\n2. Methods\nWe recruited 80 students and measured anxiety with a standard questionnaire before and after the programme.\n\nReferences\n[12] Smith, J., Lee, K., Tan, M. (2020). Mindfulness training reduces exam anxiety in undergraduates. J. Fake Psychology.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["medium"], "ordered": true},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "alert.scope": {"accept": ["specific_parts"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use.role": {"accept": ["key_evidence"]},
+      "impact.use.affected": {"accept": ["yes"]},
+      "impact.impact_level": {"accept": ["medium"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "impact.impact_level == none"],
+    "facts": {
+      "must_include": [
+        "says the effect size changed from d = 1.8 to d = 0.8",
+        "says the draft's Introduction is the affected part",
+        "tells the researcher to update the number or soften the 'large effect' wording"
+      ],
+      "must_not_include": [
+        "claims the paper was retracted",
+        "mentions an effect size other than 1.8 or 0.8",
+        "says the conclusion that training reduces anxiety is reversed"
+      ]
+    },
+    "why": "Impact table: key_evidence x medium = medium. The notice says the direction is unchanged, so severity is medium, not high."
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "category": "retraction, background only",
+  "paper": {"doi": "10.9999/fake.2017.009", "title": "Social media use and loneliness in adolescents", "publication_year": 2017, "journal": "J. Fake Psychology", "authors": ["Ivanov, K.", "Dubois, C."]},
+  "paper_text": "Social media use and loneliness in adolescents\nIvanov, K., Dubois, C.  J. Fake Psychology, 2017\n\nAbstract\nHeavy social media use was linked to higher loneliness in 1,000 adolescents.\n\nResults\nTable 1 gives the correlations.",
+  "alerts": [{"id": 91, "change_type": "retraction", "change_key": "retraction:10.9999/fake.2017.009r", "alert_severity": "high", "description": "A retraction notice was published for this paper.", "notice_doi": "10.9999/fake.2017.009r", "detected_at": "2026-10-01T00:00:00Z"}],
+  "notice": {"doi": "10.9999/fake.2017.009r", "update_to_includes_paper": true, "text": "Retraction: Social media use and loneliness in adolescents\n\nThe journal has retracted this article because the survey data were found to be unreliable. The conclusions cannot be relied on."},
+  "draft_text": "A diary study of teen friendships\n\n1. Introduction\nMany studies have examined adolescents' online lives (Ivanov and Dubois, 2017; Lee, 2019; Moreau, 2020). Our study asks a different question: how friendships are maintained during exams.\n\n2. Methods\nWe interviewed 20 students.\n\nReferences\nIvanov, K., & Dubois, C. (2017). Social media use and loneliness in adolescents. J. Fake Psychology.\nLee, S. (2019). Teens online. J. Fake Media.\nMoreau, A. (2020). Screens and sleep. J. Fake Health.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["high"], "ordered": true},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "alert.scope": {"accept": ["whole_paper"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use.role": {"accept": ["background", "supporting"]},
+      "impact.use.affected": {"accept": ["yes"]},
+      "impact.impact_level": {"accept": ["low"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "change.severity == low", "impact.impact_level == high"],
+    "facts": {
+      "must_include": [
+        "says the paper was retracted because the survey data were unreliable",
+        "says the draft cites it only as background context, among other sources",
+        "says the effect on the draft is limited, and suggests removing or replacing the citation"
+      ],
+      "must_not_include": [
+        "says the draft's methods or main argument depend on the paper"
+      ]
+    },
+    "why": "Severity high, but the use is background in a list of citations: background x high = low (supporting x high would be medium, so 'supporting' is tolerated for role but impact must still be low-ish; if the model picks supporting and medium, that is a genuine ambiguity to review)."
+  }
+}

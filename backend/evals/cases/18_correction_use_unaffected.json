@@ -1,0 +1,35 @@
+{
+  "category": "real change, draft use unaffected",
+  "tier": "hard",
+  "paper": {"doi": "10.9999/fake.2019.018", "title": "Ultrasound-guided nerve block and pain after knee surgery", "publication_year": 2019, "journal": "J. Fake Anaesthesia", "authors": ["Oyelaran, D.", "Voss, H."]},
+  "paper_text": "Ultrasound-guided nerve block and pain after knee surgery\nOyelaran, D., Voss, H.  J. Fake Anaesthesia, 2019\n\nAbstract\nIn 160 patients, an ultrasound-guided nerve block lowered pain scores 24 hours after knee replacement.\n\nResults\nTable 2 (primary outcome): mean pain score at 24 hours was 3.1 with the block and 5.2 without (p < 0.001).\nTable 4 (sensitivity analysis excluding patients with prior opioid use): mean opioid dose in the nerve-block group was 12 mg.",
+  "alerts": [{"id": 181, "change_type": "correction", "change_key": "correction:10.9999/fake.2019.018c", "alert_severity": "medium", "description": "A correction notice was published for this paper.", "notice_doi": "10.9999/fake.2019.018c", "detected_at": "2026-10-01T00:00:00Z"}],
+  "documents": [
+    {"kind": "notice", "doi": "10.9999/fake.2019.018c", "update_to_includes_paper": true, "text": "Correction to: Ultrasound-guided nerve block and pain after knee surgery\n\nIn Table 4 (the sensitivity analysis excluding patients with prior opioid use), the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg. The primary outcome in Table 2 and all other results are unchanged."}
+  ],
+  "draft_text": "Regional anaesthesia in day-case orthopaedics\n\n1. Introduction\nUltrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [4]: 3.1 versus 5.2), the outcome we test in a new population.\n\nReferences\n[4] Oyelaran, D., Voss, H. (2019). Ultrasound-guided nerve block and pain after knee surgery. J. Fake Anaesthesia.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["low"], "ordered": false},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "alert.scope": {"accept": ["specific_parts"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use.role": {"accept": ["key_evidence"]},
+      "impact.use.affected": {"accept": ["no"]},
+      "impact.impact_level": {"accept": ["none"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == high", "impact.impact_level == high", "impact.impact_level == medium"],
+    "facts": {
+      "must_include": [
+        "says the correction concerns the opioid dose in the Table 4 sensitivity analysis",
+        "says the draft's use of the pain scores is not affected",
+        "says no change to the draft is needed"
+      ],
+      "must_not_include": [
+        "recommends changing the pain-score claim",
+        "says the primary outcome is affected"
+      ]
+    },
+    "why": "Rubric: a correction to a secondary number is low; 'affected' is no when the change is elsewhere (Table 4, not Table 2), and impact is none when no use is affected. The draft is strong key_evidence and the alert_severity from the rules is medium, so overreacting is tempting."
+  }
+}

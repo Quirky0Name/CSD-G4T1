@@ -377,7 +377,7 @@ def impact_prompt(paper: PaperDetails, change: BaseModel, draft: bytes | None) -
     if draft is None:
         parts.append(NO_DRAFT)
     else:
-        parts += ["ATTACHED PDF: THE RESEARCHER'S DRAFT, the paper they are writing for this project.", Pdf(draft)]
+        parts += ["ATT ACHED PDF: THE RESEARCHER'S DRAFT, the paper they are writing for this project.", Pdf(draft)]
     parts.append(IMPACT_TASK)
     return parts
 

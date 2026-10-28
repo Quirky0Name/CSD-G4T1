@@ -13,6 +13,7 @@ import {
 import { ALERT_STATUS_LABEL, CHANGE_TYPE_LABEL, ALERT_SEVERITY_LABEL, compareAlerts, formatDateTime } from '../format'
 import { useTracking } from '../tracking'
 import { useToast } from './Toasts'
+import DebugJson from './DebugJson'
 
 const ALERT_SEVERITY_STYLES: Record<AlertSeverity, string> = {
   high: 'bg-red-400/10 text-red-400 inset-ring-red-400/20',
@@ -45,6 +46,12 @@ export default function AlertList() {
         )}
       </div>
 
+      {state.status === 'ready' && (
+        <DebugJson
+          label="alerts (GET /papers/{id}/alerts)"
+          data={state.alerts.filter((alert) => !paperFilter || alert.paper_id === paperFilter)}
+        />
+      )}
       {state.status === 'loading' && <p className="text-sm text-gray-400">Loading alerts…</p>}
       {state.status === 'error' && (
         <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">
