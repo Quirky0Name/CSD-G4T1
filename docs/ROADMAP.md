@@ -138,11 +138,12 @@ Gemini, so pick the provider again when they're started.
 
 ## Deployment
 
-- [ ] Host the root compose stack on one EC2 VM (CG-136), with 4 GB or
-  more (the stack idles at about 3 GB, GROBID's 2 GB included). Only 80
-  and 443 open; the database and PDF volumes on its disk and backed up
-  together (S3 for the PDFs later if it outgrows one VM). HTTPS on a
-  hostname (`SITE_ADDRESS`) and Adminer behind a password are built.
+- [ ] Launch the stack on AWS (CG-136, CG-137): the kit is built
+  (`deploy/`, DEPLOY.md), and the first launch is still to do. S3 for the
+  PDFs later if they outgrow one disk.
+- [ ] A domain for the site, if the `*.cloudfront.net` address isn't good
+  enough: CloudFront takes it with an ACM certificate, and nothing in the
+  app changes.
 - [ ] Turn the demo tools off on the server (`DEV_TOOLS=false`) once the
   demo no longer needs them: any registered user can fake a change on
   their own paper, which spends Gemini calls and sends a Telegram message.
