@@ -8,6 +8,29 @@ owned that story made.
 
 ---
 
+## 2026-10-28 — On AWS: one EC2 instance behind CloudFront, from one template
+
+- **One EC2 instance runs the root compose stack** (the story owner's
+  call, CG-136), with Postgres and the PDFs on its disk. Rejected: Render
+  (its free services sleep and cap memory below GROBID's 2 GB, so it
+  costs more than one instance once it's always on) and Vercel (the
+  frontend only); Supabase and S3 (2026-10-24 and 2026-10-27).
+- **CloudFront in front, for HTTPS on a `*.cloudfront.net` address.**
+  Rejected: a DuckDNS name, which SMU's network blocks as dynamic DNS, so
+  the site would be unreachable on campus Wi-Fi. A domain can replace the
+  CloudFront address later without touching the app. CloudFront caches only
+  the built frontend's files and passes every header, cookie and method on;
+  it waits at most 60 seconds, which a long poll can exceed.
+- **Only CloudFront can reach the instance** (its managed prefix list on
+  port 80); there's no SSH, Session Manager instead. Secrets live in
+  Parameter Store and become the server's `.env` at boot.
+- **N. Virginia (us-east-1), not Singapore** (the story owner's call): about
+  20 % cheaper, for about a quarter of a second more on every request from
+  Singapore. CloudFront still serves the frontend's files from nearby.
+- **One CloudFormation template** (`deploy/stack.yml`), so the whole thing
+  is created, and deleted, in one step from the console. Nightly disk
+  snapshots, 7 kept, back up the database and the PDFs together.
+
 ## 2026-10-28 — HTTPS from Caddy, and Adminer behind a password
 
 - **Caddy serves HTTPS when `SITE_ADDRESS` is a hostname** (the story
