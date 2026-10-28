@@ -1,4 +1,4 @@
-"""Eval scorer & viewer: compares saved runner results with expected answers. No LLM calls.
+"""Eval scorer: compares saved runner results with expected answers. No LLM calls.
 
     python evals/score.py                 # newest results folder
     python evals/score.py results/<stamp> # a specific one
@@ -17,7 +17,16 @@ from rich.panel import Panel
 from rich.table import Table
 
 ROOT = Path(__file__).parent
+sys.path.insert(0, str(ROOT.parent / "src"))
+
+from research_evaluation.impact.prompts import alerts_block, paper_block  # noqa: E402
+from research_evaluation.storage import AlertInReport, PaperDetails  # noqa: E402
+
 LEVELS = ["none", "low", "medium", "high"]
+# the fixed source names the step 1 prompt allows besides a notice's DOI, by document kind
+KIND_LABELS = {"current_version": "current copy", "new_version": "new version"}
+DOI = re.compile(r"10\.\d{4,9}/\S+")
+ALERT = re.compile(r"alert\s*#?\s*(\d+)")
 console = Console()
 
 
@@ -74,24 +83,79 @@ def norm(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().lower()
 
 
-def ungrounded_quotes(ev: dict, case: dict) -> tuple[int, int]:
-    docs = ([case["notice"]] if case.get("notice") else []) + list(case.get("documents") or [])
-    doc_text = [t or "" for d in docs for t in (d.get("text"), d.get("title"), d.get("pdf_text"))]
-    alert_lines = [
-        f"{a['change_type']}, {'notice ' + a['notice_doi'] if a.get('notice_doi') else 'no notice'}, "
-        f"detected {a['detected_at'][:10]}"
-        for a in case["alerts"]
-    ]
-    source = norm(
-        " ".join(
-            [case["paper_text"], case.get("draft_text") or "", *doc_text, *alert_lines]
-        )
-    )
+def quote_sources(case: dict) -> dict[str, str]:
+    """Each label the model may give as an evidence quote's source, and the (normalised) text
+    behind it, as the prompt showed it. "draft" is for impact's uses, which have no label."""
+    texts: dict[str, list[str]] = defaultdict(list)
+    paper = PaperDetails.model_validate(case["paper"])
+    texts["stored paper"] += [paper_block(paper), case["paper_text"]]
+    if paper.doi:
+        texts[paper.doi.lower()] += texts["stored paper"]
+    texts["draft"].append(case.get("draft_text") or "")
+    docs = ([{"kind": "notice", **case["notice"]}] if case.get("notice") else []) + list(case.get("documents") or [])
+    for d in docs:
+        text = " ".join(t for t in (d.get("text"), d.get("title"), d.get("pdf_text")) if t)
+        texts[d["doi"].lower()].append(text)
+        if d["kind"] in KIND_LABELS:
+            texts[KIND_LABELS[d["kind"]]].append(text)
+    for alert in case["alerts"]:
+        # the alert's own line, without alerts_block's header, exactly as the prompt has it
+        line = alerts_block([AlertInReport.model_validate(alert)]).split("\n", 1)[1]
+        texts[f"alert {alert['id']}"].append(line)
+    return {label: norm(" ".join(parts)) for label, parts in texts.items()}
+
+
+def source_label(source: str, sources: dict[str, str]) -> str | None:
+    """The quote_sources key a model's source names, or None when it names none of them."""
+    source = norm(source)
+    doi = DOI.search(source)
+    if doi and doi.group().rstrip(".,;)") in sources:
+        return doi.group().rstrip(".,;)")
+    alert = ALERT.search(source)
+    if alert and f"alert {alert.group(1)}" in sources:
+        return f"alert {alert.group(1)}"
+    return next((name for name in ("stored paper", "current copy", "new version") if name in source and name in sources), None)
+
+
+def quoted_in(quote: str, text: str) -> bool:
+    """A normalised quote is in a normalised text; "..." or "…" in the quote skips words, so each
+    piece must be there, in order."""
+    start = 0
+    for piece in filter(None, (p.strip() for p in re.split(r"\.\.\.|…", quote))):
+        found = text.find(piece, start)
+        if found < 0:
+            return False
+        start = found + len(piece)
+    return True
+
+
+def check_quotes(ev: dict, case: dict) -> dict[str, int]:
+    """Each quote is invented (in none of the case's texts), misattributed (in one, but not the one
+    its source names; for impact's uses, not in the draft) or of unknown source (real, but its
+    source names no text)."""
+    sources = quote_sources(case)
     a = ev["assessment"]
-    quotes = [e["quote"] for al in (a.get("change") or {}).get("alerts", []) for e in al["evidence"]]
-    quotes += [u["quote"] for u in (a.get("impact") or {}).get("uses", [])]
-    bad = sum(1 for q in quotes if norm(q) not in source)
-    return bad, len(quotes)
+    found = {"quotes": 0, "invented": 0, "misattributed": 0, "unknown_source": 0}
+    claimed = [
+        (e["quote"], source_label(e["source"], sources))
+        for al in (a.get("change") or {}).get("alerts", [])
+        for e in al["evidence"]
+    ]
+    claimed += [(u["quote"], "draft") for u in (a.get("impact") or {}).get("uses", [])]
+    for quote, label in claimed:
+        q = norm(quote)
+        found["quotes"] += 1
+        if not any(quoted_in(q, text) for text in sources.values()):
+            found["invented"] += 1
+        elif label is None:
+            found["unknown_source"] += 1
+        elif not quoted_in(q, sources[label]):
+            found["misattributed"] += 1
+    return found
+
+
+def quote_flags(r: dict) -> list[str]:
+    return [f"{r[k]} {k.replace('_', ' ')}" for k in ("invented", "misattributed", "unknown_source") if r[k]]
 
 
 def score_run(path: Path, case: dict) -> dict:
@@ -99,9 +163,9 @@ def score_run(path: Path, case: dict) -> dict:
     expected = case["expected"]
     out = {"case": path.name.split("__")[0], "category": case["category"], "path": path}
     if ev["assessment"]["placeholder"]:
-        return {**out, "failed": True, "tag": 0.0, "hard": [], "bad_quotes": 0, "quotes": 0, "detail": {}, "failed_facts": []}
+        # the steps that finished before every model failed are kept, so their quotes still count
+        return {**out, "failed": True, "tag": 0.0, "hard": [], **check_quotes(ev, case), "detail": {}, "failed_facts": []}
     detail = {t: score_tag(spec, resolve(ev, t)) for t, spec in expected["tags"].items()}
-    bad, total = ungrounded_quotes(ev, case)
     judge_path = path.with_suffix(".judge.json")
     text = None
     failed_facts = []
@@ -114,8 +178,7 @@ def score_run(path: Path, case: dict) -> dict:
         "failed": False,
         "tag": sum(detail.values()) / len(detail),
         "hard": hard_fails(ev, expected.get("hard_fail_if", [])),
-        "bad_quotes": bad,
-        "quotes": total,
+        **check_quotes(ev, case),
         "text": text,
         "detail": detail,
         "failed_facts": failed_facts,
@@ -171,9 +234,7 @@ def main() -> None:
             got = "/".join(dict.fromkeys(short(v) for v in resolve(ev, t)))
             row_cells.append(f"[{colour(r['detail'][t])}]{got}[/]")
         
-        flags = ["PLACEHOLDER"] * r["failed"] + [f"HARD: {h}" for h in r["hard"]]
-        if r["bad_quotes"]:
-            flags.append(f"{r['bad_quotes']} bad quote")
+        flags = ["PLACEHOLDER"] * r["failed"] + [f"HARD: {h}" for h in r["hard"]] + quote_flags(r)
         misses = [
             f"{t}: {'/'.join(dict.fromkeys(short(v) for v in resolve(ev, t)))}"
             for t, sc in r["detail"].items()
@@ -195,7 +256,7 @@ def main() -> None:
         by_cat[r["category"]].append(r)
 
     cat_table = Table(title="Performance Summary by Category")
-    for col in ("Category", "Runs", "Avg Tag", "Avg Text", "Hard Fails", "Placeholders", "Bad Quotes"):
+    for col in ("Category", "Runs", "Avg Tag", "Avg Text", "Hard Fails", "Placeholders", "Invented", "Misattributed", "Unknown Source"):
         cat_table.add_column(col, justify="right" if col != "Category" else "left")
 
     for cat, rs in sorted(by_cat.items()):
@@ -210,7 +271,7 @@ def main() -> None:
             text_avg,
             str(sum(bool(r['hard']) for r in rs)),
             str(sum(r['failed'] for r in rs)),
-            str(sum(r['bad_quotes'] for r in rs)),
+            *(str(sum(r[k] for r in rs)) for k in ("invented", "misattributed", "unknown_source")),
         )
     
     valid_runs = [r for r in runs if not r["failed"]]
@@ -224,7 +285,7 @@ def main() -> None:
         overall_text_avg,
         str(sum(bool(r['hard']) for r in runs)),
         str(sum(r['failed'] for r in runs)),
-        f"[bold]{sum(r['bad_quotes'] for r in runs)}[/bold]",
+        *(f"[bold]{sum(r[k] for r in runs)}[/bold]" for k in ("invented", "misattributed", "unknown_source")),
     )
     console.print(cat_table)
 
@@ -268,13 +329,20 @@ def main() -> None:
                 diag_panel_lines.append(f"  • (Missed {count}x) {f[:80]}...")
 
         # Quote metrics
-        total_bad = sum(r["bad_quotes"] for r in valid_runs)
-        total_quotes = sum(r["quotes"] for r in valid_runs)
+        # every run, placeholders included: a placeholder keeps the quotes of the steps that finished
+        total_quotes = sum(r["quotes"] for r in runs)
         if total_quotes > 0:
-            rate = (total_bad / total_quotes) * 100
-            diag_panel_lines.append(f"\n[bold magenta]💬 Ungrounded Quote Rate:[/] {rate:.1f}% ({total_bad}/{total_quotes})")
-            if rate > 10:
+            invented = sum(r["invented"] for r in runs)
+            misattributed = sum(r["misattributed"] for r in runs)
+            unknown = sum(r["unknown_source"] for r in runs)
+            diag_panel_lines.append(f"\n[bold magenta]💬 Quotes checked:[/] {total_quotes}")
+            diag_panel_lines.append(f"  • Invented (in no text of the case): {invented / total_quotes * 100:.1f}% ({invented})")
+            diag_panel_lines.append(f"  • Misattributed (real, but not in the source named): {misattributed / total_quotes * 100:.1f}% ({misattributed})")
+            diag_panel_lines.append(f"  • Unknown source (real, source names no text): {unknown / total_quotes * 100:.1f}% ({unknown})")
+            if invented / total_quotes > 0.1:
                 diag_panel_lines.append("  [bold red]Action:[/] High hallucination! Strengthen source extraction constraints in prompts.")
+            if misattributed:
+                diag_panel_lines.append("  [bold red]Action:[/] Quotes credited to the wrong document: check the cases flagged misattributed.")
 
         console.print(Panel("\n".join(diag_panel_lines), title="📈 Advanced Actionable Diagnostics & Improvement Metrics", title_align="left"))
 

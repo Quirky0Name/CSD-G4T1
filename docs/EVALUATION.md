@@ -381,7 +381,7 @@ one command only, from uv's cache, and never touches `pyproject.toml`,
 
 ```
 cd backend
-uv run --with fpdf2 --with rich python evals/all.py                  # asks, then run → judge → summary → grid; 3 runs per case
+uv run --with fpdf2 --with rich python evals/all.py                  # asks, then run → judge → summary → score; 3 runs per case
 uv run --with fpdf2 --with rich python evals/all.py 01_correction_effect_size --runs 1
 uv run --with fpdf2 --with rich python evals/all.py --skip-run       # re-judge and re-score the newest results, no generation
 uv run --with fpdf2 --with rich python evals/all.py --folder evals/results/<stamp> --skip-run
@@ -394,7 +394,6 @@ Or one step at a time (each defaults to the newest results folder):
 | `run.py [case ...] [--runs N] [--into <folder>]` | Each case through `assess`; saves `<case>__run<N>.json` (the `Evaluation` as stored) in `evals/results/<UTC stamp>/`. `--into` adds to an existing folder; `--dry` only builds the inputs and prints what each case attaches | yes, `GEMINI_*` |
 | `judge.py [<folder>] [--redo]` | A second model grades the three free-text fields against the case's facts; writes `<run>.judge.json`. Skips placeholders and runs already judged | yes, `JUDGE_*` |
 | `score.py [<folder>]` | The grid, a table per category with an OVERALL row, and the most missed tags and facts | no |
-| `view.py [<case>] [--folder <folder>]` | The grid; with a case, expected vs got, the free text and each judged fact | no |
 
 `run.py` reads `GEMINI_API_KEY`, `GEMINI_MODEL` and
 `GEMINI_FALLBACK_MODELS` from the environment or `backend/.env`, with the
@@ -428,10 +427,26 @@ On a failed step it stops; resume with `--folder <folder> --skip-run`.
   `must_not_include` passes when it's absent. A statement the judge
   skipped counts as failed.
 - **hard**: which `hard_fail_if` rules hit.
-- **bad quotes**: evidence and use quotes not found in the case's own
-  text (whitespace and curly quotes normalised).
+- **quotes**: each step 1 evidence quote is checked against the text its
+  `source` names, and each step 2 use quote against the draft. A source is
+  matched leniently: a DOI anywhere in it (a notice's, or the paper's own
+  for the stored paper), `stored paper`, `current copy`, `new version`, or
+  `alert <id>` for that alert's line, which is rebuilt with the prompt's
+  own `alerts_block`. Whitespace, case and curly quotes are normalised, and
+  `...` / `…` in a quote skips words. Each quote comes out as one of:
+  - **invented**: in none of the case's texts.
+  - **misattributed**: real, but not in the text its source names (for a
+    use, not in the draft).
+  - **unknown source**: real, but its source names no text (e.g.
+    `OpenAlex` for a retraction flag with no notice). The prompt has no
+    label for an alert's line yet; add `"alert <id>"` to it (a
+    `PROMPT_VERSION` bump) if these keep coming up.
+
+  A sentence that really is in two texts (a notice repeating the paper's
+  title) passes under either label.
 - **PLACEHOLDER**: every model failed a step. It scores 0 and isn't
-  judged.
+  judged, but the quotes of the steps that finished before it are still
+  checked.
 
 With several runs, `all.py` also prints each run's overall tag score and
 the spread between them. Read that spread as the noise floor: a prompt
@@ -457,7 +472,7 @@ run `run.py --dry <case>` to check that it builds.
 | Shared with Updating | `backend/src/common/`: `doi.py` (`normalize_doi`), `service_token.py` (`ServiceTokenAuth`), `config.py` |
 | Dev stub of Storage Management | `backend/dev/stub_storage.py` (every internal endpoint in memory, plus `/dev/*` helpers) |
 | Tests | `backend/tests/research_evaluation/` (with `investigation/` and `impact/`); fixtures in `backend/tests/fixtures/` |
-| Evals of impact (dev only) | `backend/evals/`: `cases/`, `run.py`, `judge.py`, `score.py`, `view.py`, `all.py` |
+| Evals of impact (dev only) | `backend/evals/`: `cases/`, `run.py`, `judge.py`, `score.py`, `all.py` |
 
 The lifespan makes four HTTP clients: Storage Management's (base URL,
 service token, 10 s), one for Crossref and Europe PMC, one for Telegram

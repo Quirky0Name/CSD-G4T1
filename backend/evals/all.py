@@ -1,4 +1,4 @@
-"""Eval orchestrator: run -> judge -> score -> view, all on the same results folder.
+"""Eval orchestrator: run -> judge -> score, all on the same results folder.
 
     python evals/all.py                              # prompts user, then runs ALL steps
     python evals/all.py 01_correction_effect_size    # specific case
@@ -66,7 +66,7 @@ def generate_summary(folder: Path) -> list[str]:
         by_case[r["case"]].append(r)
         by_run[r["run"]].append(r["tag"])
 
-    header = f"{'Case':<35}{'Runs':>5}{'Tag':>7}{'Spread':>12}{'Text':>7}{'Hard':>6}{'Fail':>6}{'BadQ':>7}"
+    header = f"{'Case':<35}{'Runs':>5}{'Tag':>7}{'Spread':>12}{'Text':>7}{'Hard':>6}{'Fail':>6}{'Inv':>5}{'Mis':>5}{'Unk':>5}"
     lines = [f"Results: {folder}\n", header, "-" * len(header)]
 
     for name, rs in sorted(by_case.items()):
@@ -78,7 +78,8 @@ def generate_summary(folder: Path) -> list[str]:
         row = (
             f"{name[:34]:<35}{len(rs):>5}{format_score(avg_tag):>7}{get_span(tags):>12}"
             f"{format_score(avg_text):>7}{sum(bool(r['hard']) for r in rs):>6}"
-            f"{sum(r['failed'] for r in rs):>6}{sum(r['bad_quotes'] for r in rs):>7}"
+            f"{sum(r['failed'] for r in rs):>6}{sum(r['invented'] for r in rs):>5}"
+            f"{sum(r['misattributed'] for r in rs):>5}{sum(r['unknown_source'] for r in rs):>5}"
         )
         lines.append(row)
 
@@ -98,7 +99,7 @@ def generate_summary(folder: Path) -> list[str]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Eval Orchestrator: Run -> Judge -> Score -> View")
+    parser = argparse.ArgumentParser(description="Eval Orchestrator: Run -> Judge -> Score")
     parser.add_argument("cases", nargs="*", help="Specific case file stems to run")
     parser.add_argument("--runs", type=int, default=3, help="Runs per case (default 3)")
     parser.add_argument("--folder", help="Target an existing results folder")
@@ -142,8 +143,8 @@ def main() -> None:
     (folder / "summary.txt").write_text(summary_text + "\n")
     print(f"\n💾 Saved summary to: {folder / 'summary.txt'}")
 
-    # Always run view.py at the end
-    run_step("view", "--folder", str(folder))
+    # Always run score.py at the end: the grid, the per-category table and the diagnostics
+    run_step("score", str(folder))
 
 
 if __name__ == "__main__":
