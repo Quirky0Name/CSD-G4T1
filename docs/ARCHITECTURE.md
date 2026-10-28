@@ -174,10 +174,12 @@ id, deleted with the user; `name`, one of each per owner; `created_at`).
 What exists: a Dockerfile per service (`storage/`, `users/`,
 `backend/research-evaluation.Dockerfile`, `backend/updating.Dockerfile`)
 and one for the website (`frontend/csd-frontend-vite/`: the built frontend
-served by Caddy, which also passes `/api`, `/auth` and `/updating` on to
-the services, so the browser talks to one address and no service needs
-CORS). The root `docker-compose.yml` runs all of them with GROBID and one
-shared Postgres, each service in its own schema, and publishes only the
+served by Caddy, which also passes `/api`, `/auth`, `/projects` and
+`/updating` on to the services, so the browser talks to one address and no
+service needs CORS). Given a hostname (`SITE_ADDRESS`), Caddy serves HTTPS
+and gets its own certificate. Adminer is at `/adminer`, behind a password
+and then Postgres's own login. The root `docker-compose.yml` runs all of
+them with GROBID and one shared Postgres, each service in its own schema, and publishes only the
 web server (SETUP.md, "Running the whole stack"). The per-service compose
 files stay for development. CI (`.github/workflows/`) is a Trivy
 vulnerability scan on PRs, pushes to `main` and weekly, plus Telegram

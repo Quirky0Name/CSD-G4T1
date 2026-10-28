@@ -89,9 +89,27 @@ Good to know:
 
 - `POSTGRES_PASSWORD` is set when the database is first created; to
   change it later, `down -v` (losing the data) and start again.
-- Only the website is reachable; it passes `/api`, `/auth` and
-  `/updating` on to the services. Swagger doesn't work through it, so use
-  the development stacks below for that.
+- Only the website is reachable; it passes `/api`, `/auth`, `/projects`
+  and `/updating` on to the services. Swagger doesn't work through it, so
+  use the development stacks below for that.
+- **Adminer** (the database's tables) is at `/adminer/`, behind a login of
+  its own: set `ADMIN_PASSWORD_HASH` in `.env` to the output of
+  `docker run --rm caddy:2.11-alpine caddy hash-password`, in single
+  quotes, and log in as `ADMIN_USER`. Then Postgres's login: server `db`,
+  user `app`, `POSTGRES_PASSWORD`, database `research_assistant`; the
+  schemas are `public` (Storage Management), `users` and `updating`.
+  Without a hash it lets nobody in. Past both logins it's the database's
+  owner (`app` is a superuser), so keep both passwords strong.
+- **HTTPS**, for a server: point the name at the machine and open 80 and
+  443 first, then set `SITE_ADDRESS` to the hostname, with `WEB_PORT=80`
+  and `HTTPS_PORT=443`. Caddy gets the certificate itself, keeps it in the
+  `caddy_data` volume and sends plain HTTP to HTTPS. It then answers only
+  that name, so `http://<ip>` gets an empty reply. Don't `down -v` the
+  server casually: that throws the certificate away too, and Let's Encrypt
+  limits how often one name gets a new one. Locally, `SITE_ADDRESS=localhost`
+  tries it with Caddy's own certificate (the browser warns): open
+  `https://localhost:8443` directly, since the redirect from plain HTTP
+  goes to port 443.
 
 ## Running everything in Docker
 

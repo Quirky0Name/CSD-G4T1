@@ -139,17 +139,16 @@ Gemini, so pick the provider again when they're started.
 ## Deployment
 
 - [ ] Host the root compose stack on one EC2 VM (CG-136), with 4 GB or
-  more (the stack idles at about 3 GB, GROBID's 2 GB included). HTTPS on a
-  hostname: the hostname as the Caddyfile's site address, 443 published
-  as well as 80, and a volume for Caddy's `/data` so its certificates
-  survive. Only 80 and 443 open; the database and PDF volumes on its disk
-  and backed up together (S3 for the PDFs later if it outgrows one VM).
+  more (the stack idles at about 3 GB, GROBID's 2 GB included). Only 80
+  and 443 open; the database and PDF volumes on its disk and backed up
+  together (S3 for the PDFs later if it outgrows one VM). HTTPS on a
+  hostname (`SITE_ADDRESS`) and Adminer behind a password are built.
 - [ ] Turn the demo tools off on the server (`DEV_TOOLS=false`) once the
   demo no longer needs them: any registered user can fake a change on
   their own paper, which spends Gemini calls and sends a Telegram message.
-- [ ] Keep `/updating` off the public web server (or behind Caddy's
-  `basic_auth`) until `POST /run-poll` takes the user's JWT (CG-99):
-  anyone can start a poll today.
+- [ ] Until `POST /run-poll` takes the user's JWT (CG-99), anyone can
+  start a poll through `/updating`. Caddy's `basic_auth` can't guard it:
+  it uses the `Authorization` header the frontend sends its token in.
 - [ ] Updating retries its startup poll while Storage Management isn't up
   yet (Updating's owner). After a host reboot Docker restarts the
   containers in no set order, and a poll that fails then counts as the
