@@ -8,6 +8,25 @@ owned that story made.
 
 ---
 
+## 2026-10-28 — HTTPS from Caddy, and Adminer behind a password
+
+- **Caddy serves HTTPS when `SITE_ADDRESS` is a hostname** (the story
+  owner's call: a free DuckDNS name), getting and renewing the certificate
+  itself; the `caddy_data` volume keeps it across restarts. Unset, it's
+  plain HTTP on `:80` as before, so local runs don't change.
+- **Adminer at `/adminer`, behind Caddy's `basic_auth` and then Postgres's
+  own login** (the story owner's call), so the data can be looked at from
+  a browser with no tunnel. Rejected: only through a Session Manager port
+  forward (safer, but everyone looking needs the AWS CLI). Past both
+  passwords it's full superuser access to the database from the internet,
+  which is accepted for a class project; it also needs `SITE_ADDRESS` set,
+  or the password goes over plain HTTP. Until `ADMIN_PASSWORD_HASH` is set,
+  the default is the hash of a password nobody kept, so it starts shut
+  rather than open.
+- **`/updating` stays open** until `POST /run-poll` takes the user's token
+  (CG-99): `basic_auth` uses the same `Authorization` header the frontend
+  sends its token in, so it would break the poll button.
+
 ## 2026-10-27 — Papers are deleted through their own endpoint; the demo tools can be switched off
 
 - **`DELETE /papers/{id}`** (the story owner's call) is how the frontend
