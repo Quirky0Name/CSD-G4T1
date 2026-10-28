@@ -20,6 +20,7 @@ login). See
 | [docs/CONTRACTS.md](docs/CONTRACTS.md) | Every endpoint between services and the frontend: request and response shapes, errors, auth |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Dated log of design decisions and why they were made |
 | [docs/SETUP.md](docs/SETUP.md) | Keys, env vars, running each service (Docker, local, stubs, mock harness), Telegram bot, tests |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Launching it on AWS (one EC2 instance behind CloudFront), day to day, pausing, restoring, cost |
 | [docs/DEMO.md](docs/DEMO.md) | The week-7 demo runbook |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | What isn't built yet and known gaps |
 | [docs/RE-changes-explained.md](docs/RE-changes-explained.md) | Research: every way each detected change shows up in real life, with real examples (the R1, C6, … case codes) |
