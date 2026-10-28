@@ -1,6 +1,7 @@
 package com.g4t1.storage.dev;
 
 import com.g4t1.storage.snapshot.SnapshotResponse;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,9 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
-// Demo and testing tools, on for everyone for now; take out before a real deployment.
-// User token, and only on the caller's own papers.
+// Demo and testing tools: user token, and only on the caller's own papers. DEV_TOOLS=false takes
+// them off a server where nobody should rewrite a paper's history.
 @RestController
+@ConditionalOnBooleanProperty("storage.dev-tools")
 @RequestMapping("/dev/papers/{paperId}")
 public class DevController {
 
@@ -39,7 +41,7 @@ public class DevController {
         dev.clearHistory(userId, paperId);
     }
 
-    // the paper and everything that refers to it: snapshots, alerts and notes, reports and documents, PDFs
+    // the paper and everything that refers to it: snapshots, alerts, reports and documents, PDFs
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePaper(@AuthenticationPrincipal UUID userId, @PathVariable UUID paperId) {

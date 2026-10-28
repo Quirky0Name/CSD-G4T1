@@ -1,6 +1,9 @@
 # Serves the built frontend and passes API calls on to the services by their compose names,
 # the same routes vite.config.ts's dev proxy has: /api, /updating, and /auth and /projects.
-:80 {
+# It also serves Adminer at /adminer, behind a password.
+# SITE_ADDRESS is :80 locally (plain HTTP). On the server it's the hostname, and Caddy then gets
+# the HTTPS certificate itself, serves 443 and sends 80 there.
+{$SITE_ADDRESS::80} {
 	encode zstd gzip
 
 	# just above Storage Management's own 30 MiB upload limit, so an oversized PDF gets its
@@ -19,6 +22,15 @@
 	@users path /auth/* /projects /projects/*
 	handle @users {
 		reverse_proxy users:8080
+	}
+
+	# Adminer, for looking at the database: this password first, then Postgres's own login
+	redir /adminer /adminer/
+	handle_path /adminer/* {
+		basic_auth {
+			{$ADMIN_USER} {$ADMIN_PASSWORD_HASH}
+		}
+		reverse_proxy adminer:8080
 	}
 
 	# a build file that isn't there is a 404, so a stale page after a redeploy fails plainly

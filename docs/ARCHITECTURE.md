@@ -36,21 +36,21 @@ feature on their own.
   researcher's draft (change severity, impact level, evaluation,
   recommendation).
 - A Telegram message to one hard-coded chat when a report is assessed.
-- The frontend: tracked papers, alerts (acknowledge, dismiss, notes),
+- The frontend: tracked papers, alerts (acknowledge, dismiss),
   reports, the draft upload, a manual poll, deleting a paper.
-- Demo tools in Storage Management to replay a change on a real paper.
+- Demo tools in Storage Management to replay a change on a real paper
+  (off with `DEV_TOOLS=false`).
 
-Everything else from the original plan (notes per paper, stance and claims
-checks, GROBID COI text, citation metrics, deployment, new related papers,
+Everything else from the original plan (stance and claims checks, GROBID COI text, citation metrics, deployment, new related papers,
 topic discovery) is in [ROADMAP.md](ROADMAP.md).
 
 ## Services
 
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
-| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users` and `projects`: register, login and the JWTs, and each researcher's projects | `users/` |
+| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users` and `projects`: register, login and the JWTs, each researcher's projects, and deleting an account | `users/` |
 | Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls the services at `/api`, `/auth`, `/projects` and `/updating` on its own address (the Vite proxy in development, Caddy in the root stack) | `frontend/csd-frontend-vite/` |
-| Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts and notes, reports and documents, drafts | `storage/` |
+| Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts, reports and documents, drafts | `storage/` |
 | Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact, notification); no database of its own | `backend/src/research_evaluation/` |
 | Updating | Python 3.13, FastAPI, APScheduler | the polling job and its small state (`tracked_papers`, `polls`) in its own schema | `backend/src/updating/` |
 
@@ -91,7 +91,7 @@ One poll, end to end:
    **impact** asks Gemini about the report and stores its evaluation (the
    report becomes `assessed`); then **notify** sends the Telegram message.
 5. The **frontend** reads alerts and reports from Storage Management; the
-   researcher acknowledges, dismisses or adds notes.
+   researcher acknowledges or dismisses them.
 
 Rules that hold across the flow:
 
@@ -121,9 +121,14 @@ Rules that hold across the flow:
 - **Service tokens:** Updating (`svc:updating`) and Research Evaluation
   (`svc:research-evaluation`) mint short-lived tokens with `role=service`
   (`common/service_token.py`), and so does User Management (`svc:users`)
-  to clear a deleted project. Storage Management's `/internal/**` takes
+  to clear a deleted project or account. Storage Management's `/internal/**` takes
   only service tokens; everything else takes only user tokens.
   `POST /evaluate/changes` and `/evaluate/reports` take any service token.
+- **Deleting an account** (`DELETE /auth/me`, with the password) has
+  Storage Management delete everything the user owns first
+  (`DELETE /internal/users/{id}`), then deletes the user and, through the
+  foreign key, their projects. Tokens aren't revoked, so one outlives its
+  account by up to 24 hours.
 - **For now** Updating's `POST /run-poll` takes no token (CG-99).
 
 ## Projects
@@ -141,14 +146,14 @@ and can be deleted again. Details in CONTRACTS.md, "Projects".
 ## Data model
 
 Storage Management's Postgres (Flyway, `storage/src/main/resources/db/migration/`;
-diagram: [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html)):
+diagram, up to V9: [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html); V11 drops its
+`alert_notes`):
 
 | Table | One row per | Migration |
 |---|---|---|
 | `papers` | user tracking a paper (owner, project, DOI, metadata at ingest, PDF `file_key`) | V1, V9 |
 | `alerts` | detected change on a paper (type, `change_key`, rule-based alert severity and text, the researcher's status, `report_id`) | V3, V7, V9 |
 | `snapshots` | snapshot Updating sent (insert-only, the full snapshot history per paper) | V4, V9 |
-| `alert_notes` | note in the researcher's log on an alert | V5 |
 | `drafts` | project's draft PDF | V6, V9 |
 | `reports` | nudge that stored new alerts for a paper (status, impact's evaluation) | V7, V8 |
 | `report_documents` | DOI fetched for a report (notice, new version, related document, current copy) | V7 |
@@ -162,20 +167,24 @@ Updating's own schema (`updating`, Alembic): `tracked_papers` (`paper_id`,
 User Management's own schema (`users`, Flyway, `users/src/main/resources/db/migration/`):
 `users` (`id`, the JWT's `sub`; lowercase `email`, unique; BCrypt
 `password_hash`; `created_at`) and `projects` (`id`; `owner_id`, the user's
-id; `name`, one of each per owner; `created_at`).
+id, deleted with the user; `name`, one of each per owner; `created_at`).
 
 ## Deployment
 
 What exists: a Dockerfile per service (`storage/`, `users/`,
 `backend/research-evaluation.Dockerfile`, `backend/updating.Dockerfile`)
 and one for the website (`frontend/csd-frontend-vite/`: the built frontend
-served by Caddy, which also passes `/api`, `/auth` and `/updating` on to
-the services, so the browser talks to one address and no service needs
-CORS). The root `docker-compose.yml` runs all of them with GROBID and one
-shared Postgres, each service in its own schema, and publishes only the
+served by Caddy, which also passes `/api`, `/auth`, `/projects` and
+`/updating` on to the services, so the browser talks to one address and no
+service needs CORS). Given a hostname (`SITE_ADDRESS`), Caddy serves HTTPS
+and gets its own certificate. Adminer is at `/adminer`, behind a password
+and then Postgres's own login. The root `docker-compose.yml` runs all of
+them with GROBID and one shared Postgres, each service in its own schema, and publishes only the
 web server (SETUP.md, "Running the whole stack"). The per-service compose
 files stay for development. CI (`.github/workflows/`) is a Trivy
 vulnerability scan on PRs, pushes to `main` and weekly, plus Telegram
-messages when a PR is opened or approved. Nothing is hosted yet; the
-target is one EC2 VM running the root compose stack, with the database
-and PDF volumes on its disk (ROADMAP.md).
+messages when a PR is opened or approved. On AWS (DEPLOY.md,
+`deploy/stack.yml`) the root compose stack runs on one EC2 instance, with
+the database and the PDFs on its disk and snapshotted nightly, behind
+CloudFront, which gives the browser HTTPS and is the only thing that can
+reach the instance.

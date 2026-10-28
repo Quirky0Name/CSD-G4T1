@@ -1,0 +1,20 @@
+# Brings the stack up at boot. Docker restarts the containers itself, but in no set order, so
+# Updating's startup poll can run before Storage Management is ready; restarting Updating once the
+# rest is healthy runs that poll again with everything up.
+[Unit]
+Description=Research assistant (root docker-compose.yml)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/research-assistant
+ExecStart=/usr/bin/docker compose up -d --build --wait
+ExecStartPost=/usr/bin/docker compose restart updating
+ExecStop=/usr/bin/docker compose stop
+TimeoutStartSec=1800
+
+[Install]
+WantedBy=multi-user.target

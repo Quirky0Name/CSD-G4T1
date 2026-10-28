@@ -8,6 +8,97 @@ owned that story made.
 
 ---
 
+## 2026-10-28 — On AWS: one EC2 instance behind CloudFront, from one template
+
+- **One EC2 instance runs the root compose stack** (the story owner's
+  call, CG-136), with Postgres and the PDFs on its disk. Rejected: Render
+  (its free services sleep and cap memory below GROBID's 2 GB, so it
+  costs more than one instance once it's always on) and Vercel (the
+  frontend only); Supabase and S3 (2026-10-24 and 2026-10-27).
+- **CloudFront in front, for HTTPS on a `*.cloudfront.net` address.**
+  Rejected: a DuckDNS name, which SMU's network blocks as dynamic DNS, so
+  the site would be unreachable on campus Wi-Fi. A domain can replace the
+  CloudFront address later without touching the app. CloudFront caches only
+  the built frontend's files and passes every header, cookie and method on;
+  it waits at most 60 seconds, which a long poll can exceed.
+- **Only CloudFront can reach the instance** (its managed prefix list on
+  port 80); there's no SSH, Session Manager instead. Secrets live in
+  Parameter Store and become the server's `.env` at boot.
+- **N. Virginia (us-east-1), not Singapore** (the story owner's call): about
+  20 % cheaper, for about a quarter of a second more on every request from
+  Singapore. CloudFront still serves the frontend's files from nearby.
+- **One CloudFormation template** (`deploy/stack.yml`), so the whole thing
+  is created, and deleted, in one step from the console. Nightly disk
+  snapshots, 7 kept, back up the database and the PDFs together.
+
+## 2026-10-28 — HTTPS from Caddy, and Adminer behind a password
+
+- **Caddy serves HTTPS when `SITE_ADDRESS` is a hostname** (the story
+  owner's call: a free DuckDNS name), getting and renewing the certificate
+  itself; the `caddy_data` volume keeps it across restarts. Unset, it's
+  plain HTTP on `:80` as before, so local runs don't change.
+- **Adminer at `/adminer`, behind Caddy's `basic_auth` and then Postgres's
+  own login** (the story owner's call), so the data can be looked at from
+  a browser with no tunnel. Rejected: only through a Session Manager port
+  forward (safer, but everyone looking needs the AWS CLI). Past both
+  passwords it's full superuser access to the database from the internet,
+  which is accepted for a class project; it also needs `SITE_ADDRESS` set,
+  or the password goes over plain HTTP. Until `ADMIN_PASSWORD_HASH` is set,
+  the default is the hash of a password nobody kept, so it starts shut
+  rather than open.
+- **`/updating` stays open** until `POST /run-poll` takes the user's token
+  (CG-99): `basic_auth` uses the same `Authorization` header the frontend
+  sends its token in, so it would break the poll button.
+
+## 2026-10-27 — Papers are deleted through their own endpoint; the demo tools can be switched off
+
+- **`DELETE /papers/{id}`** (the story owner's call) is how the frontend
+  deletes a tracked paper, instead of the demo tools' `DELETE
+  /dev/papers/{id}`, so a server can turn the demo tools off without
+  breaking deletes. Both go through `PaperDeletion`.
+- **`DEV_TOOLS=false` takes the demo tools and Swagger away** (`404`). It
+  defaults to on everywhere, the server included, while the demo still
+  uses them on the live site. Off, nobody can fake a change on a paper,
+  which would spend Gemini calls and send a Telegram message.
+- Deferred (ROADMAP.md): running Storage Management as a non-root user,
+  and a health endpoint for the compose check (the port check works).
+
+## 2026-10-27 — No notes: researchers don't keep notes on alerts or papers
+
+- **Notes are dropped entirely** (the story owner's call). The append-only
+  notes on an alert (2026-09-26) go: `POST` and `GET /alerts/{id}/notes`,
+  the frontend's notes panel, and the `alert_notes` table, which V11 drops
+  with any notes in it. The planned notes per paper won't be built either.
+  A researcher's say on an alert is its status: acknowledged or dismissed.
+- V5 stays as it was, since Flyway checks the checksums of migrations
+  already applied; V11 drops what it made.
+
+## 2026-10-27 — Deleting an account clears Storage Management first, then the user and their projects
+
+- **`DELETE /auth/me`, confirmed with the password** (the story owner's
+  call). It sits with register and login, so the web server and the Vite
+  proxy already route it. The password goes in a JSON body on the
+  `DELETE`.
+- **A wrong password is a `403`, not a `401`**: the token is fine, and the
+  frontend signs out on any `401`, so a mistyped password would log the
+  researcher out.
+- **Storage Management first, as for a project.** If its clear fails, the
+  answer is a `502` and the account stays, so a retry finishes the job.
+  Its clear answers `204` even when there's nothing left.
+- **Projects go with their user through a foreign key** (`on delete
+  cascade`), added now that there's a delete for it to follow.
+- **A double-clicked delete answers `204` twice**, for an account and for
+  a project alike. Both requests get past the checks and clear Storage
+  Management, so the row is removed with one delete statement that does
+  nothing when the other request got there first; deleting through the
+  entity failed the second request with a `500`.
+- **No token revocation** (the story owner's call): a token outlives its
+  account by up to 24 hours. User Management answers it with no projects,
+  and with a `401` `Your account no longer exists` to creating one or
+  deleting the account again, so the frontend signs it out. Rejected for
+  now: checking the account on every request, or a revocation list, in
+  every service.
+
 ## 2026-10-26 — Citation jumps alert, through the whole pipeline
 
 - **A citation jump is a rise in OpenAlex's `cited_by_count` of at least

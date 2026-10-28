@@ -37,15 +37,18 @@ public class PaperService {
     private final GrobidClient grobid;
     private final MetadataClient metadata;
     private final OpenAccessPdfClient openAccess;
+    private final PaperDeletion deletion;
     private final DataSize maxPdfSize;
 
     public PaperService(PaperRepository papers, LocalFileStore files, GrobidClient grobid, MetadataClient metadata,
-                        OpenAccessPdfClient openAccess, @Value("${storage.max-pdf-size}") DataSize maxPdfSize) {
+                        OpenAccessPdfClient openAccess, PaperDeletion deletion,
+                        @Value("${storage.max-pdf-size}") DataSize maxPdfSize) {
         this.papers = papers;
         this.files = files;
         this.grobid = grobid;
         this.metadata = metadata;
         this.openAccess = openAccess;
+        this.deletion = deletion;
         this.maxPdfSize = maxPdfSize;
     }
 
@@ -131,6 +134,14 @@ public class PaperService {
     @Transactional(readOnly = true)
     public List<PaperResponse> listForOwner(UUID ownerId) {
         return papers.findByOwnerIdOrderByCreatedAtDesc(ownerId).stream().map(PaperResponse::from).toList();
+    }
+
+    // someone else's paper gets the same 404 as a missing one
+    public void delete(UUID ownerId, UUID paperId) {
+        Paper paper = papers.findById(paperId)
+                .filter(found -> found.getOwnerId().equals(ownerId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId));
+        deletion.delete(paper);
     }
 
     private void rejectDuplicate(UUID ownerId, String doi) {

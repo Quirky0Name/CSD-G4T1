@@ -37,6 +37,7 @@ comments into the value.
 | Var | Read by | Value |
 |---|---|---|
 | `JWT_SECRET` | every service | base64 of 32+ random bytes (`openssl rand -base64 32`), the same everywhere. Storage Management's JWT library rejects shorter keys; the Python apps check at startup |
+| `DEV_TOOLS` | Storage Management | `true` (the default) serves the `/dev` demo tools and Swagger; `false` takes both away, for a public server |
 | `SM_BASE_URL` | RE, Updating | `http://localhost:8081` (compose overrides it) |
 | `RE_BASE_URL` | Updating | `http://localhost:8000` |
 | `DATABASE_URL` | Updating | `postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` (the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres |
@@ -74,8 +75,9 @@ The whole stack (below) reads one `.env` at the repo root instead (copy
 
 Everything, the website included. From the repo root:
 
-1. Copy `.env.example` to `.env`. Set `JWT_SECRET` to the same value as in
-   `backend/.env`, and `POSTGRES_PASSWORD` to any letters and digits.
+1. Copy `.env.example` to `.env`. Set `JWT_SECRET` to base64 of 32+
+   random bytes (`openssl rand -base64 32`), and `POSTGRES_PASSWORD` to any
+   letters and digits.
 2. `docker compose up -d --build`
 3. Open `http://localhost:8088`.
 
@@ -85,14 +87,29 @@ stored PDFs.
 
 Good to know:
 
-- The frontend's demo token (hard-coded in `api.ts`) only works with the
-  team's shared `JWT_SECRET`, and expires on 2026-10-28. Never use that
-  value on a public server: anyone can read the token from the site.
 - `POSTGRES_PASSWORD` is set when the database is first created; to
   change it later, `down -v` (losing the data) and start again.
-- Only the website is reachable; it passes `/api`, `/auth` and
-  `/updating` on to the services. Swagger doesn't work through it, so use
-  the development stacks below for that.
+- Only the website is reachable; it passes `/api`, `/auth`, `/projects`
+  and `/updating` on to the services. Swagger doesn't work through it, so
+  use the development stacks below for that.
+- **Adminer** (the database's tables) is at `/adminer/`, behind a login of
+  its own: set `ADMIN_PASSWORD_HASH` in `.env` to the output of
+  `docker run --rm caddy:2.11-alpine caddy hash-password`, in single
+  quotes, and log in as `ADMIN_USER`. Then Postgres's login: server `db`,
+  user `app`, `POSTGRES_PASSWORD`, database `research_assistant`; the
+  schemas are `public` (Storage Management), `users` and `updating`.
+  Without a hash it lets nobody in. Past both logins it's the database's
+  owner (`app` is a superuser), so keep both passwords strong.
+- **HTTPS**, for a server: point the name at the machine and open 80 and
+  443 first, then set `SITE_ADDRESS` to the hostname, with `WEB_PORT=80`
+  and `HTTPS_PORT=443`. Caddy gets the certificate itself, keeps it in the
+  `caddy_data` volume and sends plain HTTP to HTTPS. It then answers only
+  that name, so `http://<ip>` gets an empty reply. Don't `down -v` the
+  server casually: that throws the certificate away too, and Let's Encrypt
+  limits how often one name gets a new one. Locally, `SITE_ADDRESS=localhost`
+  tries it with Caddy's own certificate (the browser warns): open
+  `https://localhost:8443` directly, since the redirect from plain HTTP
+  goes to port 443.
 
 ## Running everything in Docker
 
