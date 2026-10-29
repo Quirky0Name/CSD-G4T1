@@ -116,6 +116,14 @@ guard, so `"tags": {}` raises `ZeroDivisionError` (`transient`).
     sets `score.ROOT` to a temp folder and calls `main()`, because the
     scorer always reads `evals/cases/`. No test is committed (no eval test
     suite, DECISIONS.md 2026-10-27). Needs no doc.
+  - Decision (code review): a placeholder run of a tagless case also
+    scores `tag = None`, not `0.0`, as Q1 says a case with no tags scores
+    `None`. A placeholder of a tagged case still scores `0.0`. Doc:
+    EVALUATION.md, with the first delta.
+  - Decision (code review): `format_score` (`-` or 2 decimals) moved from
+    `all.py` to `score.py`, which `all.py` already imports, and is used for
+    the grid's tag and text cells and the OVERALL tag cell. Needs no doc:
+    no behaviour change.
 
 ## Human checks
 

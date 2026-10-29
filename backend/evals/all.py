@@ -30,10 +30,6 @@ def run_step(name: str, *args: str) -> None:
         )
 
 
-def format_score(val: float | None) -> str:
-    return "-" if val is None else f"{val:.2f}"
-
-
 def get_span(scores: list[float]) -> str:
     if not scores:
         return "-"
@@ -77,8 +73,8 @@ def generate_summary(folder: Path) -> list[str]:
         avg_text = sum(texts) / len(texts) if texts else None
         
         row = (
-            f"{name[:34]:<35}{len(rs):>5}{format_score(avg_tag):>7}{get_span(tags):>12}"
-            f"{format_score(avg_text):>7}{sum(bool(r['hard']) for r in rs):>6}"
+            f"{name[:34]:<35}{len(rs):>5}{score.format_score(avg_tag):>7}{get_span(tags):>12}"
+            f"{score.format_score(avg_text):>7}{sum(bool(r['hard']) for r in rs):>6}"
             f"{sum(r['failed'] for r in rs):>6}{sum(r['invented'] for r in rs):>5}"
             f"{sum(r['misattributed'] for r in rs):>5}{sum(r['unknown_source'] for r in rs):>5}"
         )

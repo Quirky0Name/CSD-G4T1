@@ -164,7 +164,16 @@ def score_run(path: Path, case: dict) -> dict:
     out = {"case": path.name.split("__")[0], "category": case["category"], "path": path}
     if ev["assessment"]["placeholder"]:
         # the steps that finished before every model failed are kept, so their quotes still count
-        return {**out, "failed": True, "tag": 0.0, "hard": [], **check_quotes(ev, case), "detail": {}, "failed_facts": []}
+        tag = 0.0 if expected["tags"] else None
+        return {
+            **out,
+            "failed": True,
+            "tag": tag,
+            "hard": [],
+            **check_quotes(ev, case),
+            "detail": {},
+            "failed_facts": [],
+        }
     detail = {t: score_tag(spec, resolve(ev, t)) for t, spec in expected["tags"].items()}
     judge_path = path.with_suffix(".judge.json")
     text = None
@@ -191,6 +200,10 @@ def colour(s: float) -> str:
 
 def short(value) -> str:
     return "null" if value is None else str(value).lower() if isinstance(value, bool) else str(value)
+
+
+def format_score(val: float | None) -> str:
+    return "-" if val is None else f"{val:.2f}"
 
 
 def main() -> None:
@@ -238,8 +251,8 @@ def main() -> None:
             if sc < 1 and t not in tags
         ]
         row_cells += [
-            f"{r['tag']:.2f}" if r["tag"] is not None else "-",
-            f"{r['text']:.2f}" if r.get("text") is not None else "-",
+            format_score(r["tag"]),
+            format_score(r.get("text")),
             "; ".join(flags),
             "; ".join(misses),
         ]
@@ -280,7 +293,7 @@ def main() -> None:
     cat_table.add_row(
         "OVERALL",
         str(len(runs)),
-        f"{overall_tag_avg:.2f}" if overall_tag_avg is not None else "-",
+        format_score(overall_tag_avg),
         overall_text_avg,
         str(sum(bool(r['hard']) for r in runs)),
         str(sum(r['failed'] for r in runs)),
@@ -291,10 +304,15 @@ def main() -> None:
     # --- 3. ADVANCED ACTIONABLE DIAGNOSTICS ---
     total_runs = len(runs)
     if total_runs > 0:
+        tag_score = (
+            f"{overall_tag_avg:.3f} / 1.000"
+            if overall_tag_avg is not None
+            else "N/A (no case lists tags)"
+        )
         diag_panel_lines = [
             f"[bold cyan]Total Test Runs Executed:[/] {total_runs}",
             f"[bold cyan]Successful Runs Rate:[/]    {len(valid_runs)}/{total_runs} ({len(valid_runs)/total_runs*100:.1f}%)",
-            f"[bold cyan]Average Structured Tag Score:[/] {overall_tag_avg:.3f} / 1.000" if overall_tag_avg is not None else "[bold cyan]Average Structured Tag Score:[/] N/A (no case lists tags)",
+            f"[bold cyan]Average Structured Tag Score:[/] {tag_score}",
             f"[bold cyan]Average LLM Judge Text Score:[/] {float(overall_text_avg):.3f} / 1.000" if overall_text_avg != "-" else "[bold cyan]Average LLM Judge Text Score:[/] N/A (run judge.py first)",
         ]
 
