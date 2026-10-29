@@ -1,6 +1,6 @@
 # Frontend: track papers only while signed in, fresh for each user
 
-**Status:** draft
+**Status:** approved
 **Repo:** `D:\SMU\CS203\project\CSD-G4T1`
 **Context file to update:** none named
 
@@ -18,15 +18,9 @@
 
 Run order: S1.
 
-External blockers: OPEN Q1.
+External blockers: none.
 
 Git state: on `main`, working tree clean. Branch: `fix/frontend-tracking-session`.
-
-## Open questions
-
-1. **ASSUMED: proof without a test runner.** No test runner is added. S1 is
-   proven by `npm run build`, `npm run lint` and a grep. Its behaviour is
-   checked under Human checks. Affects S1.
 
 ## Suggested splits
 
@@ -34,7 +28,8 @@ No split: one subtask.
 
 ## Out of scope
 
-- Adding a frontend test runner (`transient`).
+- Adding a frontend test runner. S1 is proven by build, lint, a grep and
+  the Human checks (user) (`transient`).
 
 ## Subtasks
 
