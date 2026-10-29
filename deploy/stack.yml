@@ -31,10 +31,22 @@ Parameters:
     Type: String
     Default: /research-assistant/
     Description: Where the secrets live in Parameter Store; each one becomes a line of the server's .env
+  GitHubRepo:
+    Type: String
+    Default: Quirky0Name/CSD-G4T1
+    Description: The repo whose main branch may deploy (owner/name, as on GitHub)
+  CreateGitHubOidcProvider:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+    Description: >-
+      false if this AWS account already has the token.actions.githubusercontent.com identity provider
+      (IAM, Identity providers); an account can only have one
 
 Conditions:
   # us-east-1's public DNS names leave the region out (ec2-1-2-3-4.compute-1.amazonaws.com)
   IsUsEast1: !Equals [!Ref "AWS::Region", us-east-1]
+  CreateOidcProvider: !Equals [!Ref CreateGitHubOidcProvider, "true"]
 
 Resources:
   # Only CloudFront reaches the web server; nothing else is open, not even SSH (Session Manager instead)
@@ -195,6 +207,48 @@ Resources:
             # AWS-managed: CachingOptimized
             CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
 
+  # GitHub Actions signs in with a short-lived token instead of stored AWS keys
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Condition: CreateOidcProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: [sts.amazonaws.com]
+
+  # what the deploy workflow becomes in AWS: only from this repo's main branch, and it can do one
+  # thing, run the update command on this instance
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !If
+                - CreateOidcProvider
+                - !Ref GitHubOidcProvider
+                - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubRepo}:ref:refs/heads/main"
+      Policies:
+        - PolicyName: run-the-update
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: ssm:SendCommand
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript"
+                  - !Sub "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/${Instance}"
+              # these two can't be narrowed to one command or instance
+              - Effect: Allow
+                Action: [ssm:ListCommandInvocations, ssm:GetCommandInvocation]
+                Resource: "*"
+
 Outputs:
   SiteUrl:
     Description: The app
@@ -205,3 +259,6 @@ Outputs:
   InstanceId:
     Description: For Session Manager (Systems Manager, Session Manager, Start session)
     Value: !Ref Instance
+  DeployRoleArn:
+    Description: The repo variable AWS_DEPLOY_ROLE_ARN (GitHub, Settings, Secrets and variables, Actions)
+    Value: !GetAtt GitHubDeployRole.Arn
