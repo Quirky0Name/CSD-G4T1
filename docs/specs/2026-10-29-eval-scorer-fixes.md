@@ -1,6 +1,6 @@
 # Evals: scorer grid shows every run, cases without tags don't crash
 
-**Status:** draft
+**Status:** approved
 **Repo:** `D:\SMU\CS203\project\CSD-G4T1`
 **Context file to update:** none named
 
@@ -21,13 +21,13 @@
 
 Run order: S1, S2.
 
-External blockers: OPEN Q1.
+External blockers: none (Q1 resolved: assumption confirmed by user).
 
 Git state: on `main`, working tree clean. Branch: `fix/eval-scorer`.
 
 ## Open questions
 
-1. **ASSUMED: score for a case with no tags.** A case with no expected tags
+1. **RESOLVED (assumption confirmed): score for a case with no tags.** A case with no expected tags
    scores `tag = None`. The category and overall tag averages skip `None`,
    and show `-` when no score is left. Affects S2.
 
