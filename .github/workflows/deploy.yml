@@ -1,0 +1,147 @@
+# Every merge to main: run the tests, build the images on ARM (the server is a t4g), push them to
+# GitHub's registry, then have the server pull them through Systems Manager (docs/DEPLOY.md).
+# Run it by hand with an older commit to roll back.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit on main to deploy (empty for the latest)
+        required: false
+
+# one run at a time, start to finish, so an older build can't overwrite a newer one's images
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # only main may deploy; the AWS role refuses anything else anyway, but the images would already be pushed
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # whatever was typed becomes a full commit that's on main, or the run stops here; only that
+      # SHA reaches the image tags and the command the server runs
+      - id: commit
+        env:
+          REQUESTED: ${{ inputs.ref || github.sha }}
+        run: |
+          sha=$(git rev-parse --verify --quiet "${REQUESTED}^{commit}") || { echo "::error::no commit $REQUESTED"; exit 1; }
+          git merge-base --is-ancestor "$sha" origin/main || { echo "::error::$sha isn't on main"; exit 1; }
+          git checkout --quiet "$sha"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+      - name: Storage Management tests
+        working-directory: storage
+        run: ./mvnw -B test
+      - name: User Management tests
+        working-directory: users
+        run: ./mvnw -B test
+      - uses: astral-sh/setup-uv@v6
+      - name: Updating and Research Evaluation tests
+        working-directory: backend
+        run: uv sync --frozen && uv run pytest -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/csd-frontend-vite/package-lock.json
+      - name: Frontend build
+        working-directory: frontend/csd-frontend-vite
+        run: npm ci && npm run build
+
+  build:
+    needs: test
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - { service: storage, context: storage, dockerfile: storage/Dockerfile }
+          - { service: users, context: users, dockerfile: users/Dockerfile }
+          - { service: research-evaluation, context: backend, dockerfile: backend/research-evaluation.Dockerfile }
+          - { service: updating, context: backend, dockerfile: backend/updating.Dockerfile }
+          - { service: web, context: frontend/csd-frontend-vite, dockerfile: frontend/csd-frontend-vite/Dockerfile }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.test.outputs.sha }}
+      # registry names must be lowercase, and the owner isn't
+      - id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.service }}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ steps.image.outputs.name }}:main
+            ${{ steps.image.outputs.name }}:${{ needs.test.outputs.sha }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  deploy:
+    needs: [test, build]
+    runs-on: ubuntu-24.04
+    # set once AWS_DEPLOY_ROLE_ARN is in the repo's variables (docs/DEPLOY.md); until then it only builds
+    if: vars.AWS_DEPLOY_ROLE_ARN != ''
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+      - name: Update the server
+        env:
+          SHA: ${{ needs.test.outputs.sha }}
+        run: |
+          id=$(aws ssm send-command \
+            --document-name AWS-RunShellScript \
+            --targets Key=tag:Name,Values=research-assistant \
+            --parameters "commands=[\"/opt/research-assistant/deploy/update.sh $SHA\"],executionTimeout=[\"1800\"]" \
+            --comment "deploy $SHA" \
+            --query Command.CommandId --output text)
+          echo "command $id"
+          # the update pulls images and waits for the stack to be healthy, so allow it time; no
+          # invocation at all after two minutes means no instance has the tag
+          for i in $(seq 1 120); do
+            status=$(aws ssm list-command-invocations --command-id "$id" --query "CommandInvocations[0].Status" --output text)
+            case "$status" in
+              None) [ "$i" -gt 8 ] && { echo "::error::no instance tagged Name=research-assistant took the command"; exit 1; }; sleep 15 ;;
+              Pending | InProgress | Delayed) sleep 15 ;;
+              *) break ;;
+            esac
+          done
+          output=$(aws ssm list-command-invocations --command-id "$id" --details \
+            --query "CommandInvocations[0].CommandPlugins[0].Output" --output text)
+          echo "$output"
+          if grep -q "building them on the server" <<< "$output"; then
+            echo "::warning::the server built the images itself; make the GHCR packages public (docs/DEPLOY.md)"
+          fi
+          echo "status: $status"
+          [ "$status" = Success ]
