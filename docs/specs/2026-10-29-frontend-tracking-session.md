@@ -30,19 +30,31 @@ No split: one subtask.
 
 - Adding a frontend test runner. S1 is proven by build, lint, a grep and
   the Human checks (user) (`transient`).
+- The refetch on every route change. The fetch effect in `tracking.tsx`
+  depends on `navigate`, which react-router recreates whenever the path
+  changes, so moving between `/`, `/project` and `/alerts` reruns the
+  fetch. S1 does not change this.
 
 ## Subtasks
 
 ### S1: TrackingProvider only inside RequireAuth, keyed by user
 
 Fixes this review finding: `TrackingProvider` wraps `/signin` and
-`/register`, so it fetches before login. It also keeps the previous
-user's papers, alerts and seen-alert ids after an account switch
-(`transient`).
+`/register`, so it sends a `/papers` request before login, which gets a
+401. It never remounts, so `seenAlertIds` survives sign-out. The next user
+to sign in then gets a toast for every existing `new` alert on their first
+load (`transient`).
 
-- **Goal:** No paper or alert fetch runs without a session. Each signed-in
-  user gets a fresh provider: no papers, alerts or `seenAlertIds` carry
-  over from the previous user.
+The 401 was never visible. Login changes the path, which reruns the fetch
+with the token. The Projects page (`/`), where login lands, does not read
+tracking state, so the error is replaced before any page that shows it
+renders.
+Papers and alerts did not carry over between users either, because the
+fetch at `/signin` replaced them with the error state.
+
+- **Goal:** Each signed-in user gets a fresh provider, so `seenAlertIds`
+  starts empty and the first load seeds it without toasting. No paper or
+  alert fetch runs without a session.
 - **Blocked by:** none
 - **Files:** `frontend/csd-frontend-vite/src/App.tsx`
 - **Seams:** the route tree in `App.tsx`, and the `useTracking` callers.
@@ -71,8 +83,6 @@ user's papers, alerts and seen-alert ids after an account switch
 
 - [ ] **S1:** Run the stack. Open `/signin` with no session. Expected: the
       devtools Network tab shows no `/papers` request.
-- [ ] **S1:** Sign in. Expected: the Projects page loads the papers at once,
-      without "Please sign in again."
 - [ ] **S1:** Sign out, then sign in as a second user who has a `new`
-      alert. Expected: the first user's papers never appear, and no toast
-      fires for the second user's existing alerts.
+      alert. Expected: no toast fires for the second user's existing
+      alerts. (The old build toasts every one of them.)
