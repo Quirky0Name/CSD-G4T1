@@ -28,7 +28,10 @@ services:
     mem_limit: 2g
     restart: unless-stopped
 
+  # Each built service is also named as an image: locally it's built under that name; on the server
+  # IMAGE_PREFIX and IMAGE_TAG point at the ones the deploy workflow pushed (docs/DEPLOY.md)
   storage:
+    image: ${IMAGE_PREFIX:-research-assistant}/storage:${IMAGE_TAG:-local}
     build: ./storage
     depends_on:
       db:
@@ -59,6 +62,7 @@ services:
     restart: unless-stopped
 
   users:
+    image: ${IMAGE_PREFIX:-research-assistant}/users:${IMAGE_TAG:-local}
     build: ./users
     depends_on:
       db:
@@ -73,6 +77,7 @@ services:
     restart: unless-stopped
 
   research-evaluation:
+    image: ${IMAGE_PREFIX:-research-assistant}/research-evaluation:${IMAGE_TAG:-local}
     build:
       context: ./backend
       dockerfile: research-evaluation.Dockerfile
@@ -84,6 +89,7 @@ services:
     restart: unless-stopped
 
   updating:
+    image: ${IMAGE_PREFIX:-research-assistant}/updating:${IMAGE_TAG:-local}
     build:
       context: ./backend
       dockerfile: updating.Dockerfile
@@ -112,6 +118,7 @@ services:
     restart: unless-stopped
 
   web:
+    image: ${IMAGE_PREFIX:-research-assistant}/web:${IMAGE_TAG:-local}
     build: ./frontend/csd-frontend-vite
     ports:
       - "${WEB_PORT:-8088}:80"
