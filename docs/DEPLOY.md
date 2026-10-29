@@ -45,14 +45,59 @@ Learner Lab won't do: it limits IAM roles and stops instances after a few hours.
 
 The first boot's log is `/var/log/research-assistant-bootstrap.log` on the instance.
 
+## Redeploying on every merge
+
+`.github/workflows/deploy.yml` runs on every merge to `main`:
+
+1. **Tests:** Storage Management and User Management (Maven), Updating and Research Evaluation
+   (pytest) and the frontend build. Anything failing stops the deploy.
+2. **Images:** the five built services, on GitHub's ARM runners (the server is ARM), pushed to
+   GitHub's registry as `ghcr.io/<owner>/<repo>/<service>`, tagged with the commit's SHA (and
+   `main`).
+3. **Deploy:** GitHub signs in to AWS with a short-lived token (no stored keys) as the stack's
+   deploy role, which can do one thing: run `deploy/update.sh <commit>` on this instance through
+   Systems Manager. The server pulls that commit's images and restarts; nothing is built there.
+   The workflow waits and fails if the server's update does.
+
+Runs never overlap: one waits for the other to finish, and GitHub keeps only the newest waiting
+run, so a rollback queued behind a deploy can be replaced by a merge that lands meanwhile. Each
+commit on `main` shows a tick or a cross for its deploy.
+
+**Setting it up (once):**
+
+1. Update the stack: CloudFormation, the `research-assistant` stack, Update, Replace existing
+   template, upload this `deploy/stack.yml`, keep every parameter. It adds GitHub as an identity
+   provider and the deploy role; the instance isn't touched. If IAM, Identity providers already
+   lists `token.actions.githubusercontent.com`, set `CreateGitHubOidcProvider` to `false`.
+2. A repo admin adds the variable: GitHub, the repo, Settings, Secrets and variables, Actions,
+   Variables, New repository variable: `AWS_DEPLOY_ROLE_ARN` = the stack's `DeployRoleArn` output.
+   Until it's set, the workflow tests and builds but doesn't deploy.
+3. After the first run, the packages' owner (the repo's owner, Quirky0Name, since they're under
+   that account) makes the five packages public: the owner's profile, Packages, each package,
+   Package settings, Change visibility, Public. Then the server can pull them without logging in.
+   They hold only the repo's code; secrets come from Parameter Store when the containers start.
+   Until then the server builds the images itself, slowly and tight on memory, and the run shows
+   a warning saying so.
+4. Once, right after this setup reaches `main`, run the new update by hand, since the server
+   still has the old `update.sh` (Session Manager, then
+   `sudo -i`, `cd /opt/research-assistant`, `git pull`, `deploy/update.sh`). Deploys from GitHub
+   use the new one from then on.
+
+**Rolling back:** GitHub, Actions, Deploy, Run workflow, and give an earlier commit on `main`
+(its SHA, short is fine). It tests, builds and deploys that commit; anything not on `main` is
+refused.
+
+**Pausing it** (a demo week, say): Actions, Deploy, the `...` menu, Disable workflow.
+
 ## Day to day
 
 Open a shell: Systems Manager, Session Manager, Start session, pick the `research-assistant`
 instance. Then `sudo -i` and `cd /opt/research-assistant`.
 
-- **Deploy the latest `main`:** `deploy/update.sh` (pulls, rebuilds, restarts).
-- **Change a setting:** edit it in Parameter Store, then `deploy/write-env.sh /research-assistant/ us-east-1`
-  and `deploy/update.sh`.
+- **Deploy by hand:** `deploy/update.sh` (the latest `main`) or `deploy/update.sh <commit>`; it
+  uses that commit's images if the workflow built them, and builds them on the server if not.
+- **Change a setting:** edit it in Parameter Store, then redeploy; every deploy rewrites `.env`
+  from Parameter Store first.
 - **Logs:** `docker compose logs -f storage` (or `users`, `updating`, `research-evaluation`, `web`).
 - **Status:** `docker compose ps`.
 - **The demo tools:** on unless `/research-assistant/DEV_TOOLS` is `false` (ROADMAP.md says when
