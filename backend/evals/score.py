@@ -9,7 +9,7 @@ alongside advanced actionable diagnostics for prompt engineering."""
 import json
 import re
 import sys
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from rich.console import Console
@@ -19,8 +19,8 @@ from rich.table import Table
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT.parent / "src"))
 
-from research_evaluation.impact.prompts import alerts_block, paper_block  # noqa: E402
-from research_evaluation.storage import AlertInReport, PaperDetails  # noqa: E402
+from research_evaluation.impact.prompts import alerts_block, paper_block
+from research_evaluation.storage import AlertInReport, PaperDetails
 
 LEVELS = ["none", "low", "medium", "high"]
 # the fixed source names the step 1 prompt allows besides a notice's DOI, by document kind
@@ -164,7 +164,16 @@ def score_run(path: Path, case: dict) -> dict:
     out = {"case": path.name.split("__")[0], "category": case["category"], "path": path}
     if ev["assessment"]["placeholder"]:
         # the steps that finished before every model failed are kept, so their quotes still count
-        return {**out, "failed": True, "tag": 0.0, "hard": [], **check_quotes(ev, case), "detail": {}, "failed_facts": []}
+        tag = 0.0 if expected["tags"] else None
+        return {
+            **out,
+            "failed": True,
+            "tag": tag,
+            "hard": [],
+            **check_quotes(ev, case),
+            "detail": {},
+            "failed_facts": [],
+        }
     detail = {t: score_tag(spec, resolve(ev, t)) for t, spec in expected["tags"].items()}
     judge_path = path.with_suffix(".judge.json")
     text = None
@@ -176,7 +185,7 @@ def score_run(path: Path, case: dict) -> dict:
     return {
         **out,
         "failed": False,
-        "tag": sum(detail.values()) / len(detail),
+        "tag": mean(list(detail.values())),
         "hard": hard_fails(ev, expected.get("hard_fail_if", [])),
         **check_quotes(ev, case),
         "text": text,
@@ -193,16 +202,25 @@ def short(value) -> str:
     return "null" if value is None else str(value).lower() if isinstance(value, bool) else str(value)
 
 
+def format_score(val: float | None) -> str:
+    return "-" if val is None else f"{val:.2f}"
+
+
+def mean(values: list[float]) -> float | None:
+    return sum(values) / len(values) if values else None
+
+
+def run_paths(folder: Path) -> list[Path]:
+    """The saved runs in a results folder, without their .judge.json files."""
+    return [p for p in sorted(folder.glob("*__run*.json")) if not p.name.endswith(".judge.json")]
+
+
 def main() -> None:
     folders = sorted((ROOT / "results").glob("*"))
     folder = Path(sys.argv[1]) if len(sys.argv) > 1 else folders[-1]
     cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
-    
-    runs = [
-        score_run(p, cases[p.name.split("__")[0]])
-        for p in sorted(folder.glob("*__run*.json"))
-        if not p.name.endswith(".judge.json")
-    ]
+
+    runs = [score_run(p, cases[p.name.split("__")[0]]) for p in run_paths(folder)]
 
     # --- 1. RICH GRID ---
     counts: dict[str, int] = {}
@@ -220,12 +238,9 @@ def main() -> None:
     grid_table.add_column("flags", style="red")
     grid_table.add_column("misses (tag: got)", overflow="fold")
 
-    for path in sorted(folder.glob("*__run?.json")):
+    for r in runs:
+        path = r["path"]
         ev = json.loads(path.read_text())
-        r = next((run for run in runs if run["path"] == path), None)
-        if not r:
-            continue
-            
         row_cells = [path.name.split("__")[0][:30]]
         for t in tags:
             if t not in r["detail"]:
@@ -241,8 +256,8 @@ def main() -> None:
             if sc < 1 and t not in tags
         ]
         row_cells += [
-            f"{r['tag']:.2f}",
-            f"{r['text']:.2f}" if r.get("text") is not None else "-",
+            format_score(r["tag"]),
+            format_score(r.get("text")),
             "; ".join(flags),
             "; ".join(misses),
         ]
@@ -262,13 +277,12 @@ def main() -> None:
     for cat, rs in sorted(by_cat.items()):
         c_valid = [r for r in rs if not r["failed"]]
         texts = [r["text"] for r in c_valid if r.get("text") is not None]
-        text_avg = f"{sum(texts) / len(texts):.2f}" if texts else "-"
-        tag_avg = sum(r["tag"] for r in c_valid) / len(c_valid) if c_valid else 0.0
+        tag_scores = [r["tag"] for r in c_valid if r["tag"] is not None]
         cat_table.add_row(
             cat,
             str(len(rs)),
-            f"{tag_avg:.2f}",
-            text_avg,
+            format_score(mean(tag_scores)),
+            format_score(mean(texts)),
             str(sum(bool(r['hard']) for r in rs)),
             str(sum(r['failed'] for r in rs)),
             *(str(sum(r[k] for r in rs)) for k in ("invented", "misattributed", "unknown_source")),
@@ -276,13 +290,14 @@ def main() -> None:
     
     valid_runs = [r for r in runs if not r["failed"]]
     all_texts = [r["text"] for r in valid_runs if r.get("text") is not None]
-    overall_text_avg = f"{sum(all_texts) / len(all_texts):.2f}" if all_texts else "-"
-    overall_tag_avg = sum(r["tag"] for r in valid_runs) / len(valid_runs) if valid_runs else 0.0
+    overall_text_avg = mean(all_texts)
+    all_tag_scores = [r["tag"] for r in valid_runs if r["tag"] is not None]
+    overall_tag_avg = mean(all_tag_scores)
     cat_table.add_row(
         "OVERALL",
         str(len(runs)),
-        f"{overall_tag_avg:.2f}",
-        overall_text_avg,
+        format_score(overall_tag_avg),
+        format_score(overall_text_avg),
         str(sum(bool(r['hard']) for r in runs)),
         str(sum(r['failed'] for r in runs)),
         *(f"[bold]{sum(r[k] for r in runs)}[/bold]" for k in ("invented", "misattributed", "unknown_source")),
@@ -292,11 +307,21 @@ def main() -> None:
     # --- 3. ADVANCED ACTIONABLE DIAGNOSTICS ---
     total_runs = len(runs)
     if total_runs > 0:
+        tag_line = (
+            f"{overall_tag_avg:.3f} / 1.000"
+            if overall_tag_avg is not None
+            else "N/A (no tag scores)"
+        )
+        text_line = (
+            f"{overall_text_avg:.3f} / 1.000"
+            if overall_text_avg is not None
+            else "N/A (run judge.py first)"
+        )
         diag_panel_lines = [
             f"[bold cyan]Total Test Runs Executed:[/] {total_runs}",
             f"[bold cyan]Successful Runs Rate:[/]    {len(valid_runs)}/{total_runs} ({len(valid_runs)/total_runs*100:.1f}%)",
-            f"[bold cyan]Average Structured Tag Score:[/] {overall_tag_avg:.3f} / 1.000",
-            f"[bold cyan]Average LLM Judge Text Score:[/] {float(overall_text_avg):.3f} / 1.000" if overall_text_avg != "-" else "[bold cyan]Average LLM Judge Text Score:[/] N/A (run judge.py first)",
+            f"[bold cyan]Average Structured Tag Score:[/] {tag_line}",
+            f"[bold cyan]Average LLM Judge Text Score:[/] {text_line}",
         ]
 
         # Tag weaknesses
