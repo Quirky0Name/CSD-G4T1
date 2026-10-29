@@ -1,0 +1,40 @@
+{
+  "category": "two alerts: concern then retraction+replacement",
+  "tier": "hard",
+  "paper": {"doi": "10.9999/fake.2019.011", "title": "Dose-response of iron supplementation on fatigue", "publication_year": 2019, "journal": "J. Fake Nutrition", "authors": ["Park, J.", "Singh, R."]},
+  "paper_text": "Dose-response of iron supplementation on fatigue\nPark, J., Singh, R.  J. Fake Nutrition, 2019\n\nAbstract\nIn 150 iron-deficient adults, fatigue scores fell with increasing iron dose. Each extra 10 mg of daily iron lowered the fatigue score by 0.45 points.\n\nResults\nTable 3 gives the dose-response slope: 0.45 points per 10 mg (95% CI 0.30 to 0.60).",
+  "alerts": [
+    {"id": 111, "change_type": "expression_of_concern", "change_key": "eoc:10.9999/fake.2019.011e", "alert_severity": "medium", "description": "An expression of concern was published for this paper.", "notice_doi": "10.9999/fake.2019.011e", "detected_at": "2026-08-01T00:00:00Z"},
+    {"id": 112, "change_type": "retraction", "change_key": "retraction:10.9999/fake.2019.011r", "alert_severity": "high", "description": "A retraction notice was published for this paper.", "notice_doi": "10.9999/fake.2019.011r", "detected_at": "2026-10-01T00:00:00Z"}
+  ],
+  "documents": [
+    {"kind": "notice", "doi": "10.9999/fake.2019.011e", "update_to_includes_paper": true, "text": "Expression of concern: Dose-response of iron supplementation on fatigue\n\nThe editors have received concerns about the calculation of the dose-response analysis in this article and are investigating."},
+    {"kind": "notice", "doi": "10.9999/fake.2019.011r", "update_to_includes_paper": true, "text": "Retraction and replacement: Dose-response of iron supplementation on fatigue\n\nFollowing the editors' investigation, this article is retracted and replaced by a corrected version (doi 10.9999/fake.2019.011v2). The dose-response slope in Table 3 was miscalculated: it was reported as 0.45 points per 10 mg and the correct value is 0.28 points per 10 mg. The finding that iron supplementation reduces fatigue is unchanged."},
+    {"kind": "new_version", "doi": "10.9999/fake.2019.011v2", "text": null, "pdf_text": "Dose-response of iron supplementation on fatigue (corrected version)\nPark, J., Singh, R.  J. Fake Nutrition, 2019 (replaces the retracted article)\n\nAbstract\nIn 150 iron-deficient adults, fatigue scores fell with increasing iron dose. Each extra 10 mg of daily iron lowered the fatigue score by 0.28 points.\n\nResults\nTable 3 gives the dose-response slope: 0.28 points per 10 mg (95% CI 0.15 to 0.41)."}
+  ],
+  "draft_text": "Iron and fatigue in student athletes\n\n1. Introduction\nIron deficiency is common in athletes.\n\n4. Discussion\nOur estimated slope of 0.41 fatigue points per 10 mg of iron is close to that of Park and Singh [7] (0.45 per 10 mg), which supports the validity of our design.\n\nReferences\n[7] Park, J., Singh, R. (2019). Dose-response of iron supplementation on fatigue. J. Fake Nutrition.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["medium"], "ordered": false},
+      "change.has_relations": {"accept": [true]},
+      "alert#112.about_this_paper": {"accept": ["yes"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use.role": {"accept": ["comparison"]},
+      "impact.use.affected": {"accept": ["yes"]},
+      "impact.impact_level": {"accept": ["low"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "impact.impact_level == none"],
+    "facts": {
+      "must_include": [
+        "says the paper was retracted and replaced by a corrected version",
+        "says the slope changed from 0.45 to 0.28 points per 10 mg",
+        "tells the researcher to update the comparison in the Discussion or cite the corrected version"
+      ],
+      "must_not_include": [
+        "says the finding that iron reduces fatigue is invalid",
+        "says the paper was retracted for misconduct or fabrication"
+      ]
+    },
+    "why": "Rubric: a retraction and replacement where a corrected version exists = medium (not high); the later retraction supersedes the earlier concern, so relations is set. The draft only compares its own slope with the paper's: comparison x medium = low. The trap is the word 'retraction', which pulls models to high."
+  }
+}

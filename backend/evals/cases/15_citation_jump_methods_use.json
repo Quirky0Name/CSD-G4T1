@@ -1,0 +1,33 @@
+{
+  "category": "citation jump (no content change)",
+  "tier": "hard",
+  "paper": {"doi": "10.9999/fake.2020.015", "title": "An open-source tool for comparing protein structure predictions", "publication_year": 2020, "journal": "J. Fake Bioinformatics", "authors": ["Mensah, K."]},
+  "paper_text": "An open-source tool for comparing protein structure predictions\nMensah, K.  J. Fake Bioinformatics, 2020\n\nAbstract\nWe present StructCompare, an open-source tool that scores the similarity of predicted protein structures.",
+  "alerts": [{"id": 151, "change_type": "citation_jump", "change_key": "citation_jump:2026-09", "alert_severity": "low", "description": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.", "notice_doi": null, "detected_at": "2026-10-01T00:00:00Z"}],
+  "documents": [],
+  "draft_text": "Benchmarking structure predictors\n\n2. Methods\nPredicted structures were scored with StructCompare, using the default parameters of Mensah [3].\n\nReferences\n[3] Mensah, K. (2020). An open-source tool for comparing protein structure predictions. J. Fake Bioinformatics.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["low"], "ordered": true},
+      "change.has_relations": {"accept": [false]},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "alert.scope": {"accept": ["citations_only"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use.role": {"accept": ["methods_or_data"]},
+      "impact.use.affected": {"accept": ["no"]},
+      "impact.impact_level": {"accept": ["none"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == high", "impact.impact_level == high", "impact.impact_level == medium"],
+    "facts": {
+      "must_include": [
+        "says the alert is about a rise in citations and not a change to the paper's content",
+        "says no change to the draft is needed or the alert can be dismissed"
+      ],
+      "must_not_include": [
+        "suggests the paper's findings or methods are in doubt",
+        "recommends replacing or removing the citation"
+      ]
+    },
+    "why": "Rubric: a citation_jump is new attention, scope citations_only, severity low, nothing affected. The draft's use is the strongest role (methods_or_data), so applying the impact table to severity low would give medium; but the use is not affected, and impact is none when no use is affected."
+  }
+}

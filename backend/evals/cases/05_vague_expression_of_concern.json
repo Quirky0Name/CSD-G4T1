@@ -1,0 +1,31 @@
+{
+  "category": "vague notice",
+  "paper": {"doi": "10.9999/fake.2022.005", "title": "Gut bacteria and mood in mice", "publication_year": 2022, "journal": "J. Fake Microbiology", "authors": ["Lopez, D.", "Chen, W."]},
+  "paper_text": "Gut bacteria and mood in mice\nLopez, D., Chen, W.  J. Fake Microbiology, 2022\n\nAbstract\nTransplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test (Figure 3).\n\nResults\nFigure 3 shows immobility time; Figure 4 shows bacterial counts.",
+  "alerts": [{"id": 51, "change_type": "expression_of_concern", "change_key": "eoc:10.9999/fake.2022.005e", "alert_severity": "medium", "description": "An expression of concern was published for this paper.", "notice_doi": "10.9999/fake.2022.005e", "detected_at": "2026-10-01T00:00:00Z"}],
+  "notice": {"doi": "10.9999/fake.2022.005e", "update_to_includes_paper": true, "text": "Expression of concern: Gut bacteria and mood in mice\n\nThe editors have been made aware of concerns regarding some of the data reported in this article. The matter is being looked into and we will update readers when more information is available."},
+  "draft_text": "Microbiome and depression: a review\n\n1. Discussion\nThe causal role of gut bacteria in depressive behaviour is supported by transplant studies, notably Lopez and Chen [8], who showed reduced activity in recipient mice. Our own proposal builds on this finding.\n\nReferences\n[8] Lopez, D., Chen, W. (2022). Gut bacteria and mood in mice. J. Fake Microbiology.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["medium"], "ordered": true},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "alert.scope": {"accept": ["unclear", "specific_parts"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use.affected": {"accept": ["unclear", "yes"]},
+      "impact.impact_level": {"accept": ["medium"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "change.severity == high", "impact.impact_level == high"],
+    "facts": {
+      "must_include": [
+        "says the notice does not say which data or findings are in question",
+        "advises hedging the wording or not building new work on the finding",
+        "notes that the outcome of the investigation is not yet known"
+      ],
+      "must_not_include": [
+        "says the paper was retracted",
+        "names a specific figure or table as the problem"
+      ]
+    },
+    "why": "Expression of concern about data = medium (rubric). The notice names no part, so scope and 'affected' are unclear. Unclear counts as affected: key_evidence x medium = medium. Answering high would be overreach."
+  }
+}

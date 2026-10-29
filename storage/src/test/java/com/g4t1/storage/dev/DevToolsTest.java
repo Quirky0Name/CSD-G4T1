@@ -12,6 +12,9 @@ import com.g4t1.storage.snapshot.SnapshotService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -116,6 +119,26 @@ class DevToolsTest {
     }
 
     @Test
+    void undoingACitationJumpStoresTheSameDataWithNoCitations() throws Exception {
+        storeSnapshot(paperId, true);
+
+        undo(paperId, "citation_jump", user).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.cited_by_count").value(0))
+                .andExpect(jsonPath("$.is_retracted").value(true))
+                .andExpect(jsonPath("$.crossref_updates.length()").value(4));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = 0)
+    void aPaperWithNoCitationsHasNoCitationJumpToUndo(Integer citedByCount) throws Exception {
+        storeSnapshot(paperId, false, citedByCount);
+
+        undo(paperId, "citation_jump", user).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value("Paper " + paperId + " has no citation_jump to undo"));
+    }
+
+    @Test
     void aChangeThePaperDoesNotHaveIsAConflict() throws Exception {
         storeSnapshot(paperId, true);
 
@@ -171,7 +194,6 @@ class DevToolsTest {
         long snapshotId = storeSnapshot(paperId, true);
         storeSnapshot(otherPaper, true);
         addAlertAndReport(paperId, snapshotId);
-        jdbc.update("insert into alert_notes (alert_id, text, created_at) select id, 'a note', current_timestamp from alerts where paper_id = ?", paperId);
         String documentFile = files.save(PDF);
         jdbc.update("""
                 insert into report_documents (report_id, kind, doi, crossref_status, text_status, pdf_status, file_key, created_at)
@@ -185,7 +207,6 @@ class DevToolsTest {
         assertThat(count("snapshots", paperId)).isZero();
         assertThat(count("alerts", paperId)).isZero();
         assertThat(count("reports", paperId)).isZero();
-        assertThat(jdbc.queryForObject("select count(*) from alert_notes", Integer.class)).isZero();
         assertThat(jdbc.queryForObject("select count(*) from report_documents", Integer.class)).isZero();
         assertThat(files.read(paperFile)).isEmpty();
         assertThat(files.read(documentFile)).isEmpty();
@@ -223,10 +244,14 @@ class DevToolsTest {
     }
 
     private long storeSnapshot(UUID paper, boolean retracted) {
+        return storeSnapshot(paper, retracted, 1252);
+    }
+
+    private long storeSnapshot(UUID paper, boolean retracted, Integer citedByCount) {
         return snapshotService.store(paper, new SnapshotRequest("10.1016/s0140-6736(20)31180-6",
                 Instant.parse("2026-09-27T12:00:00Z"), "W3027680906", "Hydroxychloroquine or chloroquine", 2020,
                 retracted, json.readTree(NOTICES), false, "S49861241", "journal", "The Lancet", "0140-6736",
-                "Elsevier BV", json.readTree("[]"), 1252,
+                "Elsevier BV", json.readTree("[]"), citedByCount,
                 json.readTree("{\"crossref\": \"ok\", \"openalex\": \"ok\", \"openalex_authors\": \"ok\"}"))).snapshotId();
     }
 

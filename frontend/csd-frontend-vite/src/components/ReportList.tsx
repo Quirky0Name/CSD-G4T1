@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import DebugJson from './DebugJson'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   errorMessage,
@@ -102,6 +103,9 @@ export default function ReportList() {
         )}
       </div>
 
+      {reportsState.status === 'ready' && (
+        <DebugJson label="reports (GET /papers/{id}/reports)" data={reportsState.reports} />
+      )}
       {loading && <Spinner label="Loading reports…" />}
       {error && (
         <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">

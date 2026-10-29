@@ -13,6 +13,7 @@ export type ChangeType =
   | 'erratum'
   | 'expression_of_concern'
   | 'doaj_delisting'
+  | 'citation_jump'
   | 'other'
 
 export type ReportStatus = 'investigating' | 'investigated' | 'assessed'
@@ -101,11 +102,6 @@ export type Alert = {
   status_changed_at: string | null
 }
 
-export type AlertNote = {
-  text: string
-  created_at: string
-}
-
 export type Draft = {
   id: string
   project_id: string | null
@@ -187,16 +183,6 @@ export async function setAlertStatus(
   return res.data
 }
 
-export async function listAlertNotes(alertId: number): Promise<AlertNote[]> {
-  const res = await storage.get<{ notes: AlertNote[] }>(`/alerts/${alertId}/notes`)
-  return res.data.notes
-}
-
-export async function addAlertNote(alertId: number, text: string): Promise<AlertNote> {
-  const res = await storage.post<AlertNote>(`/alerts/${alertId}/notes`, { text })
-  return res.data
-}
-
 export async function runPoll(paperId?: string): Promise<PollSummary> {
   const res = await updating.post<PollSummary>('/run-poll', null, {
     params: paperId ? { paper_id: paperId } : undefined,
@@ -239,5 +225,5 @@ export function errorMessage(err: unknown): string {
 }
 
 export async function deletePaper(paperId: string): Promise<void> {
-  await storage.delete(`/dev/papers/${paperId}`)
+  await storage.delete(`/papers/${paperId}`)
 }

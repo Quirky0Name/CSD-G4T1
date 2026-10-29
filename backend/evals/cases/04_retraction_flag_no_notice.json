@@ -1,0 +1,30 @@
+{
+  "category": "missing notice",
+  "paper": {"doi": "10.9999/fake.2018.004", "title": "A low-cost sensor for river nitrate", "publication_year": 2018, "journal": "J. Fake Environmental Science", "authors": ["Novak, P.", "Silva, R."]},
+  "paper_text": "A low-cost sensor for river nitrate\nNovak, P., Silva, R.  J. Fake Environmental Science, 2018\n\nAbstract\nWe describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results.\n\nMethods\nThe calibration protocol is given in Section 2.",
+  "alerts": [{"id": 41, "change_type": "retraction", "change_key": "retraction:openalex", "alert_severity": "high", "description": "OpenAlex marks this paper as retracted; no notice was found.", "notice_doi": null, "detected_at": "2026-10-01T00:00:00Z"}],
+  "notice": null,
+  "draft_text": "Monitoring nitrate in small streams\n\n1. Methods\nWe measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.\n\nReferences\n[2] Novak, P., Silva, R. (2018). A low-cost sensor for river nitrate. J. Fake Environmental Science.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["high", "medium"], "ordered": true},
+      "alert.about_this_paper": {"accept": ["unclear"]},
+      "alert.scope": {"accept": ["unclear", "whole_paper"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use.role": {"accept": ["methods_or_data"]},
+      "impact.impact_level": {"accept": ["high", "medium"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "impact.impact_level == none"],
+    "facts": {
+      "must_include": [
+        "says the retraction is based only on a metadata flag, with no notice or reason available",
+        "advises the researcher to check the journal or publisher's page to confirm the retraction"
+      ],
+      "must_not_include": [
+        "states a reason for the retraction",
+        "quotes a retraction notice"
+      ]
+    },
+    "why": "Rubric: a retraction alert with no notice is weak evidence, so about_this_paper is 'unclear'; with only metadata, pick the usual level for the type (high) and say so. Medium accepted as a cautious answer."
+  }
+}

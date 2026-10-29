@@ -18,10 +18,11 @@ Spring Data repository, the entity, and response records.
 
 | Package | What |
 |---|---|
-| `paper/` | tracked papers: upload, track by DOI, list (`PaperService`), the internal list and PDF read, deleting a paper with everything that refers to it (`PaperDeletion`) |
+| `paper/` | tracked papers: upload, track by DOI, list, delete (`PaperService`), the internal list and PDF read, deleting a paper with everything that refers to it (`PaperDeletion`) |
 | `project/` | clearing a project User Management deleted: its papers and its draft (`ProjectService`, `DELETE /internal/projects/{id}`) |
+| `user/` | clearing an account User Management deleted: the user's papers and drafts in every project (`UserService`, `DELETE /internal/users/{id}`) |
 | `snapshot/` | `snapshots`: store a snapshot, read the snapshot history (`after_id`, `last`, `limit`) |
-| `alert/` | alerts (internal store, change keys; user list, status), alert notes; `LowercaseEnumConverter` |
+| `alert/` | alerts (internal store, change keys; user list, status); `LowercaseEnumConverter` |
 | `report/` | reports and documents: open, read, mark investigated, store the evaluation (`ReportService`), store a document and download its PDF (`ReportDocumentService`), the user's report list |
 | `draft/` | the researcher's draft per project (`DraftService`) |
 | `dev/` | demo tools (`DevController`, `DevService`) and Swagger config |
@@ -47,7 +48,7 @@ project (owner + `project_id`). A user can't track a DOI twice
 
 - Every tracked paper has a PDF (`file_key`, a `<uuid>.pdf` in
   `UPLOAD_DIR`). The file never changes; it's deleted only with the paper
-  (`DELETE /dev/papers/{id}`). The frontend sees only `file_available`.
+  (`DELETE /papers/{id}`). The frontend sees only `file_available`.
 - `papers.title` is set once at ingest and goes stale (Crossref later
   prefixes "RETRACTED:"); the newest snapshot has the current one.
 - `GET /internal/papers/{id}/pdf` (`PaperService.storedPdf`) serves any
@@ -87,7 +88,7 @@ snapshot history read writes every field, nulls included (Updating's parser need
 them all). An unknown paper is `404` `No paper <id>` exactly: Research
 Evaluation relies on that text.
 
-## Alerts and notes
+## Alerts
 
 - **Store** (`AlertService.store`, internal): idempotent on (`paper_id`,
   `change_key`). New: `201`. Existing: `200` with the stored alert
@@ -99,18 +100,17 @@ Evaluation relies on that text.
   one conditional update (`where notice_doi is null`) that takes the
   request's assessment, `detected_at` and snapshot ids, resets `status` to
   `new`, clears `status_changed_at` and `report_id`, and answers `201`. Id
-  and notes stay.
+  stays.
 - **List** (`GET /papers/{id}/alerts`): `detected_at` descending, then
   alert severity, then `id` descending (`AlertService.LIST_ORDER`, an in-memory
   sort). Dismissed ones hidden unless `include_dismissed=true`.
 - **Status** (`PATCH /alerts/{id}`): `acknowledged` ↔ `dismissed` freely,
   never back to `new`; repeating a status changes nothing.
-- **Notes** (`alert_notes`): an append-only log per alert, 1–2000 UTF-16
-  units, newest first, never touching the status. Not the paper notes
-  planned in ROADMAP.md.
-- `AlertService.requireOwnAlert` is the one ownership check for `PATCH`
-  and both note endpoints: another user's alert and a missing one get the
-  same `404`, as another user's paper does everywhere.
+- `AlertService.requireOwnAlert` is the ownership check for `PATCH`:
+  another user's alert and a missing one get the same `404`, as another
+  user's paper does everywhere.
+- **No notes:** researchers don't keep notes on alerts or papers. The
+  `alert_notes` table V5 made is dropped in V11 (DECISIONS.md, 2026-10-27).
 
 ## Reports and documents
 
@@ -159,23 +159,25 @@ investigation fetched (documents) and impact's evaluation. Status:
 
 ## Demo tools (`/dev/papers/{id}/...`)
 
-Always on (take them out, or put them behind a setting, before a real
-deployment). User token, own papers only. `DevService`:
+On unless `DEV_TOOLS=false` (`storage.dev-tools`), which takes them and
+Swagger off a server. User token, own papers only. `DevService`:
 
 - `undoChange`: stores a copy of the latest snapshot with one change type
-  removed (and `is_retracted` false for a retraction), so the next poll
-  finds it again. Needs one real poll first.
-- `clearHistory`: deletes the paper's reports (documents cascade), alerts
-  (notes cascade) and snapshots, then the documents' PDFs, so a
+  removed (and `is_retracted` false for a retraction, `cited_by_count` 0
+  for a citation jump), so the next poll finds it again. Needs one real
+  poll first.
+- `clearHistory`: deletes the paper's reports (documents cascade), alerts and
+  snapshots, then the documents' PDFs, so a
   rehearsal raises the same change again.
 - `deletePaper`: the above plus the paper row and its PDF. Updating drops
-  it from `tracked_papers` on its next poll. The frontend uses this to
-  delete a paper.
+  it from `tracked_papers` on its next poll. Kept for the demo; the
+  frontend deletes through `DELETE /papers/{id}` (`PaperService.delete`).
 
-The deleting in both is `PaperDeletion`'s, which clearing a deleted project
-uses too, so switching the demo tools off can't break that.
+The deleting in both is `PaperDeletion`'s, which `DELETE /papers/{id}` and
+clearing a deleted project use too, so switching the demo tools off can't
+break either.
 
-Swagger UI is at `/swagger-ui.html` (also always on).
+Swagger UI is at `/swagger-ui.html`, on and off with the demo tools.
 
 ## Gotchas
 
@@ -210,6 +212,4 @@ Swagger UI is at `/swagger-ui.html` (also always on).
 - **Tests mock the network:** GROBID, Crossref and the open-access
   download are mocked (`@MockitoBean`); PDF bytes are a few bytes starting
   with `%PDF-`.
-- Known edges: `{"text": 123}` is accepted as `"123"`; a `\u0000` in a
-  text field gives `500` from Postgres; an alert deleted between the
-  ownership check and a note insert gives `500` (FK) instead of `404`.
+- Known edges: a `\u0000` in a text field gives `500` from Postgres.

@@ -1,0 +1,32 @@
+{
+  "category": "retraction",
+  "paper": {"doi": "10.9999/fake.2019.002", "title": "Caffeine improves working memory in adults", "publication_year": 2019, "journal": "J. Fake Neuroscience", "authors": ["Brown, A.", "Kim, S."]},
+  "paper_text": "Caffeine improves working memory in adults\nBrown, A., Kim, S.  J. Fake Neuroscience, 2019\n\nAbstract\nIn a double-blind trial of 90 adults, 200 mg caffeine improved n-back accuracy by 12% compared with placebo.\n\nResults\nFigures 2 to 4 show accuracy by dose. The improvement was significant at 200 mg (p = 0.01).",
+  "alerts": [{"id": 21, "change_type": "retraction", "change_key": "retraction:10.9999/fake.2019.002r", "alert_severity": "high", "description": "A retraction notice was published for this paper.", "notice_doi": "10.9999/fake.2019.002r", "detected_at": "2026-10-01T00:00:00Z"}],
+  "notice": {"doi": "10.9999/fake.2019.002r", "update_to_includes_paper": true, "text": "Retraction: Caffeine improves working memory in adults\n\nThe journal has retracted this article. An institutional investigation found that the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on. The authors have not responded."},
+  "draft_text": "Caffeine and study performance\n\n1. Introduction\nCaffeine is widely used by students. Brown and Kim [3] showed that 200 mg of caffeine improves working memory by 12%, which is why we chose a 200 mg dose for our experiment.\n\n2. Methods\nParticipants received 200 mg caffeine or placebo.\n\nReferences\n[3] Brown, A., Kim, S. (2019). Caffeine improves working memory in adults. J. Fake Neuroscience.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["high"], "ordered": true},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "alert.scope": {"accept": ["whole_paper", "specific_parts"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use.role": {"accept": ["key_evidence", "methods_or_data"]},
+      "impact.use.affected": {"accept": ["yes"]},
+      "impact.impact_level": {"accept": ["high"], "ordered": true}
+    },
+    "hard_fail_if": ["change.severity == none", "change.severity == low", "impact.impact_level == none", "impact.impact_level == low"],
+    "facts": {
+      "must_include": [
+        "says the paper was retracted because the data were fabricated or unreliable",
+        "says the draft's Introduction relies on the retracted paper",
+        "tells the researcher to remove or replace the citation and re-check the dose choice or claim"
+      ],
+      "must_not_include": [
+        "says the findings may still stand",
+        "says no action is needed"
+      ]
+    },
+    "why": "Fabricated data = high severity (rubric). The draft's claim and dose rest on the paper (key_evidence or methods_or_data) so high x either = high."
+  }
+}

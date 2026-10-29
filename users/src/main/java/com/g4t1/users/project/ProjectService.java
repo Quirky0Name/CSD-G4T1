@@ -1,5 +1,8 @@
 package com.g4t1.users.project;
 
+import com.g4t1.users.auth.AccountGoneException;
+import com.g4t1.users.auth.UserRepository;
+import com.g4t1.users.storage.StorageClient;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -14,13 +17,19 @@ public class ProjectService {
 
     private final ProjectRepository projects;
     private final StorageClient storage;
+    private final UserRepository users;
 
-    public ProjectService(ProjectRepository projects, StorageClient storage) {
+    public ProjectService(ProjectRepository projects, StorageClient storage, UserRepository users) {
         this.projects = projects;
         this.storage = storage;
+        this.users = users;
     }
 
     public ProjectResponse create(UUID ownerId, ProjectRequest request) {
+        // otherwise the insert breaks the owner foreign key and comes back as a misleading 409
+        if (!users.existsById(ownerId)) {
+            throw new AccountGoneException();
+        }
         String name = nameOf(request);
         requireFree(ownerId, name);
         return saveNamed(new Project(ownerId, name), name);
@@ -51,7 +60,7 @@ public class ProjectService {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
                     "Storage Management couldn't clear project " + projectId + ", so it wasn't deleted");
         }
-        projects.deleteById(projectId);
+        projects.deleteIfPresent(projectId);
     }
 
     // the spaces around a name are typing noise, not part of it

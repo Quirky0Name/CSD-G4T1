@@ -39,7 +39,7 @@ class NewAlert(BaseModel):
     """The body of `POST /internal/papers/{id}/alerts`; the real service answers 400 where
     this stub's validation answers 422."""
 
-    change_type: Literal["retraction", "correction", "erratum", "expression_of_concern", "doaj_delisting", "other"]
+    change_type: Literal["retraction", "correction", "erratum", "expression_of_concern", "doaj_delisting", "citation_jump", "other"]
     change_key: str = Field(min_length=1, max_length=512)
     alert_severity: Literal["high", "medium", "low"]
     description: str = Field(min_length=1)

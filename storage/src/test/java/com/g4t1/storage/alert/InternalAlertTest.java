@@ -56,16 +56,12 @@ class InternalAlertTest {
     JdbcTemplate jdbc;
 
     @Autowired
-    AlertNoteRepository notes;
-
-    @Autowired
     ReportRepository reports;
 
     private UUID paperId;
 
     @BeforeEach
     void clean() {
-        notes.deleteAll();
         alerts.deleteAll();
         reports.deleteAll();
         papers.deleteAll();
@@ -123,6 +119,19 @@ class InternalAlertTest {
                 .andExpect(jsonPath("$.notice_doi").value(nullValue()));
     }
 
+    @Test
+    void aCitationJumpIsAccepted() throws Exception {
+        Map<String, Object> body = body();
+        body.put("change_type", "citation_jump");
+        body.put("change_key", "citation_jump:42");
+        body.put("alert_severity", "low");
+        body.remove("notice_doi");
+
+        store(paperId, body)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.change_type").value("citation_jump"));
+    }
+
     @ParameterizedTest
     @EnumSource(ChangeType.class)
     void everyChangeTypeIsAccepted(ChangeType type) throws Exception {
@@ -163,8 +172,8 @@ class InternalAlertTest {
 
     @Test
     void aLateRetractionNoticeReplacesANoticelessRetractionAlertAndMakesItNew() throws Exception {
-        // OpenAlex's flag came first: a retraction alert with no notice, since acknowledged,
-        // noted, and grouped into a report
+        // OpenAlex's flag came first: a retraction alert with no notice, since acknowledged
+        // and grouped into a report
         Map<String, Object> flag = body();
         flag.remove("notice_doi");
         store(paperId, flag).andExpect(status().isCreated());
@@ -172,7 +181,6 @@ class InternalAlertTest {
         first.setStatus(AlertStatus.ACKNOWLEDGED);
         first.setStatusChangedAt(Instant.parse("2026-09-21T08:00:00Z"));
         alerts.save(first);
-        notes.save(new AlertNote(first.getId(), "Checked the journal site."));
         long reportId = reports.save(new Report(paperId)).getId();
         jdbc.update("update alerts set report_id = ? where id = ?", reportId, first.getId());
 
@@ -197,9 +205,8 @@ class InternalAlertTest {
         assertThat(replaced.getPreviousSnapshotId()).isEqualTo(46L);
         assertThat(replaced.getStatus()).isEqualTo(AlertStatus.NEW);
         assertThat(replaced.getStatusChangedAt()).isNull();
-        // out of its report, so the paper's next report takes it; its notes stay
+        // out of its report, so the paper's next report takes it
         assertThat(replaced.getReportId()).isNull();
-        assertThat(notes.findByAlertIdOrderByCreatedAtDescIdDesc(first.getId())).hasSize(1);
     }
 
     @Test

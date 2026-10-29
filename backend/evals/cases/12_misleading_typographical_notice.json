@@ -1,0 +1,34 @@
+{
+  "category": "misleading notice",
+  "tier": "hard",
+  "paper": {"doi": "10.9999/fake.2020.012", "title": "Drug X reduces monthly migraine days: a randomised trial", "publication_year": 2020, "journal": "J. Fake Neurology", "authors": ["Reyes, A.", "Kowalski, B.", "Mbeki, S."]},
+  "paper_text": "Drug X reduces monthly migraine days: a randomised trial\nReyes, A., Kowalski, B., Mbeki, S.  J. Fake Neurology, 2020\n\nAbstract\nIn a randomised trial of 240 adults, drug X reduced monthly migraine days by 2.1 compared with placebo (p = 0.03).\n\nResults\nTable 2 gives the primary outcome: mean reduction 2.1 days (95% CI 0.2 to 4.0), p = 0.03.",
+  "alerts": [{"id": 121, "change_type": "correction", "change_key": "correction:10.9999/fake.2020.012c", "alert_severity": "medium", "description": "A correction notice was published for this paper.", "notice_doi": "10.9999/fake.2020.012c", "detected_at": "2026-10-01T00:00:00Z"}],
+  "documents": [
+    {"kind": "notice", "doi": "10.9999/fake.2020.012c", "update_to_includes_paper": true, "text": "Correction to: Drug X reduces monthly migraine days: a randomised trial\n\nThis is a minor typographical correction. In Table 2, the p-value for the primary outcome should read p = 0.21 rather than p = 0.03, and the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0. The authors note that this typographical change does not affect the overall conclusions of the article."}
+  ],
+  "draft_text": "Choosing a comparator for migraine prevention\n\n1. Methods\nWe selected drug X as the active comparator.\n\n4. Discussion\nDrug X is an appropriate comparator because it was shown to significantly reduce monthly migraine days (Reyes et al. [9], p = 0.03).\n\nReferences\n[9] Reyes, A., Kowalski, B., Mbeki, S. (2020). Drug X reduces monthly migraine days: a randomised trial. J. Fake Neurology.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["medium", "high"], "ordered": false},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "impact.cited": {"accept": [true]},
+      "impact.use.role": {"accept": ["key_evidence"]},
+      "impact.use.affected": {"accept": ["yes"]},
+      "impact.impact_level": {"accept": ["medium", "high"], "ordered": false}
+    },
+    "hard_fail_if": ["change.severity == none", "change.severity == low", "impact.impact_level == none", "impact.impact_level == low"],
+    "facts": {
+      "must_include": [
+        "says the p-value changed from 0.03 to 0.21",
+        "says the primary result is no longer statistically significant or is now in doubt",
+        "tells the researcher to remove or hedge the claim that drug X significantly reduces migraine days"
+      ],
+      "must_not_include": [
+        "says the change is only typographical and does not matter",
+        "says the paper was retracted"
+      ]
+    },
+    "why": "The notice calls itself 'minor typographical' but its content moves the primary result from significant to non-significant: a correction that changes results/conclusions (medium) and arguably leaves the finding unreliable (high). Calling it low or none is wrong whatever the notice says. The draft rests on the significance as key_evidence, so medium or high."
+  }
+}

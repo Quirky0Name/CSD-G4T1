@@ -1,0 +1,35 @@
+{
+  "category": "concern lifted by a later notice",
+  "tier": "hard",
+  "paper": {"doi": "10.9999/fake.2020.017", "title": "Microplastics in municipal drinking water: a national survey", "publication_year": 2020, "journal": "J. Fake Environmental Health", "authors": ["Becker, F.", "Ito, M."]},
+  "paper_text": "Microplastics in municipal drinking water: a national survey\nBecker, F., Ito, M.  J. Fake Environmental Health, 2020\n\nAbstract\nMicroplastic particles were found in 83% of 400 tap-water samples from 40 cities.",
+  "alerts": [
+    {"id": 171, "change_type": "expression_of_concern", "change_key": "eoc:10.9999/fake.2020.017e", "alert_severity": "medium", "description": "An expression of concern was published for this paper.", "notice_doi": "10.9999/fake.2020.017e", "detected_at": "2026-07-01T00:00:00Z"},
+    {"id": 172, "change_type": "other", "change_key": "other:10.9999/fake.2020.017x", "alert_severity": "low", "description": "A notice of type removal was published for this paper.", "notice_doi": "10.9999/fake.2020.017x", "detected_at": "2026-10-01T00:00:00Z"}
+  ],
+  "documents": [
+    {"kind": "notice", "doi": "10.9999/fake.2020.017e", "update_to_includes_paper": true, "text": "Expression of concern: Microplastics in municipal drinking water: a national survey\n\nThe editors have been alerted to concerns about possible contamination of the water samples and are looking into the matter."},
+    {"kind": "notice", "doi": "10.9999/fake.2020.017x", "update_to_includes_paper": true, "text": "Removal of expression of concern: Microplastics in municipal drinking water: a national survey\n\nThe editors have completed their review, with an independent laboratory re-testing retained samples. The contamination concerns were not substantiated and the findings of the article are confirmed. The expression of concern published earlier is removed."}
+  ],
+  "draft_text": "Exposure to microplastics through tap water\n\n1. Introduction\nMicroplastics are widespread in tap water: 83% of samples contained particles (Becker and Ito [2]), which is the starting point of our exposure model.\n\nReferences\n[2] Becker, F., Ito, M. (2020). Microplastics in municipal drinking water: a national survey. J. Fake Environmental Health.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["none"], "ordered": true},
+      "change.has_relations": {"accept": [true]},
+      "alert#171.about_this_paper": {"accept": ["yes"]},
+      "alert#172.about_this_paper": {"accept": ["yes"]}
+    },
+    "hard_fail_if": ["change.severity == medium", "change.severity == high"],
+    "facts": {
+      "must_include": [
+        "says the expression of concern was lifted or resolved by the later notice",
+        "says the paper's findings were confirmed or can still be relied on"
+      ],
+      "must_not_include": [
+        "recommends hedging the wording or removing the citation",
+        "treats the expression of concern as still open"
+      ]
+    },
+    "why": "Rubric: a concern lifted by a later notice in the same report is none, and report severity is lower than the highest alert when a later notice resolves an earlier one. Both alerts carry a non-trivial alert_severity from the rules, so a model that just takes the highest alert says medium. Severity none stops the pipeline before the draft is read."
+  }
+}

@@ -32,6 +32,7 @@ ALERT_SEVERITY = {
     ChangeType.CORRECTION: AlertSeverity.MEDIUM,
     ChangeType.ERRATUM: AlertSeverity.LOW,
     ChangeType.DOAJ_DELISTING: AlertSeverity.LOW,
+    ChangeType.CITATION_JUMP: AlertSeverity.LOW,
     # unknown kinds of notice get attention rather than being overlooked
     ChangeType.OTHER: AlertSeverity.MEDIUM,
 }
@@ -80,6 +81,15 @@ def assess(change: Change) -> Assessment:
                 "control may be weaker than it was."
             )
             recommendation = "Look up why the journal was delisted, and weigh this paper's findings with more care."
+        case ChangeType.CITATION_JUMP:
+            description = (
+                f"OpenAlex counted {_citation_rise(change)} since the previous poll. Something "
+                "has drawn new attention to this paper; its content hasn't changed."
+            )
+            recommendation = (
+                "Look at the works that cite it now, and check whether they support, extend or "
+                "challenge the findings you rely on."
+            )
         case ChangeType.OTHER:
             kind = change.notice_label or change.notice_type or "an unrecognised"
             description = (
@@ -88,6 +98,17 @@ def assess(change: Change) -> Assessment:
             )
             recommendation = "Read the notice to see what changed and whether it affects how you use this paper."
     return Assessment(alert_severity=ALERT_SEVERITY[change.change_type], description=description, recommendation=recommendation)
+
+
+def _citation_rise(change: Change) -> str:
+    """`300 new citations of this paper (from 952 to 1252)`, or less when a count is unknown."""
+    if change.previous_cited_by_count is None or change.cited_by_count is None:
+        return "a sudden rise in citations of this paper"
+    rise = change.cited_by_count - change.previous_cited_by_count
+    return (
+        f"{rise} new citations of this paper "
+        f"(from {change.previous_cited_by_count} to {change.cited_by_count})"
+    )
 
 
 def _notice(change: Change) -> str:

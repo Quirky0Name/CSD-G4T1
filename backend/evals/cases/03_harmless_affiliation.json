@@ -1,0 +1,29 @@
+{
+  "category": "harmless change",
+  "paper": {"doi": "10.9999/fake.2021.003", "title": "School start times and teenage sleep", "publication_year": 2021, "journal": "J. Fake Education", "authors": ["Garcia, M.", "Okafor, T."]},
+  "paper_text": "School start times and teenage sleep\nGarcia, M. (University of Northfield), Okafor, T.  J. Fake Education, 2021\n\nAbstract\nDelaying school start by 45 minutes added 31 minutes of sleep per night in 600 students.\n\nResults\nSleep was measured by wrist actigraphy over four weeks (Table 1).",
+  "alerts": [{"id": 31, "change_type": "correction", "change_key": "correction:10.9999/fake.2021.003c", "alert_severity": "medium", "description": "A correction notice was published for this paper.", "notice_doi": "10.9999/fake.2021.003c", "detected_at": "2026-10-01T00:00:00Z"}],
+  "notice": {"doi": "10.9999/fake.2021.003c", "update_to_includes_paper": true, "text": "Correction to: School start times and teenage sleep\n\nThe affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education. This does not affect the results or conclusions of the article."},
+  "draft_text": "Sleep and school timetables\n\n1. Introduction\nGarcia and Okafor [5] report that a 45-minute later start added 31 minutes of sleep, which motivates our study.\n\nReferences\n[5] Garcia, M., Okafor, T. (2021). School start times and teenage sleep. J. Fake Education.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["none"], "ordered": true},
+      "alert.about_this_paper": {"accept": ["yes"]},
+      "alert.scope": {"accept": ["administrative"]},
+      "impact.cited": {"accept": [null]},
+      "impact.impact_level": {"accept": [null]}
+    },
+    "hard_fail_if": ["change.severity == high", "change.severity == medium"],
+    "facts": {
+      "must_include": [
+        "says the change is only to the author's affiliation",
+        "says the results and conclusions are unaffected"
+      ],
+      "must_not_include": [
+        "recommends changing the draft",
+        "describes a change to any result or number"
+      ]
+    },
+    "why": "Affiliation changes are 'none' in the rubric, so the pipeline stops after call 1: no draft read, impact fields null."
+  }
+}

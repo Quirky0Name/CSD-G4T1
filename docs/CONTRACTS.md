@@ -24,8 +24,8 @@ This is the single source of truth for every interface between services.
   Evaluation's `POST /evaluate/changes`, which accepts any service token
   (`role=service`) and rejects user tokens, the same way Storage
   Management treats `/internal/**`. User Management mints one too
-  (`sub=svc:users`, five minutes) to clear a deleted project in Storage
-  Management.
+  (`sub=svc:users`, five minutes) to clear a deleted project or account in
+  Storage Management.
 - **For now** everything runs locally with a shared throwaway `JWT_SECRET`
   (base64 of 32+ bytes like the real one, the same in every service's local
   config). The frontend signs in through User Management, keeps the token
@@ -38,9 +38,9 @@ This is the single source of truth for every interface between services.
 Owned by: User Management (`users/`). Consumed by: the frontend, at `/auth`
 and `/projects` on its own address, since User Management sends no CORS
 headers: the Vite proxy in development, Caddy in the root stack. Register
-and login need no token; the project calls need the user's token, as
-Storage Management's do. Register and login answer with the same shape, so
-the frontend handles them alike:
+and login need no token; the project calls and deleting the account need
+the user's token, as Storage Management's do. Register and login answer
+with the same shape, so the frontend handles them alike:
 
 ```json
 {"token": "eyJ...", "user": {"id": "uuid", "email": "someone@example.com", "created_at": "2026-10-24T08:00:00Z"}}
@@ -73,6 +73,25 @@ password alike, answered in about the same time, so login doesn't show
 which emails have accounts. Register's `409` does, which is accepted:
 sign-up has to say the email is taken.
 
+### `DELETE /auth/me`
+
+User JWT required. Deletes the caller's account. **Request:**
+`{"password": "..."}`, the account's password. First asks Storage
+Management to clear everything the user owns (`DELETE /internal/users/{id}`,
+below), then deletes the account and its projects. **Response `204`.**
+
+Errors, as problem details: `400` a missing or blank password; `401`
+missing or bad token, or `Your account no longer exists` for an account
+already deleted; `403` with `detail` `Wrong password` (not a `401`, since
+the token is fine and the frontend signs out on any `401`), or a service
+token; `502` with `detail` `Storage Management couldn't clear your account,
+so it wasn't deleted`. Nothing was deleted, so it can simply be tried again.
+
+Tokens aren't revoked: a deleted account's token stays valid for up to 24
+hours. User Management then lists no projects for it, answers `PUT` and
+`DELETE /projects/{id}` with `404`, and `POST /projects` with `401` `Your
+account no longer exists`.
+
 ### `POST /projects`
 
 User JWT required. **Request:** `{"name": "..."}`. **Response `201`:**
@@ -86,7 +105,8 @@ unique, exactly as typed apart from those spaces, so "Thesis" and "thesis"
 are two names.
 
 Errors, as problem details: `400` a missing or blank name, or one over
-100 characters; `409` with `detail` `You already have a project called <name>`.
+100 characters; `401` `Your account no longer exists` for a deleted
+account's token; `409` with `detail` `You already have a project called <name>`.
 
 ### `GET /projects`
 
@@ -147,14 +167,25 @@ service token (`svc:users`), like every other `/internal/**` call.
 ### `DELETE /internal/projects/{id}?owner_id=`
 
 Deletes the owner's papers in that project, each with everything that
-refers to it (snapshots, alerts and their notes, reports and their
-documents, and the PDFs), then the project's draft and its PDF. Only that
+refers to it (snapshots, alerts, reports and their documents, and the
+PDFs), then the project's draft and its PDF. Only that
 owner's: another user's project with the same id is untouched (see
 "Projects"). **Response `204`**, also when there's nothing to delete, so a
 delete User Management retries after a failure still goes through.
 
 Errors, as problem details: `400` an id or `owner_id` that isn't a UUID, or
 no `owner_id`; `401` missing or bad token, `403` a user token.
+
+### `DELETE /internal/users/{id}`
+
+Deletes everything the user owns: their papers in every project, the
+default one included, each with everything that refers to it (as above),
+then all their drafts and their PDFs. **Response `204`**, also when there's
+nothing to delete, so an account delete User Management retries still
+goes through.
+
+Errors, as problem details: `400` an id that isn't a UUID; `401` missing or
+bad token, `403` a user token.
 
 ## Frontend ↔ Storage Management
 
@@ -166,11 +197,10 @@ SETUP.md), with the user's token.
 |---|---|
 | List tracked papers | `GET /papers` |
 | Track a paper | `POST /papers`, multipart PDF or JSON `{"doi"}` |
-| Delete a paper | `DELETE /dev/papers/{id}` (a demo tool for now) |
+| Delete a paper | `DELETE /papers/{id}` |
 | Poll a paper now | Updating's `POST /run-poll?paper_id=` (`/updating/...`) |
 | A paper's alerts | `GET /papers/{id}/alerts` (one call per paper; no cross-paper list yet) |
 | Acknowledge / dismiss | `PATCH /alerts/{id}` |
-| Notes on an alert | `POST` / `GET /alerts/{id}/notes` |
 | A paper's reports (alerts, documents, evaluation) | `GET /papers/{id}/reports` |
 | A paper's alert severity | not a field: the highest `alert_severity` among its `new` alerts |
 | New-alert toast | no push: re-fetch alerts and toast unseen `new` ids |
@@ -214,6 +244,17 @@ Errors come back as problem details, with the reason in `detail`:
 `400` not a PDF, `401` missing or bad token, `403` service token,
 `409` you already track a paper with that DOI, `413` over 25 MB.
 
+### `DELETE /papers/{id}`
+
+User JWT required, and only the paper's owner can delete it. Stops
+tracking the paper: deletes it with everything that refers to it
+(snapshots, alerts, reports and their documents, and the PDFs). Updating
+stops tracking it on its next poll. **Response `204`.**
+
+Errors, as problem details: `400` an id that isn't a UUID; `401` missing or
+bad token; `403` a service token; `404` `No paper <id>` for a missing paper
+and another user's alike. A refused request deletes nothing.
+
 ### `GET /papers/{id}/alerts?include_dismissed=false`
 
 User JWT required, and only the paper's owner sees its alerts. Returns
@@ -243,7 +284,7 @@ A paper with no alerts gives `{"alerts": []}`.
 
 | Field | Meaning |
 |---|---|
-| `change_type` | `retraction`, `correction`, `erratum`, `expression_of_concern`, `doaj_delisting` or `other` |
+| `change_type` | `retraction`, `correction`, `erratum`, `expression_of_concern`, `doaj_delisting`, `citation_jump` or `other` |
 | `alert_severity` | `high`, `medium` or `low` |
 | `description` | what changed and how it affects the researcher |
 | `recommendation` | what to do about it |
@@ -284,58 +325,6 @@ acknowledged or dismissed"), a missing or unknown status, a body that
 isn't JSON, or an id that isn't a number; `401` missing or bad token;
 `403` a service token; `404` no alert with that id **or** an alert on
 another user's paper (the same `detail` for both).
-
-### `POST /alerts/{id}/notes`
-
-User JWT required, and only the owner of the alert's paper can add a
-note. Adds a note to the researcher's log on an alert, e.g. what they did
-about it. These aren't the paper's own notes (`PUT /papers/{id}/notes`).
-Adding a note never changes the alert's `status` or `status_changed_at`,
-and any alert can get one, dismissed or not. Notes can't be edited or
-deleted.
-
-**Request:**
-
-```json
-{"text": "Removed the citation from my draft."}
-```
-
-`text` is required: 1 to 2000 characters, not blank. The limit counts
-UTF-16 code units, like JavaScript's `length`, so an emoji counts as 2.
-
-**Response `201`:**
-
-```json
-{"text": "Removed the citation from my draft.", "created_at": "2026-09-26T10:00:00Z"}
-```
-
-Errors, as problem details: `400` a missing or blank `text`, one over
-2000 characters, a body that isn't JSON, or an id that isn't a number;
-`401` missing or bad token; `403` a service token; `404` no alert with
-that id **or** an alert on another user's paper (the same `detail` as
-`PATCH /alerts/{id}`). A refused request stores nothing.
-
-### `GET /alerts/{id}/notes`
-
-User JWT required, and only the owner of the alert's paper can read its
-notes. Returns the alert's notes, **newest first** (by `created_at`, then
-the newer note).
-
-**Response `200`:**
-
-```json
-{"notes": [
-  {"text": "Emailed my co-author.", "created_at": "2026-09-27T09:00:00Z"},
-  {"text": "Removed the citation from my draft.", "created_at": "2026-09-26T10:00:00Z"}
-]}
-```
-
-An alert with no notes gives `{"notes": []}`. The alert list
-(`GET /papers/{id}/alerts`) doesn't include notes; they're read per alert.
-
-Errors, as problem details: `400` an id that isn't a number; `401`
-missing or bad token; `403` a service token; `404` as for
-`POST /alerts/{id}/notes`.
 
 ### `GET /papers/{id}/reports`
 
@@ -385,7 +374,7 @@ be in `GET /papers/{id}/alerts` a moment before it's in a report.
 | `status` | `investigating` (its documents are being fetched, or fetching stopped midway; nothing resumes it yet), `investigated` (fetching finished) or `assessed` (impact wrote its evaluation) |
 | `created_at`, `investigated_at` | when the report was opened, and when fetching finished (null until then) |
 | `evaluation`, `recommendation`, `evaluated_at` | impact's evaluation of the report's alerts together, what the researcher should do, and when it was written. Null until the report is `assessed`, and also null on an assessed report whose change impact rated `none` (not meaningful) |
-| `alerts` | the report's alerts, in the same shape and order as `GET /papers/{id}/alerts` (newest first, then most severe), **dismissed ones included**, with their status. They're the same alerts, acted on with `PATCH /alerts/{id}` and `/alerts/{id}/notes`. Can be empty: when a retraction notice arrives after a retraction alert that had none, the alert moves to the paper's next report (see `POST /internal/papers/{id}/alerts`), and the earlier report keeps its documents |
+| `alerts` | the report's alerts, in the same shape and order as `GET /papers/{id}/alerts` (newest first, then most severe), **dismissed ones included**, with their status. They're the same alerts, acted on with `PATCH /alerts/{id}`. Can be empty: when a retraction notice arrives after a retraction alert that had none, the alert moves to the paper's next report (see `POST /internal/papers/{id}/alerts`), and the earlier report keeps its documents |
 | `documents` | what investigation fetched, oldest first (the order it stored them) |
 
 | Document field | Meaning |
@@ -492,26 +481,29 @@ Errors: as for `GET /draft`. A `404` deletes nothing.
 
 ### Demo tools: `/dev/papers/{id}/...`
 
-Always on for now, for the demo and testing; they should come out (or go
-behind a setting) before a real deployment. User JWT required, and only
+On unless `DEV_TOOLS=false`, for the demo and testing; with it off, they
+and Swagger answer `404`. User JWT required, and only
 on the caller's own papers: another user's paper gets the same `404`
 `No paper <id>` as a missing one. How to use them for a demo is in
 STORAGE.md, "Demo tools", and DEMO.md.
 
 - **`POST /dev/papers/{id}/undo-change?change=`** (`retraction`,
-  `correction`, `erratum` or `expression_of_concern`): stores a copy of
-  the paper's latest snapshot with that change taken out (for a
-  retraction, `is_retracted` set back to false too), so the next poll
-  finds the change again. **`201`** with the new snapshot, in the shape
+  `correction`, `erratum`, `expression_of_concern` or `citation_jump`):
+  stores a copy of the paper's latest snapshot with that change taken out
+  (for a retraction, `is_retracted` set back to false too; for a citation
+  jump, `cited_by_count` set to 0), so the next poll finds the change
+  again. A citation jump needs at least 10 citations now to be found. **`201`** with the new snapshot, in the shape
   `POST /internal/papers/{id}/snapshots` returns. `400` an unknown
   `change`; `409` the paper has no snapshot yet (poll it once first), or
-  has no such change to undo.
+  has no such change to undo (for `citation_jump`, a count that is null or
+  0).
 - **`DELETE /dev/papers/{id}/history`**: deletes the paper's snapshots,
-  alerts (and their notes) and reports (and their documents and PDFs), so
+  alerts and reports (and their documents and PDFs), so
   a rehearsal raises the same change again. **`204`**.
 - **`DELETE /dev/papers/{id}`**: deletes the paper and everything above,
   plus its stored PDF. Updating stops tracking it on its next poll.
-  **`204`**. The frontend calls this to delete a tracked paper.
+  **`204`**, the same as `DELETE /papers/{id}`, which is what the frontend
+  calls.
 
 Errors, as problem details: `401` missing or bad token; `403` a service
 token; `404` as above.
@@ -664,7 +656,7 @@ re-sent nudge can't store the same change twice.
 
 | Field | Rules |
 |---|---|
-| `change_type` | required: `retraction`, `correction`, `erratum`, `expression_of_concern`, `doaj_delisting` or `other` (a Crossref notice type Research Evaluation doesn't classify yet), exact lowercase |
+| `change_type` | required: `retraction`, `correction`, `erratum`, `expression_of_concern`, `doaj_delisting`, `citation_jump` or `other` (a Crossref notice type Research Evaluation doesn't classify yet), exact lowercase |
 | `change_key` | required, at most 512 characters. Identifies the change within the paper (e.g. `retraction`, `correction:<notice_doi>`) |
 | `alert_severity` | required: `high`, `medium` or `low`, exact lowercase |
 | `description`, `recommendation` | required, not blank |
@@ -699,8 +691,8 @@ first) and the request is a `retraction` with a `notice_doi`, the row is
 replaced with the request's `alert_severity`, `description`, `recommendation`,
 `notice_doi`, `detected_at` and snapshot ids, and treated as a new alert:
 `status` goes back to `new`, `status_changed_at` is cleared, and it leaves
-its report so the paper's next report takes it. Its `id` stays, so the
-researcher's notes on it stay. The answer is `201`, like a new alert. A
+its report so the paper's next report takes it. Its `id` stays. The
+answer is `201`, like a new alert. A
 `retraction` that already has a notice is never replaced (`200`). See
 EVALUATION.md, "The nudge".
 
@@ -996,7 +988,7 @@ for those two sources a null field means the source didn't know the DOI
 | `journal_source_id`, `journal_source_type` | text | OpenAlex `primary_location.source.id` / `.type` | guard for the DOAJ alert, journal context |
 | `journal`, `issn_l`, `publisher` | text | OpenAlex source `display_name` / `issn_l` / `host_organization_name` | journal context |
 | `authors` | JSON array, first 10, in authorship order | OpenAlex `authorships` plus one batched `/authors` lookup | author context |
-| `cited_by_count` | int, nullable | OpenAlex only (Crossref's count differs) | stored, no alert |
+| `cited_by_count` | int, nullable | OpenAlex only (Crossref's count differs) | citation jump alert |
 | `title`, `publication_year` | text, int | OpenAlex | display |
 | `source_status` | JSON `{crossref, openalex, openalex_authors}`, each `ok` / `not_found` / `error` | Updating | real change vs outage |
 
@@ -1062,6 +1054,7 @@ Classification, from the sprint's alert stories:
 | Correction | a new `crossref_updates` entry of type `correction` | `medium` | `correction:<notice_doi>` |
 | Erratum | a new `crossref_updates` entry of type `erratum` | `low` | `erratum:<notice_doi>` |
 | DOAJ delisting | `in_doaj` true → false, with the same `journal_source_id` and a `journal_source_type` of `journal` | `low` | `doaj_delisting:<snapshot_id>` |
+| Citation jump | `cited_by_count` rises by at least 10 and at least 20 % of the previous count | `low` | `citation_jump:<snapshot_id>` |
 | Other | a new `crossref_updates` entry of any other type (`withdrawal`, `removal`, `partial_retraction`, ...) | `medium` | `other:<type>:<notice_doi>` |
 
 Entries are identified by (`notice_doi`, `type`), and nulls are never

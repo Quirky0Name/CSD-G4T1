@@ -1,0 +1,28 @@
+{
+  "category": "wrong paper",
+  "paper": {"doi": "10.9999/fake.2021.007", "title": "Mindfulness training reduces exam anxiety in undergraduates", "publication_year": 2021, "journal": "J. Fake Psychology", "authors": ["Smith, J."]},
+  "paper_text": "Mindfulness training reduces exam anxiety in undergraduates\nSmith, J.  J. Fake Psychology, 2021\n\nAbstract\nEight weeks of mindfulness training reduced self-reported exam anxiety in 120 undergraduates.",
+  "alerts": [{"id": 71, "change_type": "retraction", "change_key": "retraction:10.9999/fake.2021.700r", "alert_severity": "high", "description": "A retraction notice was published for this paper.", "notice_doi": "10.9999/fake.2021.700r", "detected_at": "2026-10-01T00:00:00Z"}],
+  "notice": {"doi": "10.9999/fake.2021.700r", "title": "RETRACTED: Mindfulness training improves sleep quality in nurses", "update_to_includes_paper": true, "text": "Retraction: Mindfulness training improves sleep quality in nurses\n\nThis article has been retracted because the data could not be verified. The authors agree with the retraction."},
+  "draft_text": "Reducing student stress\n\n1. Introduction\nSmith [1] found that mindfulness training reduces exam anxiety, which we build on.\n\nReferences\n[1] Smith, J. (2021). Mindfulness training reduces exam anxiety in undergraduates. J. Fake Psychology.",
+  "expected": {
+    "tags": {
+      "change.severity": {"accept": ["none"], "ordered": true},
+      "alert.about_this_paper": {"accept": ["no"]},
+      "impact.cited": {"accept": [null]},
+      "impact.impact_level": {"accept": [null]}
+    },
+    "hard_fail_if": ["change.severity == high", "change.severity == medium"],
+    "facts": {
+      "must_include": [
+        "says the notice is about a different article (sleep quality in nurses)",
+        "says the tracked paper is not affected"
+      ],
+      "must_not_include": [
+        "says the tracked paper was retracted",
+        "recommends removing the citation"
+      ]
+    },
+    "why": "Rubric: when the notice's Crossref title shows another article, about_this_paper is 'no' even if update-to lists this paper, and severity is none. The notice record deliberately says update_to_includes_paper = true to test this."
+  }
+}

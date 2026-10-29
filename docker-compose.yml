@@ -45,6 +45,7 @@ services:
       OPENALEX_API_KEY: ${OPENALEX_API_KEY:-}
       S2_API_KEY: ${S2_API_KEY:-}
       UPLOAD_DIR: /data/uploads
+      DEV_TOOLS: ${DEV_TOOLS:-true}
     # the PDFs and the database belong together: back up or reset both volumes at once
     volumes:
       - uploads:/data/uploads
@@ -53,6 +54,8 @@ services:
       test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/8081"]
       interval: 5s
       retries: 30
+      # a first start on a fresh server (Flyway, the build still running, GROBID loading) can be slow
+      start_period: 120s
     restart: unless-stopped
 
   users:
@@ -99,16 +102,40 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  # Adminer, to look at the tables; only reachable through the web server's /adminer
+  adminer:
+    image: adminer:5.3.0
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    depends_on:
+      - db
+    restart: unless-stopped
+
   web:
     build: ./frontend/csd-frontend-vite
     ports:
       - "${WEB_PORT:-8088}:80"
+      - "${HTTPS_PORT:-8443}:443"
+    environment:
+      # unset locally (plain HTTP on :80); the hostname on the server, which turns on HTTPS
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      # the default is the hash of a random password nobody kept, so /adminer stays shut until
+      # .env sets one (docs/SETUP.md, "Running the whole stack")
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-$$2a$$14$$7DssxedPF/V5.j6vqsJoQOlv7XQYe0Ie/XxwDOFliCrF0Cs6hoXNi}
+    # Caddy keeps its certificates here, so a restart doesn't ask for new ones
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - storage
       - users
       - updating
+      - adminer
     restart: unless-stopped
 
 volumes:
   db_data:
   uploads:
+  caddy_data:
+  caddy_config:

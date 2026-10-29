@@ -6,6 +6,7 @@ snapshot, or whose source wasn't `ok`, is never compared, so a source that doesn
 DOI can't look like a status change. (Stored snapshots never have `error` for Crossref or
 OpenAlex, so in practice that only skips `not_found`.)"""
 
+from common.citations import is_citation_jump
 from updating.snapshot import CrossrefUpdate, Snapshot
 from updating.sources import SourceStatus
 
@@ -33,6 +34,14 @@ def nudge_reasons(previous: Snapshot, new: Snapshot) -> list[str]:
     # Evaluation's job (docs/CONTRACTS.md, "Snapshot fields").
     if openalex_ok and previous.in_doaj is True and new.in_doaj is False:
         reasons.append("in_doaj true -> false")
+
+    if (
+        openalex_ok
+        and previous.cited_by_count is not None
+        and new.cited_by_count is not None
+        and is_citation_jump(previous.cited_by_count, new.cited_by_count)
+    ):
+        reasons.append(f"cited_by_count {previous.cited_by_count} -> {new.cited_by_count}")
 
     if (
         _both_ok(previous.source_status.crossref, new.source_status.crossref)

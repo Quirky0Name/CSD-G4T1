@@ -8,6 +8,154 @@ owned that story made.
 
 ---
 
+## 2026-10-28 — On AWS: one EC2 instance behind CloudFront, from one template
+
+- **One EC2 instance runs the root compose stack** (the story owner's
+  call, CG-136), with Postgres and the PDFs on its disk. Rejected: Render
+  (its free services sleep and cap memory below GROBID's 2 GB, so it
+  costs more than one instance once it's always on) and Vercel (the
+  frontend only); Supabase and S3 (2026-10-24 and 2026-10-27).
+- **CloudFront in front, for HTTPS on a `*.cloudfront.net` address.**
+  Rejected: a DuckDNS name, which SMU's network blocks as dynamic DNS, so
+  the site would be unreachable on campus Wi-Fi. A domain can replace the
+  CloudFront address later without touching the app. CloudFront caches only
+  the built frontend's files and passes every header, cookie and method on;
+  it waits at most 60 seconds, which a long poll can exceed.
+- **Only CloudFront can reach the instance** (its managed prefix list on
+  port 80); there's no SSH, Session Manager instead. Secrets live in
+  Parameter Store and become the server's `.env` at boot.
+- **N. Virginia (us-east-1), not Singapore** (the story owner's call): about
+  20 % cheaper, for about a quarter of a second more on every request from
+  Singapore. CloudFront still serves the frontend's files from nearby.
+- **One CloudFormation template** (`deploy/stack.yml`), so the whole thing
+  is created, and deleted, in one step from the console. Nightly disk
+  snapshots, 7 kept, back up the database and the PDFs together.
+
+## 2026-10-28 — HTTPS from Caddy, and Adminer behind a password
+
+- **Caddy serves HTTPS when `SITE_ADDRESS` is a hostname** (the story
+  owner's call: a free DuckDNS name), getting and renewing the certificate
+  itself; the `caddy_data` volume keeps it across restarts. Unset, it's
+  plain HTTP on `:80` as before, so local runs don't change.
+- **Adminer at `/adminer`, behind Caddy's `basic_auth` and then Postgres's
+  own login** (the story owner's call), so the data can be looked at from
+  a browser with no tunnel. Rejected: only through a Session Manager port
+  forward (safer, but everyone looking needs the AWS CLI). Past both
+  passwords it's full superuser access to the database from the internet,
+  which is accepted for a class project; it also needs `SITE_ADDRESS` set,
+  or the password goes over plain HTTP. Until `ADMIN_PASSWORD_HASH` is set,
+  the default is the hash of a password nobody kept, so it starts shut
+  rather than open.
+- **No `basic_auth` on `/updating`**: `POST /run-poll` checks the user's
+  token itself (CG-99), and `basic_auth` uses the same `Authorization`
+  header the frontend sends its token in, so it would break the poll button.
+
+## 2026-10-27 — Impact is measured by an offline eval set, graded by a second model
+
+- **Hand-written cases run through the real `assess`, offline**
+  (`backend/evals/`, EVALUATION.md "Evals"), so a prompt or model change
+  gets a score to compare, not an impression from one demo paper. Cases
+  are fake papers written as text and turned into PDFs, so the expected
+  answer is known and nothing real is quoted. Rejected: pytest (the
+  answers aren't deterministic and every run spends Gemini quota) and
+  scoring by hand.
+- **Answers are saved first and scored later**, so re-scoring or changing
+  the scorer costs no quota.
+- **Structured fields are scored in code; only the free text goes to a
+  judge.** Tags compare exact values, with half marks for one level off on
+  ordered levels. Quotes are checked against the case text.
+- **The judge reports, the code decides.** The judge only says whether
+  each statement is in the answer, with a quote, and never sees a gold
+  paragraph. Pass or fail (present for `must_include`, absent for
+  `must_not_include`) is worked out in code, so the judge can't be lenient
+  and length or style earns nothing.
+- **The judge has its own key and model** (`JUDGE_API_KEY`, `JUDGE_MODEL`),
+  so it doesn't use up the tested model's daily free-tier quota and
+  doesn't grade its own answers.
+- **Several runs per case, and their spread is the noise floor**: the
+  answers vary between runs, so a change smaller than the spread means
+  nothing.
+- **Dev only:** `fpdf2` and `rich` are added per command with
+  `uv run --with`, not as project dependencies, and the services never
+  import the evals.
+
+## 2026-10-27 — Papers are deleted through their own endpoint; the demo tools can be switched off
+
+- **`DELETE /papers/{id}`** (the story owner's call) is how the frontend
+  deletes a tracked paper, instead of the demo tools' `DELETE
+  /dev/papers/{id}`, so a server can turn the demo tools off without
+  breaking deletes. Both go through `PaperDeletion`.
+- **`DEV_TOOLS=false` takes the demo tools and Swagger away** (`404`). It
+  defaults to on everywhere, the server included, while the demo still
+  uses them on the live site. Off, nobody can fake a change on a paper,
+  which would spend Gemini calls and send a Telegram message.
+- Deferred (ROADMAP.md): running Storage Management as a non-root user,
+  and a health endpoint for the compose check (the port check works).
+
+## 2026-10-27 — No notes: researchers don't keep notes on alerts or papers
+
+- **Notes are dropped entirely** (the story owner's call). The append-only
+  notes on an alert (2026-09-26) go: `POST` and `GET /alerts/{id}/notes`,
+  the frontend's notes panel, and the `alert_notes` table, which V11 drops
+  with any notes in it. The planned notes per paper won't be built either.
+  A researcher's say on an alert is its status: acknowledged or dismissed.
+- V5 stays as it was, since Flyway checks the checksums of migrations
+  already applied; V11 drops what it made.
+
+## 2026-10-27 — Deleting an account clears Storage Management first, then the user and their projects
+
+- **`DELETE /auth/me`, confirmed with the password** (the story owner's
+  call). It sits with register and login, so the web server and the Vite
+  proxy already route it. The password goes in a JSON body on the
+  `DELETE`.
+- **A wrong password is a `403`, not a `401`**: the token is fine, and the
+  frontend signs out on any `401`, so a mistyped password would log the
+  researcher out.
+- **Storage Management first, as for a project.** If its clear fails, the
+  answer is a `502` and the account stays, so a retry finishes the job.
+  Its clear answers `204` even when there's nothing left.
+- **Projects go with their user through a foreign key** (`on delete
+  cascade`), added now that there's a delete for it to follow.
+- **A double-clicked delete answers `204` twice**, for an account and for
+  a project alike. Both requests get past the checks and clear Storage
+  Management, so the row is removed with one delete statement that does
+  nothing when the other request got there first; deleting through the
+  entity failed the second request with a `500`.
+- **No token revocation** (the story owner's call): a token outlives its
+  account by up to 24 hours. User Management answers it with no projects,
+  and with a `401` `Your account no longer exists` to creating one or
+  deleting the account again, so the frontend signs it out. Rejected for
+  now: checking the account on every request, or a revocation list, in
+  every service.
+
+## 2026-10-26 — Citation jumps alert, through the whole pipeline
+
+- **A citation jump is a rise in OpenAlex's `cited_by_count` of at least
+  10 and at least 20 % of the previous count, between two consecutive
+  snapshots** (the story owner's call, CG-88). The absolute floor stops a
+  paper going from 1 to 2 citations counting as +100 %; the relative floor
+  stops a heavily cited paper's ordinary growth counting as a jump. A drop
+  never counts. The numbers are constants, not settings.
+- **Updating and Research Evaluation share the rule** (`common/citations.py`).
+  Updating otherwise only does plain comparisons, but nudging on every
+  rise would nudge most papers on every poll, and a threshold of its own
+  could drift from Research Evaluation's and miss alerts.
+- **Keyed by snapshot** (`citation_jump:<snapshot_id>`), like a DOAJ
+  delisting, because a paper can jump again. Alert severity `low`.
+- **It goes through investigation, impact and Telegram like any other
+  alert** (the story owner's call). Investigation fetches nothing for it.
+  Impact's step 1 is told it's new attention, not a change to the content,
+  with severity `low`, so the gate lets it through and steps 2 and 3 say
+  what to do. Rejected: a Telegram message straight from the rule text
+  that skips Gemini (impact judges integrity changes and would mostly
+  answer "nothing to do", but the story owner wanted one path for every
+  alert), and a stored alert with no message.
+- Rejected: comparing against the count at the last citation alert, so a
+  slow, steady climb alerts eventually. It needs a baseline per paper
+  beyond the snapshot window Research Evaluation reads; it's on ROADMAP.md.
+
+---
+
 ## 2026-10-26 — Projects live in User Management; deleting one clears Storage Management first
 
 - **Names are unique per user, trimmed but otherwise exact** (the story
@@ -74,8 +222,7 @@ owned that story made.
 - **Tokens: HS256 forced, 24 hours, no refresh token.** The JWT library
   picks the algorithm from the key's length, and a long `JWT_SECRET` would
   give HS512. The contract says HS256, and the Python services' check
-  accepts nothing else (Research Evaluation's today, Updating's with
-  CG-99). `sub` is the user's uuid, as Storage Management requires.
+  accepts nothing else (Research Evaluation's and Updating's). `sub` is the user's uuid, as Storage Management requires.
 - **Emails are stored lowercase**: one account per address whatever its
   letter case, enforced by the unique constraint, so two registrations of
   one email at once get a `201` and a `409`, never a second account.
@@ -569,7 +716,8 @@ owned that story made.
   nothing changed**: each user gets their own baseline, differences can be
   worked out and replayed after the fact. Keying by DOI was rejected
   (fan-out logic for a few rows saved).
-- **Citation counts stored, not alerted on.**
+- *Superseded (2026-10-26, citation jumps alert):* **Citation counts
+  stored, not alerted on.**
 - Facts from live responses that shape the rules: `updated-by` lists one
   notice per source, sometimes under different types (identify entries by
   `notice_doi`, `type`); DOAJ status belongs to the journal, and repository

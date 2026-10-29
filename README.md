@@ -5,8 +5,8 @@ meaningful change in a tracked paper → assess its impact → recommend an
 action → the researcher decides.**
 
 The services sit behind one React frontend and talk to each other over
-REST, trusting a single JWT (issued by User Management at login; the
-frontend still uses a demo token until it has a login page). See
+REST, trusting a single JWT (issued by User Management at register and
+login). See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
 
 ## Where to look
@@ -14,12 +14,13 @@ frontend still uses a demo token until it has a login page). See
 | Doc | What's in it |
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The system map: week-7 scope, services and ownership, data flow, auth, projects, data model, deployment |
-| [docs/STORAGE.md](docs/STORAGE.md) | Storage Management inside: papers and PDFs, drafts, snapshots, alerts and notes, reports and documents, demo tools, code layout, gotchas |
-| [docs/EVALUATION.md](docs/EVALUATION.md) | Research Evaluation inside: detection and rules, investigation, Gemini impact and its fallback, the Telegram notification, code layout, gotchas |
+| [docs/STORAGE.md](docs/STORAGE.md) | Storage Management inside: papers and PDFs, drafts, snapshots, alerts, reports and documents, demo tools, code layout, gotchas |
+| [docs/EVALUATION.md](docs/EVALUATION.md) | Research Evaluation inside: detection and rules, investigation, Gemini impact and its fallback, the Telegram notification, the impact evals (purpose, how to run, reading the scores), code layout, gotchas |
 | [docs/UPDATING.md](docs/UPDATING.md) | Updating inside: the poll, the outage gate, when it nudges, the schedule, snapshots, code layout, gotchas |
 | [docs/CONTRACTS.md](docs/CONTRACTS.md) | Every endpoint between services and the frontend: request and response shapes, errors, auth |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Dated log of design decisions and why they were made |
-| [docs/SETUP.md](docs/SETUP.md) | Keys, env vars, running each service (Docker, local, stubs, mock harness), demo token, Telegram bot, tests |
+| [docs/SETUP.md](docs/SETUP.md) | Keys, env vars, running each service (Docker, local, stubs, mock harness), Telegram bot, tests and evals |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Launching it on AWS (one EC2 instance behind CloudFront), day to day, pausing, restoring, cost |
 | [docs/DEMO.md](docs/DEMO.md) | The week-7 demo runbook |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | What isn't built yet and known gaps |
 | [docs/RE-changes-explained.md](docs/RE-changes-explained.md) | Research: every way each detected change shows up in real life, with real examples (the R1, C6, … case codes) |
@@ -34,7 +35,7 @@ frontend still uses a demo token until it has a login page). See
 | Storage Management | Java + Spring Boot | `storage/` |
 | Research Evaluation | Python (FastAPI) | `backend/` |
 | Updating | Python (FastAPI) | `backend/` |
-| User Management | Java + Spring Boot (register, login and projects) | `users/` |
+| User Management | Java + Spring Boot (register, login, projects and deleting an account) | `users/` |
 
 Research Evaluation and Updating share one Python project in `backend/`
 (two FastAPI apps, a Dockerfile each).

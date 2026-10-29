@@ -21,6 +21,7 @@ def change(kind: ChangeType, **fields) -> Change:
         (ChangeType.CORRECTION, AlertSeverity.MEDIUM),
         (ChangeType.ERRATUM, AlertSeverity.LOW),
         (ChangeType.DOAJ_DELISTING, AlertSeverity.LOW),
+        (ChangeType.CITATION_JUMP, AlertSeverity.LOW),
         (ChangeType.OTHER, AlertSeverity.MEDIUM),
     ],
 )
@@ -75,3 +76,10 @@ def test_an_other_notice_is_named_by_its_label_then_its_type():
     assert "a 'Withdrawal' notice" in by_label
     assert "a 'withdrawal' notice" in by_type
     assert "isn't a type of change we assess yet" in by_label
+
+
+def test_a_citation_jump_names_both_counts_and_the_rise():
+    jump = change(ChangeType.CITATION_JUMP, previous_cited_by_count=952, cited_by_count=1252)
+
+    assert "300 new citations" in assess(jump).description
+    assert "952 to 1252" in assess(jump).description

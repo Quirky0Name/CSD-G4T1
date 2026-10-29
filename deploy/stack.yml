@@ -1,0 +1,207 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  The research assistant on one EC2 instance, behind CloudFront for HTTPS. The instance runs the
+  repo's root docker-compose.yml; its settings come from Parameter Store. docs/DEPLOY.md has the steps.
+
+Parameters:
+  CloudFrontPrefixList:
+    Type: String
+    Description: >-
+      The ID of the AWS-managed prefix list com.amazonaws.global.cloudfront.origin-facing in this
+      region (VPC console, Managed prefix lists), so only CloudFront can reach the instance
+  InstanceType:
+    Type: String
+    Default: t4g.medium
+    Description: 4 GB or more; the stack idles at about 3 GB, GROBID's 2 GB included. t4g is ARM.
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/canonical/ubuntu/server/24.04/stable/current/arm64/hvm/ebs-gp3/ami-id
+    Description: Ubuntu 24.04 for ARM; for an x86 instance type, swap arm64 for amd64
+  DiskSize:
+    Type: Number
+    Default: 30
+    Description: GB, for the images, the database and the PDFs
+  RepoUrl:
+    Type: String
+    Default: https://github.com/Quirky0Name/CSD-G4T1.git
+  Branch:
+    Type: String
+    Default: main
+  ParameterPath:
+    Type: String
+    Default: /research-assistant/
+    Description: Where the secrets live in Parameter Store; each one becomes a line of the server's .env
+
+Conditions:
+  # us-east-1's public DNS names leave the region out (ec2-1-2-3-4.compute-1.amazonaws.com)
+  IsUsEast1: !Equals [!Ref "AWS::Region", us-east-1]
+
+Resources:
+  # Only CloudFront reaches the web server; nothing else is open, not even SSH (Session Manager instead)
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: HTTP from CloudFront only
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourcePrefixListId: !Ref CloudFrontPrefixList
+
+  # Reads our parameters (for .env) and lets Session Manager open a shell in the browser
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: read-settings
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: ssm:GetParametersByPath
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPath}"
+                  - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPath}*"
+              - Effect: Allow
+                Action: kms:Decrypt
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    kms:ViaService: !Sub "ssm.${AWS::Region}.amazonaws.com"
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref InstanceRole]
+
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref ImageId
+      IamInstanceProfile: !Ref InstanceProfile
+      SecurityGroupIds: [!GetAtt WebSecurityGroup.GroupId]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref DiskSize
+            VolumeType: gp3
+            Encrypted: true
+      Tags:
+        - { Key: Name, Value: research-assistant }
+        # the nightly snapshot policy below picks the disk up by this tag
+        - { Key: Backup, Value: research-assistant }
+      PropagateTagsToVolumeOnCreation: true
+      # first boot only: fetch the repo and hand over to its bootstrap script
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euo pipefail
+          exec > /var/log/research-assistant-bootstrap.log 2>&1
+          git clone --branch "${Branch}" "${RepoUrl}" /opt/research-assistant
+          bash /opt/research-assistant/deploy/bootstrap.sh "${ParameterPath}" "${AWS::Region}"
+
+  # a fixed address, so CloudFront's origin stays the same when the instance is stopped and started
+  ElasticIp:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref Instance
+
+  # the disk, every night, the last 7 kept: the database and the PDFs are on it together
+  SnapshotRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: dlm.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSDataLifecycleManagerServiceRole
+
+  NightlySnapshots:
+    Type: AWS::DLM::LifecyclePolicy
+    Properties:
+      Description: research-assistant nightly disk snapshots
+      State: ENABLED
+      ExecutionRoleArn: !GetAtt SnapshotRole.Arn
+      PolicyDetails:
+        ResourceTypes: [VOLUME]
+        TargetTags:
+          - { Key: Backup, Value: research-assistant }
+        Schedules:
+          - Name: nightly
+            CreateRule:
+              Interval: 24
+              IntervalUnit: HOURS
+              # UTC: 2 a.m. in Singapore, when nobody's using it
+              Times: ["18:00"]
+            RetainRule:
+              Count: 7
+            CopyTags: true
+
+  # HTTPS for the browser on a *.cloudfront.net address, passing everything on to the instance.
+  # Nothing is cached except the built frontend's hashed files, and every header, cookie and
+  # method goes through, since the app's calls carry the user's token.
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: research-assistant
+        HttpVersion: http2and3
+        PriceClass: PriceClass_200
+        Origins:
+          - Id: instance
+            DomainName: !If
+              - IsUsEast1
+              - !Sub
+                - "ec2-${Dashed}.compute-1.amazonaws.com"
+                - Dashed: !Join ["-", !Split [".", !Ref ElasticIp]]
+              - !Sub
+                - "ec2-${Dashed}.${AWS::Region}.compute.amazonaws.com"
+                - Dashed: !Join ["-", !Split [".", !Ref ElasticIp]]
+            CustomOriginConfig:
+              HTTPPort: 80
+              OriginProtocolPolicy: http-only
+              # the longest CloudFront allows without asking AWS; a poll of many papers can take a while
+              OriginReadTimeout: 60
+        DefaultCacheBehavior:
+          TargetOriginId: instance
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          # AWS-managed: CachingDisabled, and AllViewer (every header, cookie and query string)
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+          OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
+        CacheBehaviors:
+          # the build's file names change with their contents, so these are safe to keep
+          - PathPattern: /assets/*
+            TargetOriginId: instance
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            Compress: true
+            # AWS-managed: CachingOptimized
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+
+Outputs:
+  SiteUrl:
+    Description: The app
+    Value: !Sub "https://${Distribution.DomainName}"
+  AdminerUrl:
+    Description: The database's tables, behind the admin password
+    Value: !Sub "https://${Distribution.DomainName}/adminer/"
+  InstanceId:
+    Description: For Session Manager (Systems Manager, Session Manager, Start session)
+    Value: !Ref Instance
