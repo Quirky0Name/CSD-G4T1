@@ -11,7 +11,8 @@ Wants=network-online.target
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/opt/research-assistant
-ExecStart=/usr/bin/docker compose up -d --build --wait
+# builds an image only if it's missing (the deploy workflow normally supplies them)
+ExecStart=/usr/bin/docker compose up -d --wait
 ExecStartPost=/usr/bin/docker compose restart updating
 ExecStop=/usr/bin/docker compose stop
 TimeoutStartSec=1800

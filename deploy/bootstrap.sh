@@ -22,7 +22,13 @@ if [ ! -f /swapfile ]; then
     echo "/swapfile none swap sw 0 0" >> /etc/fstab
 fi
 
+# for update.sh, which every later deploy runs
+printf 'PARAMETER_PATH=%s\nREGION=%s\n' "$PARAMETER_PATH" "$REGION" > /etc/research-assistant.conf
+
 "$APP_DIR/deploy/write-env.sh" "$PARAMETER_PATH" "$REGION"
+
+# the deploy workflow's images, if it has run; the service builds whatever's missing
+(cd "$APP_DIR" && docker compose pull --quiet storage users research-evaluation updating web) || true
 
 cp "$APP_DIR/deploy/research-assistant.service" /etc/systemd/system/
 systemctl daemon-reload
