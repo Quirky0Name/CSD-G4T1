@@ -31,10 +31,13 @@ Parameters:
     Type: String
     Default: /research-assistant/
     Description: Where the secrets live in Parameter Store; each one becomes a line of the server's .env
-  GitHubRepo:
+  GitHubSubjectPrefix:
     Type: String
-    Default: Quirky0Name/CSD-G4T1
-    Description: The repo whose main branch may deploy (owner/name, as on GitHub)
+    Default: "repo:Quirky0Name@138382802/CSD-G4T1@1382882535"
+    Description: >-
+      How GitHub names this repo in the deploy workflow's sign-in token, before ":ref:...". It uses
+      immutable subjects (owner and repo IDs, so a re-created repo of the same name can't deploy):
+      the sub_claim_prefix of gh api repos/OWNER/REPO/actions/oidc/customization/sub
   CreateGitHubOidcProvider:
     Type: String
     Default: "true"
@@ -233,7 +236,7 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubRepo}:ref:refs/heads/main"
+                token.actions.githubusercontent.com:sub: !Sub "${GitHubSubjectPrefix}:ref:refs/heads/main"
       Policies:
         - PolicyName: run-the-update
           PolicyDocument:
