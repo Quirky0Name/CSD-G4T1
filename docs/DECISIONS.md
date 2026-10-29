@@ -27,6 +27,11 @@ owned that story made.
   `.env`, and the secrets reach the containers from Parameter Store at
   start-up. Rejected: private packages with a registry token on the server
   (one more secret that expires).
+- **A stopped instance catches up when it starts** (2026-10-29): the boot
+  service deploys the latest `main` if the workflow built its images, and
+  the deploy job only warns when no instance takes the command. It never
+  builds at boot, so a commit whose tests failed (no images) can't go live
+  that way. Rejected: leaving it to someone to rerun the workflow by hand.
 - **Images are tagged with their commit, and the server runs the tag of
   the commit it deployed** (kept in its `.env`, so a reboot doesn't jump
   to newer images). Rolling back is running the workflow by hand for an
