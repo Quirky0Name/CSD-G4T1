@@ -421,7 +421,12 @@ On a failed step it stops; resume with `--folder <folder> --skip-run`.
 
 **The scores**, per run:
 
-- **tag**: the mean of the tag scores (1, 0.5 or 0).
+- **tag**: the mean of the tag scores (1, 0.5 or 0). A case may list no
+  expected tags. Its tag score is then left out of the averages (per case
+  in `all.py`, per category and overall in `score.py`), and shown as `-`
+  when no tag score is left, including a category or the overall row with
+  only such runs. A PLACEHOLDER run of a tagless case also has no tag
+  score; one of a tagged case scores 0.
 - **text**: the share of facts met. The judge only says whether each
   statement is present, and the code decides pass or fail, so a
   `must_not_include` passes when it's absent. A statement the judge
@@ -444,9 +449,15 @@ On a failed step it stops; resume with `--folder <folder> --skip-run`.
 
   A sentence that really is in two texts (a notice repeating the paper's
   title) passes under either label.
-- **PLACEHOLDER**: every model failed a step. It scores 0 and isn't
+- **PLACEHOLDER**: every model failed a step. Its tag score is 0
+  (none for a case with no expected tags) and it isn't
   judged, but the quotes of the steps that finished before it are still
   checked.
+
+`score.py`, `all.py` and `judge.py` take the same runs: `*__run*.json` in
+the folder (any run number, without the `.judge.json` files), listed by
+`score.run_paths`. `judge.py` repeats the glob rather than import
+`score.py`, so keep the two in step.
 
 With several runs, `all.py` also prints each run's overall tag score and
 the spread between them. Read that spread as the noise floor: a prompt
