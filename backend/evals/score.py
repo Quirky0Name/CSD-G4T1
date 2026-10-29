@@ -185,7 +185,7 @@ def score_run(path: Path, case: dict) -> dict:
     return {
         **out,
         "failed": False,
-        "tag": sum(detail.values()) / len(detail) if detail else None,
+        "tag": mean(list(detail.values())),
         "hard": hard_fails(ev, expected.get("hard_fail_if", [])),
         **check_quotes(ev, case),
         "text": text,
@@ -277,11 +277,11 @@ def main() -> None:
     for cat, rs in sorted(by_cat.items()):
         c_valid = [r for r in rs if not r["failed"]]
         texts = [r["text"] for r in c_valid if r.get("text") is not None]
-        tags_scored = [r["tag"] for r in c_valid if r["tag"] is not None]
+        tag_scores = [r["tag"] for r in c_valid if r["tag"] is not None]
         cat_table.add_row(
             cat,
             str(len(rs)),
-            format_score(mean(tags_scored)),
+            format_score(mean(tag_scores)),
             format_score(mean(texts)),
             str(sum(bool(r['hard']) for r in rs)),
             str(sum(r['failed'] for r in rs)),
@@ -291,8 +291,8 @@ def main() -> None:
     valid_runs = [r for r in runs if not r["failed"]]
     all_texts = [r["text"] for r in valid_runs if r.get("text") is not None]
     overall_text_avg = mean(all_texts)
-    all_tags = [r["tag"] for r in valid_runs if r["tag"] is not None]
-    overall_tag_avg = mean(all_tags)
+    all_tag_scores = [r["tag"] for r in valid_runs if r["tag"] is not None]
+    overall_tag_avg = mean(all_tag_scores)
     cat_table.add_row(
         "OVERALL",
         str(len(runs)),

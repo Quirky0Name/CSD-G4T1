@@ -88,7 +88,9 @@ async def main() -> None:
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     folder = Path(args[0]) if args else folders[-1]
     cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
-    for path in sorted(folder.glob("*__run?.json")):
+    for path in sorted(folder.glob("*__run*.json")):
+        if path.name.endswith(".judge.json"):
+            continue  # a grade, not a run (same run list as score.run_paths)
         ev = json.loads(path.read_text())
         if ev["assessment"]["placeholder"]:
             continue  # nothing to judge: a failed run

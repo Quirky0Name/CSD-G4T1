@@ -49,7 +49,8 @@ Fixes this review finding: the grid globs `*__run?.json` but scoring globs
 
 - **Goal:** Every run that is scored also has a row in the grid.
 - **Blocked by:** none
-- **Files:** `backend/evals/score.py`, `backend/evals/all.py`
+- **Files:** `backend/evals/score.py`, `backend/evals/all.py`,
+  `backend/evals/judge.py`
 - **Seams:** the scorer command.
 - **Decisions:**
   - The grid iterates over the same run list as scoring: `*__run*.json`,
@@ -62,7 +63,21 @@ Fixes this review finding: the grid globs `*__run?.json` but scoring globs
   - [x] (added with the `all.py` spec change) `all.py`'s summary, on the
         same 12 runs plus a `.judge.json`, counts 12 runs for that case and
         lists `run12` in the noise floor.
+  - [x] (added with the `judge.py` spec change) `judge.py`, with the
+        Gemini client faked, on 12 runs of one case where run3 is already
+        judged: writes `.judge.json` for the other 11, run10 to run12
+        included, and doesn't treat a `.judge.json` as a run.
 - **Doc deltas:**
+  - Spec change (user's call, 2026-10-29, code review round 3): S1's Files
+    also include `backend/evals/judge.py`. It globbed `*__run?.json`, so it
+    never graded runs 10 and up, which then always showed `-` for text. It
+    now globs `*__run*.json` and skips `.judge.json` files. Needs no doc:
+    the docs never said runs stop at 9.
+  - Decision: `judge.py` repeats the glob instead of calling
+    `score.run_paths`, because importing `score.py` pulls in `rich` and
+    `research_evaluation`, which `python evals/judge.py` doesn't otherwise
+    need. Its comment names `score.run_paths` as the list it must match.
+    Needs no doc: the comment says it.
   - Spec change (user's call, 2026-10-29, code review): S1's Files also
     include `backend/evals/all.py`. Its `load_runs` globbed `*__run?.json`,
     so its summary and noise floor dropped runs 10 and up. Both scripts
@@ -140,6 +155,11 @@ guard, so `"tags": {}` raises `ZeroDivisionError` (`transient`).
     `all.py`, with `format_score` for display. The diagnostics panel's text
     line now uses the unrounded mean (e.g. `0.333`, was `0.330` from the
     2-decimal string). Needs no doc: display precision only.
+  - Decision (code review round 3): `score_run`'s normal branch and
+    `all.py`'s per-run noise floor also go through `mean`, and the tag-score
+    lists are named `tag_scores` / `all_tag_scores` (not `tags`, which in
+    `score.main` already names the tag columns). Needs no doc: no
+    behaviour change.
 
 ## Human checks
 
