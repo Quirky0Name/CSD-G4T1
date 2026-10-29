@@ -109,7 +109,10 @@ for it to be healthy, then restarts Updating so its startup poll runs with Stora
 ## Pausing and deleting
 
 - **Pause:** stop the instance in the EC2 console. Compute stops billing; the disk, the snapshots
-  and the fixed IP (so CloudFront's link) stay. Start it again and the stack comes back.
+  and the fixed IP (so CloudFront's link) stay. Start it again and the stack comes back, then
+  catches up by itself: if `main` moved on while it was stopped, it deploys the latest `main`
+  (`deploy/catch-up.sh`), but only from the workflow's images, so only a commit that passed the
+  tests. A merge while it's stopped ends the deploy job with a warning, not a failure.
 - **Delete:** delete the stack. The instance, its disk, the IP, CloudFront and the roles go.
   The nightly snapshots stay until deleted by hand (EC2, Snapshots), and so do the parameters.
 
