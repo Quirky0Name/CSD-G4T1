@@ -64,13 +64,14 @@ def generate_summary(folder: Path) -> list[str]:
     
     for r in runs:
         by_case[r["case"]].append(r)
-        by_run[r["run"]].append(r["tag"])
+        if r["tag"] is not None:
+            by_run[r["run"]].append(r["tag"])
 
     header = f"{'Case':<35}{'Runs':>5}{'Tag':>7}{'Spread':>12}{'Text':>7}{'Hard':>6}{'Fail':>6}{'Inv':>5}{'Mis':>5}{'Unk':>5}"
     lines = [f"Results: {folder}\n", header, "-" * len(header)]
 
     for name, rs in sorted(by_case.items()):
-        tags = [r["tag"] for r in rs]
+        tags = [r["tag"] for r in rs if r["tag"] is not None]
         texts = [r["text"] for r in rs if r.get("text") is not None]
         avg_tag = sum(tags) / len(tags) if tags else None
         avg_text = sum(texts) / len(texts) if texts else None

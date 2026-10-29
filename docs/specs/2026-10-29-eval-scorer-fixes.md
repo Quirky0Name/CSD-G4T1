@@ -80,18 +80,42 @@ guard, so `"tags": {}` raises `ZeroDivisionError` (`transient`).
 
 - **Goal:** A case with no expected tags is scored without a crash.
 - **Blocked by:** none
-- **Files:** `backend/evals/score.py`
+- **Files:** `backend/evals/score.py`, `backend/evals/all.py`
 - **Seams:** the scorer command.
 - **Decisions:**
   - ASSUMED (Q1): with no tags, `tag = None`, and the averages skip it.
 - **Acceptance criteria:**
-  - [ ] Use a temp cases folder with one case where `"tags": {}`, plus a
+  - [x] Use a temp cases folder with one case where `"tags": {}`, plus a
         results folder with one run for it. Expected: the scorer command
         exits 0 and prints the tables, with `-` for that case's average
         tag score.
-  - [ ] `uv run ruff check` passes.
-- **Doc deltas:** `docs/EVALUATION.md` ("Evals"): "A case may list no
-  expected tags. Its tag score is then left out of the averages."
+  - [x] `uv run ruff check` passes.
+  - [x] (added with the `all.py` spec change) `all.py`'s summary, on a
+        cases folder with the same tagless case (2 runs) and one tagged
+        case (2 runs), doesn't crash and shows `-` as the tagless case's
+        tag; the noise floor uses only the tagged case's scores.
+- **Doc deltas:**
+  - `docs/EVALUATION.md` ("Evals"): "A case may list no expected tags. Its
+    tag score is then left out of the averages."
+  - Decision: the grid's `tag` cell for such a run shows `-`, like the
+    `text` cell does with no judge score. Needs no doc: covered by the
+    delta above.
+  - Decision: a category or the overall row with no tag score left
+    (including one with only placeholder runs) shows `-`, not `0.00` as
+    before, so "no score" isn't read as "all wrong". Doc: EVALUATION.md,
+    with the delta above.
+  - Decision: the diagnostics panel's average tag line shows
+    `N/A (no case lists tags)` when no tag score is left, like its text
+    line does. Needs no doc: the panel says it.
+  - Spec change (user's call, 2026-10-29): S2's Files also include
+    `backend/evals/all.py`. Its summary summed `score_run`'s `tag`, so a
+    tagless case still crashed `all.py` (`TypeError`). Its per-case tag,
+    spread and per-run noise floor now skip `None`, and the per-case tag
+    shows `-` when none is left. Doc: EVALUATION.md, with the first delta.
+  - Decision: the temp cases folder is reached by a throwaway script that
+    sets `score.ROOT` to a temp folder and calls `main()`, because the
+    scorer always reads `evals/cases/`. No test is committed (no eval test
+    suite, DECISIONS.md 2026-10-27). Needs no doc.
 
 ## Human checks
 

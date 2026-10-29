@@ -176,7 +176,7 @@ def score_run(path: Path, case: dict) -> dict:
     return {
         **out,
         "failed": False,
-        "tag": sum(detail.values()) / len(detail),
+        "tag": sum(detail.values()) / len(detail) if detail else None,
         "hard": hard_fails(ev, expected.get("hard_fail_if", [])),
         **check_quotes(ev, case),
         "text": text,
@@ -238,7 +238,7 @@ def main() -> None:
             if sc < 1 and t not in tags
         ]
         row_cells += [
-            f"{r['tag']:.2f}",
+            f"{r['tag']:.2f}" if r["tag"] is not None else "-",
             f"{r['text']:.2f}" if r.get("text") is not None else "-",
             "; ".join(flags),
             "; ".join(misses),
@@ -260,11 +260,12 @@ def main() -> None:
         c_valid = [r for r in rs if not r["failed"]]
         texts = [r["text"] for r in c_valid if r.get("text") is not None]
         text_avg = f"{sum(texts) / len(texts):.2f}" if texts else "-"
-        tag_avg = sum(r["tag"] for r in c_valid) / len(c_valid) if c_valid else 0.0
+        tags_scored = [r["tag"] for r in c_valid if r["tag"] is not None]
+        tag_avg = f"{sum(tags_scored) / len(tags_scored):.2f}" if tags_scored else "-"
         cat_table.add_row(
             cat,
             str(len(rs)),
-            f"{tag_avg:.2f}",
+            tag_avg,
             text_avg,
             str(sum(bool(r['hard']) for r in rs)),
             str(sum(r['failed'] for r in rs)),
@@ -274,11 +275,12 @@ def main() -> None:
     valid_runs = [r for r in runs if not r["failed"]]
     all_texts = [r["text"] for r in valid_runs if r.get("text") is not None]
     overall_text_avg = f"{sum(all_texts) / len(all_texts):.2f}" if all_texts else "-"
-    overall_tag_avg = sum(r["tag"] for r in valid_runs) / len(valid_runs) if valid_runs else 0.0
+    all_tags = [r["tag"] for r in valid_runs if r["tag"] is not None]
+    overall_tag_avg = sum(all_tags) / len(all_tags) if all_tags else None
     cat_table.add_row(
         "OVERALL",
         str(len(runs)),
-        f"{overall_tag_avg:.2f}",
+        f"{overall_tag_avg:.2f}" if overall_tag_avg is not None else "-",
         overall_text_avg,
         str(sum(bool(r['hard']) for r in runs)),
         str(sum(r['failed'] for r in runs)),
@@ -292,7 +294,7 @@ def main() -> None:
         diag_panel_lines = [
             f"[bold cyan]Total Test Runs Executed:[/] {total_runs}",
             f"[bold cyan]Successful Runs Rate:[/]    {len(valid_runs)}/{total_runs} ({len(valid_runs)/total_runs*100:.1f}%)",
-            f"[bold cyan]Average Structured Tag Score:[/] {overall_tag_avg:.3f} / 1.000",
+            f"[bold cyan]Average Structured Tag Score:[/] {overall_tag_avg:.3f} / 1.000" if overall_tag_avg is not None else "[bold cyan]Average Structured Tag Score:[/] N/A (no case lists tags)",
             f"[bold cyan]Average LLM Judge Text Score:[/] {float(overall_text_avg):.3f} / 1.000" if overall_text_avg != "-" else "[bold cyan]Average LLM Judge Text Score:[/] N/A (run judge.py first)",
         ]
 
