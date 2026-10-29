@@ -159,8 +159,8 @@ Gemini, so pick the provider again when they're started.
   yet (Updating's owner). After a host reboot Docker restarts the
   containers in no set order, and a poll that fails then counts as the
   day's poll.
-- [ ] CI that builds each image on merge to `main` and redeploys (today CI
-  is a Trivy scan and Telegram PR pings).
+- [x] CI that tests, builds each image and redeploys on merge to `main`
+  (`.github/workflows/deploy.yml`, DEPLOY.md).
 - [ ] Before a real deployment: real secrets, a health endpoint for
   Storage Management, and its container not running as root; a database
   role per service instead of the one shared role.

@@ -15,12 +15,16 @@ umask 077
     echo "WEB_PORT=80"
     # Caddy needs a port for 443 even though nothing reaches it; the security group keeps it shut
     echo "HTTPS_PORT=8443"
+    # the images the deploy workflow pushes, named after the repo (lowercase, as the registry wants)
+    repo=$(git -C /opt/research-assistant remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##' | tr '[:upper:]' '[:lower:]')
+    echo "IMAGE_PREFIX=ghcr.io/$repo"
+    echo "IMAGE_TAG=main"
     aws ssm get-parameters-by-path --region "$REGION" --path "$PARAMETER_PATH" \
         --with-decryption --recursive --query "Parameters[].[Name,Value]" --output text |
     while IFS=$'\t' read -r name value; do
         case "${name##*/}" in
             # set above; a hostname in SITE_ADDRESS would also send CloudFront round in redirects
-            WEB_PORT | HTTPS_PORT | SITE_ADDRESS) continue ;;
+            WEB_PORT | HTTPS_PORT | SITE_ADDRESS | IMAGE_PREFIX | IMAGE_TAG) continue ;;
         esac
         # compose's .env has no way to escape a quote inside a quoted value
         if [[ "$value" == *"'"* ]]; then

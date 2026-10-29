@@ -182,8 +182,10 @@ and then Postgres's own login. The root `docker-compose.yml` runs all of
 them with GROBID and one shared Postgres, each service in its own schema, and publishes only the
 web server (SETUP.md, "Running the whole stack"). The per-service compose
 files stay for development. CI (`.github/workflows/`) is a Trivy
-vulnerability scan on PRs, pushes to `main` and weekly, plus Telegram
-messages when a PR is opened or approved. On AWS (DEPLOY.md,
+vulnerability scan on PRs, pushes to `main` and weekly, Telegram messages
+when a PR is opened or approved, and, on every merge to `main`, a deploy:
+the tests, ARM images pushed to GitHub's registry, and the server told to
+pull them through Systems Manager. On AWS (DEPLOY.md,
 `deploy/stack.yml`) the root compose stack runs on one EC2 instance, with
 the database and the PDFs on its disk and snapshotted nightly, behind
 CloudFront, which gives the browser HTTPS and is the only thing that can
