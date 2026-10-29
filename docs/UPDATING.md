@@ -74,6 +74,9 @@ only seen when it arrives with a known change).
   with trigger `manual` and never move the schedule.
 - `paper_id` on a manual run limits fetching and storing to that paper;
   the nudge still sends every pending paper.
+- A manual run polls only the caller's papers (`owner_id`). The nudge
+  still sends every user's pending papers, but the summary's `nudged`
+  and `nudge_error.paper_ids` list only the caller's.
 
 ## Snapshots
 

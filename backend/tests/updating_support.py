@@ -5,6 +5,7 @@ from uuid import UUID
 
 import httpx
 from sqlalchemy import select
+from support import user_token
 
 from updating.db import init_db, make_engine, make_sessions
 from updating.models import Poll, PollStatus, PollTrigger, TrackedPaper
@@ -34,9 +35,10 @@ async def record_run(database_url: str, trigger: PollTrigger, started_at: dateti
     await engine.dispose()
 
 
-async def trigger_poll(client: httpx.AsyncClient, paper_id: UUID | None = None) -> dict:
-    """Call `POST /run-poll`, expecting a poll summary back."""
+async def trigger_poll(client: httpx.AsyncClient, paper_id: UUID | None = None, user: UUID | None = None) -> dict:
+    """Call `POST /run-poll` as `user` (the tests' usual owner by default), expecting a poll summary back."""
     params = {} if paper_id is None else {"paper_id": str(paper_id)}
-    response = await client.post(RUN_POLL, params=params)
+    headers = {"Authorization": f"Bearer {user_token(*([user] if user else []))}"}
+    response = await client.post(RUN_POLL, params=params, headers=headers)
     assert response.status_code == 200, response.text
     return response.json()

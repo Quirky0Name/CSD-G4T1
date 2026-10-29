@@ -7,7 +7,7 @@ import httpx
 import pytest
 import respx
 from pydantic import SecretStr
-from support import TEST_JWT_KEY, TEST_JWT_SECRET, load_fixture
+from support import TEST_JWT_KEY, TEST_JWT_SECRET, TEST_USER, load_fixture
 from updating_support import record_run
 
 from common.service_token import ServiceTokenAuth
@@ -94,14 +94,14 @@ class StubSm:
             transport=self.transport, base_url="http://stub", auth=ServiceTokenAuth(TEST_JWT_KEY, SERVICE_SUBJECT)
         )
 
-    async def add_paper(self, doi: str | None, paper_id: UUID | None = None) -> UUID:
-        body = {"id": str(paper_id or uuid4()), "doi": doi}
+    async def add_paper(self, doi: str | None, paper_id: UUID | None = None, owner: UUID = TEST_USER) -> UUID:
+        body = {"id": str(paper_id or uuid4()), "owner_id": str(owner), "doi": doi}
         response = await self.client.post("/dev/papers", json=body)
         return UUID(response.json()["id"])
 
-    async def seed_scenario(self, scenario: Scenario) -> UUID:
+    async def seed_scenario(self, scenario: Scenario, owner: UUID = TEST_USER) -> UUID:
         """A paper with the scenario's earlier snapshot, via the stub's `POST /dev/seed`."""
-        response = await self.client.post("/dev/seed", params={"scenario": scenario})
+        response = await self.client.post("/dev/seed", params={"scenario": scenario, "owner_id": str(owner)})
         assert response.status_code == 201
         return UUID(response.json()["id"])
 

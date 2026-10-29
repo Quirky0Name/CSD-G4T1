@@ -463,10 +463,12 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
         return paper
 
     @dev.post("/seed", status_code=201)
-    def seed(scenario: Scenario) -> StubPaper:
+    def seed(scenario: Scenario, owner_id: UUID | None = None) -> StubPaper:
         """Add a paper whose earlier snapshot differs from what the recorded APIs say now."""
         before = before_snapshot(scenario)
         paper = StubPaper(doi=before.doi if before else None)
+        if owner_id is not None:
+            paper.owner_id = owner_id
         store.papers[paper.id] = paper
         if before:
             store.add_snapshot(paper.id, before.model_dump(mode="json"))

@@ -30,8 +30,8 @@ This is the single source of truth for every interface between services.
   (base64 of 32+ bytes like the real one, the same in every service's local
   config). The frontend signs in through User Management, keeps the token
   in `localStorage` and sends it to Storage Management and Updating.
-  Updating's own endpoints still check nothing; `POST /run-poll`
-  will take the user's JWT (CG-99).
+  Updating's `POST /run-poll` checks the user's JWT and polls only that
+  user's papers.
 
 ## Frontend ↔ User Management
 
@@ -1183,7 +1183,9 @@ UPDATING.md. The poll summary below is the poll's contract.
 
 ### `POST /run-poll?paper_id=`
 
-No auth for now (see "Auth"). Runs the poll job synchronously (used for
+Takes the user's JWT (`Authorization: Bearer`) and polls only the papers
+that user tracks (Storage Management's `owner_id`); the scheduled poll
+still covers everyone's. Runs the poll job synchronously (used for
 the demo and for testing, since a real change won't reliably land inside a
 10-minute slot) and returns the poll summary. It is recorded in `polls`
 with trigger `manual`, so it never moves the schedule of the automatic polls.
@@ -1198,7 +1200,9 @@ error.
 | Status | When |
 |---|---|
 | `200` | the poll summary, below |
-| `404` | `paper_id` isn't a paper Storage Management lists |
+| `401` | a missing, bad or expired token |
+| `403` | a service token |
+| `404` | `paper_id` isn't one of the caller's papers (another user's paper counts as unknown) |
 | `409` | a poll is already running. Only one runs at a time: a scheduled poll that comes due meanwhile waits for it, and a manual call that arrives at the very moment it is handed the lock waits too |
 | `422` | `paper_id` isn't a uuid |
 | `502` | Storage Management's paper list was unavailable |
@@ -1223,8 +1227,8 @@ error.
 | `skipped_no_doi` | papers with no DOI, which aren't polled |
 | `source_errors` | papers with no snapshot this poll because Crossref or OpenAlex returned `error` for their DOI (the outage gate); retried next poll |
 | `store_errors` | papers with no snapshot this poll because Storage Management failed: the previous-snapshot read (`reading history: …`) or the store itself; retried next poll |
-| `nudged` | every paper id sent to `POST /evaluate/changes` and accepted with `202`, including ones left over from an earlier failed nudge |
-| `nudge_error` | `{paper_ids, reason}` when the nudge wasn't accepted; those papers stay pending and are re-sent next poll, otherwise null |
+| `nudged` | every paper id sent to `POST /evaluate/changes` and accepted with `202`, including ones left over from an earlier failed nudge. The nudge sends every user's pending papers, but this lists only the caller's |
+| `nudge_error` | `{paper_ids, reason}` when the nudge wasn't accepted (`paper_ids` again only the caller's); those papers stay pending and are re-sent next poll, otherwise null |
 
 The summary lists ids only. Why a paper was nudged (which field changed) is
 logged by Updating, not returned.

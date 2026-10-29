@@ -3,11 +3,14 @@
 from uuid import uuid4
 
 import jwt
-from support import TEST_JWT_KEY
+from support import TEST_JWT_KEY, user_token
 from updating_support import RUN_POLL, polls, trigger_poll
 
+from common.service_token import mint_service_token
 from dev.scenarios import DOIS, Scenario
 from updating.models import PollTrigger
+
+AUTH = {"Authorization": f"Bearer {user_token()}"}
 
 
 async def test_a_paper_id_scopes_the_poll_to_that_paper(updating_client, updating_app, sm, sources):
@@ -39,7 +42,7 @@ async def test_without_a_paper_id_every_paper_is_polled(updating_client, sm, sou
 async def test_an_unknown_paper_is_404(updating_client, sm):
     await sm.add_paper(DOIS["jbc"])
 
-    response = await updating_client.post(RUN_POLL, params={"paper_id": str(uuid4())})
+    response = await updating_client.post(RUN_POLL, params={"paper_id": str(uuid4())}, headers=AUTH)
 
     assert response.status_code == 404
     assert "no paper" in response.json()["detail"]
@@ -48,7 +51,7 @@ async def test_an_unknown_paper_is_404(updating_client, sm):
 async def test_a_poll_already_running_is_409(updating_client, updating_app):
     await updating_app.state.poll_deps.lock.acquire()
 
-    response = await updating_client.post(RUN_POLL)
+    response = await updating_client.post(RUN_POLL, headers=AUTH)
 
     updating_app.state.poll_deps.lock.release()
     assert response.status_code == 409
@@ -57,14 +60,14 @@ async def test_a_poll_already_running_is_409(updating_client, updating_app):
 async def test_an_unavailable_paper_list_is_502(updating_client, sm):
     sm.transport.faults["/internal/papers"] = 503
 
-    response = await updating_client.post(RUN_POLL)
+    response = await updating_client.post(RUN_POLL, headers=AUTH)
 
     assert response.status_code == 502
     assert "Storage Management" in response.json()["detail"]
 
 
 async def test_a_bad_paper_id_is_422(updating_client):
-    response = await updating_client.post(RUN_POLL, params={"paper_id": "nope"})
+    response = await updating_client.post(RUN_POLL, params={"paper_id": "nope"}, headers=AUTH)
 
     assert response.status_code == 422
 
@@ -103,3 +106,41 @@ async def test_every_request_to_either_service_carries_updatings_service_token(
         scheme, token = request.headers["Authorization"].split(" ")
         claims = jwt.decode(token, TEST_JWT_KEY, algorithms=["HS256"], options={"require": ["exp", "sub"]})
         assert (scheme, claims["sub"], claims["role"]) == ("Bearer", "svc:updating", "service")
+
+
+async def test_a_poll_needs_a_user_token(updating_client):
+    assert (await updating_client.post(RUN_POLL)).status_code == 401
+    assert (await updating_client.post(RUN_POLL, headers={"Authorization": "Bearer nope"})).status_code == 401
+    service = {"Authorization": f"Bearer {mint_service_token(TEST_JWT_KEY, 'svc:updating')}"}
+    assert (await updating_client.post(RUN_POLL, headers=service)).status_code == 403
+
+
+async def test_a_poll_covers_only_the_callers_papers(updating_client, sm, sources):
+    sources.serve("ijaa")
+    sources.serve("lancet")
+    mine = await sm.add_paper(DOIS["ijaa"])
+    theirs = await sm.add_paper(DOIS["lancet"], owner=uuid4())
+
+    summary = await trigger_poll(updating_client)
+
+    assert [row["paper_id"] for row in summary["stored"]] == [str(mine)]
+    assert str(theirs) not in str(summary)
+
+
+async def test_a_user_with_no_papers_polls_nothing(updating_client, sm, sources):
+    await sm.add_paper(DOIS["ijaa"], owner=uuid4())
+
+    summary = await trigger_poll(updating_client)
+
+    assert summary["stored"] == [] and summary["skipped_no_doi"] == []
+
+
+async def test_polling_someone_elses_paper_is_404(updating_client, sm, sources):
+    sources.serve("ijaa")
+    theirs = await sm.add_paper(DOIS["ijaa"], owner=uuid4())
+
+    response = await updating_client.post(
+        RUN_POLL, params={"paper_id": str(theirs)}, headers={"Authorization": f"Bearer {user_token()}"}
+    )
+
+    assert response.status_code == 404

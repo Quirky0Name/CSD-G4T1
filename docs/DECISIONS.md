@@ -72,9 +72,9 @@ owned that story made.
   or the password goes over plain HTTP. Until `ADMIN_PASSWORD_HASH` is set,
   the default is the hash of a password nobody kept, so it starts shut
   rather than open.
-- **`/updating` stays open** until `POST /run-poll` takes the user's token
-  (CG-99): `basic_auth` uses the same `Authorization` header the frontend
-  sends its token in, so it would break the poll button.
+- **No `basic_auth` on `/updating`**: `POST /run-poll` checks the user's
+  token itself (CG-99), and `basic_auth` uses the same `Authorization`
+  header the frontend sends its token in, so it would break the poll button.
 
 ## 2026-10-27 — Impact is measured by an offline eval set, graded by a second model
 
@@ -248,8 +248,7 @@ owned that story made.
 - **Tokens: HS256 forced, 24 hours, no refresh token.** The JWT library
   picks the algorithm from the key's length, and a long `JWT_SECRET` would
   give HS512. The contract says HS256, and the Python services' check
-  accepts nothing else (Research Evaluation's today, Updating's with
-  CG-99). `sub` is the user's uuid, as Storage Management requires.
+  accepts nothing else (Research Evaluation's and Updating's). `sub` is the user's uuid, as Storage Management requires.
 - **Emails are stored lowercase**: one account per address whatever its
   letter case, enforced by the unique constraint, so two registrations of
   one email at once get a `201` and a `409`, never a second account.

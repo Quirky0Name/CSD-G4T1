@@ -70,6 +70,7 @@ def create_app(
                     lock=asyncio.Lock(),
                 )
                 app.state.poll_deps = deps
+                app.state.jwt_key = config.jwt_secret.get_secret_value()
                 app.state.scheduler = build_scheduler(deps, config.poll_interval_hours, next_run)
                 app.state.scheduler.start()
                 try:

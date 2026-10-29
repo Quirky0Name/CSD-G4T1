@@ -124,12 +124,13 @@ Rules that hold across the flow:
   to clear a deleted project or account. Storage Management's `/internal/**` takes
   only service tokens; everything else takes only user tokens.
   `POST /evaluate/changes` and `/evaluate/reports` take any service token.
+- Updating's `POST /run-poll` takes the user's token and polls only that
+  user's papers.
 - **Deleting an account** (`DELETE /auth/me`, with the password) has
   Storage Management delete everything the user owns first
   (`DELETE /internal/users/{id}`), then deletes the user and, through the
   foreign key, their projects. Tokens aren't revoked, so one outlives its
   account by up to 24 hours.
-- **For now** Updating's `POST /run-poll` takes no token (CG-99).
 
 ## Projects
 

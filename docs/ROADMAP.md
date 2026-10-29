@@ -36,7 +36,7 @@ most needed first within each.
   Management, which can't tell the account is gone, so it can add papers
   and drafts nobody owns any more. Shorter tokens, or Storage Management
   asking User Management, would close it.
-- [ ] `POST /run-poll` takes the user's JWT (CG-99).
+- [x] `POST /run-poll` takes the user's JWT (CG-99).
 - [ ] Notifications to the paper's owner instead of one hard-coded
   Telegram chat (needs users and contact details).
 
@@ -102,7 +102,7 @@ most needed first within each.
 - [ ] Replace a wrong retraction notice stored first (R3's
   self-reference, R5's notice about another article), e.g. when
   `update_to_includes_paper` is false or the title shows another article.
-- [ ] Follow replacement DOIs named in a notice's text (R4) as new versions.
+- [x] Follow replacement DOIs named in a notice's text (R4) as new versions.
 - [ ] Judge whether a downloaded current copy is really a new version (an
   LLM comparing text; delete the copy if it's the same), and whether a
   re-fetched document that differs from its stored row matters.
@@ -152,9 +152,6 @@ Gemini, so pick the provider again when they're started.
 - [ ] Turn the demo tools off on the server (`DEV_TOOLS=false`) once the
   demo no longer needs them: any registered user can fake a change on
   their own paper, which spends Gemini calls and sends a Telegram message.
-- [ ] Until `POST /run-poll` takes the user's JWT (CG-99), anyone can
-  start a poll through `/updating`. Caddy's `basic_auth` can't guard it:
-  it uses the `Authorization` header the frontend sends its token in.
 - [ ] Updating retries its startup poll while Storage Management isn't up
   yet (Updating's owner). After a host reboot Docker restarts the
   containers in no set order, and a poll that fails then counts as the

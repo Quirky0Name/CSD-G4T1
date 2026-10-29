@@ -137,10 +137,10 @@ cd ../storage && docker compose up -d --build
 A poll through the real services:
 
 ```
-TOKEN=$(uv run python -c "import base64, uuid, jwt; from dotenv import dotenv_values; print(jwt.encode({'sub': str(uuid.uuid4())}, base64.b64decode(dotenv_values('.env')['JWT_SECRET']), algorithm='HS256'))")
+TOKEN=$(uv run python -c "import base64, time, uuid, jwt; from dotenv import dotenv_values; print(jwt.encode({'sub': str(uuid.uuid4()), 'exp': int(time.time()) + 3600}, base64.b64decode(dotenv_values('.env')['JWT_SECRET']), algorithm='HS256'))")
 curl -X POST localhost:8081/papers -H "Authorization: Bearer $TOKEN" \
   -H 'content-type: application/json' -d '{"doi": "10.1371/journal.pmed.0020124"}'
-curl -X POST localhost:8001/run-poll
+curl -X POST localhost:8001/run-poll -H "Authorization: Bearer $TOKEN"
 ```
 
 The first poll only stores a baseline (`stored`, `nudged` empty). Many
@@ -274,8 +274,12 @@ start it with `uv run --env-file .env uvicorn research_evaluation.main:app --por
 
 To see a nudge without waiting for a real change, seed a paper whose
 "before" snapshot differs from what the APIs say now:
-`POST localhost:8081/dev/seed?scenario=<name>` on the stub, then
-`POST /run-poll` with its `paper_id` (Swagger at `localhost:8001/docs`).
+`POST localhost:8081/dev/seed?scenario=<name>&owner_id=<user id>` on the stub, then
+`POST /run-poll` with its `paper_id` and a token whose `sub` is that same user id
+(Swagger at `localhost:8001/docs`). Without `owner_id` the stub picks a random
+owner and `/run-poll` answers `404`. For the token, use the `TOKEN=` line
+under "A poll through the real services" with `str(uuid.uuid4())` replaced
+by `'<user id>'`.
 
 | `scenario` | Paper | Expected nudge |
 |---|---|---|
