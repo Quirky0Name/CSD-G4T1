@@ -220,12 +220,9 @@ def main() -> None:
     grid_table.add_column("flags", style="red")
     grid_table.add_column("misses (tag: got)", overflow="fold")
 
-    for path in sorted(folder.glob("*__run?.json")):
+    for r in runs:
+        path = r["path"]
         ev = json.loads(path.read_text())
-        r = next((run for run in runs if run["path"] == path), None)
-        if not r:
-            continue
-            
         row_cells = [path.name.split("__")[0][:30]]
         for t in tags:
             if t not in r["detail"]:

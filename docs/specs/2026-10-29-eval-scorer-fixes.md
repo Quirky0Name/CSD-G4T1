@@ -55,11 +55,17 @@ Fixes this review finding: the grid globs `*__run?.json` but scoring globs
   - The grid iterates over the same run list as scoring: `*__run*.json`,
     without the `.judge.json` files (`transient`).
 - **Acceptance criteria:**
-  - [ ] Build a temp results folder with `<case>__run1.json` up to
+  - [x] Build a temp results folder with `<case>__run1.json` up to
         `<case>__run12.json` for one case. Expected: the scorer command
         prints 12 grid rows for that case.
-  - [ ] `uv run ruff check` passes.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
+  - Decision: the grid loops over `runs` itself (each run keeps its
+    `path`), not a second glob, so the two lists can't drift apart again.
+    Needs no doc: code shows it.
+  - Decision: the 12-run check is a throwaway shell script, not a committed
+    test, as evals have no test suite (DECISIONS.md, 2026-10-27). Needs no
+    doc.
   - Spec change (user's call, 2026-10-29): `uv run ruff check` already
     failed at the base commit (10 errors in `evals/all.py`, `judge.py`,
     `run.py`, `score.py`). They are fixed in a separate commit before S1,
