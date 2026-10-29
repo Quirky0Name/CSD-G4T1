@@ -40,7 +40,7 @@ def get_span(scores: list[float]) -> str:
 def load_runs(folder: Path) -> list[dict]:
     cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
     runs = []
-    for path in sorted(folder.glob("*__run?.json")):
+    for path in score.run_paths(folder):
         name, _, number = path.stem.partition("__run")
         if name not in cases:
             continue
@@ -69,8 +69,8 @@ def generate_summary(folder: Path) -> list[str]:
     for name, rs in sorted(by_case.items()):
         tags = [r["tag"] for r in rs if r["tag"] is not None]
         texts = [r["text"] for r in rs if r.get("text") is not None]
-        avg_tag = sum(tags) / len(tags) if tags else None
-        avg_text = sum(texts) / len(texts) if texts else None
+        avg_tag = score.mean(tags)
+        avg_text = score.mean(texts)
         
         row = (
             f"{name[:34]:<35}{len(rs):>5}{score.format_score(avg_tag):>7}{get_span(tags):>12}"
@@ -84,7 +84,7 @@ def generate_summary(folder: Path) -> list[str]:
     
     # Calculate noise floor if multiple runs exist
     if len(by_run) > 1:
-        per_run_avg = {k: (sum(v) / len(v) if v else 0) for k, v in sorted(by_run.items())}
+        per_run_avg = {k: sum(v) / len(v) for k, v in sorted(by_run.items())}
         spread = max(per_run_avg.values()) - min(per_run_avg.values())
         lines.extend([
             "",

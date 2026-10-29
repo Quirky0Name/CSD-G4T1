@@ -49,7 +49,7 @@ Fixes this review finding: the grid globs `*__run?.json` but scoring globs
 
 - **Goal:** Every run that is scored also has a row in the grid.
 - **Blocked by:** none
-- **Files:** `backend/evals/score.py`
+- **Files:** `backend/evals/score.py`, `backend/evals/all.py`
 - **Seams:** the scorer command.
 - **Decisions:**
   - The grid iterates over the same run list as scoring: `*__run*.json`,
@@ -59,7 +59,16 @@ Fixes this review finding: the grid globs `*__run?.json` but scoring globs
         `<case>__run12.json` for one case. Expected: the scorer command
         prints 12 grid rows for that case.
   - [x] `uv run ruff check` passes.
+  - [x] (added with the `all.py` spec change) `all.py`'s summary, on the
+        same 12 runs plus a `.judge.json`, counts 12 runs for that case and
+        lists `run12` in the noise floor.
 - **Doc deltas:**
+  - Spec change (user's call, 2026-10-29, code review): S1's Files also
+    include `backend/evals/all.py`. Its `load_runs` globbed `*__run?.json`,
+    so its summary and noise floor dropped runs 10 and up. Both scripts
+    now take their runs from one `score.run_paths(folder)`
+    (`*__run*.json`, without `.judge.json`). Needs no doc: the docs never
+    said runs stop at 9.
   - Decision: the grid loops over `runs` itself (each run keeps its
     `path`), not a second glob, so the two lists can't drift apart again.
     Needs no doc: code shows it.
@@ -105,8 +114,10 @@ guard, so `"tags": {}` raises `ZeroDivisionError` (`transient`).
     before, so "no score" isn't read as "all wrong". Doc: EVALUATION.md,
     with the delta above.
   - Decision: the diagnostics panel's average tag line shows
-    `N/A (no case lists tags)` when no tag score is left, like its text
-    line does. Needs no doc: the panel says it.
+    `N/A (no tag scores)` when no tag score is left, like its text line
+    does. (First worded "no case lists tags", which was wrong when only
+    placeholder runs of tagged cases are left; reworded in code review.)
+    Needs no doc: the panel says it.
   - Spec change (user's call, 2026-10-29): S2's Files also include
     `backend/evals/all.py`. Its summary summed `score_run`'s `tag`, so a
     tagless case still crashed `all.py` (`TypeError`). Its per-case tag,
@@ -124,6 +135,11 @@ guard, so `"tags": {}` raises `ZeroDivisionError` (`transient`).
     `all.py` to `score.py`, which `all.py` already imports, and is used for
     the grid's tag and text cells and the OVERALL tag cell. Needs no doc:
     no behaviour change.
+  - Decision (code review): one `score.mean(values)` (`None` when empty)
+    replaces the six hand-written "average or `-`" steps in `score.py` and
+    `all.py`, with `format_score` for display. The diagnostics panel's text
+    line now uses the unrounded mean (e.g. `0.333`, was `0.330` from the
+    2-decimal string). Needs no doc: display precision only.
 
 ## Human checks
 
