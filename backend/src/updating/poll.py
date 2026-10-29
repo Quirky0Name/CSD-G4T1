@@ -164,7 +164,8 @@ async def _poll(
 
     # another user's paper is "unknown" to the caller
     in_scope = [paper for paper in papers if owner_id in (None, paper.owner_id)]
-    if only_paper is not None and only_paper not in {paper.id for paper in in_scope}:
+    in_scope_ids = {paper.id for paper in in_scope}
+    if only_paper is not None and only_paper not in in_scope_ids:
         raise UnknownPaper(f"Storage Management has no paper {only_paper}")
     polled = [paper for paper in in_scope if only_paper in (None, paper.id)]
     # every paper feeds the sync, so a single-paper poll can't drop the other papers' rows
@@ -215,11 +216,15 @@ async def _poll(
 
     nudged: list[PaperId] = []
     nudge_error = None
+    # every pending paper is sent, but the summary lists only the caller's
     match await _send_nudges(deps):
         case NudgeError() as failed:
-            nudge_error = failed
+            nudge_error = NudgeError(
+                paper_ids=[paper_id for paper_id in failed.paper_ids if paper_id in in_scope_ids],
+                reason=failed.reason,
+            )
         case sent:
-            nudged = sent
+            nudged = [paper_id for paper_id in sent if paper_id in in_scope_ids]
 
     return PollSummary(
         poll_id=poll_id,

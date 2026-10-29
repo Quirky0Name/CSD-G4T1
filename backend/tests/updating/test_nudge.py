@@ -1,8 +1,10 @@
 """The nudge flow end to end: stub Storage Management and Research Evaluation in-process."""
 
+from uuid import uuid4
+
 import httpx
 import pytest
-from support import load_fixture
+from support import TEST_USER, load_fixture
 from updating_support import polls, tracked_rows
 
 from dev.scenarios import DOIS, fixture_snapshot
@@ -18,9 +20,9 @@ async def poll(deps):
     return await run_poll(deps, PollTrigger.SCHEDULED)
 
 
-async def add_seeded(sm, name, **changes):
+async def add_seeded(sm, name, owner=TEST_USER, **changes):
     """A tracked paper whose earlier snapshot (a seeded baseline) is already in Storage Management."""
-    paper = await sm.add_paper(DOIS[name])
+    paper = await sm.add_paper(DOIS[name], owner=owner)
     await sm.seed(paper, fixture_snapshot(name, **{**NOTHING_YET, **changes}))
     return paper
 
@@ -228,3 +230,36 @@ async def test_a_single_paper_poll_still_sends_every_pending_paper(deps, sm, re,
 
     assert set(summary.nudged) == {lancet, ijaa}
     assert [set(call) for call in await re.received()] == [{lancet, ijaa}]
+
+
+async def test_an_owners_poll_sends_every_pending_paper_but_lists_only_theirs(deps, sm, re, sources):
+    sources.serve("lancet")
+    sources.serve("ijaa")
+    owner = uuid4()
+    mine = await add_seeded(sm, "lancet", owner=owner)
+    theirs = await add_seeded(sm, "ijaa")
+    await re.fail()
+    await poll(deps)  # both changed, the nudge failed: both stay pending
+    await re.fail(on=False)
+
+    summary = await run_poll(deps, PollTrigger.MANUAL, owner_id=owner)
+
+    assert summary.nudged == [mine]
+    assert [set(call) for call in await re.received()] == [{mine, theirs}]
+
+
+async def test_an_owners_failed_nudge_lists_only_their_papers(deps, sm, re, sources):
+    sources.serve("lancet")
+    sources.serve("ijaa")
+    owner = uuid4()
+    mine = await add_seeded(sm, "lancet", owner=owner)
+    theirs = await add_seeded(sm, "ijaa")
+    await re.fail()
+    await poll(deps)  # both changed, the nudge failed: both stay pending
+
+    summary = await run_poll(deps, PollTrigger.MANUAL, owner_id=owner)
+
+    assert summary.nudged == []
+    assert summary.nudge_error.paper_ids == [mine] and summary.nudge_error.reason == "HTTP 503"
+    rows = await tracked_rows(deps)
+    assert rows[mine].nudge_pending is True and rows[theirs].nudge_pending is True

@@ -258,7 +258,9 @@ To see a nudge without waiting for a real change, seed a paper whose
 `POST localhost:8081/dev/seed?scenario=<name>&owner_id=<user id>` on the stub, then
 `POST /run-poll` with its `paper_id` and a token whose `sub` is that same user id
 (Swagger at `localhost:8001/docs`). Without `owner_id` the stub picks a random
-owner and `/run-poll` answers `404`.
+owner and `/run-poll` answers `404`. For the token, use the `TOKEN=` line
+under "A poll through the real services" with `str(uuid.uuid4())` replaced
+by `'<user id>'`.
 
 | `scenario` | Paper | Expected nudge |
 |---|---|---|

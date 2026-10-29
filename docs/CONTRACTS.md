@@ -1234,8 +1234,8 @@ error.
 | `skipped_no_doi` | papers with no DOI, which aren't polled |
 | `source_errors` | papers with no snapshot this poll because Crossref or OpenAlex returned `error` for their DOI (the outage gate); retried next poll |
 | `store_errors` | papers with no snapshot this poll because Storage Management failed: the previous-snapshot read (`reading history: …`) or the store itself; retried next poll |
-| `nudged` | every paper id sent to `POST /evaluate/changes` and accepted with `202`, including ones left over from an earlier failed nudge |
-| `nudge_error` | `{paper_ids, reason}` when the nudge wasn't accepted; those papers stay pending and are re-sent next poll, otherwise null |
+| `nudged` | every paper id sent to `POST /evaluate/changes` and accepted with `202`, including ones left over from an earlier failed nudge. The nudge sends every user's pending papers, but this lists only the caller's |
+| `nudge_error` | `{paper_ids, reason}` when the nudge wasn't accepted (`paper_ids` again only the caller's); those papers stay pending and are re-sent next poll, otherwise null |
 
 The summary lists ids only. Why a paper was nudged (which field changed) is
 logged by Updating, not returned.
