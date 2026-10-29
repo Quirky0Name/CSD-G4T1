@@ -9,7 +9,7 @@ import argparse
 import json
 import subprocess
 import sys
-from collections import Counter, defaultdict
+from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -21,7 +21,7 @@ ROOT = Path(__file__).parent
 def run_step(name: str, *args: str) -> None:
     """Executes a pipeline script via subprocess and halts on failure."""
     print(f"\n{'='*20} {name.upper()} {'='*20}", flush=True)
-    result = subprocess.run([sys.executable, str(ROOT / f"{name}.py"), *args])
+    result = subprocess.run([sys.executable, str(ROOT / f"{name}.py"), *args], check=False)
     if result.returncode != 0:
         sys.exit(
             f"\n❌ {name}.py failed (exit code {result.returncode}).\n"

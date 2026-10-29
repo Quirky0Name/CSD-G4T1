@@ -57,7 +57,6 @@ def statements(case: dict) -> list[str]:
 
 
 def prompt(case: dict, ev: dict) -> str:
-    facts = case["expected"]["facts"]
     lines = [f"{n}. {f}" for n, f in enumerate(statements(case), 1)]
     docs = ([case["notice"]] if case.get("notice") else []) + list(case.get("documents") or [])
     notice = "\n\n".join(

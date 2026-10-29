@@ -9,7 +9,7 @@ alongside advanced actionable diagnostics for prompt engineering."""
 import json
 import re
 import sys
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from rich.console import Console
@@ -19,8 +19,8 @@ from rich.table import Table
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT.parent / "src"))
 
-from research_evaluation.impact.prompts import alerts_block, paper_block  # noqa: E402
-from research_evaluation.storage import AlertInReport, PaperDetails  # noqa: E402
+from research_evaluation.impact.prompts import alerts_block, paper_block
+from research_evaluation.storage import AlertInReport, PaperDetails
 
 LEVELS = ["none", "low", "medium", "high"]
 # the fixed source names the step 1 prompt allows besides a notice's DOI, by document kind

@@ -59,7 +59,13 @@ Fixes this review finding: the grid globs `*__run?.json` but scoring globs
         `<case>__run12.json` for one case. Expected: the scorer command
         prints 12 grid rows for that case.
   - [ ] `uv run ruff check` passes.
-- **Doc deltas:** none.
+- **Doc deltas:**
+  - Spec change (user's call, 2026-10-29): `uv run ruff check` already
+    failed at the base commit (10 errors in `evals/all.py`, `judge.py`,
+    `run.py`, `score.py`). They are fixed in a separate commit before S1,
+    so the ruff criterion can pass. No behaviour change: `check=False` is
+    `subprocess.run`'s default, and the removed `facts` line in `judge.py`
+    was unused. Needs no doc: lint hygiene only.
 
 ### S2: A case with no expected tags doesn't crash the scorer
 
