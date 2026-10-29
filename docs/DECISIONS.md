@@ -8,6 +8,32 @@ owned that story made.
 
 ---
 
+## 2026-10-29 — Every merge to main tests, builds and deploys
+
+- **GitHub Actions builds the images and the server only pulls them**
+  (the story owner's call), so a deploy takes minutes and the small
+  instance never compiles anything. The images are built on GitHub's ARM
+  runners to match the t4g. Rejected: a timer on the server that pulls
+  `main` and rebuilds there (simpler, but slow, and builds on the box).
+- **GitHub reaches the server through Systems Manager, signing in with
+  OIDC**: no AWS keys stored in GitHub and still no SSH. The deploy role
+  only trusts this repo's `main` and can only run the update on this one
+  instance.
+- **The tests gate the deploy**: Storage Management, User Management,
+  Updating and Research Evaluation, and the frontend build. A merge that
+  breaks any of them doesn't reach the server.
+- **The images are public packages on GitHub's registry.** They hold only
+  the public repo's code; the builds start from a clean checkout with no
+  `.env`, and the secrets reach the containers from Parameter Store at
+  start-up. Rejected: private packages with a registry token on the server
+  (one more secret that expires).
+- **Images are tagged with their commit, and the server runs the tag of
+  the commit it deployed** (kept in its `.env`, so a reboot doesn't jump
+  to newer images). Rolling back is running the workflow by hand for an
+  earlier commit on `main`; the typed commit is resolved to a full SHA on
+  `main` before anything uses it, so the input can't reach the server's
+  shell.
+
 ## 2026-10-28 — On AWS: one EC2 instance behind CloudFront, from one template
 
 - **One EC2 instance runs the root compose stack** (the story owner's
