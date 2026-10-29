@@ -51,13 +51,21 @@ user's papers, alerts and seen-alert ids after an account switch
     `AppLayout`). It is keyed by `session.user.id`, so a different user
     remounts it. `/signin` and `/register` are outside it (`transient`).
 - **Acceptance criteria:**
-  - [ ] `npm run build` passes.
-  - [ ] `npm run lint` passes.
-  - [ ] `grep -rn "useTracking" frontend/csd-frontend-vite/src/pages/Signin.tsx frontend/csd-frontend-vite/src/pages/Register.tsx`
+  - [x] `npm run build` passes.
+  - [x] `npm run lint` passes.
+  - [x] `grep -rn "useTracking" frontend/csd-frontend-vite/src/pages/Signin.tsx frontend/csd-frontend-vite/src/pages/Register.tsx`
         returns nothing.
 - **Doc deltas:** `docs/ARCHITECTURE.md` (frontend section, where it covers
   the shared refresh): "The shared paper and alert refresh runs only while
   a user is signed in, and starts fresh for each user."
+  - Decision: `AppLayout` itself renders `TrackingProvider`, keyed by
+    `useAuth().session?.user.id`, instead of a separate wrapper route
+    element. Why: `AppLayout` only renders under `RequireAuth`, so one
+    component holds both the auth gate placement and the key. Needs no doc
+    beyond the line above; the comment on `AppLayout` records it.
+  - Decision: the provider wraps `Sidebar` as well as the `Outlet`. Why: the
+    whole signed-in shell then shares one provider, so any future tracking
+    use in the sidebar works. Needs no doc.
 
 ## Human checks
 
