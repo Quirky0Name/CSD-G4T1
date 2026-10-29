@@ -40,6 +40,7 @@ def test_job_is_registered_at_the_configured_interval():
     assert job.coalesce is True
     assert job.next_run_time == NOW
     assert job.args[1] is PollTrigger.SCHEDULED
+    assert len(job.args) == 2  # no paper or owner: the scheduled poll covers every user's papers
 
 
 def seed_run(database_url: str, trigger: PollTrigger, started_at: datetime) -> None:

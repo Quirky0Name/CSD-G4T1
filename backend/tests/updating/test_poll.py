@@ -260,6 +260,40 @@ async def test_a_single_paper_poll_stores_only_that_paper_and_keeps_the_other_ro
     assert recorded.summary["paper_id"] == str(lancet)
 
 
+async def test_a_scheduled_poll_covers_every_owners_papers(deps, sm, sources):
+    sources.serve("lancet")
+    sources.serve("jbc")
+    mine = await sm.add_paper(DOIS["lancet"])
+    theirs = await sm.add_paper(DOIS["jbc"], owner=uuid4())
+
+    summary = await poll(deps)
+
+    assert [s.paper_id for s in summary.stored] == [mine, theirs]
+    assert set(await tracked_rows(deps)) == {mine, theirs}
+
+
+async def test_an_owners_poll_stores_only_their_papers_and_keeps_the_other_rows(deps, sm, sources):
+    sources.serve("lancet")
+    sources.serve("jbc")
+    owner = uuid4()
+    mine = await sm.add_paper(DOIS["lancet"], owner=owner)
+    theirs = await sm.add_paper(DOIS["jbc"])
+    await poll(deps)
+    their_snapshot = (await tracked_rows(deps))[theirs].last_snapshot_id
+
+    summary = await run_poll(deps, PollTrigger.MANUAL, owner_id=owner)
+
+    assert [s.paper_id for s in summary.stored] == [mine]
+    assert len(await sm.history(mine)) == 2 and len(await sm.history(theirs)) == 1
+    rows = await tracked_rows(deps)
+    assert set(rows) == {mine, theirs}
+    assert rows[theirs].last_snapshot_id == their_snapshot
+
+    summary = await poll(deps)  # the next scheduled poll still covers both
+
+    assert [s.paper_id for s in summary.stored] == [mine, theirs]
+
+
 async def test_a_single_paper_poll_for_a_paper_without_a_doi_lists_it_as_skipped(deps, sm, sources):
     no_doi = await sm.add_paper(None)
 

@@ -103,7 +103,7 @@ most needed first within each.
 - [ ] Replace a wrong retraction notice stored first (R3's
   self-reference, R5's notice about another article), e.g. when
   `update_to_includes_paper` is false or the title shows another article.
-- [ ] Follow replacement DOIs named in a notice's text (R4) as new versions.
+- [x] Follow replacement DOIs named in a notice's text (R4) as new versions.
 - [ ] Judge whether a downloaded current copy is really a new version (an
   LLM comparing text; delete the copy if it's the same), and whether a
   re-fetched document that differs from its stored row matters.
