@@ -14,6 +14,8 @@ WorkingDirectory=/opt/research-assistant
 # builds an image only if it's missing (the deploy workflow normally supplies them)
 ExecStart=/usr/bin/docker compose up -d --wait
 ExecStartPost=/usr/bin/docker compose restart updating
+# merges that landed while the instance was stopped; if it can't, it stays on the version it booted with
+ExecStartPost=-/opt/research-assistant/deploy/catch-up.sh
 ExecStop=/usr/bin/docker compose stop
 TimeoutStartSec=1800
 

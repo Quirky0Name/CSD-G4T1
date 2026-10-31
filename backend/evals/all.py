@@ -9,7 +9,7 @@ import argparse
 import json
 import subprocess
 import sys
-from collections import Counter, defaultdict
+from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -21,17 +21,13 @@ ROOT = Path(__file__).parent
 def run_step(name: str, *args: str) -> None:
     """Executes a pipeline script via subprocess and halts on failure."""
     print(f"\n{'='*20} {name.upper()} {'='*20}", flush=True)
-    result = subprocess.run([sys.executable, str(ROOT / f"{name}.py"), *args])
+    result = subprocess.run([sys.executable, str(ROOT / f"{name}.py"), *args], check=False)
     if result.returncode != 0:
         sys.exit(
             f"\n❌ {name}.py failed (exit code {result.returncode}).\n"
             f"Fix the error, then resume grading this folder with:\n"
             f"    python evals/all.py --folder <folder_path> --skip-run"
         )
-
-
-def format_score(val: float | None) -> str:
-    return "-" if val is None else f"{val:.2f}"
 
 
 def get_span(scores: list[float]) -> str:
@@ -44,7 +40,7 @@ def get_span(scores: list[float]) -> str:
 def load_runs(folder: Path) -> list[dict]:
     cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
     runs = []
-    for path in sorted(folder.glob("*__run?.json")):
+    for path in score.run_paths(folder):
         name, _, number = path.stem.partition("__run")
         if name not in cases:
             continue
@@ -64,20 +60,21 @@ def generate_summary(folder: Path) -> list[str]:
     
     for r in runs:
         by_case[r["case"]].append(r)
-        by_run[r["run"]].append(r["tag"])
+        if r["tag"] is not None:
+            by_run[r["run"]].append(r["tag"])
 
     header = f"{'Case':<35}{'Runs':>5}{'Tag':>7}{'Spread':>12}{'Text':>7}{'Hard':>6}{'Fail':>6}{'Inv':>5}{'Mis':>5}{'Unk':>5}"
     lines = [f"Results: {folder}\n", header, "-" * len(header)]
 
     for name, rs in sorted(by_case.items()):
-        tags = [r["tag"] for r in rs]
+        tag_scores = [r["tag"] for r in rs if r["tag"] is not None]
         texts = [r["text"] for r in rs if r.get("text") is not None]
-        avg_tag = sum(tags) / len(tags) if tags else None
-        avg_text = sum(texts) / len(texts) if texts else None
+        avg_tag = score.mean(tag_scores)
+        avg_text = score.mean(texts)
         
         row = (
-            f"{name[:34]:<35}{len(rs):>5}{format_score(avg_tag):>7}{get_span(tags):>12}"
-            f"{format_score(avg_text):>7}{sum(bool(r['hard']) for r in rs):>6}"
+            f"{name[:34]:<35}{len(rs):>5}{score.format_score(avg_tag):>7}{get_span(tag_scores):>12}"
+            f"{score.format_score(avg_text):>7}{sum(bool(r['hard']) for r in rs):>6}"
             f"{sum(r['failed'] for r in rs):>6}{sum(r['invented'] for r in rs):>5}"
             f"{sum(r['misattributed'] for r in rs):>5}{sum(r['unknown_source'] for r in rs):>5}"
         )
@@ -87,7 +84,7 @@ def generate_summary(folder: Path) -> list[str]:
     
     # Calculate noise floor if multiple runs exist
     if len(by_run) > 1:
-        per_run_avg = {k: (sum(v) / len(v) if v else 0) for k, v in sorted(by_run.items())}
+        per_run_avg = {k: score.mean(v) for k, v in sorted(by_run.items())}
         spread = max(per_run_avg.values()) - min(per_run_avg.values())
         lines.extend([
             "",

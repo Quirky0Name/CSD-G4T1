@@ -73,7 +73,8 @@ class PaperDeleteTest {
         assertThat(count("snapshots", paper)).isZero();
         assertThat(count("alerts", paper)).isZero();
         assertThat(count("reports", paper)).isZero();
-        assertThat(jdbc.queryForObject("select count(*) from report_documents", Integer.class)).isZero();
+        // only this paper's document: other test classes share the database and leave theirs
+        assertThat(jdbc.queryForObject("select count(*) from report_documents where file_key = ?", Integer.class, documentFile)).isZero();
         assertThat(files.read(paperFile)).isEmpty();
         assertThat(files.read(documentFile)).isEmpty();
     }

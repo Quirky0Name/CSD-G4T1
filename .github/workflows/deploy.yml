@@ -127,12 +127,13 @@ jobs:
             --comment "deploy $SHA" \
             --query Command.CommandId --output text)
           echo "command $id"
-          # the update pulls images and waits for the stack to be healthy, so allow it time; no
-          # invocation at all after two minutes means no instance has the tag
+          # the update pulls images and waits for the stack to be healthy, so allow it time. No
+          # invocation at all after two minutes means the instance is stopped: not a failure, since
+          # it deploys the latest main itself when it starts (deploy/catch-up.sh)
           for i in $(seq 1 120); do
             status=$(aws ssm list-command-invocations --command-id "$id" --query "CommandInvocations[0].Status" --output text)
             case "$status" in
-              None) [ "$i" -gt 8 ] && { echo "::error::no instance tagged Name=research-assistant took the command"; exit 1; }; sleep 15 ;;
+              None) [ "$i" -gt 8 ] && { echo "::warning::the instance is stopped (or not tagged Name=research-assistant); it catches up when it starts"; exit 0; }; sleep 15 ;;
               Pending | InProgress | Delayed) sleep 15 ;;
               *) break ;;
             esac
