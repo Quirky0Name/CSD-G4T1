@@ -91,7 +91,9 @@ One poll, end to end:
    **impact** asks Gemini about the report and stores its evaluation (the
    report becomes `assessed`); then **notify** sends the Telegram message.
 5. The **frontend** reads alerts and reports from Storage Management; the
-   researcher acknowledges or dismisses them.
+   researcher acknowledges or dismisses them. The shared paper and alert
+   refresh runs only while a user is signed in, and starts fresh for each
+   user.
 
 Rules that hold across the flow:
 
