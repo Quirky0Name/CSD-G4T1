@@ -105,6 +105,9 @@ async def main() -> None:
     parser.add_argument("--redo", action="store_true", help="grade runs already graded again")
     parser.add_argument("--label", help="write <run>.judge-<label>.json, a second grading")
     args = parser.parse_args()
+    if args.label == "default":
+        # judge_check.py reads the label `default` as <run>.judge.json, the unlabelled grading
+        parser.error("--label default is reserved for <run>.judge.json: leave out --label")
     folder = Path(args.folder) if args.folder else max((ROOT / "results").glob("*"))
     cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
     for path in sorted(folder.glob("*__run*.json")):
