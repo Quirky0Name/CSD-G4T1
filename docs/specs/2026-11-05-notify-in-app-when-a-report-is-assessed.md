@@ -270,7 +270,7 @@ export type TrackingState =
   - [x] `uv run pytest` passes (from `backend/`).
   - [x] `uv run ruff check` passes (from `backend/`).
   - [x] `git grep -n -i telegram -- backend .env.example` returns nothing.
-  - [ ] `git grep -n -i telegram -- docs README.md` returns only the
+  - [x] `git grep -n -i telegram -- docs README.md` returns only the
         line in `docs/ARCHITECTURE.md` about the PR workflows, entries in
         `docs/DECISIONS.md` dated before 2026-11-05, the 2026-11-05
         entry's lines about replacing Telegram, and the ROADMAP item

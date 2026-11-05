@@ -30,7 +30,7 @@ Learner Lab won't do: it limits IAM roles and stops instances after a few hours.
    | `/research-assistant/ADMIN_PASSWORD_HASH` | `docker run --rm caddy:2.11-alpine caddy hash-password` (for `/adminer`) |
 
    Then any of the API keys and settings in `.env.example` the app should use (`GEMINI_API_KEY`,
-   `OPENALEX_API_KEY`, `CROSSREF_MAILTO`, `TELEGRAM_BOT_TOKEN`, `NOTIFY_TELEGRAM_CHAT_ID`,
+   `OPENALEX_API_KEY`, `CROSSREF_MAILTO`,
    `DEV_TOOLS`, ...). Leave out `WEB_PORT`, `HTTPS_PORT` and `SITE_ADDRESS`: the server sets those.
    No value may contain a single quote.
 2. **CloudFront's prefix list.** In the VPC console, Managed prefix lists, find
