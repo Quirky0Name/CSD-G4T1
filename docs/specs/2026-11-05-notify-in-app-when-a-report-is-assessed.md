@@ -267,16 +267,16 @@ export type TrackingState =
     Only the gotcha that gives the bot token as the reason is removed
     (user; `transient`).
 - **Acceptance criteria:**
-  - [ ] `uv run pytest` passes (from `backend/`).
-  - [ ] `uv run ruff check` passes (from `backend/`).
-  - [ ] `git grep -n -i telegram -- backend .env.example` returns nothing.
+  - [x] `uv run pytest` passes (from `backend/`).
+  - [x] `uv run ruff check` passes (from `backend/`).
+  - [x] `git grep -n -i telegram -- backend .env.example` returns nothing.
   - [ ] `git grep -n -i telegram -- docs README.md` returns only the
         line in `docs/ARCHITECTURE.md` about the PR workflows, entries in
         `docs/DECISIONS.md` dated before 2026-11-05, the 2026-11-05
         entry's lines about replacing Telegram, and the ROADMAP item
         marked done.
-  - [ ] `git diff --stat <base> -- .github` is empty.
-  - [ ] A test shows a report is stored as `assessed` with
+  - [x] `git diff --stat <base> -- .github` is empty.
+  - [x] A test shows a report is stored as `assessed` with
         `ImpactContext(llm)` built with only the model (existing
         `test_run.py` assessment tests, adjusted).
 - **Doc deltas:**
@@ -306,6 +306,29 @@ export type TrackingState =
   - `docs/DECISIONS.md`: the 2026-11-05 entry (S2) also records that the
     Telegram notification and its two env vars were removed from Research
     Evaluation, and that the PR workflows' Telegram messages stay.
+  - Decisions made during implementation:
+    - Deleted `test_run.py` tests whose only subject was the notification
+      (short notification, Telegram failing) and those whose assessment
+      assertions another test already makes: the notified-once test, the
+      failing-report test, the not-stored test and the skipped-reports
+      test. The kept tests that make those assertions are, in order,
+      `test_a_new_retraction_ends_assessed_with_the_models_answers`,
+      `test_a_failing_report_stores_nothing_and_the_next_is_still_assessed`,
+      `test_storage_management_failing_on_the_put_is_logged_not_raised` and
+      `test_only_investigated_reports_are_assessed`.
+      `test_each_report_it_assesses_is_notified` in `test_trigger.py` is
+      deleted too: the test before it already asserts both reports end
+      `assessed` (`transient`: test layout; no doc needed).
+    - Kept, without the notifier: the placeholder test (renamed
+      `test_every_model_failing_a_step_stores_the_placeholder`), the
+      placeholder-put failure test, and the no-notifier test, renamed
+      `test_an_investigated_report_is_stored_assessed_with_only_the_model`,
+      which now reads the report back as `assessed` (`transient`; no doc
+      needed).
+    - Added `test_a_dotenv_with_settings_the_service_no_longer_reads_still_loads`
+      in `test_config.py`, so an old `.env` that still sets a removed
+      variable is proved to load (`extra="ignore"`) (`transient`; no doc
+      needed).
 
 ## Human checks
 
