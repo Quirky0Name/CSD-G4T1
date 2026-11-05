@@ -174,19 +174,35 @@ and all add to EVALUATION.md "Evals".
     pass rate is reported only (user, 2026-11-05).
   - A pass rate with no counted runs shows `-`.
 - **Acceptance criteria:**
-  - [ ] Throwaway script, temp folder: case A with 3 runs (2 pass, 1
+  - [x] Throwaway script, temp folder: case A with 3 runs (2 pass, 1
         fail), case B with 3 runs (1 pass, 1 fail, 1 error). The scorer
         prints A `2/3` meets target, B `1/2` misses target, overall `3/5`,
         and failure-type counts that match the runs.
-  - [ ] `all.py`'s summary on the same folder (all runs already judged)
+  - [x] `all.py`'s summary on the same folder (all runs already judged)
         has a `Pass` column with the same per-case values and an overall
         pass rate line.
-  - [ ] `uv run ruff check` passes.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals": pass rate per case, category and overall,
     counted runs only, `unjudged`/`error` shown apart; the case target;
     failure-type counts; a few runs per case illustrate reliability but
     don't estimate it, so raise `--runs` for a final comparison.
+  - (decision) A case's rate is rounded to two places before it is
+    compared with `case_pass_rate`, so 2 of 3 (0.667) meets 0.67. Why: the
+    spec says 0.67 means 2 of 3, and an exact comparison would miss it.
+    Doc: the case target in EVALUATION.md.
+  - (decision) Failure-type counts are over failed runs only (an
+    unjudged run's structured failures aren't counted). Why: they explain
+    the pass rate, which counts only pass and fail. Doc: EVALUATION.md,
+    with the counts.
+  - (decision) The scorer prints a new "Pass Rates by Case" table (Runs,
+    Pass, Target `meets`/`misses`/`-`, Unjudged, Error), adds Pass,
+    Unjudged and Error columns to the category table and its OVERALL row,
+    an overall pass rate line in the diagnostics panel, and a one-line
+    failure-type count. `all.py`'s summary adds Pass, Target, Unj and Err
+    columns per case, then a pass rate per category, an "Overall pass
+    rate:" line and the failure-type counts. Doc: EVALUATION.md (what each
+    output shows).
 
 ### S3: Each run records what produced it
 

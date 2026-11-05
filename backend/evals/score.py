@@ -238,6 +238,51 @@ def verdict_cell(v: dict) -> str:
     return f"[dim]{v['result']}[/]"
 
 
+FAILURE_TYPES = (
+    "hard_fail", "wrong_tag", "missed_fact", "wrong_fact", "invented_quote", "misattributed_quote"
+)
+
+
+def pass_rate(runs: list[dict], thresholds: dict) -> dict:
+    """Passed out of the counted runs (pass or fail); unjudged and error runs are counted apart.
+    rate is None when no run is counted."""
+    results = Counter(verdict(r, thresholds)["result"] for r in runs)
+    counted = results["pass"] + results["fail"]
+    return {
+        "passed": results["pass"],
+        "counted": counted,
+        "rate": results["pass"] / counted if counted else None,
+        "unjudged": results["unjudged"],
+        "error": results["error"],
+    }
+
+
+def format_rate(rate: dict) -> str:
+    return f"{rate['passed']}/{rate['counted']}" if rate["counted"] else "-"
+
+
+def rate_line(rate: dict) -> str:
+    """A pass rate with its share, and the runs left out of it."""
+    share = f" ({rate['rate']:.0%})" if rate["counted"] else ""
+    return f"{format_rate(rate)}{share}, not counted: {rate['unjudged']} unjudged, {rate['error']} error"
+
+
+def target(rate: dict, thresholds: dict) -> str:
+    """Whether a case meets case_pass_rate: "meets", "misses", or "-" with no counted run. The
+    rate is rounded to two places first, so 2 of 3 (0.667) meets 0.67."""
+    if rate["rate"] is None:
+        return "-"
+    return "meets" if round(rate["rate"], 2) >= thresholds["case_pass_rate"] else "misses"
+
+
+def failure_counts(runs: list[dict], thresholds: dict) -> dict[str, int]:
+    """How many failed runs had each failure type."""
+    counts = Counter(
+        f for r in runs if (v := verdict(r, thresholds))["result"] == "fail" for f in v["failures"]
+    )
+    return {f: counts[f] for f in FAILURE_TYPES}
+
+
 def colour(s: float) -> str:
     return "green" if s == 1 else "yellow" if s > 0 else "red"
 
@@ -312,22 +357,45 @@ def main() -> None:
     
     console.print(grid_table)
 
-    # --- 2. CATEGORY SUMMARY TABLE ---
+    # --- 2. PASS RATES BY CASE ---
+    by_case = defaultdict(list)
+    for r in runs:
+        by_case[r["case"]].append(r)
+    case_table = Table(
+        title=f"Pass Rates by Case (counted runs only; target: {thresholds['case_pass_rate']:.0%} of them pass)"
+    )
+    for col in ("Case", "Runs", "Pass", "Target", "Unjudged", "Error"):
+        case_table.add_column(col, justify="left" if col == "Case" else "right")
+    for name, rs in sorted(by_case.items()):
+        rate = pass_rate(rs, thresholds)
+        met = target(rate, thresholds)
+        style = {"meets": "green", "misses": "red"}.get(met, "dim")
+        case_table.add_row(
+            name, str(len(rs)), format_rate(rate), f"[{style}]{met}[/]",
+            str(rate["unjudged"]), str(rate["error"]),
+        )
+    console.print(case_table)
+
+    # --- 3. CATEGORY SUMMARY TABLE ---
     by_cat = defaultdict(list)
     for r in runs:
         by_cat[r["category"]].append(r)
 
     cat_table = Table(title="Performance Summary by Category")
-    for col in ("Category", "Runs", "Avg Tag", "Avg Text", "Hard Fails", "Placeholders", "Invented", "Misattributed", "Unknown Source"):
+    for col in ("Category", "Runs", "Pass", "Unjudged", "Error", "Avg Tag", "Avg Text", "Hard Fails", "Placeholders", "Invented", "Misattributed", "Unknown Source"):
         cat_table.add_column(col, justify="right" if col != "Category" else "left")
 
     for cat, rs in sorted(by_cat.items()):
         c_valid = [r for r in rs if not r["failed"]]
         texts = [r["text"] for r in c_valid if r.get("text") is not None]
         tag_scores = [r["tag"] for r in c_valid if r["tag"] is not None]
+        rate = pass_rate(rs, thresholds)
         cat_table.add_row(
             cat,
             str(len(rs)),
+            format_rate(rate),
+            str(rate["unjudged"]),
+            str(rate["error"]),
             format_score(mean(tag_scores)),
             format_score(mean(texts)),
             str(sum(bool(r['hard']) for r in rs)),
@@ -340,9 +408,13 @@ def main() -> None:
     overall_text_avg = mean(all_texts)
     all_tag_scores = [r["tag"] for r in valid_runs if r["tag"] is not None]
     overall_tag_avg = mean(all_tag_scores)
+    overall_rate = pass_rate(runs, thresholds)
     cat_table.add_row(
         "OVERALL",
         str(len(runs)),
+        f"[bold]{format_rate(overall_rate)}[/bold]",
+        str(overall_rate["unjudged"]),
+        str(overall_rate["error"]),
         format_score(overall_tag_avg),
         format_score(overall_text_avg),
         str(sum(bool(r['hard']) for r in runs)),
@@ -350,8 +422,12 @@ def main() -> None:
         *(f"[bold]{sum(r[k] for r in runs)}[/bold]" for k in ("invented", "misattributed", "unknown_source")),
     )
     console.print(cat_table)
+    console.print(
+        "Failure types (in failed runs): "
+        + ", ".join(f"{f} {n}" for f, n in failure_counts(runs, thresholds).items())
+    )
 
-    # --- 3. ADVANCED ACTIONABLE DIAGNOSTICS ---
+    # --- 4. ADVANCED ACTIONABLE DIAGNOSTICS ---
     total_runs = len(runs)
     if total_runs > 0:
         tag_line = (
@@ -367,6 +443,7 @@ def main() -> None:
         diag_panel_lines = [
             f"[bold cyan]Total Test Runs Executed:[/] {total_runs}",
             f"[bold cyan]Successful Runs Rate:[/]    {len(valid_runs)}/{total_runs} ({len(valid_runs)/total_runs*100:.1f}%)",
+            f"[bold cyan]Overall Pass Rate:[/]       {rate_line(overall_rate)}",
             f"[bold cyan]Average Structured Tag Score:[/] {tag_line}",
             f"[bold cyan]Average LLM Judge Text Score:[/] {text_line}",
         ]
