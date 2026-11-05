@@ -172,16 +172,18 @@ def score_run(path: Path, case: dict) -> dict:
             "hard": [],
             **check_quotes(ev, case),
             "detail": {},
+            "judged": False,
             "failed_facts": [],
+            "failed_kinds": [],
         }
     detail = {t: score_tag(spec, resolve(ev, t)) for t, spec in expected["tags"].items()}
     judge_path = path.with_suffix(".judge.json")
     text = None
-    failed_facts = []
+    failed = []
     if judge_path.exists():
         items = json.loads(judge_path.read_text())["items"]
         text = sum(i["pass"] for i in items) / len(items) if items else None
-        failed_facts = [i["fact"] for i in items if not i["pass"]]
+        failed = [i for i in items if not i["pass"]]
     return {
         **out,
         "failed": False,
@@ -190,8 +192,50 @@ def score_run(path: Path, case: dict) -> dict:
         **check_quotes(ev, case),
         "text": text,
         "detail": detail,
-        "failed_facts": failed_facts,
+        "judged": judge_path.exists(),
+        "failed_facts": [i["fact"] for i in failed],
+        "failed_kinds": [i["kind"] for i in failed],
     }
+
+
+def load_thresholds() -> dict:
+    """The pass/fail thresholds in evals/thresholds.json, fixed before a run (docs/EVALUATION.md)."""
+    return json.loads((ROOT / "thresholds.json").read_text())
+
+
+def verdict(r: dict, thresholds: dict) -> dict:
+    """A scored run's verdict against the thresholds: pass, fail (with its failure types),
+    unjudged (no .judge.json yet; lists the structured failures found so far) or error (a
+    PLACEHOLDER run). A run with no tag score or no text score skips that threshold."""
+    if r["failed"]:
+        return {"result": "error", "failures": []}
+    failures = []
+    if len(r["hard"]) > thresholds["max_hard_fails"]:
+        failures.append("hard_fail")
+    if r["tag"] is not None and r["tag"] < thresholds["tag"]:
+        failures.append("wrong_tag")
+    if r["text"] is not None and r["text"] < thresholds["text"]:
+        # the text score is too low: which kinds of statement the judge's grade failed
+        if "must_include" in r["failed_kinds"]:
+            failures.append("missed_fact")
+        if "must_not_include" in r["failed_kinds"]:
+            failures.append("wrong_fact")
+    if r["invented"] > thresholds["max_invented"]:
+        failures.append("invented_quote")
+    if r["misattributed"] > thresholds["max_misattributed"]:
+        failures.append("misattributed_quote")
+    if not r["judged"]:
+        return {"result": "unjudged", "failures": failures}
+    return {"result": "fail" if failures else "pass", "failures": failures}
+
+
+def verdict_cell(v: dict) -> str:
+    """A verdict for the grid: pass green, fail red with its failure types, the others dim."""
+    if v["result"] == "pass":
+        return "[green]pass[/]"
+    if v["result"] == "fail":
+        return f"[red]fail {', '.join(v['failures'])}[/]"
+    return f"[dim]{v['result']}[/]"
 
 
 def colour(s: float) -> str:
@@ -221,6 +265,7 @@ def main() -> None:
     cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
 
     runs = [score_run(p, cases[p.name.split("__")[0]]) for p in run_paths(folder)]
+    thresholds = load_thresholds()
 
     # --- 1. RICH GRID ---
     counts: dict[str, int] = {}
@@ -235,6 +280,7 @@ def main() -> None:
         grid_table.add_column(t.replace("impact.", "i.").replace("alert.", "a.").replace("change.", "c."), justify="center")
     grid_table.add_column("tag", justify="right")
     grid_table.add_column("text", justify="right")
+    grid_table.add_column("verdict", no_wrap=True)
     grid_table.add_column("flags", style="red")
     grid_table.add_column("misses (tag: got)", overflow="fold")
 
@@ -258,6 +304,7 @@ def main() -> None:
         row_cells += [
             format_score(r["tag"]),
             format_score(r.get("text")),
+            verdict_cell(verdict(r, thresholds)),
             "; ".join(flags),
             "; ".join(misses),
         ]

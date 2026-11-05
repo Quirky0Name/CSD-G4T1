@@ -125,21 +125,36 @@ and all add to EVALUATION.md "Evals".
   - The grid gets a `verdict` column (`pass` green, `fail` red with its
     failure types, `unjudged`/`error` dim).
 - **Acceptance criteria:**
-  - [ ] Throwaway script on a temp results folder with five runs of one
+  - [x] Throwaway script on a temp results folder with five runs of one
         case built to hit each outcome (all met; one hard fail; tag 0.5; a
         `must_not_include` present; placeholder) plus one run with no
         `.judge.json`: `score.verdict` returns `pass`, `fail [hard_fail]`,
         `fail [wrong_tag]`, `fail [wrong_fact]`, `error`, `unjudged`.
-  - [ ] Same folder through the scorer command: exits 0 and the grid shows
+  - [x] Same folder through the scorer command: exits 0 and the grid shows
         each run's verdict.
-  - [ ] Changing `tag` in `thresholds.json` to 0.5 turns the tag-0.5 run
+  - [x] Changing `tag` in `thresholds.json` to 0.5 turns the tag-0.5 run
         into `pass` (same script).
-  - [ ] `uv run ruff check` passes.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals", "The scores": the verdict, its four values, the
     failure types, and `thresholds.json` with its values; the thresholds
     are set before a run and changed only on purpose, never to make a run
     pass.
+  - (decision) `missed_fact` and `wrong_fact` are reported only when the
+    text score is below the `text` threshold: they name which kinds of
+    statement the judge failed. One failed statement in a case with five
+    or more statements leaves text at 0.8 or above, and the run can still
+    pass. Why: the spec's pass rule is `text >= 0.8`, not "every fact met".
+  - (decision) A hard fail, invented or misattributed quote counts against
+    the threshold as "more than `max_*`" (`len(hard) > max_hard_fails`).
+    Why: `max_*` = 0 means none allowed. No doc beyond the thresholds
+    themselves.
+  - (decision) `score_run` also returns `judged` (a `.judge.json` exists)
+    and `failed_kinds` (the kind of each failed statement), which
+    `verdict` reads. No doc needed (code shows it).
+  - (decision) The grid's `verdict` column sits after `text` and lists the
+    failure types after `fail`, comma-separated. No doc needed beyond the
+    column itself.
 
 ### S2: Pass rates and failure types are reported per case, category and overall
 
