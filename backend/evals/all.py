@@ -9,7 +9,6 @@ import argparse
 import json
 import subprocess
 import sys
-from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -55,15 +54,13 @@ def generate_summary(folder: Path) -> list[str]:
     if not runs:
         return [f"No scored runs found in {folder}"]
 
-    by_case = defaultdict(list)
-    by_run = defaultdict(list)
-    
-    for r in runs:
-        by_case[r["case"]].append(r)
-        if r["tag"] is not None:
-            by_run[r["run"]].append(r["tag"])
+    by_case = score.group_by(runs, "case")
 
-    header = f"{'Case':<35}{'Runs':>5}{'Tag':>7}{'Spread':>12}{'Text':>7}{'Hard':>6}{'Fail':>6}{'Inv':>5}{'Mis':>5}{'Unk':>5}"
+    thresholds = score.load_thresholds()
+    header = (
+        f"{'Case':<35}{'Runs':>5}{'Pass':>6}{'Target':>8}{'Unj':>5}{'Err':>5}{'Tag':>7}"
+        f"{'Spread':>12}{'Text':>7}{'Hard':>6}{'Fail':>6}{'Inv':>5}{'Mis':>5}{'Unk':>5}"
+    )
     lines = [f"Results: {folder}\n", header, "-" * len(header)]
 
     for name, rs in sorted(by_case.items()):
@@ -72,8 +69,11 @@ def generate_summary(folder: Path) -> list[str]:
         avg_tag = score.mean(tag_scores)
         avg_text = score.mean(texts)
         
+        rate = score.pass_rate(rs, thresholds)
         row = (
-            f"{name[:34]:<35}{len(rs):>5}{score.format_score(avg_tag):>7}{get_span(tag_scores):>12}"
+            f"{name[:34]:<35}{len(rs):>5}{score.format_rate(rate):>6}"
+            f"{score.target(rate, thresholds):>8}{rate['unjudged']:>5}{rate['error']:>5}"
+            f"{score.format_score(avg_tag):>7}{get_span(tag_scores):>12}"
             f"{score.format_score(avg_text):>7}{sum(bool(r['hard']) for r in rs):>6}"
             f"{sum(r['failed'] for r in rs):>6}{sum(r['invented'] for r in rs):>5}"
             f"{sum(r['misattributed'] for r in rs):>5}{sum(r['unknown_source'] for r in rs):>5}"
@@ -81,11 +81,19 @@ def generate_summary(folder: Path) -> list[str]:
         lines.append(row)
 
     lines.append("-" * len(header))
-    
+
+    by_cat = score.group_by(runs, "category")
+    lines.append("")
+    lines.append("Pass rate by category (counted runs only):")
+    for cat, rs in sorted(by_cat.items()):
+        lines.append(f"  {cat}: {score.rate_line(score.pass_rate(rs, thresholds))}")
+    lines.append(f"Overall pass rate: {score.rate_line(score.pass_rate(runs, thresholds))}")
+    lines.append(score.failure_line(runs, thresholds))
+
     # Calculate noise floor if multiple runs exist
-    if len(by_run) > 1:
-        per_run_avg = {k: score.mean(v) for k, v in sorted(by_run.items())}
-        spread = max(per_run_avg.values()) - min(per_run_avg.values())
+    spread = score.noise_floor(runs)
+    if spread is not None:
+        per_run_avg = score.tag_by_run(runs)
         lines.extend([
             "",
             "Overall tag score by run: " + "   ".join(f"run{k}: {v:.2f}" for k, v in per_run_avg.items()),

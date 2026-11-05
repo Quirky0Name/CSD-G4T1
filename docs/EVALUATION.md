@@ -383,10 +383,12 @@ Or one step at a time (each defaults to the newest results folder):
 | Script | Does | Calls Gemini |
 |---|---|---|
 | `run.py [case ...] [--runs N] [--into <folder>]` | Each case through `assess`; saves `<case>__run<N>.json` (the `Evaluation` as stored) in `evals/results/<UTC stamp>/`. `--into` adds to an existing folder; `--dry` only builds the inputs and prints what each case attaches | yes, `GEMINI_*` |
-| `judge.py [<folder>] [--redo]` | A second model grades the three free-text fields against the case's facts; writes `<run>.judge.json`. Skips placeholders and runs already judged | yes, `JUDGE_*` |
-| `score.py [<folder>]` | The grid, a table per category with an OVERALL row, and the most missed tags and facts | no |
+| `judge.py [<folder>] [--redo] [--label <label>]` | A second model grades the three free-text fields against the case's facts; writes `<run>.judge.json`, or `<run>.judge-<label>.json` with `--label`. Skips placeholders and runs already judged. `--redo` with `--label` regrades only that label's files. `--label default` is a usage error: `judge_check.py` reads `default` as `<run>.judge.json`, so a `judge-default` file would never be read | yes, `JUDGE_*` |
+| `score.py [<folder>]` | The grid (with a verdict per run), pass rates per case, category and overall, failure-type counts, the Metamorphic Groups table, a table per category with an OVERALL row, and the most missed tags and facts | no |
+| `compare.py <baseline> <new>` | Regression check of two results folders (below) | no |
+| `judge_check.py agree`, `sample` or `human` | Checks the judge (below) | no |
 
-`run.py` reads `GEMINI_API_KEY`, `GEMINI_MODEL` and
+`run.py` also writes `meta.json` into the folder (below). It reads `GEMINI_API_KEY`, `GEMINI_MODEL` and
 `GEMINI_FALLBACK_MODELS` from the environment or `backend/.env`, with the
 same 120 s timeout and fallback as the service. `judge.py` reads
 `JUDGE_API_KEY` (falling back to `GEMINI_API_KEY`) and `JUDGE_MODEL`
@@ -396,7 +398,7 @@ model from the one tested. `all.py` writes `summary.txt` into the folder.
 On a failed step it stops; resume with `--folder <folder> --skip-run`.
 `evals/results/` is gitignored.
 
-**A case** (`evals/cases/NN_name.json`, 20 of them, half marked
+**A case** (`evals/cases/NN_name.json`, 23 of them, 11 marked
 `"tier": "hard"`) is one report: `paper` (details) and `paper_text`,
 `alerts`, a `notice` or a `documents` list (kind, DOI, text, optional
 `pdf_text` for a stored PDF), an optional `draft_text`, and `expected`:
@@ -409,6 +411,13 @@ On a failed step it stops; resume with `--folder <folder> --skip-run`.
 - `facts`: `must_include` and `must_not_include` statements for the free
   text.
 - `why`: the reasoning behind the expected answer.
+- `variant_of` (optional): the stem of another case this one is a
+  **metamorphic variant** of: the same facts in other words (or sections in
+  another order), so the same `expected` answer applies. A variant is its
+  original's file with only the texts changed (cases 21, 22, 23 vary 01,
+  02, 14) and `variant_of` added; every fact and tag must stay true of the
+  new texts. Variant file names contain no `__`, which splits case from run
+  in result file names. A `variant_of` naming no case file is skipped.
 
 **The scores**, per run:
 
@@ -445,14 +454,151 @@ On a failed step it stops; resume with `--folder <folder> --skip-run`.
   judged, but the quotes of the steps that finished before it are still
   checked.
 
+**The verdict**, per run: `pass`, `fail`, `unjudged` (no `<run>.judge.json`)
+or `error` (a PLACEHOLDER run, usually quota). A run passes when `tag` >=
+0.8, `text` >= 0.8, and there are no hard fails, invented quotes or
+misattributed quotes. These are the eval's acceptance criteria, fixed in
+`evals/thresholds.json` before a run and changed only on purpose, never to
+make a run pass:
+
+```json
+{"tag": 0.8, "text": 0.8, "max_hard_fails": 0, "max_invented": 0,
+ "max_misattributed": 0, "case_pass_rate": 0.67}
+```
+
+- A hard fail, invented or misattributed quote fails the run when there are
+  more than the matching `max_*`, so 0 allows none.
+- Unknown-source quotes never fail a run (the prompt has no label for an
+  alert's line yet).
+- A tagless case skips the tag threshold; a judged run whose case lists no
+  facts skips the text threshold.
+- A failed run lists its failure types: `hard_fail`, `wrong_tag` (tag below
+  threshold), `missed_fact` (a `must_include` failed), `wrong_fact` (a
+  `must_not_include` failed), `invented_quote`, `misattributed_quote`. An
+  unjudged run still shows the structured ones found so far; an `error`
+  run none.
+- `missed_fact` and `wrong_fact` appear only when the text score is below
+  the `text` threshold: they say which kinds of statement failed. In a case
+  with five or more statements, one failed statement leaves text at 0.8 or
+  above and the run can still pass.
+
+**Pass rates.** `score.py` reports `k/N` per case, per category and
+overall, over counted runs only (`pass` and `fail`); `unjudged` and `error`
+runs are shown next to it and left out of the rate. A rate with no counted
+run shows `-`. A case meets its target when at least `case_pass_rate`
+(0.67) of its counted runs pass (2 of 3); the rate is rounded to two places
+before the comparison, so 2 of 3 meets it. There is no overall target; the
+overall rate is only reported. `score.py` prints a "Pass Rates by Case"
+table (Runs, Pass, Target `meets`/`misses`/`-`, Unjudged, Error), Pass,
+Unjudged and Error columns on the category table and OVERALL row, an
+overall pass rate in the diagnostics panel and a one-line count of failure
+types; the grid's `verdict` column lists failure types after `fail`.
+`all.py`'s summary has Pass, Target, Unj and Err columns per case, a pass
+rate per category, an "Overall pass rate:" line and the failure-type
+counts. Failure-type counts are over failed runs only, so they explain the
+pass rate. A few runs per case illustrate reliability but don't estimate
+it: raise `--runs` for a final comparison.
+
+**Metamorphic Groups.** `score.py` prints this table only when at least two
+members of a group (an original and its `variant_of` variants) have runs in
+the folder. Per member it shows the pass rate and each tag's most common
+value across its non-PLACEHOLDER runs (values tied for most common are all
+shown, sorted, joined with ` | `). Each group ends with a `(group)` row:
+pass rates `same` or `differ` (`-` when a member has no counted run), and
+`inconsistent: <tags>` or `all tags consistent`. A member with only
+PLACEHOLDER runs shows `-` for its values, which makes every tag
+inconsistent.
+
+**`meta.json`.** `run.py` records what produced each run in the folder's
+`meta.json`:
+
+```json
+{"runs": {"<case>__run<N>": {"started_at": "<ISO UTC>",
+          "prompt_version": 4, "models": ["gemini-flash-latest", "..."],
+          "generation": {"temperature": null, "seed": null},
+          "case_sha256": "<hex of the case file bytes>"}}}
+```
+
+- `--into` adds entries; an entry for a re-run run is replaced. An entry is
+  written right after the run's file, one run at a time, so a run stopped
+  part-way (quota) still has entries for the runs it saved. `started_at` is
+  taken before the run starts.
+- `models` is the list the run's `FallbackLlm` was given (`GEMINI_MODEL`
+  then `GEMINI_FALLBACK_MODELS`), not the model that answered; that one is
+  in the run's own `assessment.answered_by`.
+- `generation` is recorded, not set: temperature and seed are the model's
+  defaults, in production and in the evals (`impact/llm.py` sets neither).
+- `case_sha256` hashes the case file's bytes as read from disk, so a
+  reformat with no content change also counts as a changed case.
+- The git commit of a run is not recorded.
+
 `score.py`, `all.py` and `judge.py` take the same runs: `*__run*.json` in
-the folder (any run number, without the `.judge.json` files), listed by
-`score.run_paths`. `judge.py` repeats the glob rather than import
+the folder (any run number). Every name containing `.judge`
+(`<run>.judge.json`, `<run>.judge-<label>.json`) is a grade, not a run, and
+`meta.json` is not a run; `score.run_paths` lists the runs. `score.py`
+reads only `<run>.judge.json`. `judge.py` repeats the glob rather than import
 `score.py`, so keep the two in step.
 
 With several runs, `all.py` also prints each run's overall tag score and
 the spread between them. Read that spread as the noise floor: a prompt
 change that moves the score by less than it hasn't shown anything.
+
+**Regression workflow.** Record a baseline folder for each `PROMPT_VERSION`,
+re-run after every prompt, model or input change, compare, and keep a change
+only when it beats the noise floor. `compare.py <baseline> <new>` (no LLM
+calls):
+
+- For the cases in both folders it reports the change in overall pass rate,
+  mean tag and mean text (`score.py`'s overall means, PLACEHOLDER runs and
+  missing scores left out), and each case's pass rate before and after
+  (better, worse, same). The pass-rate change prints as `±k/N` when both
+  sides count the same number of runs, as a percentage otherwise. A case
+  with no counted run on one side is "not comparable".
+- Each of the three changes is "within noise" when its size is at most the
+  larger of the two folders' noise floors, "beyond noise" otherwise. A
+  folder's floor is the spread of per-run overall tag score over all its
+  runs, as in `all.py`; when only one folder has one, it is used; when
+  neither does (one run per case) the label is "no noise floor (1 run)".
+- A case whose `case_sha256` differs between the folders is "case changed"
+  and, like cases in only one folder ("only in baseline" / "only in new"),
+  is left out of the totals. A case with no `meta.json` entry on one side
+  is not flagged (no hash to compare is not a change). A folder without
+  `meta.json` (made before it) is compared without the hash check, and the
+  output says so.
+- A different `prompt_version` or model list is a header line, not an error.
+- Limit: a case that regresses in only some of its runs widens the new
+  folder's spread too, so a regression in a single case can come out
+  "within noise". Read the per-case lines as well as the totals.
+
+**Checking the judge.** A judge that disagrees with itself or with a person
+makes the text score itself flaky, so check it before trusting text scores.
+`judge_check.py`:
+
+- `agree <folder> <labelA> <labelB>`: grade the folder twice
+  (`judge.py --label b`), then compare. Agreement is per statement (the
+  judge's `present`) over statements graded in both; it prints `k/N (%)` and
+  lists the differing statements. The label `default` means
+  `<run>.judge.json`. Statements are paired by their text, not position; a
+  statement in only one grading, and runs graded under only one label, are
+  left out and counted on separate lines.
+- `sample <folder> [--n 20] [--seed N] [--out <csv>]`: writes a random
+  sample of graded statements to `<folder>/judge_sample.csv` (or `--out`)
+  with columns `run, n, fact, kind, answer_excerpt, judge_present,
+  human_present`. It samples the default grading (what the text score
+  uses), leaves out statements the judge skipped, and sorts rows by run and
+  statement number. Without `--seed` the sample differs each time.
+  `answer_excerpt` is the run's three free-text fields as the judge saw
+  them, not the judge's evidence quote, so the person marks without seeing
+  its reasoning. Fill `human_present` with `true` or `false`.
+- `human <folder> <csv>`: reports how often the person agrees with the
+  judge. It compares each marked row with the `present` in the folder's
+  current `<run>.judge.json`, falling back to the CSV's `judge_present` when
+  that grade is gone, skipped the statement, or its statement `n` is now a
+  different fact. `judge_present` and `human_present` are trimmed and
+  lowercased before comparing (a spreadsheet's `TRUE`/`FALSE` works); the
+  CSV is read as `utf-8-sig` (a "CSV UTF-8" export works). A `human_present`
+  that is not `true`/`false` is listed as unmarked with its value;
+  disagreements are listed too.
 
 To add a case, copy one close to it, change the texts and `expected`, and
 run `run.py --dry <case>` to check that it builds.
@@ -473,7 +619,7 @@ run `run.py --dry <case>` to check that it builds.
 | Shared with Updating | `backend/src/common/`: `doi.py` (`normalize_doi`), `service_token.py` (`ServiceTokenAuth`), `config.py` |
 | Dev stub of Storage Management | `backend/dev/stub_storage.py` (every internal endpoint in memory, plus `/dev/*` helpers) |
 | Tests | `backend/tests/research_evaluation/` (with `investigation/` and `impact/`); fixtures in `backend/tests/fixtures/` |
-| Evals of impact (dev only) | `backend/evals/`: `cases/`, `run.py`, `judge.py`, `score.py`, `all.py` |
+| Evals of impact (dev only) | `backend/evals/`: `cases/`, `thresholds.json`, `run.py`, `judge.py`, `judge_check.py`, `score.py` (also the shared helpers `verdict`, `pass_rate`, `group_by`, `noise_floor`, `overall_mean`, `failure_line`), `compare.py`, `all.py` |
 
 The lifespan makes three HTTP clients: Storage Management's (base URL,
 service token, 10 s), one for Crossref and Europe PMC (no base URL and no
@@ -488,7 +634,7 @@ auth), and the Gemini client.
   helper logs status codes and exception classes. (Known gaps: the
   default branch of `_cause` logs `str(exc)`; investigation's `_cause` has
   no `ValidationError` case and can quote part of a body.)
-- **Background tasks must never raise.** `investigate_paper`,
+- **Background tasks must never raise.** `investigate_paper`
   and `assess_report` catch everything; a report a crash
   leaves `investigating` or `investigated` stays that way.
 - **`No paper <id>` is the only "gone" `404`.** For the paper PDF and the
@@ -522,7 +668,7 @@ auth), and the Gemini client.
   `conftest.ExternalApis` fakes Crossref and Europe PMC; impact uses a
   `FakeLlm`. Only `-m live` tests reach real APIs (Crossref, Europe PMC,
   Gemini).
-- **Evals spend the free-tier quota:** a full run is 20 cases × 3 runs ×
+- **Evals spend the free-tier quota:** a full run is 23 cases × 3 runs ×
   up to 3 calls, far over about 20 requests per model per day. Run one or
   a few cases (`--runs 1`) while iterating, and give the judge its own key.
   A `PLACEHOLDER` row usually means the quota ran out, not a bad prompt.

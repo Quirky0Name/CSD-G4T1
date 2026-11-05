@@ -8,6 +8,24 @@ owned that story made.
 
 ---
 
+## 2026-11-05 — Evals decide pass or fail by thresholds fixed in a file; a change is judged against the noise floor
+
+- **Pass or fail is decided by `evals/thresholds.json`, written before a
+  run** (tag and text >= 0.8, no hard fails, invented or misattributed
+  quotes; a case meets its target at 2 of 3 runs), and changed only on
+  purpose, never to make a run pass. Fixing the bar after seeing the score
+  lets any result look fine.
+- **One green run proves nothing**: answers vary between runs, so the evals
+  report pass rates over several runs, and `compare.py` calls a change real
+  only when it beats the noise floor of the two results folders. A baseline
+  is recorded per `PROMPT_VERSION` and re-compared after every prompt,
+  model or input change.
+- The judge is checked too (graded twice, and against a hand-marked
+  sample), since a flaky judge makes the text score flaky. Metamorphic
+  variants (reworded cases with the same expected answer) check that the
+  answers don't hang on wording. Temperature and seed stay the model's
+  defaults; the evals record them, they don't set them.
+
 ## 2026-11-05 — The researcher is notified in the app when a report is assessed
 
 - **An in-app toast on the frontend's refresh**, which is shortened from

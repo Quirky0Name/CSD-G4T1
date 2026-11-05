@@ -172,16 +172,18 @@ def score_run(path: Path, case: dict) -> dict:
             "hard": [],
             **check_quotes(ev, case),
             "detail": {},
+            "judged": False,
             "failed_facts": [],
+            "failed_kinds": [],
         }
     detail = {t: score_tag(spec, resolve(ev, t)) for t, spec in expected["tags"].items()}
     judge_path = path.with_suffix(".judge.json")
     text = None
-    failed_facts = []
+    failed = []
     if judge_path.exists():
         items = json.loads(judge_path.read_text())["items"]
         text = sum(i["pass"] for i in items) / len(items) if items else None
-        failed_facts = [i["fact"] for i in items if not i["pass"]]
+        failed = [i for i in items if not i["pass"]]
     return {
         **out,
         "failed": False,
@@ -190,8 +192,103 @@ def score_run(path: Path, case: dict) -> dict:
         **check_quotes(ev, case),
         "text": text,
         "detail": detail,
-        "failed_facts": failed_facts,
+        "judged": judge_path.exists(),
+        "failed_facts": [i["fact"] for i in failed],
+        "failed_kinds": [i["kind"] for i in failed],
     }
+
+
+def load_thresholds() -> dict:
+    """The pass/fail thresholds in evals/thresholds.json, fixed before a run
+    (docs/EVALUATION.md)."""
+    return json.loads((ROOT / "thresholds.json").read_text())
+
+
+def verdict(r: dict, thresholds: dict) -> dict:
+    """A scored run's verdict against the thresholds: pass, fail (with its failure types),
+    unjudged (no .judge.json yet; lists the structured failures found so far) or error (a
+    PLACEHOLDER run). A run with no tag score or no text score skips that threshold."""
+    if r["failed"]:
+        return {"result": "error", "failures": []}
+    failures = []
+    if len(r["hard"]) > thresholds["max_hard_fails"]:
+        failures.append("hard_fail")
+    if r["tag"] is not None and r["tag"] < thresholds["tag"]:
+        failures.append("wrong_tag")
+    if r["text"] is not None and r["text"] < thresholds["text"]:
+        # the text score is too low: which kinds of statement the judge's grade failed
+        if "must_include" in r["failed_kinds"]:
+            failures.append("missed_fact")
+        if "must_not_include" in r["failed_kinds"]:
+            failures.append("wrong_fact")
+    if r["invented"] > thresholds["max_invented"]:
+        failures.append("invented_quote")
+    if r["misattributed"] > thresholds["max_misattributed"]:
+        failures.append("misattributed_quote")
+    if not r["judged"]:
+        return {"result": "unjudged", "failures": failures}
+    return {"result": "fail" if failures else "pass", "failures": failures}
+
+
+def verdict_cell(v: dict) -> str:
+    """A verdict for the grid: pass green, fail red with its failure types, the others dim."""
+    if v["result"] == "pass":
+        return "[green]pass[/]"
+    if v["result"] == "fail":
+        return f"[red]fail {', '.join(v['failures'])}[/]"
+    return f"[dim]{v['result']}[/]"
+
+
+FAILURE_TYPES = (
+    "hard_fail", "wrong_tag", "missed_fact", "wrong_fact", "invented_quote", "misattributed_quote"
+)
+
+
+def pass_rate(runs: list[dict], thresholds: dict) -> dict:
+    """Passed out of the counted runs (pass or fail); unjudged and error runs are counted apart.
+    rate is None when no run is counted."""
+    results = Counter(verdict(r, thresholds)["result"] for r in runs)
+    counted = results["pass"] + results["fail"]
+    return {
+        "passed": results["pass"],
+        "counted": counted,
+        "rate": results["pass"] / counted if counted else None,
+        "unjudged": results["unjudged"],
+        "error": results["error"],
+    }
+
+
+def format_rate(rate: dict) -> str:
+    return f"{rate['passed']}/{rate['counted']}" if rate["counted"] else "-"
+
+
+def rate_line(rate: dict) -> str:
+    """A pass rate with its share, and the runs left out of it."""
+    share = f" ({rate['rate']:.0%})" if rate["counted"] else ""
+    left_out = f"not counted: {rate['unjudged']} unjudged, {rate['error']} error"
+    return f"{format_rate(rate)}{share}, {left_out}"
+
+
+def target(rate: dict, thresholds: dict) -> str:
+    """Whether a case meets case_pass_rate: "meets", "misses", or "-" with no counted run. The
+    rate is rounded to two places first, so 2 of 3 (0.667) meets 0.67."""
+    if rate["rate"] is None:
+        return "-"
+    return "meets" if round(rate["rate"], 2) >= thresholds["case_pass_rate"] else "misses"
+
+
+def failure_counts(runs: list[dict], thresholds: dict) -> dict[str, int]:
+    """How many failed runs had each failure type."""
+    counts = Counter(
+        f for r in runs if (v := verdict(r, thresholds))["result"] == "fail" for f in v["failures"]
+    )
+    return {f: counts[f] for f in FAILURE_TYPES}
+
+
+def failure_line(runs: list[dict], thresholds: dict) -> str:
+    return "Failure types (in failed runs): " + ", ".join(
+        f"{f} {n}" for f, n in failure_counts(runs, thresholds).items()
+    )
 
 
 def colour(s: float) -> str:
@@ -210,9 +307,92 @@ def mean(values: list[float]) -> float | None:
     return sum(values) / len(values) if values else None
 
 
+def group_by(runs: list[dict], key: str) -> defaultdict[str, list[dict]]:
+    """Scored runs by one of their fields ("case", "category"), in the runs' order."""
+    groups = defaultdict(list)
+    for r in runs:
+        groups[r[key]].append(r)
+    return groups
+
+
+def overall_mean(runs: list[dict], key: str) -> float | None:
+    """The mean tag or text score over runs, PLACEHOLDER runs and missing scores left out."""
+    return mean([r[key] for r in runs if not r["failed"] and r.get(key) is not None])
+
+
+def tag_by_run(runs: list[dict]) -> dict[int, float]:
+    """The overall tag score of each run number (runs from all.load_runs carry "run"), in run
+    order; a PLACEHOLDER run's tag of 0 counts."""
+    by_run = defaultdict(list)
+    for r in runs:
+        if r["tag"] is not None:
+            by_run[r["run"]].append(r["tag"])
+    return {k: mean(v) for k, v in sorted(by_run.items())}
+
+
+def noise_floor(runs: list[dict]) -> float | None:
+    """The spread between the run numbers' overall tag scores; None with a single run number."""
+    by_run = tag_by_run(runs)
+    return max(by_run.values()) - min(by_run.values()) if len(by_run) > 1 else None
+
+
 def run_paths(folder: Path) -> list[Path]:
-    """The saved runs in a results folder, without their .judge.json files."""
-    return [p for p in sorted(folder.glob("*__run*.json")) if not p.name.endswith(".judge.json")]
+    """The saved runs in a results folder, without the grades: every file with ".judge" in its
+    name (<run>.judge.json, and <run>.judge-<label>.json from judge.py --label)."""
+    return [p for p in sorted(folder.glob("*__run*.json")) if ".judge" not in p.name]
+
+
+def most_common_value(runs: list[dict], tag: str) -> str | None:
+    """The value a tag path most often had across a case's runs (PLACEHOLDER runs left out), as
+    the grid shows it; None when no run is left. Values tied for most common are all given,
+    sorted and joined with " | ", so the result doesn't depend on the order of the runs."""
+    values = Counter(
+        "/".join(dict.fromkeys(short(v) for v in resolve(json.loads(r["path"].read_text()), tag)))
+        for r in runs
+        if not r["failed"]
+    )
+    if not values:
+        return None
+    top = max(values.values())
+    return " | ".join(sorted(v for v, n in values.items() if n == top))
+
+
+def metamorphic_groups(runs: list[dict], cases: dict[str, dict], thresholds: dict) -> list[dict]:
+    """Each original case with metamorphic variants (`variant_of`), when at least two of the
+    group have runs: each member's pass rate and most common value per tag, the tags whose most
+    common value isn't the same for every member (a member with no value, only PLACEHOLDER runs,
+    makes the tag inconsistent), and whether every member passes at the same rate (None when a
+    member has no counted run, so there is nothing to compare)."""
+    variants = defaultdict(list)
+    for stem, c in cases.items():
+        if c.get("variant_of"):
+            variants[c["variant_of"]].append(stem)
+    by_case = group_by(runs, "case")
+    groups = []
+    for original, names in sorted(variants.items()):
+        present = [n for n in (original, *sorted(names)) if by_case[n]]
+        if original not in cases or len(present) < 2:
+            continue  # an unknown original has no expected tags to compare
+        tags = list(cases[original]["expected"]["tags"])
+        members = [
+            {
+                "case": n,
+                "rate": pass_rate(by_case[n], thresholds),
+                "values": {t: most_common_value(by_case[n], t) for t in tags},
+            }
+            for n in present
+        ]
+        rates = {m["rate"]["rate"] for m in members}
+        groups.append({
+            "original": original,
+            "members": members,
+            "inconsistent": [
+                t for t in tags
+                if None in (values := {m["values"][t] for m in members}) or len(values) > 1
+            ],
+            "same_pass_rate": None if None in rates else len(rates) == 1,
+        })
+    return groups
 
 
 def main() -> None:
@@ -221,6 +401,7 @@ def main() -> None:
     cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
 
     runs = [score_run(p, cases[p.name.split("__")[0]]) for p in run_paths(folder)]
+    thresholds = load_thresholds()
 
     # --- 1. RICH GRID ---
     counts: dict[str, int] = {}
@@ -235,6 +416,7 @@ def main() -> None:
         grid_table.add_column(t.replace("impact.", "i.").replace("alert.", "a.").replace("change.", "c."), justify="center")
     grid_table.add_column("tag", justify="right")
     grid_table.add_column("text", justify="right")
+    grid_table.add_column("verdict", no_wrap=True)
     grid_table.add_column("flags", style="red")
     grid_table.add_column("misses (tag: got)", overflow="fold")
 
@@ -258,6 +440,7 @@ def main() -> None:
         row_cells += [
             format_score(r["tag"]),
             format_score(r.get("text")),
+            verdict_cell(verdict(r, thresholds)),
             "; ".join(flags),
             "; ".join(misses),
         ]
@@ -265,37 +448,54 @@ def main() -> None:
     
     console.print(grid_table)
 
-    # --- 2. CATEGORY SUMMARY TABLE ---
-    by_cat = defaultdict(list)
-    for r in runs:
-        by_cat[r["category"]].append(r)
+    # --- 2. PASS RATES BY CASE ---
+    by_case = group_by(runs, "case")
+    case_target = f"target: {thresholds['case_pass_rate']:.0%} of them pass"
+    case_table = Table(title=f"Pass Rates by Case (counted runs only; {case_target})")
+    for col in ("Case", "Runs", "Pass", "Target", "Unjudged", "Error"):
+        case_table.add_column(col, justify="left" if col == "Case" else "right")
+    for name, rs in sorted(by_case.items()):
+        rate = pass_rate(rs, thresholds)
+        met = target(rate, thresholds)
+        style = {"meets": "green", "misses": "red"}.get(met, "dim")
+        case_table.add_row(
+            name, str(len(rs)), format_rate(rate), f"[{style}]{met}[/]",
+            str(rate["unjudged"]), str(rate["error"]),
+        )
+    console.print(case_table)
+
+    # --- 3. CATEGORY SUMMARY TABLE ---
+    by_cat = group_by(runs, "category")
 
     cat_table = Table(title="Performance Summary by Category")
-    for col in ("Category", "Runs", "Avg Tag", "Avg Text", "Hard Fails", "Placeholders", "Invented", "Misattributed", "Unknown Source"):
+    for col in ("Category", "Runs", "Pass", "Unjudged", "Error", "Avg Tag", "Avg Text", "Hard Fails", "Placeholders", "Invented", "Misattributed", "Unknown Source"):
         cat_table.add_column(col, justify="right" if col != "Category" else "left")
 
     for cat, rs in sorted(by_cat.items()):
-        c_valid = [r for r in rs if not r["failed"]]
-        texts = [r["text"] for r in c_valid if r.get("text") is not None]
-        tag_scores = [r["tag"] for r in c_valid if r["tag"] is not None]
+        rate = pass_rate(rs, thresholds)
         cat_table.add_row(
             cat,
             str(len(rs)),
-            format_score(mean(tag_scores)),
-            format_score(mean(texts)),
+            format_rate(rate),
+            str(rate["unjudged"]),
+            str(rate["error"]),
+            format_score(overall_mean(rs, "tag")),
+            format_score(overall_mean(rs, "text")),
             str(sum(bool(r['hard']) for r in rs)),
             str(sum(r['failed'] for r in rs)),
             *(str(sum(r[k] for r in rs)) for k in ("invented", "misattributed", "unknown_source")),
         )
     
     valid_runs = [r for r in runs if not r["failed"]]
-    all_texts = [r["text"] for r in valid_runs if r.get("text") is not None]
-    overall_text_avg = mean(all_texts)
-    all_tag_scores = [r["tag"] for r in valid_runs if r["tag"] is not None]
-    overall_tag_avg = mean(all_tag_scores)
+    overall_text_avg = overall_mean(runs, "text")
+    overall_tag_avg = overall_mean(runs, "tag")
+    overall_rate = pass_rate(runs, thresholds)
     cat_table.add_row(
         "OVERALL",
         str(len(runs)),
+        f"[bold]{format_rate(overall_rate)}[/bold]",
+        str(overall_rate["unjudged"]),
+        str(overall_rate["error"]),
         format_score(overall_tag_avg),
         format_score(overall_text_avg),
         str(sum(bool(r['hard']) for r in runs)),
@@ -303,8 +503,32 @@ def main() -> None:
         *(f"[bold]{sum(r[k] for r in runs)}[/bold]" for k in ("invented", "misattributed", "unknown_source")),
     )
     console.print(cat_table)
+    console.print(failure_line(runs, thresholds))
 
-    # --- 3. ADVANCED ACTIONABLE DIAGNOSTICS ---
+    # --- 4. METAMORPHIC GROUPS: an original and its reworded variants should answer alike ---
+    groups = metamorphic_groups(runs, cases, thresholds)
+    if groups:
+        group_table = Table(
+            title="Metamorphic Groups (same facts, other wording: same answer expected)"
+        )
+        for col in ("Group", "Member", "Pass", "Most common tag values"):
+            group_table.add_column(col, overflow="fold")
+        for g in groups:
+            for m in g["members"]:
+                values = "; ".join(f"{t}={'-' if v is None else v}" for t, v in m["values"].items())
+                group_table.add_row(g["original"], m["case"], format_rate(m["rate"]), values)
+            same = {True: "[green]same[/]", False: "[red]differ[/]", None: "[dim]-[/]"}[
+                g["same_pass_rate"]
+            ]
+            flags = (
+                f"[red]inconsistent: {', '.join(g['inconsistent'])}[/]"
+                if g["inconsistent"]
+                else "[green]all tags consistent[/]"
+            )
+            group_table.add_row(g["original"], "[bold](group)[/]", same, flags, end_section=True)
+        console.print(group_table)
+
+    # --- 5. ADVANCED ACTIONABLE DIAGNOSTICS ---
     total_runs = len(runs)
     if total_runs > 0:
         tag_line = (
@@ -320,6 +544,7 @@ def main() -> None:
         diag_panel_lines = [
             f"[bold cyan]Total Test Runs Executed:[/] {total_runs}",
             f"[bold cyan]Successful Runs Rate:[/]    {len(valid_runs)}/{total_runs} ({len(valid_runs)/total_runs*100:.1f}%)",
+            f"[bold cyan]Overall Pass Rate:[/]       {rate_line(overall_rate)}",
             f"[bold cyan]Average Structured Tag Score:[/] {tag_line}",
             f"[bold cyan]Average LLM Judge Text Score:[/] {text_line}",
         ]

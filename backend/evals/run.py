@@ -9,6 +9,7 @@ or backend/.env. Needs fpdf2 to turn the .txt files into PDFs (not a project dep
 
 import argparse
 import asyncio
+import hashlib
 import json
 import os
 import sys
@@ -27,6 +28,7 @@ sys.path.insert(0, str(ROOT.parent / "src"))
 from research_evaluation.impact.assess import assess
 from research_evaluation.impact.inputs import ReportInputs
 from research_evaluation.impact.llm import FallbackLlm
+from research_evaluation.impact.prompts import PROMPT_VERSION
 from research_evaluation.storage import (
     AlertInReport,
     DocumentInReport,
@@ -111,12 +113,32 @@ def fake_storage(draft: bytes | None) -> httpx.AsyncClient:
     return httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="http://storage")
 
 
+def record_run(out_dir: Path, name: str, entry: dict) -> None:
+    """Adds a run's entry to <out_dir>/meta.json, replacing the entry of a run that is re-run."""
+    path = out_dir / "meta.json"
+    meta = json.loads(path.read_text()) if path.exists() else {"runs": {}}
+    meta["runs"][name] = entry
+    path.write_text(json.dumps(meta, indent=2))
+
+
 async def run_case(llm: FallbackLlm, case_file: Path, run: int, out_dir: Path) -> None:
-    inputs, draft = build_inputs(json.loads(case_file.read_text()))
+    name = f"{case_file.stem}__run{run}"
+    case_bytes = case_file.read_bytes()
+    # what produced the run, so a regression can be told from noise or from a changed case
+    entry = {
+        "started_at": datetime.now(UTC).isoformat(),
+        "prompt_version": PROMPT_VERSION,
+        "models": list(llm.models),
+        # assess sets neither: the model's defaults, as in production
+        "generation": {"temperature": None, "seed": None},
+        "case_sha256": hashlib.sha256(case_bytes).hexdigest(),
+    }
+    inputs, draft = build_inputs(json.loads(case_bytes))
     async with fake_storage(draft) as sm:
         evaluation = await assess(llm, sm, inputs)
     body = evaluation.model_dump(mode="json")
-    (out_dir / f"{case_file.stem}__run{run}.json").write_text(json.dumps(body, indent=2))
+    (out_dir / f"{name}.json").write_text(json.dumps(body, indent=2))
+    record_run(out_dir, name, entry)
     a = body["assessment"]
     print(
         f"{case_file.stem} run {run}: change={body['change_severity']} impact={body['impact_level']} "
