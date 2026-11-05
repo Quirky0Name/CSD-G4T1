@@ -9,7 +9,6 @@ import argparse
 import json
 import subprocess
 import sys
-from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -55,9 +54,7 @@ def generate_summary(folder: Path) -> list[str]:
     if not runs:
         return [f"No scored runs found in {folder}"]
 
-    by_case = defaultdict(list)
-    for r in runs:
-        by_case[r["case"]].append(r)
+    by_case = score.group_by(runs, "case")
 
     thresholds = score.load_thresholds()
     header = (
@@ -85,9 +82,7 @@ def generate_summary(folder: Path) -> list[str]:
 
     lines.append("-" * len(header))
 
-    by_cat = defaultdict(list)
-    for r in runs:
-        by_cat[r["category"]].append(r)
+    by_cat = score.group_by(runs, "category")
     lines.append("")
     lines.append("Pass rate by category (counted runs only):")
     for cat, rs in sorted(by_cat.items()):

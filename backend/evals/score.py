@@ -307,6 +307,14 @@ def mean(values: list[float]) -> float | None:
     return sum(values) / len(values) if values else None
 
 
+def group_by(runs: list[dict], key: str) -> defaultdict[str, list[dict]]:
+    """Scored runs by one of their fields ("case", "category"), in the runs' order."""
+    groups = defaultdict(list)
+    for r in runs:
+        groups[r[key]].append(r)
+    return groups
+
+
 def overall_mean(runs: list[dict], key: str) -> float | None:
     """The mean tag or text score over runs, PLACEHOLDER runs and missing scores left out."""
     return mean([r[key] for r in runs if not r["failed"] and r.get(key) is not None])
@@ -359,9 +367,7 @@ def metamorphic_groups(runs: list[dict], cases: dict[str, dict], thresholds: dic
     for stem, c in cases.items():
         if c.get("variant_of"):
             variants[c["variant_of"]].append(stem)
-    by_case = defaultdict(list)
-    for r in runs:
-        by_case[r["case"]].append(r)
+    by_case = group_by(runs, "case")
     groups = []
     for original, names in sorted(variants.items()):
         present = [n for n in (original, *sorted(names)) if by_case[n]]
@@ -443,9 +449,7 @@ def main() -> None:
     console.print(grid_table)
 
     # --- 2. PASS RATES BY CASE ---
-    by_case = defaultdict(list)
-    for r in runs:
-        by_case[r["case"]].append(r)
+    by_case = group_by(runs, "case")
     case_target = f"target: {thresholds['case_pass_rate']:.0%} of them pass"
     case_table = Table(title=f"Pass Rates by Case (counted runs only; {case_target})")
     for col in ("Case", "Runs", "Pass", "Target", "Unjudged", "Error"):
@@ -461,9 +465,7 @@ def main() -> None:
     console.print(case_table)
 
     # --- 3. CATEGORY SUMMARY TABLE ---
-    by_cat = defaultdict(list)
-    for r in runs:
-        by_cat[r["category"]].append(r)
+    by_cat = group_by(runs, "category")
 
     cat_table = Table(title="Performance Summary by Category")
     for col in ("Category", "Runs", "Pass", "Unjudged", "Error", "Avg Tag", "Avg Text", "Hard Fails", "Placeholders", "Invented", "Misattributed", "Unknown Source"):
