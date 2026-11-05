@@ -35,6 +35,9 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   // null until the first successful load, which only seeds it — never toasts.
   const seenAlertIds = useRef<Set<number> | null>(null)
+  // Same rule for reports: the first load records the ones already assessed,
+  // later loads toast each report that has become assessed since, once.
+  const seenAssessedReportIds = useRef<Set<number> | null>(null)
   const refreshRef = useRef<() => Promise<void>>(() => Promise.resolve())
 
   useEffect(() => {
@@ -60,6 +63,25 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    function noticeAssessedReports(papers: Paper[], reports: UserReport[]) {
+      const assessed = reports.filter((report) => report.status === 'assessed')
+      const seen = seenAssessedReportIds.current
+      if (seen === null) {
+        seenAssessedReportIds.current = new Set(assessed.map((report) => report.id))
+        return
+      }
+      const paperTitle = new Map(papers.map((paper) => [paper.id, paper.title ?? 'a tracked paper']))
+      for (const report of assessed) {
+        if (seen.has(report.id)) continue
+        seen.add(report.id)
+        showToast({
+          tone: 'success',
+          message: `Report ready on "${paperTitle.get(report.paper_id)}"`,
+          action: { label: 'View', onClick: () => navigate(`/alerts?paper=${report.paper_id}`) },
+        })
+      }
+    }
+
     async function runOnce() {
       try {
         const papers = await listPapers()
@@ -73,6 +95,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
         if (!mounted) return
         setState({ status: 'ready', papers, alerts, reports })
         noticeNewAlerts(papers, alerts)
+        noticeAssessedReports(papers, reports)
       } catch (err) {
         if (!mounted) return
         setState({ status: 'error', message: errorMessage(err) })

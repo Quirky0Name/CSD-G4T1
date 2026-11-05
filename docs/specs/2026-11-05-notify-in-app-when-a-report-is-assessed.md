@@ -187,11 +187,11 @@ export type TrackingState =
     Storage Management returns only the caller's papers and answers `404`
     for another user's paper (docs: `docs/CONTRACTS.md`).
 - **Acceptance criteria:**
-  - [ ] `npm run build` passes.
-  - [ ] `npm run lint` passes.
-  - [ ] `grep -n "Report ready on" frontend/csd-frontend-vite/src/tracking.tsx`
+  - [x] `npm run build` passes.
+  - [x] `npm run lint` passes.
+  - [x] `grep -n "Report ready on" frontend/csd-frontend-vite/src/tracking.tsx`
         finds the message.
-  - [ ] `grep -n "seenAssessedReportIds" frontend/csd-frontend-vite/src/tracking.tsx`
+  - [x] `grep -n "seenAssessedReportIds" frontend/csd-frontend-vite/src/tracking.tsx`
         finds the ref.
 - **Doc deltas:**
   - `docs/CONTRACTS.md` ("Frontend ↔ Storage Management" feature table),
@@ -222,6 +222,13 @@ export type TrackingState =
   - `docs/DEMO.md` step 3: show the in-app "Report ready" toast instead of
     the Telegram message (up to about 30 s after the report is
     assessed).
+  - Decisions made during implementation:
+    - In a run that finds both, the new-alert toasts are shown before the
+      report-ready toasts (`noticeNewAlerts` runs first) (`transient`:
+      order inside one run; no doc needed).
+    - A run that finds several newly assessed reports shows one toast per
+      report, in the newest-first order of `reports` (`transient`:
+      follows from "one toast per assessed report"; no doc needed).
 
 ### S3: Remove the Telegram notification from Research Evaluation
 
