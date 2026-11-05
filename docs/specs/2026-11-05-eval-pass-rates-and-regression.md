@@ -222,16 +222,27 @@ and all add to EVALUATION.md "Evals".
     2026-11-05).
   - No git commit is recorded (user: "can remove").
 - **Acceptance criteria:**
-  - [ ] Throwaway script runs `run.py`'s `run_case` path for 2 cases × 2
+  - [x] Throwaway script runs `run.py`'s `run_case` path for 2 cases × 2
         runs with `FallbackLlm` faked: `meta.json` has 4 entries, each with
         the case file's sha256 and `prompt_version` 4.
-  - [ ] A second call with `--into` and run 2 of one case replaces that
+  - [x] A second call with `--into` and run 2 of one case replaces that
         entry and keeps the other 3.
-  - [ ] `meta.json` is not picked up as a run by `score.run_paths`.
-  - [ ] `uv run ruff check` passes.
+  - [x] `meta.json` is not picked up as a run by `score.run_paths`.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals": `meta.json` and its fields; temperature and seed
     are the model's defaults in production and in the evals.
+  - (decision) `run_case` writes the run's `meta.json` entry right after
+    the run's file, one run at a time, so a run stopped part-way (quota)
+    still has entries for the runs it saved. `started_at` is taken before
+    the run starts. Doc: EVALUATION.md, with `meta.json`.
+  - (decision) `models` is the list the run's `FallbackLlm` was given
+    (`GEMINI_MODEL` then `GEMINI_FALLBACK_MODELS`), not the model that
+    answered; that one is already in the run's own
+    `assessment.answered_by`. Doc: EVALUATION.md, with the fields.
+  - (decision) `case_sha256` hashes the case file's bytes as read from
+    disk, so a reformat with no content change also counts as a changed
+    case. Doc: EVALUATION.md, with the fields.
 
 ### S4: Two results folders can be compared as a regression check
 
