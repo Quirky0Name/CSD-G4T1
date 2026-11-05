@@ -305,6 +305,61 @@ def run_paths(folder: Path) -> list[Path]:
     return [p for p in sorted(folder.glob("*__run*.json")) if ".judge" not in p.name]
 
 
+def most_common_value(runs: list[dict], tag: str) -> str | None:
+    """The value a tag path most often had across a case's runs (PLACEHOLDER runs left out), as
+    the grid shows it; None when no run is left. Values tied for most common are all given,
+    sorted and joined with " | ", so the result doesn't depend on the order of the runs."""
+    values = Counter(
+        "/".join(dict.fromkeys(short(v) for v in resolve(json.loads(r["path"].read_text()), tag)))
+        for r in runs
+        if not r["failed"]
+    )
+    if not values:
+        return None
+    top = max(values.values())
+    return " | ".join(sorted(v for v, n in values.items() if n == top))
+
+
+def metamorphic_groups(runs: list[dict], cases: dict[str, dict], thresholds: dict) -> list[dict]:
+    """Each original case with metamorphic variants (`variant_of`), when at least two of the
+    group have runs: each member's pass rate and most common value per tag, the tags whose most
+    common value isn't the same for every member (a member with no value, only PLACEHOLDER runs,
+    makes the tag inconsistent), and whether every member passes at the same rate (None when a
+    member has no counted run, so there is nothing to compare)."""
+    variants = defaultdict(list)
+    for stem, c in cases.items():
+        if c.get("variant_of"):
+            variants[c["variant_of"]].append(stem)
+    by_case = defaultdict(list)
+    for r in runs:
+        by_case[r["case"]].append(r)
+    groups = []
+    for original, names in sorted(variants.items()):
+        present = [n for n in (original, *sorted(names)) if by_case[n]]
+        if original not in cases or len(present) < 2:
+            continue  # an unknown original has no expected tags to compare
+        tags = list(cases[original]["expected"]["tags"])
+        members = [
+            {
+                "case": n,
+                "rate": pass_rate(by_case[n], thresholds),
+                "values": {t: most_common_value(by_case[n], t) for t in tags},
+            }
+            for n in present
+        ]
+        rates = {m["rate"]["rate"] for m in members}
+        groups.append({
+            "original": original,
+            "members": members,
+            "inconsistent": [
+                t for t in tags
+                if None in (values := {m["values"][t] for m in members}) or len(values) > 1
+            ],
+            "same_pass_rate": None if None in rates else len(rates) == 1,
+        })
+    return groups
+
+
 def main() -> None:
     folders = sorted((ROOT / "results").glob("*"))
     folder = Path(sys.argv[1]) if len(sys.argv) > 1 else folders[-1]
@@ -428,7 +483,28 @@ def main() -> None:
         + ", ".join(f"{f} {n}" for f, n in failure_counts(runs, thresholds).items())
     )
 
-    # --- 4. ADVANCED ACTIONABLE DIAGNOSTICS ---
+    # --- 4. METAMORPHIC GROUPS: an original and its reworded variants should answer alike ---
+    groups = metamorphic_groups(runs, cases, thresholds)
+    if groups:
+        group_table = Table(title="Metamorphic Groups (same facts, other wording: same answer expected)")
+        for col in ("Group", "Member", "Pass", "Most common tag values"):
+            group_table.add_column(col, overflow="fold")
+        for g in groups:
+            for m in g["members"]:
+                values = "; ".join(f"{t}={'-' if v is None else v}" for t, v in m["values"].items())
+                group_table.add_row(g["original"], m["case"], format_rate(m["rate"]), values)
+            same = {True: "[green]same[/]", False: "[red]differ[/]", None: "[dim]-[/]"}[
+                g["same_pass_rate"]
+            ]
+            flags = (
+                f"[red]inconsistent: {', '.join(g['inconsistent'])}[/]"
+                if g["inconsistent"]
+                else "[green]all tags consistent[/]"
+            )
+            group_table.add_row(g["original"], "[bold](group)[/]", same, flags, end_section=True)
+        console.print(group_table)
+
+    # --- 5. ADVANCED ACTIONABLE DIAGNOSTICS ---
     total_runs = len(runs)
     if total_runs > 0:
         tag_line = (

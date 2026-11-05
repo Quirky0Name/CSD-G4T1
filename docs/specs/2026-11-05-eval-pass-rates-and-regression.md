@@ -407,19 +407,38 @@ and all add to EVALUATION.md "Evals".
     pass rate and, per tag, whether all members' most common value is the
     same.
 - **Acceptance criteria:**
-  - [ ] `run.py --dry 21_correction_effect_size_reworded
+  - [x] `run.py --dry 21_correction_effect_size_reworded
         22_retraction_key_evidence_reordered
         23_same_authors_different_paper_reworded` builds all three.
-  - [ ] Each variant's `expected` equals its original's (throwaway script
+  - [x] Each variant's `expected` equals its original's (throwaway script
         compares the JSON).
-  - [ ] Throwaway script, temp folder with runs of 01 and 21 where 21's
+  - [x] Throwaway script, temp folder with runs of 01 and 21 where 21's
         `impact.impact_level` differs: the scorer's group table flags that
         tag as inconsistent for group 01.
-  - [ ] `uv run ruff check` passes.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals": the case count (the number of files in
     `evals/cases/`), `variant_of`, what a metamorphic variant is (same
     facts, other wording, same expected answer) and the group table.
+  - (decision) Each variant is its original's committed file with one
+    text swapped (21: `notice.text`; 22 and 23: `draft_text`) and a
+    `"variant_of"` line added before `category`; everything else,
+    including `tier`, `why`, the paper, alerts and DOIs, is identical. 22
+    puts Methods before the Introduction, and the paper is still used in
+    the Introduction, so "the draft's Introduction relies on the retracted
+    paper" stays true. Doc: EVALUATION.md, with `variant_of`.
+  - (decision) The "Metamorphic Groups" table appears only when at least
+    two members of a group have runs in the folder. Per member it shows
+    the pass rate and each tag's most common value across its non-
+    PLACEHOLDER runs (as the grid writes it). Each group then gets a
+    `(group)` row: pass rates `same`/`differ`, and `inconsistent: <tags>`
+    or `all tags consistent`. A member with only PLACEHOLDER runs shows
+    `-` for its values, which makes every tag inconsistent. When a member
+    has no counted run (pass rate `-`), the pass-rate cell is `-`, not
+    `same`/`differ`. Values tied for most common are all shown, sorted
+    and joined with ` | `, so the flag doesn't depend on run order. A
+    `variant_of` that names no case file is skipped. Doc: EVALUATION.md,
+    the group table.
 
 ## Human checks
 
