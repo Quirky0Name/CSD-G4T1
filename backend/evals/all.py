@@ -56,15 +56,14 @@ def generate_summary(folder: Path) -> list[str]:
         return [f"No scored runs found in {folder}"]
 
     by_case = defaultdict(list)
-    by_run = defaultdict(list)
-    
     for r in runs:
         by_case[r["case"]].append(r)
-        if r["tag"] is not None:
-            by_run[r["run"]].append(r["tag"])
 
     thresholds = score.load_thresholds()
-    header = f"{'Case':<35}{'Runs':>5}{'Pass':>6}{'Target':>8}{'Unj':>5}{'Err':>5}{'Tag':>7}{'Spread':>12}{'Text':>7}{'Hard':>6}{'Fail':>6}{'Inv':>5}{'Mis':>5}{'Unk':>5}"
+    header = (
+        f"{'Case':<35}{'Runs':>5}{'Pass':>6}{'Target':>8}{'Unj':>5}{'Err':>5}{'Tag':>7}"
+        f"{'Spread':>12}{'Text':>7}{'Hard':>6}{'Fail':>6}{'Inv':>5}{'Mis':>5}{'Unk':>5}"
+    )
     lines = [f"Results: {folder}\n", header, "-" * len(header)]
 
     for name, rs in sorted(by_case.items()):
@@ -94,15 +93,12 @@ def generate_summary(folder: Path) -> list[str]:
     for cat, rs in sorted(by_cat.items()):
         lines.append(f"  {cat}: {score.rate_line(score.pass_rate(rs, thresholds))}")
     lines.append(f"Overall pass rate: {score.rate_line(score.pass_rate(runs, thresholds))}")
-    lines.append(
-        "Failure types (in failed runs): "
-        + ", ".join(f"{f} {n}" for f, n in score.failure_counts(runs, thresholds).items())
-    )
-    
+    lines.append(score.failure_line(runs, thresholds))
+
     # Calculate noise floor if multiple runs exist
-    if len(by_run) > 1:
-        per_run_avg = {k: score.mean(v) for k, v in sorted(by_run.items())}
-        spread = max(per_run_avg.values()) - min(per_run_avg.values())
+    spread = score.noise_floor(runs)
+    if spread is not None:
+        per_run_avg = score.tag_by_run(runs)
         lines.extend([
             "",
             "Overall tag score by run: " + "   ".join(f"run{k}: {v:.2f}" for k, v in per_run_avg.items()),

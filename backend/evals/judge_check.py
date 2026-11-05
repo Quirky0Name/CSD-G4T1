@@ -32,7 +32,7 @@ def share(agreed: int, total: int) -> str:
     return f"{agreed}/{total} ({agreed / total:.0%})" if total else "-"
 
 
-def text(value: bool | None) -> str:
+def bool_text(value: bool | None) -> str:
     return "" if value is None else str(value).lower()
 
 
@@ -54,7 +54,7 @@ def agree(folder: Path, label_a: str, label_b: str) -> None:
             else:
                 differing.append(
                     f"  {run.stem} #{n} ({x['kind']}) {x['fact']}: "
-                    f"{label_a}={text(x['present'])}, {label_b}={text(y['present'])}"
+                    f"{label_a}={bool_text(x['present'])}, {label_b}={bool_text(y['present'])}"
                 )
     print(f"Agreement between {label_a} and {label_b}: {share(agreed, total)} of the statements "
           f"graded in both ({runs} runs)")
@@ -82,7 +82,8 @@ def sample(folder: Path, n: int, seed: int | None, out: Path) -> None:
         writer = csv.writer(f)
         writer.writerow(COLUMNS)
         for run, i, item, excerpt in sorted(picked, key=lambda p: (p[0], p[1])):
-            writer.writerow([run, i, item["fact"], item["kind"], excerpt, text(item["present"]), ""])
+            present = bool_text(item["present"])
+            writer.writerow([run, i, item["fact"], item["kind"], excerpt, present, ""])
     print(f"Wrote {len(picked)} of {len(population)} graded statements to {out}")
     print("Fill in human_present with true or false, then run: judge_check.py human <folder> <csv>")
 
@@ -101,7 +102,10 @@ def human(folder: Path, csv_path: Path) -> None:
         # the judge's grade as the folder has it now (what score.py reads), else the CSV's copy
         items = grading(folder / f"{row['run']}.json", "default")
         n = int(row["n"])
-        judged = text(items[n - 1]["present"]) if items and n <= len(items) else row["judge_present"]
+        if items and n <= len(items):
+            judged = bool_text(items[n - 1]["present"])
+        else:
+            judged = row["judge_present"]
         marked += 1
         if judged == mark:
             agreed += 1
@@ -137,7 +141,8 @@ def main() -> None:
     if args.command == "agree":
         agree(folder, args.label_a, args.label_b)
     elif args.command == "sample":
-        sample(folder, args.n, args.seed, Path(args.out) if args.out else folder / "judge_sample.csv")
+        out = Path(args.out) if args.out else folder / "judge_sample.csv"
+        sample(folder, args.n, args.seed, out)
     else:
         human(folder, Path(args.csv))
 

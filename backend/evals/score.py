@@ -199,7 +199,8 @@ def score_run(path: Path, case: dict) -> dict:
 
 
 def load_thresholds() -> dict:
-    """The pass/fail thresholds in evals/thresholds.json, fixed before a run (docs/EVALUATION.md)."""
+    """The pass/fail thresholds in evals/thresholds.json, fixed before a run
+    (docs/EVALUATION.md)."""
     return json.loads((ROOT / "thresholds.json").read_text())
 
 
@@ -264,7 +265,8 @@ def format_rate(rate: dict) -> str:
 def rate_line(rate: dict) -> str:
     """A pass rate with its share, and the runs left out of it."""
     share = f" ({rate['rate']:.0%})" if rate["counted"] else ""
-    return f"{format_rate(rate)}{share}, not counted: {rate['unjudged']} unjudged, {rate['error']} error"
+    left_out = f"not counted: {rate['unjudged']} unjudged, {rate['error']} error"
+    return f"{format_rate(rate)}{share}, {left_out}"
 
 
 def target(rate: dict, thresholds: dict) -> str:
@@ -283,6 +285,12 @@ def failure_counts(runs: list[dict], thresholds: dict) -> dict[str, int]:
     return {f: counts[f] for f in FAILURE_TYPES}
 
 
+def failure_line(runs: list[dict], thresholds: dict) -> str:
+    return "Failure types (in failed runs): " + ", ".join(
+        f"{f} {n}" for f, n in failure_counts(runs, thresholds).items()
+    )
+
+
 def colour(s: float) -> str:
     return "green" if s == 1 else "yellow" if s > 0 else "red"
 
@@ -297,6 +305,27 @@ def format_score(val: float | None) -> str:
 
 def mean(values: list[float]) -> float | None:
     return sum(values) / len(values) if values else None
+
+
+def overall_mean(runs: list[dict], key: str) -> float | None:
+    """The mean tag or text score over runs, PLACEHOLDER runs and missing scores left out."""
+    return mean([r[key] for r in runs if not r["failed"] and r.get(key) is not None])
+
+
+def tag_by_run(runs: list[dict]) -> dict[int, float]:
+    """The overall tag score of each run number (runs from all.load_runs carry "run"), in run
+    order; a PLACEHOLDER run's tag of 0 counts."""
+    by_run = defaultdict(list)
+    for r in runs:
+        if r["tag"] is not None:
+            by_run[r["run"]].append(r["tag"])
+    return {k: mean(v) for k, v in sorted(by_run.items())}
+
+
+def noise_floor(runs: list[dict]) -> float | None:
+    """The spread between the run numbers' overall tag scores; None with a single run number."""
+    by_run = tag_by_run(runs)
+    return max(by_run.values()) - min(by_run.values()) if len(by_run) > 1 else None
 
 
 def run_paths(folder: Path) -> list[Path]:
@@ -417,9 +446,8 @@ def main() -> None:
     by_case = defaultdict(list)
     for r in runs:
         by_case[r["case"]].append(r)
-    case_table = Table(
-        title=f"Pass Rates by Case (counted runs only; target: {thresholds['case_pass_rate']:.0%} of them pass)"
-    )
+    case_target = f"target: {thresholds['case_pass_rate']:.0%} of them pass"
+    case_table = Table(title=f"Pass Rates by Case (counted runs only; {case_target})")
     for col in ("Case", "Runs", "Pass", "Target", "Unjudged", "Error"):
         case_table.add_column(col, justify="left" if col == "Case" else "right")
     for name, rs in sorted(by_case.items()):
@@ -442,9 +470,6 @@ def main() -> None:
         cat_table.add_column(col, justify="right" if col != "Category" else "left")
 
     for cat, rs in sorted(by_cat.items()):
-        c_valid = [r for r in rs if not r["failed"]]
-        texts = [r["text"] for r in c_valid if r.get("text") is not None]
-        tag_scores = [r["tag"] for r in c_valid if r["tag"] is not None]
         rate = pass_rate(rs, thresholds)
         cat_table.add_row(
             cat,
@@ -452,18 +477,16 @@ def main() -> None:
             format_rate(rate),
             str(rate["unjudged"]),
             str(rate["error"]),
-            format_score(mean(tag_scores)),
-            format_score(mean(texts)),
+            format_score(overall_mean(rs, "tag")),
+            format_score(overall_mean(rs, "text")),
             str(sum(bool(r['hard']) for r in rs)),
             str(sum(r['failed'] for r in rs)),
             *(str(sum(r[k] for r in rs)) for k in ("invented", "misattributed", "unknown_source")),
         )
     
     valid_runs = [r for r in runs if not r["failed"]]
-    all_texts = [r["text"] for r in valid_runs if r.get("text") is not None]
-    overall_text_avg = mean(all_texts)
-    all_tag_scores = [r["tag"] for r in valid_runs if r["tag"] is not None]
-    overall_tag_avg = mean(all_tag_scores)
+    overall_text_avg = overall_mean(runs, "text")
+    overall_tag_avg = overall_mean(runs, "tag")
     overall_rate = pass_rate(runs, thresholds)
     cat_table.add_row(
         "OVERALL",
@@ -478,15 +501,14 @@ def main() -> None:
         *(f"[bold]{sum(r[k] for r in runs)}[/bold]" for k in ("invented", "misattributed", "unknown_source")),
     )
     console.print(cat_table)
-    console.print(
-        "Failure types (in failed runs): "
-        + ", ".join(f"{f} {n}" for f, n in failure_counts(runs, thresholds).items())
-    )
+    console.print(failure_line(runs, thresholds))
 
     # --- 4. METAMORPHIC GROUPS: an original and its reworded variants should answer alike ---
     groups = metamorphic_groups(runs, cases, thresholds)
     if groups:
-        group_table = Table(title="Metamorphic Groups (same facts, other wording: same answer expected)")
+        group_table = Table(
+            title="Metamorphic Groups (same facts, other wording: same answer expected)"
+        )
         for col in ("Group", "Member", "Pass", "Most common tag values"):
             group_table.add_column(col, overflow="fold")
         for g in groups:

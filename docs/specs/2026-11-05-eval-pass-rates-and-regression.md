@@ -316,6 +316,11 @@ and all add to EVALUATION.md "Evals".
   - (decision) `compare.py` reuses `all.load_runs` for the runs and repeats
     `all.py`'s noise-floor formula in its own `noise_floor`, since S4 may
     not change `all.py`. No doc needed (code shows it).
+  - (decision, code review) Superseding the line above: the noise floor
+    (`score.noise_floor`, with `score.tag_by_run`), the overall mean
+    (`score.overall_mean`) and the failure-type line (`score.failure_line`)
+    now live once in `score.py`, used by `score.py`, `all.py` and
+    `compare.py`; output is unchanged. No doc needed (code shows it).
 
 ### S5: The judge can be checked for consistency and against a person
 
@@ -382,6 +387,10 @@ and all add to EVALUATION.md "Evals".
   - (decision) `agree` lists runs graded under only one of the two labels
     as a count, left out of the agreement. No doc needed beyond the
     command.
+  - (decision, code review) `judge.py --label default` exits with a usage
+    error. Why: `judge_check.py` reads the label `default` as
+    `<run>.judge.json`, so a `<run>.judge-default.json` would never be
+    read. Doc: EVALUATION.md's `judge.py` row.
 
 ### S6: Metamorphic variants of three cases, with a consistency report
 

@@ -5,9 +5,9 @@
 For the cases in both folders it prints each case's pass rate before and after (better, worse,
 same), and the change in overall pass rate, mean tag and mean text, each labelled "within noise"
 when it is no bigger than the larger of the two folders' noise floors (all.py's spread of the
-per-run overall tag score). A case whose file changed between the runs (meta.json's
-case_sha256) is listed as "case changed"; cases in only one folder are listed apart. Neither
-counts toward the totals."""
+per-run overall tag score, score.noise_floor). A case whose file changed between the runs
+(meta.json's case_sha256) is listed as "case changed"; cases in only one folder are listed
+apart. Neither counts toward the totals."""
 
 import argparse
 import json
@@ -28,19 +28,6 @@ def load(folder: Path) -> tuple[dict[str, list[dict]], dict | None]:
     return dict(by_case), meta
 
 
-def noise_floor(runs: list[dict]) -> float | None:
-    """all.py's noise floor: the spread of the overall tag score between run numbers; None with
-    a single run number."""
-    by_run = defaultdict(list)
-    for r in runs:
-        if r["tag"] is not None:
-            by_run[r["run"]].append(r["tag"])
-    if len(by_run) < 2:
-        return None
-    means = [score.mean(v) for v in by_run.values()]
-    return max(means) - min(means)
-
-
 def meta_values(meta: dict, field: str) -> str:
     """The distinct values of one meta.json field across a folder's runs, as text."""
     seen = []
@@ -52,7 +39,9 @@ def meta_values(meta: dict, field: str) -> str:
     return "; ".join(seen)
 
 
-def case_changed(base_meta: dict, base_runs: list[dict], new_meta: dict, new_runs: list[dict]) -> bool:
+def case_changed(
+    base_meta: dict, base_runs: list[dict], new_meta: dict, new_runs: list[dict]
+) -> bool:
     """The case file's hash differs between the folders' runs; a case whose runs have no
     meta.json entry in one folder is not checked."""
     before, after = case_hashes(base_meta, base_runs), case_hashes(new_meta, new_runs)
@@ -81,11 +70,6 @@ def direction(before: float | None, after: float | None) -> str:
     return "better" if after > before else "worse" if after < before else "same"
 
 
-def valid_mean(runs: list[dict], key: str) -> float | None:
-    """score.py's overall mean: placeholder runs and missing scores left out."""
-    return score.mean([r[key] for r in runs if not r["failed"] and r.get(key) is not None])
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="Compare two eval results folders")
     parser.add_argument("baseline")
@@ -106,11 +90,12 @@ def main() -> None:
             else:
                 print(f"{field} differs: baseline {before} | new {after}")
     else:
-        missing = [str(f) for f, m in ((base_folder, base_meta), (new_folder, new_meta)) if m is None]
+        folders = ((base_folder, base_meta), (new_folder, new_meta))
+        missing = [str(f) for f, m in folders if m is None]
         print(f"Case hashes not checked: no meta.json in {' and '.join(missing)}")
 
-    base_floor = noise_floor([r for rs in base.values() for r in rs])
-    new_floor = noise_floor([r for rs in new.values() for r in rs])
+    base_floor = score.noise_floor([r for rs in base.values() for r in rs])
+    new_floor = score.noise_floor([r for rs in new.values() for r in rs])
     floors = [f for f in (base_floor, new_floor) if f is not None]
     floor = max(floors) if floors else None
     print(
@@ -132,7 +117,11 @@ def main() -> None:
             f"{name:<40}{score.format_rate(before):>10}{score.format_rate(after):>8}  "
             f"{direction(before['rate'], after['rate'])}"
         )
-    for label, names in (("Only in baseline", base.keys() - new.keys()), ("Only in new", new.keys() - base.keys())):
+    only = (
+        ("Only in baseline", base.keys() - new.keys()),
+        ("Only in new", new.keys() - base.keys()),
+    )
+    for label, names in only:
         if names:
             print(f"{label} (left out of the totals): {', '.join(sorted(names))}")
 
@@ -145,7 +134,8 @@ def main() -> None:
     if before["rate"] is not None and after["rate"] is not None:
         rate_change = after["rate"] - before["rate"]
         if before["counted"] == after["counted"]:
-            moved = f"{after['passed'] - before['passed']:+d}/{after['counted']}, {rate_change:+.0%}"
+            passed = after["passed"] - before["passed"]
+            moved = f"{passed:+d}/{after['counted']}, {rate_change:+.0%}"
         else:
             moved = f"{rate_change:+.0%}"
     else:
@@ -155,7 +145,7 @@ def main() -> None:
         f"({moved}) {noise_label(rate_change, floor)}".rstrip()
     )
     for key in ("tag", "text"):
-        b, a = valid_mean(base_runs, key), valid_mean(new_runs, key)
+        b, a = score.overall_mean(base_runs, key), score.overall_mean(new_runs, key)
         change = a - b if a is not None and b is not None else None
         moved = f"{change:+.2f}" if change is not None else "not comparable"
         print(
