@@ -344,20 +344,44 @@ and all add to EVALUATION.md "Evals".
     `true`/`false`). Sample size 20 by default, `--seed` for a repeatable
     sample (user, 2026-11-05).
 - **Acceptance criteria:**
-  - [ ] Throwaway script: `judge.py --label b` with a fake client writes
+  - [x] Throwaway script: `judge.py --label b` with a fake client writes
         `<run>.judge-b.json` and leaves `<run>.judge.json` untouched; the
         scorer's runs and text scores are unchanged.
-  - [ ] `judge_check.py agree` on two hand-made gradings differing on 1 of
+  - [x] `judge_check.py agree` on two hand-made gradings differing on 1 of
         10 statements prints 9/10 (90%) and lists the differing statement.
-  - [ ] `judge_check.py sample --n 5 --seed 1` twice writes the same 5
+  - [x] `judge_check.py sample --n 5 --seed 1` twice writes the same 5
         rows. `judge_check.py human` on that CSV with 4 rows filled (3
         matching the judge, 1 not) and 1 blank prints 3/4 (75%) and names
         the blank row as unmarked.
-  - [ ] `uv run ruff check` passes.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals": how to check the judge (grade twice and compare;
     sample and mark by hand), and that a judge with low agreement makes the
     text score itself flaky (slide 28).
+  - (decision) `judge.py` parses its arguments with argparse (`[folder]
+    [--redo] [--label <label>]`); the old "every argument not starting with
+    `--` is the folder" parsing would have taken the label for the folder.
+    `--redo` with `--label` regrades only that label's files. Doc:
+    EVALUATION.md's `judge.py` row.
+  - (decision) `sample` writes to `<folder>/judge_sample.csv` unless
+    `--out <csv>` is given. It samples statements from the default grading
+    (`<run>.judge.json`, the one the text score uses), leaves out
+    statements the judge skipped (`present` null), and writes the rows
+    sorted by run and statement number. Without `--seed` the sample
+    differs each time. Doc: EVALUATION.md, with the commands.
+  - (decision) `answer_excerpt` is the run's three free-text fields as the
+    judge saw them (`judge.answer`, also used by the judge's prompt), not
+    the judge's own evidence quote, so the person marks the answer without
+    seeing the judge's reasoning. Doc: EVALUATION.md, with the CSV.
+  - (decision) `human` compares each marked row with the judge's `present`
+    in the folder's current `<run>.judge.json` (what the text score
+    reads), falling back to the CSV's `judge_present` when that grade is
+    gone. A `human_present` that isn't `true`/`false` (case-insensitive)
+    is listed as unmarked with its value. Disagreements are listed too.
+    Doc: EVALUATION.md, with the commands.
+  - (decision) `agree` lists runs graded under only one of the two labels
+    as a count, left out of the agreement. No doc needed beyond the
+    command.
 
 ### S6: Metamorphic variants of three cases, with a consistency report
 

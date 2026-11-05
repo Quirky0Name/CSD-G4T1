@@ -2,15 +2,19 @@
 
     python evals/judge.py                  # newest results folder
     python evals/judge.py results/<stamp>
+    python evals/judge.py results/<stamp> --label b   # a second grading, for judge_check.py
 
 It never sees a gold paragraph: only the case's own texts, the model's three free-text fields and
 the facts, and answers pass/fail per fact with a quote. It writes <run>.judge.json next to each
-result; score.py then adds the text score. Calls the judge model with temperature 0.
+result; score.py then adds the text score. With --label <label> it writes
+<run>.judge-<label>.json instead, which score.py never reads. Calls the judge model with
+temperature 0.
 
 Settings (environment or backend/.env):
   JUDGE_API_KEY  a Gemini API key for the judge (falls back to GEMINI_API_KEY)
   JUDGE_MODEL    default gemini-flash-lite-latest; use a different model from the one being tested"""
 
+import argparse
 import asyncio
 import json
 import os
@@ -67,13 +71,25 @@ def prompt(case: dict, ev: dict) -> str:
         "CASE MATERIAL\n"
         f"Tracked paper:\n{case['paper_text']}\n\nChange notice(s) and related documents:\n{notice}\n\n"
         f"Researcher's draft:\n{case.get('draft_text') or '(no draft uploaded)'}\n\n"
-        "ANSWER\n"
-        f"change_summary: {ev['change_summary']}\n"
-        f"evaluation: {ev['evaluation'] or '(none: the change was not meaningful, so impact was not assessed)'}\n"
-        f"recommendation: {ev['recommendation'] or '(none)'}\n\n"
+        f"ANSWER\n{answer(ev)}\n\n"
         "STATEMENTS (return one item per number)\n"
         + "\n".join(lines)
     )
+
+
+def answer(ev: dict) -> str:
+    """The run's three free-text fields, as the judge sees them."""
+    return (
+        f"change_summary: {ev['change_summary']}\n"
+        f"evaluation: {ev['evaluation'] or '(none: the change was not meaningful, so impact was not assessed)'}\n"
+        f"recommendation: {ev['recommendation'] or '(none)'}"
+    )
+
+
+def grade_path(run: Path, label: str | None = None) -> Path:
+    """Where a run's grade goes: <run>.judge.json, or <run>.judge-<label>.json for a labelled
+    grading. Every file with ".judge" in its name is a grade, not a run."""
+    return run.with_suffix(f".judge-{label}.json" if label else ".judge.json")
 
 
 async def main() -> None:
@@ -84,17 +100,21 @@ async def main() -> None:
     model = os.environ.get("JUDGE_MODEL", "gemini-flash-lite-latest")
     client = genai.Client(api_key=key)
 
-    folders = sorted((ROOT / "results").glob("*"))
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    folder = Path(args[0]) if args else folders[-1]
+    parser = argparse.ArgumentParser(description="Grade a results folder's free-text answers")
+    parser.add_argument("folder", nargs="?", help="results folder; default is the newest")
+    parser.add_argument("--redo", action="store_true", help="grade runs already graded again")
+    parser.add_argument("--label", help="write <run>.judge-<label>.json, a second grading")
+    args = parser.parse_args()
+    folder = Path(args.folder) if args.folder else max((ROOT / "results").glob("*"))
     cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
     for path in sorted(folder.glob("*__run*.json")):
-        if path.name.endswith(".judge.json"):
+        if ".judge" in path.name:
             continue  # a grade, not a run (same run list as score.run_paths)
         ev = json.loads(path.read_text())
         if ev["assessment"]["placeholder"]:
             continue  # nothing to judge: a failed run
-        if path.with_suffix(".judge.json").exists() and "--redo" not in sys.argv:
+        out_path = grade_path(path, args.label)
+        if out_path.exists() and not args.redo:
             continue  # already graded; --redo grades again
         case = cases[path.name.split("__")[0]]
         for attempt in range(4):
@@ -134,7 +154,7 @@ async def main() -> None:
                 }
             )
         out = {"judge_model": model, "items": items}
-        path.with_suffix(".judge.json").write_text(json.dumps(out, indent=2))
+        out_path.write_text(json.dumps(out, indent=2))
         print(f"{path.stem}: {sum(i['pass'] for i in items)}/{len(items)} facts met")
 
 

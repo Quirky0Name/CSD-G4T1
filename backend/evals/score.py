@@ -300,8 +300,9 @@ def mean(values: list[float]) -> float | None:
 
 
 def run_paths(folder: Path) -> list[Path]:
-    """The saved runs in a results folder, without their .judge.json files."""
-    return [p for p in sorted(folder.glob("*__run*.json")) if not p.name.endswith(".judge.json")]
+    """The saved runs in a results folder, without the grades: every file with ".judge" in its
+    name (<run>.judge.json, and <run>.judge-<label>.json from judge.py --label)."""
+    return [p for p in sorted(folder.glob("*__run*.json")) if ".judge" not in p.name]
 
 
 def main() -> None:
