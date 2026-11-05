@@ -283,6 +283,9 @@ async def test_only_investigated_reports_are_assessed(sm):
     assert len(llm.calls) == calls
 
 
+# a report marked investigated directly, for assess_reports (docs/EVALUATION.md, "Impact")
+
+
 async def investigated_report(sm) -> int:
     """A report of a new paper (with snapshots, as impact reads the paper's details from them),
     marked investigated without running investigation."""

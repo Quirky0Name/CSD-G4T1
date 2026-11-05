@@ -45,13 +45,12 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     let running: Promise<void> | null = null
     let queued: Promise<void> | null = null
 
-    function noticeNewAlerts(papers: Paper[], alerts: Alert[]) {
+    function noticeNewAlerts(paperTitle: Map<string, string>, alerts: Alert[]) {
       const seen = seenAlertIds.current
       if (seen === null) {
         seenAlertIds.current = new Set(alerts.map((alert) => alert.id))
         return
       }
-      const paperTitle = new Map(papers.map((paper) => [paper.id, paper.title ?? 'a tracked paper']))
       for (const alert of alerts) {
         if (alert.status !== 'new' || seen.has(alert.id)) continue
         seen.add(alert.id)
@@ -63,14 +62,13 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    function noticeAssessedReports(papers: Paper[], reports: UserReport[]) {
+    function noticeAssessedReports(paperTitle: Map<string, string>, reports: UserReport[]) {
       const assessed = reports.filter((report) => report.status === 'assessed')
       const seen = seenAssessedReportIds.current
       if (seen === null) {
         seenAssessedReportIds.current = new Set(assessed.map((report) => report.id))
         return
       }
-      const paperTitle = new Map(papers.map((paper) => [paper.id, paper.title ?? 'a tracked paper']))
       for (const report of assessed) {
         if (seen.has(report.id)) continue
         seen.add(report.id)
@@ -94,8 +92,9 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
         const reports = reportLists.flat().toSorted((a, b) => b.created_at.localeCompare(a.created_at))
         if (!mounted) return
         setState({ status: 'ready', papers, alerts, reports })
-        noticeNewAlerts(papers, alerts)
-        noticeAssessedReports(papers, reports)
+        const paperTitle = new Map(papers.map((paper) => [paper.id, paper.title ?? 'a tracked paper']))
+        noticeNewAlerts(paperTitle, alerts)
+        noticeAssessedReports(paperTitle, reports)
       } catch (err) {
         if (!mounted) return
         setState({ status: 'error', message: errorMessage(err) })
