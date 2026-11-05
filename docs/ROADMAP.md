@@ -111,8 +111,10 @@ most needed first within each.
   verify quotes against PDF text (the evals already check them, offline,
   against each case's text); compute the impact level in code from
   the change severity table; cache how a draft uses a paper.
-- [ ] Evals (EVALUATION.md, "Evals"): record a baseline score for the
-  current `PROMPT_VERSION` and re-run before each prompt change. Add
+- [ ] Evals (EVALUATION.md, "Evals"): agree `evals/thresholds.json`, record
+  a baseline (`all.py --runs 3`) for the current `PROMPT_VERSION`, check the
+  judge against a hand-marked sample, and re-run and `compare.py` before
+  each prompt change. Add
   cases from real PDFs (the cases are text turned into simple PDFs) and
   for the investigation side (which documents get fetched).
 
