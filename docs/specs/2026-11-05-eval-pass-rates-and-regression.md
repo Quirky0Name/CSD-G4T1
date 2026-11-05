@@ -269,17 +269,17 @@ and all add to EVALUATION.md "Evals".
   - A folder without `meta.json` (made before S3) is compared without the
     case-hash check, and the output says so.
 - **Acceptance criteria:**
-  - [ ] Throwaway script, two temp folders with the same 2 cases × 3 runs,
+  - [x] Throwaway script, two temp folders with the same 2 cases × 3 runs,
         the new one with one case going from 3/3 to 1/3 passing: output
         lists that case as worse, the other as same, and an overall pass
         rate change of -2/6.
-  - [ ] Same, with a per-run spread larger than the change in mean tag:
+  - [x] Same, with a per-run spread larger than the change in mean tag:
         that change is labelled "within noise".
-  - [ ] One case's `case_sha256` differs between the folders: it is listed
+  - [x] One case's `case_sha256` differs between the folders: it is listed
         as "case changed" and left out of the totals.
-  - [ ] A folder without `meta.json`: exits 0 and prints that case hashes
+  - [x] A folder without `meta.json`: exits 0 and prints that case hashes
         weren't checked.
-  - [ ] `uv run ruff check` passes.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals": the regression workflow (record a baseline per
     `PROMPT_VERSION`, re-run after every prompt, model or input change,
@@ -289,6 +289,33 @@ and all add to EVALUATION.md "Evals".
     fixed in a file; a change is judged against the noise floor", with the
     reasons (slides 29–30: fix the threshold before you run; one green run
     proves nothing).
+  - (decision) The noise-floor test applies to all three changes: the
+    overall pass rate (as a fraction) as well as mean tag and mean text.
+    Each is "within noise", "beyond noise" or "no noise floor (1 run)".
+    Why: the goal asks whether the pass rate and mean scores moved by more
+    than the noise floor. Doc: EVALUATION.md, the regression workflow.
+  - (decision) When only one folder has a noise floor (the other has one
+    run per case), that one is used; "no noise floor (1 run)" only when
+    neither has one. Each folder's floor is taken over all its runs, as
+    `all.py` does, so it matches `summary.txt`. Doc: EVALUATION.md, with
+    the command, including the limit: a case that regresses in only some
+    runs widens the new folder's spread too, so a regression in a single
+    case can come out "within noise"; read the per-case lines as well as
+    the totals.
+  - (decision) Mean tag and mean text are `score.py`'s overall means
+    (PLACEHOLDER runs and missing scores left out). The pass-rate change
+    is printed as `±k/N` when both sides count the same number of runs,
+    and as a percentage otherwise. Doc: EVALUATION.md, with the output.
+  - (decision) A case with no counted run on one side is "not
+    comparable" instead of better/worse/same. Doc: EVALUATION.md, with the
+    output.
+  - (decision) A case whose runs have no `meta.json` entry in one folder
+    (runs added with `--into` to a folder made before `meta.json`) is not
+    flagged as "case changed". Why: no hash to compare isn't a change. Doc:
+    EVALUATION.md, with the case-hash check.
+  - (decision) `compare.py` reuses `all.load_runs` for the runs and repeats
+    `all.py`'s noise-floor formula in its own `noise_floor`, since S4 may
+    not change `all.py`. No doc needed (code shows it).
 
 ### S5: The judge can be checked for consistency and against a person
 
