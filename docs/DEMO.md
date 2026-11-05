@@ -48,12 +48,11 @@ the publisher during the demo.
    `GET /papers/{id}/alerts` with the researcher's token (or, against the
    stub, `GET /dev/papers/{id}/alerts`).
    Once impact has assessed the report (in the background, up to a minute
-   with three Gemini calls), **show the Telegram message on the phone**:
-   the paper, the change severity and summary, the impact on the draft
-   and what to do. It needs `GEMINI_API_KEY`, `TELEGRAM_BOT_TOKEN` and
-   `NOTIFY_TELEGRAM_CHAT_ID` in `backend/.env`; check the bot beforehand
-   with the `live` test in [SETUP.md](SETUP.md) ("Telegram bot"). If Gemini's free tier is out of requests the report
-   stays `investigated` and no message comes; assess it again later with
+   with three Gemini calls), **show the in-app "Report ready" toast** in the
+   frontend (up to about 30 s after the report is assessed, on the
+   frontend's refresh); its View button opens the paper's alerts and
+   reports. It needs `GEMINI_API_KEY` in `backend/.env`. If Gemini's free tier is out of requests the report
+   stays `investigated` and no toast comes; assess it again later with
    `POST /evaluate/reports`.
 4. **Frontend:** show the changes panel on the paper detail page, then
    acknowledge one change. Until the panel exists, show the same thing on

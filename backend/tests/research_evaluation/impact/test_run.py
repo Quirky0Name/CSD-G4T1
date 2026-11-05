@@ -1,7 +1,6 @@
 """Impact after a nudge, end to end: Research Evaluation against the stub Storage Management,
 with Crossref and Europe PMC faked (conftest.ExternalApis) and a fake model in Gemini's place."""
 
-import json
 import logging
 from uuid import UUID
 
@@ -19,7 +18,6 @@ from research_evaluation.impact.schemas import (
     ImpactAssessment,
     RecommendedActions,
 )
-from research_evaluation.notify import TelegramNotifier
 
 PAPER_DOI = "10.1016/j.ijantimicag.2020.105949"  # every test snapshot's DOI
 NOTICE = "10.1016/j.ijantimicag.2024.107416"
@@ -285,14 +283,7 @@ async def test_only_investigated_reports_are_assessed(sm):
     assert len(llm.calls) == calls
 
 
-# notifying the researcher (docs/EVALUATION.md, "Notification"), with Telegram faked
-
-
-TITLE = "Hydroxychloroquine and azithromycin as a treatment of COVID-19"  # the test snapshots'
-
-
-def notifier(telegram) -> TelegramNotifier:
-    return TelegramNotifier(telegram.client, "123456:test-token", "987654321")
+# a report marked investigated directly, for assess_reports (docs/EVALUATION.md, "Impact")
 
 
 async def investigated_report(sm) -> int:
@@ -321,133 +312,6 @@ async def investigated_report(sm) -> int:
     return report_id
 
 
-async def test_an_assessed_report_is_notified_once_with_its_evaluation(
-    client, sm, impact, telegram
-):
-    impact.context = ImpactContext(FakeLlm("high"), notifier(telegram))
-    paper = await retracted_paper(sm)
-
-    response = await nudge(client, [paper])
-
-    assert response.status_code == 202
-    report = await the_report(sm, paper)
-    assert report["status"] == "assessed"
-    [text] = telegram.texts()
-    assert text == (
-        f"Evaluation done: report {report['id']}\n"
-        f"Paper: {TITLE}\n"
-        f"DOI: {PAPER_DOI}\n"
-        "\n"
-        "Change: high\n"
-        "A high change.\n"
-        "\n"
-        "Impact on your draft: medium\n"
-        "Your Discussion relies on it.\n"
-        "\n"
-        "What to do:\n"
-        "Replace it."
-    )
-    [request] = telegram.requests
-    assert request.url.path == "/bot123456:test-token/sendMessage"
-    assert json.loads(request.content)["chat_id"] == "987654321"
-
-
-async def test_a_report_rated_none_gets_the_short_notification(client, sm, impact, telegram):
-    impact.context = ImpactContext(FakeLlm("none"), notifier(telegram))
-    paper = await retracted_paper(sm)
-
-    await nudge(client, [paper])
-
-    report = await the_report(sm, paper)
-    [text] = telegram.texts()
-    assert text.startswith(f"Evaluation done: report {report['id']}\n")
-    assert text.endswith("Change: none (not meaningful)\nA none change.\n\nNothing to do.")
-
-
-async def test_a_failing_report_is_not_notified_and_the_next_one_is(client, sm, impact, telegram):
-    # the first report's first model call fails; the second report is assessed
-    impact.context = ImpactContext(
-        FakeLlm("high", fail_on=1, failure=ValueError("boom")), notifier(telegram)
-    )
-    first = await retracted_paper(sm)
-    second = await retracted_paper(sm)
-
-    await nudge(client, [first, second])
-
-    assert (await the_report(sm, first))["status"] == "investigated"
-    assessed = await the_report(sm, second)
-    assert assessed["status"] == "assessed"
-    [text] = telegram.texts()
-    assert text.startswith(f"Evaluation done: report {assessed['id']}\n")
-
-
-async def test_a_report_whose_evaluation_isnt_stored_is_not_notified(client, sm, impact, telegram):
-    impact.context = ImpactContext(FakeLlm("high"), notifier(telegram))
-    sm.transport.faults["/evaluation"] = 500
-    paper = await retracted_paper(sm)
-
-    await nudge(client, [paper])
-
-    assert (await the_report(sm, paper))["status"] == "investigated"
-    assert telegram.requests == []
-
-
-async def test_skipped_reports_are_not_notified(sm, telegram):
-    context = ImpactContext(FakeLlm("high"), notifier(telegram))
-    ready = await investigated_report(sm)
-    assert await assess_reports(sm.client, context, [ready]) == [ready]
-    telegram.requests.clear()
-    paper = await sm.add_paper()
-    await sm.client.post(
-        f"/internal/papers/{paper}/alerts",
-        json={
-            "change_type": "retraction",
-            "change_key": "retraction",
-            "alert_severity": "high",
-            "description": "d",
-            "recommendation": "r",
-            "notice_doi": None,
-            "detected_at": "2026-09-20T12:00:00Z",
-            "snapshot_id": 2,
-            "previous_snapshot_id": 1,
-        },
-    )
-    investigating = (await sm.client.post(f"/internal/papers/{paper}/reports")).json()["id"]
-
-    # already assessed, still investigating, and no such report
-    assert await assess_reports(sm.client, context, [ready, investigating, 999]) == []
-    assert telegram.requests == []
-
-
-@pytest.mark.parametrize(
-    "answer",
-    [
-        httpx.Response(500, text="oops"),
-        httpx.Response(403, json={"ok": False, "description": "Forbidden"}),
-        httpx.ConnectError("connection refused"),
-        httpx.ReadTimeout("timed out"),
-    ],
-    ids=["500", "403", "connect error", "timeout"],
-)
-async def test_telegram_failing_leaves_the_report_assessed_and_counted(
-    sm, telegram, caplog, answer
-):
-    telegram.response = answer
-    context = ImpactContext(FakeLlm("high"), notifier(telegram))
-    report_id = await investigated_report(sm)
-
-    with caplog.at_level(logging.WARNING, logger="research_evaluation"):
-        assert await assess_reports(sm.client, context, [report_id]) == [report_id]
-
-    response = await sm.client.get(f"/internal/reports/{report_id}")
-    assert response.json()["status"] == "assessed"
-    assert len(telegram.requests) == 1
-    [record] = [r for r in caplog.records if r.name.startswith("research_evaluation")]
-    assert record.name == "research_evaluation.notify"
-    assert f"notifying report {report_id} failed" in record.getMessage()
-    assert "test-token" not in record.getMessage()
-
-
 # every model failing a step: the placeholder (docs/EVALUATION.md, "Impact")
 
 
@@ -461,12 +325,10 @@ def every_model_failed() -> AllModelsFailed:
 
 
 @pytest.mark.parametrize(("step", "failed_step"), [(1, "change"), (2, "impact"), (3, "actions")])
-async def test_every_model_failing_a_step_stores_the_placeholder_and_notifies_it(
-    client, sm, impact, telegram, step, failed_step
+async def test_every_model_failing_a_step_stores_the_placeholder(
+    client, sm, impact, step, failed_step
 ):
-    impact.context = ImpactContext(
-        FakeLlm("high", fail_on=step, failure=every_model_failed()), notifier(telegram)
-    )
+    impact.context = ImpactContext(FakeLlm("high", fail_on=step, failure=every_model_failed()))
     paper = await retracted_paper(sm)
 
     response = await nudge(client, [paper])
@@ -486,10 +348,6 @@ async def test_every_model_failing_a_step_stores_the_placeholder_and_notifies_it
         "gemini-flash-lite-latest",
     ]
     assert sm.calls("GET", "/draft") == (0 if step == 1 else 1)
-    [text] = telegram.texts()
-    assert text.startswith(f"Evaluation done: report {report['id']}\n")
-    assert f"Change: low\n{PLACEHOLDER_TEXT}" in text
-    assert f"What to do:\n{PLACEHOLDER_TEXT}" in text
 
 
 async def test_a_placeholder_report_isnt_assessed_again(sm):
@@ -502,11 +360,9 @@ async def test_a_placeholder_report_isnt_assessed_again(sm):
 
 
 async def test_storage_management_failing_on_the_placeholders_put_still_fails_the_report(
-    client, sm, impact, telegram
+    client, sm, impact
 ):
-    impact.context = ImpactContext(
-        FakeLlm("high", fail_on=1, failure=every_model_failed()), notifier(telegram)
-    )
+    impact.context = ImpactContext(FakeLlm("high", fail_on=1, failure=every_model_failed()))
     sm.transport.faults["/evaluation"] = 500
     paper = await retracted_paper(sm)
 
@@ -515,13 +371,12 @@ async def test_storage_management_failing_on_the_placeholders_put_still_fails_th
     report = await the_report(sm, paper)
     assert report["status"] == "investigated"
     assert report["change_summary"] is None
-    assert telegram.requests == []
 
 
-async def test_without_a_notifier_nothing_is_sent_and_the_report_is_assessed(sm, telegram):
+async def test_an_investigated_report_is_stored_assessed_with_only_the_model(sm):
     context = ImpactContext(FakeLlm("high"))
     report_id = await investigated_report(sm)
 
-    assert context.notifier is None
     assert await assess_reports(sm.client, context, [report_id]) == [report_id]
-    assert telegram.requests == []
+    response = await sm.client.get(f"/internal/reports/{report_id}")
+    assert response.json()["status"] == "assessed"

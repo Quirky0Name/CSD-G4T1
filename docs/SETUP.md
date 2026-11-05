@@ -11,7 +11,6 @@ User Management 8080, Storage Management 8081, Postgres 5432 (backend),
 | Service | Needed for | Notes |
 |---|---|---|
 | **Gemini** | impact's LLM (Research Evaluation) | aistudio.google.com → "Get API key"; the free tier is enough (about 20 requests per model per day). Without it impact doesn't run |
-| **Telegram** | the notification when a report is assessed (Research Evaluation) | Optional; see "Telegram bot" below |
 | **OpenAlex** | retraction status, DOAJ, journal, authors (Updating); metadata and open-access PDF links (Storage Management) | Free account and key; keyless calls get 1/10 of the $1/day budget. Passed as the `api_key` query param. The two services share the budget if they use one key, so Updating fetches each DOI once per poll |
 | **Crossref** | notices (Updating), metadata (Storage Management), each notice's record (Research Evaluation) | No key. Set a contact email as `CROSSREF_MAILTO` for the polite pool |
 | **Semantic Scholar** | open-access PDF links when Storage Management tracks by DOI | Optional key (`S2_API_KEY`, header `x-api-key`); keyless calls hit 429s more often |
@@ -50,7 +49,6 @@ comments into the value.
 | `GEMINI_MODEL` | RE | `gemini-flash-latest` |
 | `GEMINI_FALLBACK_MODELS` | RE | `gemini-flash-lite-latest`: comma-separated models tried in order when a call fails; empty for none |
 | `IMPACT_LLM_TIMEOUT_SECONDS` | RE | `120`, per Gemini call |
-| `TELEGRAM_BOT_TOKEN`, `NOTIFY_TELEGRAM_CHAT_ID` | RE | the bot and the one chat that gets every notification; off unless both are set |
 | `JUDGE_API_KEY` | `evals/judge.py` only | a second aistudio.google.com key (ideally another Google project) for the eval judge; empty falls back to `GEMINI_API_KEY` |
 | `JUDGE_MODEL` | `evals/judge.py` only | `gemini-flash-lite-latest`; better a different model from the one being tested |
 
@@ -226,19 +224,6 @@ kept in `localStorage`. None of the services send CORS headers, so
 `vite.config.ts` proxies `/auth` → `localhost:8080`, `/api` →
 `localhost:8081` and `/updating` → `localhost:8001`.
 
-## Telegram bot
-
-1. Message **@BotFather**, `/newbot`, pick a name and username; it answers
-   with the token (`123456:ABC...`): `TELEGRAM_BOT_TOKEN`.
-2. Send your bot any message (a bot can only write to someone who wrote to
-   it first; otherwise Telegram answers `403`).
-3. Open `https://api.telegram.org/bot<token>/getUpdates`; the chat id is
-   `result[0].message.chat.id`: `NOTIFY_TELEGRAM_CHAT_ID`. For a group, add
-   the bot, send a message there, and use the group's (negative) id.
-4. Check it from `backend/`:
-   `uv run pytest -m live tests/research_evaluation/test_notify.py` sends
-   one sample message.
-
 ## Updating alone, against the stubs
 
 `backend/dev/stub_storage.py` stands in for Storage Management (in memory,
@@ -302,7 +287,7 @@ Updating's log (`paper <id>: snapshot N changed since M: …`).
 ```
 cd backend
 uv run pytest                 # everything except live; no keys, Docker or Postgres
-uv run pytest -m live         # hits real Crossref/OpenAlex/Europe PMC/Gemini/Telegram
+uv run pytest -m live         # hits real Crossref/OpenAlex/Europe PMC/Gemini
 uv run ruff check
 uv run pytest tests/updating/test_scenarios.py   # the mock harness on recorded responses
 uv run --with fpdf2 --with rich python evals/all.py   # impact evals: real Gemini calls, needs GEMINI_API_KEY (EVALUATION.md, "Evals")

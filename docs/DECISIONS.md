@@ -26,6 +26,21 @@ owned that story made.
   answers don't hang on wording. Temperature and seed stay the model's
   defaults; the evals record them, they don't set them.
 
+## 2026-11-05 — The researcher is notified in the app when a report is assessed
+
+- **An in-app toast on the frontend's refresh**, which is shortened from
+  60 s to 30 s so the toast shows sooner. Only the signed-in user's
+  reports; one toast per assessed report.
+- **Reports already assessed at sign-in or reload don't notify**, so
+  nothing needs to persist: the notified ids live in memory per tab.
+- **Reuses `GET /papers/{id}/reports`** rather than a new endpoint.
+- **Replaces the Telegram notification of 2026-09-28.** The Telegram
+  notification and its two env vars (`TELEGRAM_BOT_TOKEN`,
+  `NOTIFY_TELEGRAM_CHAT_ID`) were removed from Research Evaluation. The
+  PR workflows' Telegram messages stay.
+- Rejected: **server push** (the refresh already exists); **a stored read
+  or notified state** (not needed for the rule above).
+
 ---
 
 ## 2026-10-29 — Every merge to main tests, builds and deploys

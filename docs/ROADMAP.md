@@ -37,8 +37,11 @@ most needed first within each.
   and drafts nobody owns any more. Shorter tokens, or Storage Management
   asking User Management, would close it.
 - [x] `POST /run-poll` takes the user's JWT (CG-99).
-- [ ] Notifications to the paper's owner instead of one hard-coded
-  Telegram chat (needs users and contact details).
+- [x] Notifications to the paper's owner instead of one hard-coded
+  Telegram chat: done in the app (a toast on the frontend's 30 s refresh).
+- [ ] A notification history (the toast has none, and no read state).
+- [ ] Notify about reports assessed while the researcher was signed out
+  (today only reports assessed while a tab is open notify).
 
 ## Frontend and the researcher's view
 
@@ -153,7 +156,7 @@ Gemini, so pick the provider again when they're started.
   app changes.
 - [ ] Turn the demo tools off on the server (`DEV_TOOLS=false`) once the
   demo no longer needs them: any registered user can fake a change on
-  their own paper, which spends Gemini calls and sends a Telegram message.
+  their own paper, which spends Gemini calls.
 - [ ] Updating retries its startup poll while Storage Management isn't up
   yet (Updating's owner). After a host reboot Docker restarts the
   containers in no set order, and a poll that fails then counts as the
