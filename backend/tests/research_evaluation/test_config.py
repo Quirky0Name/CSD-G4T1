@@ -7,10 +7,6 @@ from support import TEST_JWT_KEY, TEST_JWT_SECRET
 
 from research_evaluation.config import ResearchEvaluationSettings
 from research_evaluation.main import create_app
-from research_evaluation.notify import telegram_configured
-
-TOKEN = "123456:secret-bot-token"
-CHAT = "987654321"
 
 pytestmark = pytest.mark.usefixtures("clean_settings_env")
 
@@ -225,25 +221,10 @@ def test_a_model_listed_twice_is_tried_once(tmp_path, monkeypatch):
         assert app.state.impact.llm.models == ("gemini-flash-latest", "gemini-b")
 
 
-def test_notifications_are_off_unless_both_variables_are_set(monkeypatch):
-    def configured() -> bool:
-        return telegram_configured(ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET))
+def test_a_dotenv_with_settings_the_service_no_longer_reads_still_loads(tmp_path):
+    env_file = tmp_path / ".env"
+    env_file.write_text(f"JWT_SECRET={TEST_JWT_SECRET}\nRETIRED_SETTING=x\n")
 
-    assert configured() is False
-    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", TOKEN)
-    assert configured() is False
-    monkeypatch.setenv("NOTIFY_TELEGRAM_CHAT_ID", CHAT)
-    assert configured() is True
-    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "")
-    assert configured() is False
+    settings = ResearchEvaluationSettings(_env_file=env_file)
 
-
-def test_the_bot_token_stays_hidden_in_the_settings(monkeypatch):
-    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", TOKEN)
-    monkeypatch.setenv("NOTIFY_TELEGRAM_CHAT_ID", CHAT)
-
-    settings = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
-
-    assert settings.telegram_bot_token.get_secret_value() == TOKEN
-    assert TOKEN not in repr(settings)
-    assert settings.notify_telegram_chat_id == CHAT
+    assert settings.jwt_secret.get_secret_value() == TEST_JWT_KEY

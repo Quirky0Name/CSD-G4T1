@@ -35,7 +35,7 @@ feature on their own.
   **report**, and Gemini judges the report's **impact** on the
   researcher's draft (change severity, impact level, evaluation,
   recommendation).
-- A Telegram message to one hard-coded chat when a report is assessed.
+- An in-app notification, on the frontend's 30 s refresh, when one of the signed-in researcher's reports is assessed.
 - The frontend: tracked papers, alerts (acknowledge, dismiss),
   reports, the draft upload, a manual poll, deleting a paper.
 - Demo tools in Storage Management to replay a change on a real paper
@@ -51,7 +51,7 @@ topic discovery) is in [ROADMAP.md](ROADMAP.md).
 | User Management | Java 25 + Spring Boot, Postgres, Flyway | `users` and `projects`: register, login and the JWTs, each researcher's projects, and deleting an account | `users/` |
 | Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls the services at `/api`, `/auth`, `/projects` and `/updating` on its own address (the Vite proxy in development, Caddy in the root stack) | `frontend/csd-frontend-vite/` |
 | Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts, reports and documents, drafts | `storage/` |
-| Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact, notification); no database of its own | `backend/src/research_evaluation/` |
+| Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact); no database of its own | `backend/src/research_evaluation/` |
 | Updating | Python 3.13, FastAPI, APScheduler | the polling job and its small state (`tracked_papers`, `polls`) in its own schema | `backend/src/updating/` |
 
 Research Evaluation and Updating share one Python project (`backend/`, one
@@ -65,7 +65,7 @@ Storage Management.
 ## Data flow
 
 ```
-Frontend ──/api──▶ Storage Management ◀──/internal── Research Evaluation ──▶ Crossref, Europe PMC, Gemini, Telegram
+Frontend ──/api──▶ Storage Management ◀──/internal── Research Evaluation ──▶ Crossref, Europe PMC, Gemini
    │                  │  ▲        │                        ▲
    │                  │  │        └─▶ GROBID, Crossref,    │ POST /evaluate/changes (paper ids)
    │                  ▼  │            OpenAlex, S2          │
@@ -89,11 +89,24 @@ One poll, end to end:
    grouping the paper's new alerts and stores what it fetched as the
    report's documents (Storage Management downloads their PDFs); then
    **impact** asks Gemini about the report and stores its evaluation (the
-   report becomes `assessed`); then **notify** sends the Telegram message.
+   report becomes `assessed`). Research Evaluation sends no notification.
 5. The **frontend** reads alerts and reports from Storage Management; the
-   researcher acknowledges or dismisses them. The shared paper and alert
-   refresh runs only while a user is signed in, and starts fresh for each
-   user.
+   researcher acknowledges or dismisses them. The shared refresh of
+   papers, alerts and reports runs every 30 s only while a user is signed
+   in, and starts fresh for each user. When a refresh finds a report that
+   has become `assessed` since the first load, the frontend notifies the
+   researcher (see below).
+
+The **report-ready notification** is a toast (`Report ready on "<paper
+title>"`, with a `View` button to `/alerts?paper=<paper id>`), shown once
+per assessed report of the signed-in researcher's own papers. It has no
+history, badge, unread count or read state. The ids already notified are
+kept in memory per tab (`seenAssessedReportIds` in `tracking.tsx`); the
+first load after sign-in, a reload or a new tab only records the reports
+already `assessed`, so reports assessed while no tab was open never
+notify, and each open tab notifies once per report. There is no server
+push (WebSocket, SSE, browser notifications); the frontend finds assessed
+reports on its refresh.
 
 Rules that hold across the flow:
 

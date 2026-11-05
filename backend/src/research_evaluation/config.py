@@ -44,10 +44,6 @@ class ResearchEvaluationSettings(BaseSettings):
     gemini_fallback_models: Annotated[list[str], NoDecode] = list(DEFAULT_GEMINI_FALLBACK_MODELS)
     # how long impact waits for one Gemini call; it runs after investigation, in the background
     impact_llm_timeout_seconds: float = Field(default=120, gt=0)
-    # the demo's notification when a report is assessed (docs/EVALUATION.md, "Notification"): a Telegram
-    # bot and the one hard-coded chat it writes to; notifications are off unless both are set
-    telegram_bot_token: SecretStr | None = None
-    notify_telegram_chat_id: str = ""
 
     @field_validator("jwt_secret", mode="before")
     @classmethod

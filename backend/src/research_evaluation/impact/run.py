@@ -1,7 +1,6 @@
 """Impact over a list of report ids: for each, read the report, skip it unless it's
 `investigated`, gather its inputs, assess it with the model, and store the evaluation in Storage
-Management, which marks it `assessed` (docs/EVALUATION.md, "Impact"). Once it's stored, the
-researcher is told on Telegram, when that's configured (docs/EVALUATION.md, "Notification").
+Management, which marks it `assessed` (docs/EVALUATION.md, "Impact").
 
 It runs in the background, after investigation, so it must never raise. A report that fails is
 logged, stays `investigated` and nothing is stored for it; nothing retries it (a later sprint)."""
@@ -16,7 +15,6 @@ from pydantic import ValidationError
 from research_evaluation.impact.assess import assess
 from research_evaluation.impact.inputs import gather_inputs
 from research_evaluation.impact.llm import Llm
-from research_evaluation.notify import TelegramNotifier
 from research_evaluation.storage import PaperGone, ReportGone, read_report, store_evaluation
 
 log = logging.getLogger(__name__)
@@ -24,11 +22,9 @@ log = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ImpactContext:
-    """What impact runs with besides the Storage Management client: the model, and the notifier
-    that tells the researcher a report is assessed (None when notifications are off)."""
+    """What impact runs with besides the Storage Management client: the model."""
 
     llm: Llm
-    notifier: TelegramNotifier | None = None
 
 
 async def assess_reports(
@@ -66,9 +62,6 @@ async def assess_report(sm: httpx.AsyncClient, context: ImpactContext, report_id
             ),
         )
         return False
-    if context.notifier is not None:
-        # after the store, so only an assessed report is notified; it never raises
-        await context.notifier.report_assessed(report, inputs.paper, evaluation)
     return True
 
 

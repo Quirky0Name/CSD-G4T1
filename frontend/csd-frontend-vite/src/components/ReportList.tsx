@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import DebugJson from './DebugJson'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
-  errorMessage,
-  listReports,
   type Alert,
   type DocumentKind,
   type Paper,
@@ -52,42 +50,18 @@ function Spinner({ label }: { label: string }) {
   )
 }
 
-type ReportsState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'ready'; reports: UserReport[] }
-
 export default function ReportList() {
   const { state } = useTracking()
   const [searchParams] = useSearchParams()
   const paperFilter = searchParams.get('paper')
   const [expandedId, setExpandedId] = useState<number | null>(null)
-  const [reportsState, setReportsState] = useState<ReportsState>({ status: 'loading' })
 
-  const papers = state.status === 'ready' ? state.papers : null
-
-  useEffect(() => {
-    if (!papers) return
-    let active = true
-    const ids = paperFilter ? [paperFilter] : papers.map((paper) => paper.id)
-    // starts as loading; later refreshes (every minute, with tracking) keep the last list on screen
-    Promise.all(ids.map((id) => listReports(id)))
-      .then((lists) => {
-        if (!active) return
-        const reports = lists.flat().toSorted((a, b) => b.created_at.localeCompare(a.created_at))
-        setReportsState({ status: 'ready', reports })
-      })
-      .catch((err: unknown) => {
-        if (active) setReportsState({ status: 'error', message: errorMessage(err) })
-      })
-    return () => {
-      active = false
-    }
-  }, [papers, paperFilter])
-
-  const error =
-    state.status === 'error' ? state.message : reportsState.status === 'error' ? reportsState.message : null
-  const loading = state.status === 'loading' || (state.status === 'ready' && reportsState.status === 'loading')
+  const reports =
+    state.status === 'ready'
+      ? paperFilter
+        ? state.reports.filter((report) => report.paper_id === paperFilter)
+        : state.reports
+      : null
 
   return (
     <div>
@@ -103,19 +77,17 @@ export default function ReportList() {
         )}
       </div>
 
-      {reportsState.status === 'ready' && (
-        <DebugJson label="reports (GET /papers/{id}/reports)" data={reportsState.reports} />
-      )}
-      {loading && <Spinner label="Loading reports…" />}
-      {error && (
+      {reports && <DebugJson label="reports (GET /papers/{id}/reports)" data={reports} />}
+      {state.status === 'loading' && <Spinner label="Loading reports…" />}
+      {state.status === 'error' && (
         <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">
-          {error}
+          {state.message}
         </p>
       )}
-      {state.status === 'ready' && reportsState.status === 'ready' && (
+      {state.status === 'ready' && reports && (
         <ReportRows
           papers={state.papers}
-          reports={reportsState.reports}
+          reports={reports}
           expandedId={expandedId}
           onToggle={(id) => setExpandedId((current) => (current === id ? null : id))}
         />
