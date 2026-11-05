@@ -37,7 +37,7 @@ def bool_text(value: bool | None) -> str:
 
 
 def agree(folder: Path, label_a: str, label_b: str) -> None:
-    agreed, total, runs, one_only = 0, 0, 0, 0
+    agreed, total, runs, one_only, unmatched = 0, 0, 0, 0, 0
     differing = []
     for run in score.run_paths(folder):
         a, b = grading(run, label_a), grading(run, label_b)
@@ -45,7 +45,15 @@ def agree(folder: Path, label_a: str, label_b: str) -> None:
             one_only += a is not None or b is not None
             continue
         runs += 1
-        for n, (x, y) in enumerate(zip(a, b), 1):
+        # statements are paired by their text, so gradings made before and after a case's facts
+        # were edited never compare two different statements
+        b_by_fact = {y["fact"]: y for y in b}
+        unmatched += len(b_by_fact.keys() - {x["fact"] for x in a})
+        for n, x in enumerate(a, 1):
+            y = b_by_fact.get(x["fact"])
+            if y is None:
+                unmatched += 1
+                continue
             if x["present"] is None or y["present"] is None:
                 continue  # skipped by the judge in one grading: nothing to compare
             total += 1
@@ -60,6 +68,9 @@ def agree(folder: Path, label_a: str, label_b: str) -> None:
           f"graded in both ({runs} runs)")
     if one_only:
         print(f"Runs graded under only one of the labels (left out): {one_only}")
+    if unmatched:
+        print(f"Statements in only one of the gradings (left out; the case's facts changed?): "
+              f"{unmatched}")
     if differing:
         print("Differing statements:")
         print("\n".join(differing))
@@ -89,7 +100,8 @@ def sample(folder: Path, n: int, seed: int | None, out: Path) -> None:
 
 
 def human(folder: Path, csv_path: Path) -> None:
-    with csv_path.open(encoding="utf-8", newline="") as f:
+    # utf-8-sig: a spreadsheet's "CSV UTF-8" export starts with a byte-order mark
+    with csv_path.open(encoding="utf-8-sig", newline="") as f:
         rows = list(csv.DictReader(f))
     agreed, marked = 0, 0
     unmarked, disagree = [], []
@@ -99,11 +111,13 @@ def human(folder: Path, csv_path: Path) -> None:
         if mark not in ("true", "false"):
             unmarked.append(f"  {where} {row['fact']}" + (f" (value {mark!r})" if mark else ""))
             continue
-        # the judge's grade as the folder has it now (what score.py reads), else the CSV's copy
-        items = grading(folder / f"{row['run']}.json", "default")
+        # the judge's grade as the folder has it now (what score.py reads), else the CSV's copy:
+        # when the grade is gone, the statement at n is another one, or the judge skipped it
+        items = grading(folder / f"{row['run']}.json", "default") or []
         n = int(row["n"])
-        if items and n <= len(items):
-            judged = bool_text(items[n - 1]["present"])
+        item = items[n - 1] if 0 < n <= len(items) else None
+        if item is not None and item["fact"] == row["fact"] and item["present"] is not None:
+            judged = bool_text(item["present"])
         else:
             judged = row["judge_present"]
         marked += 1

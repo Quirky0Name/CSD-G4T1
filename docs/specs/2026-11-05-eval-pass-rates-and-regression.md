@@ -391,6 +391,18 @@ and all add to EVALUATION.md "Evals".
     error. Why: `judge_check.py` reads the label `default` as
     `<run>.judge.json`, so a `<run>.judge-default.json` would never be
     read. Doc: EVALUATION.md's `judge.py` row.
+  - (decision, code review) `agree` pairs the two gradings' statements by
+    their text, not their position; a statement in only one grading (the
+    case's facts changed between them) is left out and counted on a
+    separate line. Doc: EVALUATION.md, with `agree`.
+  - (decision, code review) `human` also falls back to the CSV's
+    `judge_present` when the current grade skipped that statement
+    (`present` null) or its statement `n` is now a different fact. It
+    reads the CSV as `utf-8-sig`, so a spreadsheet's "CSV UTF-8" export
+    (with a byte-order mark) works. Doc: EVALUATION.md, with `human`.
+  - (decision, code review) `score.group_by(runs, key)` groups scored runs
+    by case or category for `score.py`, `all.py` and `compare.py`. No doc
+    needed (code shows it).
 
 ### S6: Metamorphic variants of three cases, with a consistency report
 
