@@ -1,17 +1,26 @@
-// One shared fetch loop for tracked papers and their alerts, so the sidebar
-// toaster and both pages read the same data instead of polling three times.
+// One shared fetch loop for tracked papers and their alerts and reports, so
+// the sidebar toaster and both pages read the same data instead of polling
+// three times.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { listAlerts, listPapers, errorMessage, type Alert, type Paper } from './api'
+import {
+  listAlerts,
+  listPapers,
+  listReports,
+  errorMessage,
+  type Alert,
+  type Paper,
+  type UserReport,
+} from './api'
 import { CHANGE_TYPE_LABEL, ALERT_SEVERITY_LABEL } from './format'
 import { useToast } from './components/Toasts'
 
-const ALERT_REFRESH_MS = 60_000
+const TRACKING_REFRESH_MS = 30_000
 
 export type TrackingState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; papers: Paper[]; alerts: Alert[] }
+  | { status: 'ready'; papers: Paper[]; alerts: Alert[]; reports: UserReport[] }
 
 type TrackingContextValue = {
   state: TrackingState
@@ -54,9 +63,15 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     async function runOnce() {
       try {
         const papers = await listPapers()
-        const alerts = (await Promise.all(papers.map((paper) => listAlerts(paper.id)))).flat()
+        const [alertLists, reportLists] = await Promise.all([
+          Promise.all(papers.map((paper) => listAlerts(paper.id))),
+          Promise.all(papers.map((paper) => listReports(paper.id))),
+        ])
+        const alerts = alertLists.flat()
+        // newest first, as the reports list shows them
+        const reports = reportLists.flat().toSorted((a, b) => b.created_at.localeCompare(a.created_at))
         if (!mounted) return
-        setState({ status: 'ready', papers, alerts })
+        setState({ status: 'ready', papers, alerts, reports })
         noticeNewAlerts(papers, alerts)
       } catch (err) {
         if (!mounted) return
@@ -88,7 +103,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     const interval = setInterval(() => {
       if (running) return
       void refresh()
-    }, ALERT_REFRESH_MS)
+    }, TRACKING_REFRESH_MS)
 
     return () => {
       mounted = false

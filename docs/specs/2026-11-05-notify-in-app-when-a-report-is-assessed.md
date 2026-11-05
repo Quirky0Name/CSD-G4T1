@@ -103,13 +103,13 @@ export type TrackingState =
   - `TrackingState.ready.reports` is sorted newest first by `created_at`,
     as `ReportList` sorts them today (code: `ReportList.tsx`; `transient`).
 - **Acceptance criteria:**
-  - [ ] `npm run build` passes.
-  - [ ] `npm run lint` passes.
-  - [ ] `grep -n "listReports" frontend/csd-frontend-vite/src/components/ReportList.tsx`
+  - [x] `npm run build` passes.
+  - [x] `npm run lint` passes.
+  - [x] `grep -n "listReports" frontend/csd-frontend-vite/src/components/ReportList.tsx`
         returns nothing.
-  - [ ] `grep -n "listReports" frontend/csd-frontend-vite/src/tracking.tsx`
+  - [x] `grep -n "listReports" frontend/csd-frontend-vite/src/tracking.tsx`
         finds the call.
-  - [ ] `grep -n "30_000" frontend/csd-frontend-vite/src/tracking.tsx`
+  - [x] `grep -n "30_000" frontend/csd-frontend-vite/src/tracking.tsx`
         finds the interval, and `grep -n "60_000" frontend/csd-frontend-vite/src/tracking.tsx`
         returns nothing.
 - **Doc deltas:**
@@ -117,6 +117,18 @@ export type TrackingState =
     papers, alerts and reports runs every 30 s only while a user is signed
     in, and starts fresh for each user."
   - `tracking.tsx` header comment: the loop covers reports too.
+  - Decisions made during implementation:
+    - Each run fetches the alert lists and the report lists in parallel
+      (one `Promise.all` over both), so adding reports doesn't make a run
+      take twice as long (`transient`: the code shows it; no doc needed).
+    - `ReportList` filters `state.reports` by `paper_id === paper` query
+      parameter, so `/alerts?paper=<id>` for an id not in `GET /papers`
+      shows no reports instead of calling `GET /papers/{id}/reports` for
+      it (`transient`: Storage Management answers `404` for such an id
+      anyway; no doc needed).
+    - `ReportList` shows loading and error from the tracking state alone;
+      its own `ReportsState` is gone (`transient`: follows from reading
+      reports from `useTracking()`; no doc needed).
 
 ### S2: Toast when a report becomes assessed
 
