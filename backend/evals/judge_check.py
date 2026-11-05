@@ -119,7 +119,7 @@ def human(folder: Path, csv_path: Path) -> None:
         if item is not None and item["fact"] == row["fact"] and item["present"] is not None:
             judged = bool_text(item["present"])
         else:
-            judged = row["judge_present"]
+            judged = row["judge_present"].strip().lower()  # a spreadsheet may write TRUE
         marked += 1
         if judged == mark:
             agreed += 1

@@ -400,6 +400,10 @@ and all add to EVALUATION.md "Evals".
     (`present` null) or its statement `n` is now a different fact. It
     reads the CSV as `utf-8-sig`, so a spreadsheet's "CSV UTF-8" export
     (with a byte-order mark) works. Doc: EVALUATION.md, with `human`.
+  - (decision, code review) The CSV's `judge_present` is trimmed and
+    lowercased like `human_present` before they're compared, so a
+    spreadsheet's `TRUE`/`FALSE` still matches. Doc: EVALUATION.md, with
+    `human`.
   - (decision, code review) `score.group_by(runs, key)` groups scored runs
     by case or category for `score.py`, `all.py` and `compare.py`. No doc
     needed (code shows it).
