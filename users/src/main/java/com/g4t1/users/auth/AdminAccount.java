@@ -16,9 +16,11 @@ public class AdminAccount implements SmartInitializingSingleton {
     private final UserRepository users;
     private final boolean devMode;
 
-    public AdminAccount(UserRepository users, @Value("${users.dev-mode}") boolean devMode) {
+    // a String, because a boolean would also read 1, on and yes as true, and the account's password is known.
+    // Only "true" is on, whatever its letter case, as @ConditionalOnBooleanProperty reads it
+    public AdminAccount(UserRepository users, @Value("${users.dev-mode}") String devMode) {
         this.users = users;
-        this.devMode = devMode;
+        this.devMode = "true".equalsIgnoreCase(devMode);
     }
 
     @Override

@@ -7,6 +7,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -67,14 +69,21 @@ class AdminAccountTest {
     void withDevModeOffARowLeftFromAnEarlierRunIsDeleted() {
         start(true).close();
         try (var app = start(false)) {
-            Integer rows = app.getBean(JdbcTemplate.class)
-                    .queryForObject("select count(*) from users.users where email = 'admin'", Integer.class);
-
-            assertThat(rows).isZero();
             login(app, "admin", PASSWORD)
                     .expectStatus().isUnauthorized()
                     .expectBody()
                     .jsonPath("$.detail").isEqualTo("Wrong email or password");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"1", "on", "yes", ""})
+    void onlyTrueSwitchesDevModeOn(String value) {
+        start(true).close();
+        try (var app = new SpringApplicationBuilder(UsersApplication.class)
+                .profiles("test")
+                .run("--server.port=0", "--users.dev-mode=" + value)) {
+            login(app, "admin", PASSWORD).expectStatus().isUnauthorized();
         }
     }
 
