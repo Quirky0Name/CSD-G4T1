@@ -57,3 +57,14 @@ export function GuestOnly() {
   const { session } = useAuth()
   return session ? <Navigate to="/" replace /> : <Outlet />
 }
+
+// The admin account has no papers or projects, so it only ever sees dev mode.
+export function RequireResearcher() {
+  const { session } = useAuth()
+  return session?.user.role === 'admin' ? <Navigate to="/dev" replace /> : <Outlet />
+}
+
+export function RequireAdmin() {
+  const { session } = useAuth()
+  return session?.user.role === 'admin' ? <Outlet /> : <Navigate to="/" replace />
+}

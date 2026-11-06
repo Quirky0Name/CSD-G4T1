@@ -62,7 +62,8 @@ export default function Signin() {
                                 <input
                                     id="email"
                                     name="email"
-                                    type="email"
+                                    type="text"
+                                    inputMode="email"
                                     required
                                     autoComplete="email"
                                     value={email}

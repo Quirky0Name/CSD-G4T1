@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import { ToastProvider } from './components/Toasts'
@@ -7,7 +8,10 @@ import Project from './pages/Project'
 import Projects from './pages/Projects'
 import Register from './pages/Register'
 import Signin from './pages/Signin'
-import { AuthProvider, GuestOnly, RequireAuth, useAuth } from './auth'
+import { AuthProvider, GuestOnly, RequireAdmin, RequireAuth, RequireResearcher, useAuth } from './auth'
+
+// Loaded only by the admin, so researchers never download it or its fonts.
+const DevMode = lazy(() => import('./pages/DevMode'))
 
 // Only rendered under RequireAuth, so tracking never fetches without a session.
 // Keyed by user so a different user gets a fresh provider with no leftover state.
@@ -36,10 +40,22 @@ function App() {
               <Route path="/register" element={<Register />} />
             </Route>
             <Route element={<RequireAuth />}>
-              <Route element={<AppLayout />}>
-                <Route path="/" element={<Projects />} />
-                <Route path="/project" element={<Project />} />
-                <Route path="/alerts" element={<Alerts />} />
+              <Route element={<RequireResearcher />}>
+                <Route element={<AppLayout />}>
+                  <Route path="/" element={<Projects />} />
+                  <Route path="/project" element={<Project />} />
+                  <Route path="/alerts" element={<Alerts />} />
+                </Route>
+              </Route>
+              <Route element={<RequireAdmin />}>
+                <Route
+                  path="/dev"
+                  element={
+                    <Suspense fallback={null}>
+                      <DevMode />
+                    </Suspense>
+                  }
+                />
               </Route>
             </Route>
           </Routes>
