@@ -668,6 +668,11 @@ auth), and the Gemini client.
   `conftest.ExternalApis` fakes Crossref and Europe PMC; impact uses a
   `FakeLlm`. Only `-m live` tests reach real APIs (Crossref, Europe PMC,
   Gemini).
+- **`storage/src/main/resources/dev/fake-report/report.json` is a saved
+  impact output** (dev mode's fake report, STORAGE.md). A schema change in
+  `research_evaluation/impact/schemas.py` can make
+  `tests/research_evaluation/test_fake_report_example.py` fail; the file is
+  then regenerated.
 - **Evals spend the free-tier quota:** a full run is 23 cases × 3 runs ×
   up to 3 calls, far over about 20 requests per model per day. Run one or
   a few cases (`--runs 1`) while iterating, and give the judge its own key.

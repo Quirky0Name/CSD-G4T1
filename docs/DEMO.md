@@ -62,6 +62,19 @@ the publisher during the demo.
 5. Run the poll again live to show it stores another snapshot but doesn't
    nudge again.
 
+## Triggering the change on demand (dev mode)
+
+With `DEV_MODE=true` (SETUP.md, "Dev mode: triggering a change"), the real
+retraction needn't be waiting: 1. poll the paper; 2. as the admin,
+`POST /api/admin/papers/<id>/snapshots` with `{"is_retracted": false,
+"removed_crossref_update_types": ["retraction"]}`; 3. poll again, and the
+flagged change raises its alert. To repeat it, `DELETE
+/api/admin/papers/<id>/history`, then poll (a baseline, which never
+alerts), change the flag and poll again. Use an actually retracted paper:
+the poll fetches the real value, so the edit can only restore a real
+change. `POST /api/admin/papers/<id>/fake-report` puts a finished report
+on a paper without a poll.
+
 ## Rehearsing the Updating half
 
 The seeded-scenario harness in [SETUP.md](SETUP.md) ("Mock harness") runs steps 3

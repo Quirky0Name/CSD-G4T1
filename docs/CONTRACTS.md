@@ -26,6 +26,13 @@ This is the single source of truth for every interface between services.
   Management treats `/internal/**`. User Management mints one too
   (`sub=svc:users`, five minutes) to clear a deleted project or account in
   Storage Management.
+- **Admin token** (dev mode only, `DEV_MODE=true`): the usual JWT plus a
+  claim: HS256, `sub` = the admin's user id, `role` = `admin`, 24 hours.
+  Storage Management and User Management read it as an admin
+  (`ROLE_ADMIN`, not `ROLE_USER`): researcher endpoints and `/internal/**`
+  answer it `403`. Updating doesn't look at the claim, so on `POST
+  /run-poll` it is a user with no papers. Research Evaluation already
+  answers it `403`. Researchers' tokens have no `role` claim.
 - **For now** everything runs locally with a shared throwaway `JWT_SECRET`
   (base64 of 32+ bytes like the real one, the same in every service's local
   config). The frontend signs in through User Management, keeps the token
@@ -43,8 +50,10 @@ the user's token, as Storage Management's do. Register and login answer
 with the same shape, so the frontend handles them alike:
 
 ```json
-{"token": "eyJ...", "user": {"id": "uuid", "email": "someone@example.com", "created_at": "2026-10-24T08:00:00Z"}}
+{"token": "eyJ...", "user": {"id": "uuid", "email": "someone@example.com", "role": "user", "created_at": "2026-10-24T08:00:00Z"}}
 ```
+
+`user.role` is `user` or `admin`. A researcher's is always `user`.
 
 `token` is the user JWT above; send it as `Authorization: Bearer <token>`
 to Storage Management. `user.id` is its `sub`. Emails are stored and
@@ -73,6 +82,12 @@ password alike, answered in about the same time, so login doesn't show
 which emails have accounts. Register's `409` does, which is accepted:
 sign-up has to say the email is taken.
 
+With dev mode on, the admin signs in here with `{"email": "admin",
+"password": "12345679"}` (same request and errors) and gets `user.role`
+`admin` and an admin token (see Auth). With dev mode off the account does
+not exist, so that login gets the usual `401`. Register with the email
+`admin` answers `400`.
+
 ### `DELETE /auth/me`
 
 User JWT required. Deletes the caller's account. **Request:**
@@ -91,6 +106,16 @@ Tokens aren't revoked: a deleted account's token stays valid for up to 24
 hours. User Management then lists no projects for it, answers `PUT` and
 `DELETE /projects/{id}` with `404`, and `POST /projects` with `401` `Your
 account no longer exists`.
+
+### `GET /auth/admin/users`
+
+Dev mode only. Under `/auth` so the Vite proxy and Caddy already route it.
+Admin token only. **`200`:** `{"users": [{"id": "uuid", "email": "a@b.c",
+"role": "user", "created_at": "..."}]}`, newest first, without the admin
+account.
+
+Errors: `401` missing or bad token; `403` a user or service token; `404`
+dev mode off.
 
 ### `POST /projects`
 
@@ -508,6 +533,145 @@ STORAGE.md, "Demo tools", and DEMO.md.
 
 Errors, as problem details: `401` missing or bad token; `403` a service
 token; `404` as above.
+
+## Admin endpoints (dev mode)
+
+Owned by: Storage Management (the `/admin/**` and `/public/fake-report/**`
+routes below; User Management's `GET /auth/admin/users` is above). Only with
+`DEV_MODE=true`; with it off every one answers `404`. Admin token only
+(see Auth), except the public PDF route, and they work on any user's
+paper. From the browser they are under `/api/...`. How to use them is in
+STORAGE.md, "Dev mode", and SETUP.md. JSON is snake_case.
+
+Snapshots can come from the admin as well as from Updating: the edit below
+stores one with `POST /admin/papers/{id}/snapshots`.
+
+### `POST /admin/papers/{id}/snapshots`
+
+Changes the paper's flags in its stored data: stores a new snapshot, a
+copy of the latest one with the given fields changed and `fetched_at` set
+to now (snapshots are insert-only). The next poll fetches the real values
+and compares them with this row, so setting a value to what it was before a
+real change makes that poll find the change.
+
+**Request**, at least one field:
+
+```json
+{
+  "is_retracted": false,
+  "in_doaj": true,
+  "cited_by_count": 0,
+  "removed_crossref_update_types": ["retraction", "correction"]
+}
+```
+
+| Field | Rules |
+|---|---|
+| `is_retracted`, `in_doaj` | boolean. Left out or null keeps the latest value |
+| `cited_by_count` | integer of 0 or more. Left out or null keeps the latest value |
+| `removed_crossref_update_types` | array of non-blank strings. Every entry of these types is left out of the new row's `crossref_updates`. An empty array counts as no field given |
+
+Request values are not coerced: `"false"` and `1.5` answer `400`.
+
+**`201`:** the new snapshot, in the shape `POST /internal/papers/{id}/snapshots`
+returns.
+
+Errors: `400` a body that breaks the rules, no field given, or an id that
+isn't a UUID; `401`; `403` a user or service token; `404` `No paper <id>`,
+or dev mode off; `409` the paper has no snapshot yet (`Paper <id> has no
+snapshot yet; poll it once first`), or the latest snapshot's source for a
+given field isn't `ok` (`source_status.openalex` for `is_retracted`,
+`source_status.crossref` for a removed type), since such a field is never
+compared.
+
+### Admin reads
+
+Errors: `400` an id that isn't a UUID; `401`; `403` a user or service
+token; `404` `No paper <id>` (paper routes), or dev mode off.
+
+| Call | `200` |
+|---|---|
+| `GET /admin/users/{ownerId}/papers` | `{"papers": [...]}`, newest first: each paper in the `GET /papers` shape plus `owner_id`, `latest_snapshot` (a snapshot row or null). An unknown owner gives `{"papers": []}` |
+| `GET /admin/papers/{id}/snapshots` | `{"snapshots": [...]}`, the full history, oldest first, in the `GET /internal/papers/{id}/snapshots` shape |
+| `GET /admin/papers/{id}/alerts` | the `GET /papers/{id}/alerts` body, dismissed alerts included |
+| `GET /admin/papers/{id}/reports` | the `GET /papers/{id}/reports` body |
+| `DELETE /admin/papers/{id}/history` | `204`. Deletes snapshots, alerts and reports, as `DELETE /dev/papers/{id}/history` does |
+
+### `POST /admin/papers/{id}/fake-report?status=`
+
+No body. In one transaction, copies the one stored example
+(`storage/src/main/resources/dev/fake-report/`) onto the paper as new
+alerts, a new report grouping exactly those alerts, and that report's
+documents. The paper needs no DOI and no snapshot.
+
+`status` is optional: `investigating`, `investigated` or `assessed` (the
+default).
+
+| `status` | `investigated_at` | Evaluation fields |
+|---|---|---|
+| `investigating` | null | null |
+| `investigated` | set | null |
+| `assessed` | set | from the example, `evaluated_at` set |
+
+**`201`:** the report, in the shape of one entry of `GET /papers/{id}/reports`.
+
+Errors: `400` an unknown `status`, or an id that isn't a UUID; `401`; `403`
+a user or service token; `404` `No paper <id>`, or dev mode off.
+
+### `GET /public/fake-report/{file}`
+
+No token, because a link opened in a new tab can't send one. Serves only
+the example's made-up document PDFs, `new-version.pdf` and
+`current-version.pdf`, as `application/pdf`. **`200`** with the file. `404`
+for any other name, or dev mode off. A `..` path under this route is turned
+away by Spring's firewall before any controller; a `RequestRejectedHandler`
+scoped to the route gives its `404`.
+
+### Example files in `storage/src/main/resources/dev/fake-report/`
+
+`report.json`, `new-version.pdf`, `current-version.pdf`, `paper.pdf` and
+`draft.pdf`. All are made up. `paper.pdf` and `draft.pdf` are kept only as
+the record of what the prompts read, and are never served or stored on a
+paper.
+
+`report.json` (abridged: the real file has two alerts and four documents):
+
+```json
+{
+  "alerts": [
+    {"change_type": "retraction", "alert_severity": "high", "description": "...", "recommendation": "...", "notice_doi": "10.9999/fake.2019.011r"}
+  ],
+  "documents": [
+    {"kind": "notice", "doi": "10.9999/fake.2019.011r", "crossref_status": "ok", "crossref_record": {}, "update_to_includes_paper": true,
+     "text_status": "ok", "text": "...", "text_truncated": false, "links": [], "pdf_file": null},
+    {"kind": "new_version", "doi": "10.9999/fake.2019.011v2", "crossref_status": "ok", "crossref_record": {}, "update_to_includes_paper": null,
+     "text_status": "not_open_access", "text": null, "text_truncated": false, "links": [], "pdf_file": "new-version.pdf"}
+  ],
+  "evaluation": {
+    "change_summary": "...", "change_severity": "medium", "impact_level": "low",
+    "evaluation": "...", "recommendation": "...",
+    "assessment": {"fake": true, "prompt_version": 4, "...": "the rest of what impact stores"}
+  }
+}
+```
+
+What a call stores, beyond the example's text:
+
+- Each fake alert's `change_key` is `fake:<random uuid>`, so repeat calls
+  never collide and a fake alert can't stop a real change being stored
+  under its own key.
+- `snapshot_id` and `previous_snapshot_id` are `0` (both columns are not
+  null, have no foreign key, and are not returned to the frontend).
+- `detected_at`, `created_at`, `investigated_at` and `evaluated_at` are the
+  time of the call.
+- Each document's PDF is stored again per call through `LocalFileStore.save`
+  (`pdf_status` `ok`, `file_key`, `sha256`, `pdf_fetched_at`), so
+  `GET /internal/documents/{id}/pdf` and `DELETE /admin/papers/{id}/history`
+  work as for a real document. A notice stays `skipped`.
+  `pdf_source_url` is `/api/public/fake-report/<file>`, which the report UI
+  links in a new tab.
+- The report takes only its own alerts. The researcher's draft is never
+  added or replaced.
 
 ## Storage Management ↔ Research Evaluation / Updating
 

@@ -52,3 +52,14 @@ _Avoid_: Severity (on its own)
 **Change severity**:
 How serious one particular change really is for anyone relying on the paper.
 _Avoid_: Severity (on its own)
+
+### Dev mode
+
+**Dev mode**:
+A setting (`DEV_MODE`, off unless set to `true`) that gives the stack an admin account and the admin endpoints, for demos and testing.
+
+**Admin**:
+The account `admin`, which exists only in dev mode. It reads and changes any researcher's paper data and is not a researcher: it has no papers or projects.
+
+**Fake report**:
+A report, with its alerts and documents, copied onto a paper by the admin from one saved example instead of coming from a poll.
