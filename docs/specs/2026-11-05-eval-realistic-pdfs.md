@@ -1,6 +1,6 @@
 # Evals: realistic case PDFs and cases from real published papers
 
-**Status:** draft
+**Status:** approved
 **Repo:** `D:\SMU\CS203\project\CSD-G4T1`
 **Context file to update:** none named
 
@@ -38,7 +38,6 @@ S3 is blocked by S1 because both change `case_text.py`, `run.py` and
 `score.py`; S4's drafts use S1's `draft_doc` format.
 
 External blockers:
-- The open questions below.
 - `docs/specs/2026-11-05-eval-pass-rates-and-regression.md` is done on
   `feat/ai-eval-output`, whose PR to `main` is open. This branch is
   stacked on it, so its own PR merges after that one. Variant
@@ -51,33 +50,6 @@ External blockers:
 Git state: branch `feat/eval-realistic-pdfs`, at `907c2e0` on top of
 `feat/ai-eval-output` (user, 2026-11-05). No uncommitted changes besides
 this spec.
-
-## Open questions
-
-1. **Committed or downloaded** (S3, S4). ASSUMED: the real PDFs are
-   committed under `backend/evals/real/`, each with its licence and source
-   in `evals/real/SOURCES.md`, as CC-BY allows redistribution with
-   attribution. The alternative is a fetch script with sha256 checksums
-   into a gitignored folder, which keeps the repo small but breaks when a
-   publisher's link dies or starts a bot check.
-2. **Which real papers** (S4). ASSUMED six, from RE-changes-explained.md
-   §8:
-   - R1 retraction: PLOS ONE `10.1371/journal.pone.0258361`, notice
-     `10.1371/journal.pone.0322065`
-   - E1 expression of concern: PLOS ONE `10.1371/journal.pone.0035065`,
-     notice `10.1371/journal.pone.0298436`
-   - C1 admin correction: Sci Rep `10.1038/s41598-024-79772-7`, notice
-     `10.1038/s41598-025-93099-x`
-   - C2 figures switched: PLOS ONE `10.1371/journal.pone.0309025`, notice
-     `10.1371/journal.pone.0320535`
-   - E4 concern lifted: RSC Advances `10.1039/c3ra45263h`, notice
-     `10.1039/d6ra90114j`
-   - C6 new version: F1000Research `10.12688/f1000research.187739.1` and
-     `.2`
-
-   One whose licence isn't CC-BY is dropped, not replaced.
-3. **Who downloads** (S4). ASSUMED: whoever runs S4 downloads them (curl),
-   and any file it can't get is listed for the user to download by hand.
 
 ## Suggested splits
 
@@ -124,17 +96,6 @@ changes the same files as S1.
   next to it (made once by `evals/real/extract.py`), so `score.py` and
   `judge.py` need no PDF library. Doc delta on S3 (EVALUATION.md).
 - A case has one form per field (`_text`, `_doc` or `_file`), never two.
-- **`evals/case_text.py`** (S1, extended by S3; used by `run.py`,
-  `score.py`, `judge.py`; standard library only):
-  - `doc_text(doc: dict) -> str`: every word the built PDF shows, in
-    reading order: running head, banner, watermark, title, authors,
-    abstract, each section's heading, text, table caption and cells,
-    figure caption, then references.
-  - `paper_text(case) -> str`, `draft_text(case) -> str | None`,
-    `pdf_text(document) -> str | None`: the `_text` field, `doc_text` of
-    the `_doc` field, or (from S3) the `.txt` of the `_file` field.
-
-  `transient` (code shows it).
 
 ## Subtasks
 
@@ -168,28 +129,56 @@ changes the same files as S1.
   - `case_text.py` uses only the standard library, so `judge.py` still
     needs neither `rich` nor `research_evaluation` (code: `judge.py`'s
     comment on `score.run_paths`).
+  - `case_text.doc_text` returns every word the built PDF shows, in reading
+    order: running head, banner, watermark, title, authors, abstract, each
+    section's heading, text, table caption and cells, figure caption, then
+    references. `paper_text(case)`, `draft_text(case)` and
+    `pdf_text(document)` return the `_text` field or `doc_text` of the
+    `_doc` field. `transient` (code shows it).
 - **Acceptance criteria:**
-  - [ ] `run.py --dry` builds every case in `evals/cases/` (unchanged
+  - [x] `run.py --dry` builds every case in `evals/cases/` (unchanged
         output apart from the font).
-  - [ ] Throwaway script, `--with pypdf`: a rich document with
+  - [x] Throwaway script, `--with pypdf`: a rich document with
         `two_column`, a watermark, a table and enough sections for 3 pages
         builds through `run.build_inputs`; the PDF has at least 3 pages,
         and every page's extracted text contains the watermark.
-  - [ ] Same script: plain `paper_text` and a rich document containing
+  - [x] Same script: plain `paper_text` and a rich document containing
         `7·9% – ≥ α "curly"` both build without an error.
-  - [ ] Same script: `score.check_quotes` on a fake run quoting one table
+  - [x] Same script: `score.check_quotes` on a fake run quoting one table
         cell of a rich stored paper as `stored paper`, and the watermark of
         a rich `current_version` document as `current copy`, finds neither
         invented nor misattributed.
-  - [ ] Same script: `judge.prompt` for a case with a rich draft contains
+  - [x] Same script: `judge.prompt` for a case with a rich draft contains
         a sentence from the draft's last section.
-  - [ ] `uv run ruff check` passes.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals", "A case": the `_doc` form of `paper_text`,
     `draft_text` and `pdf_text`, its fields, that a case uses one form per
     field, and that the plain form stays valid; that built PDFs use the
     DejaVu font in `evals/fonts/`; that quotes and the judge read the full
     text the PDF shows.
+  - Decisions made in implementation (S1):
+    - `case_text.doc_text` also includes the "Abstract" and "References"
+      labels, because the rich PDF prints them and `doc_text` returns every
+      word the PDF shows. EVALUATION.md "A case".
+    - `case_text.form` raises `ValueError` when a field is given in two
+      forms, so "one form per field" is enforced, not only documented.
+      EVALUATION.md "A case".
+    - The DejaVu files are matplotlib's bundled copies; `fonts/LICENSE` is
+      their `LICENSE_DEJAVU`. No doc: the licence file is beside the fonts.
+    - Rich layout: A4; in two columns the title block spans the page and the
+      sections flow down the left column, then the right; the first table row
+      is the header (bold); a figure is an empty grey box above its caption.
+      EVALUATION.md "A case" (table's first row is the header).
+    - A page break inside the full-width title block (banner, title,
+      authors, abstract) goes to a new page, not to a right column: the
+      columns start only after the abstract (`DocPdf.in_columns`; a
+      code-review fix). No doc: code shows it.
+    - The judge shows a document's `text` and, when it differs, its stored
+      PDF's text after "Stored PDF:" (a code-review fix: before, it showed
+      only `text` when both existed, so it missed a watermark or banner the
+      quote check counts). EVALUATION.md "A case" (the judge reads the full
+      text).
 
 ### S2: Five cases become realistic, and four missing scenarios get cases
 
@@ -207,9 +196,16 @@ changes the same files as S1.
 - **Seams:** `run.py --dry`; `case_text`; the scorer's metamorphic group
   table.
 - **Decisions:**
-  - The case files are written by hand (by whoever runs S2), as JSON. No
-    script or LLM call generates their text. The PDFs are built from them
-    by S1's code at run time and never committed.
+  - The case files are written directly as JSON by subagents. No script or
+    Gemini call generates their text. The PDFs are built from them by S1's
+    code at run time and never committed.
+  - The implementer doesn't write the long case files in its own context:
+    it spawns one subagent per case file (user, 2026-11-06). Each subagent
+    gets the case file path, its scenario and this subtask's Decisions,
+    writes the file, runs `run.py --dry <case>`, and returns only the path
+    and the result, never the case text. Variant 22 is written by the
+    subagent that writes 02, so the pair differs only in wording and section
+    order. `transient`.
   - Cases 02, 11, 16, 18, 19 move to the rich format (user, 2026-11-05).
     No other existing case is touched.
   - Variant 22 (of 02) moves to the rich format with 02, so the pair still
@@ -234,19 +230,44 @@ changes the same files as S1.
   - Case 19's watermark is the rich `watermark` field on its
     `current_version` document, with "RETRACTED:" before the title.
 - **Acceptance criteria:**
-  - [ ] `run.py --dry` builds every case in `evals/cases/`.
-  - [ ] Throwaway script, `--with pypdf`: each rich paper has at least 5
+  - [x] `run.py --dry` builds every case in `evals/cases/`.
+  - [x] Throwaway script, `--with pypdf`: each rich paper has at least 5
         pages and each rich draft at least 3 pages and 20 references.
-  - [ ] Same script: for each rewritten and new case, every value quoted in
+  - [x] Same script: for each rewritten and new case, every value quoted in
         its `why` in double quotes appears in `case_text`'s text of the
         case, and the page-1 text of a rich draft doesn't contain the
         tracked paper's reference.
-  - [ ] Same script: 22's `expected` equals 02's, and both use the rich
+  - [x] Same script: 22's `expected` equals 02's, and both use the rich
         format.
-  - [ ] `uv run ruff check` passes.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals": the case count (the number of files in
     `evals/cases/`) and that some cases use full-length rich PDFs.
+  - Decisions made in implementation (S2):
+    - Case 24 (R3) stores no notice document, only a `current_version` at
+      the paper's DOI whose PDF is the unchanged paper, because
+      investigation stores no notice document for an own-DOI notice
+      (`investigate.py`); `expected` is severity none and
+      `about_this_paper` no, from the prompt's rubric ("no" when the
+      notice's DOI is the paper's own and nothing else shows a change).
+      EVALUATION.md "Evals" (the case list).
+    - Case 25 (R8) follows case 17: the reinstatement resolves the
+      retraction in the same report, so severity is none and both alerts
+      are about the paper. EVALUATION.md "Evals" (the case list).
+    - Case 27 is a self-referencing withdrawal: the current copy's text and
+      its one-page `pdf_doc` are the withdrawal statement, so it is not a
+      paper and has no 5-page minimum; severity high, about the paper.
+      EVALUATION.md "Evals" (the case list).
+    - Case 19's current copy is the stored paper with the watermark and
+      "RETRACTED: " title and no banner; its `pdf_doc` was copied from the
+      hand-written `paper_doc` by a one-off script (no text generated),
+      which also re-indented the file. No doc: the case file shows it.
+    - In variant 22 the Methods section comes first, so one Methods sentence
+      (no citation of the tracked paper) is on the draft's page 1; the
+      tested citation is on page 2 in both 02 and 22. No doc: case-local.
+    - Draft reference lists are alphabetical, so citation numbers changed
+      (e.g. 18's [4] became [15]); no `expected` changed in any rewritten
+      case. No doc: case-local.
 
 ### S3: A case can attach a real PDF, read through its extracted text
 
@@ -260,7 +281,9 @@ changes the same files as S1.
 - **Seams:** `run.py --dry`; `run.build_inputs`; `case_text`; the scorer
   command; `extract.py`.
 - **Decisions:**
-  - `paper_file` / `pdf_file` as in Interfaces.
+  - `paper_file` / `pdf_file` as in Interfaces. `case_text`'s `paper_text`
+    and `pdf_text` also return the `.txt` of a `_file` field. `transient`
+    (code shows it).
   - `extract.py` (run with `--with pypdf`) writes `<stem>.txt` for each
     PDF in `evals/real/` that has none (or all with `--redo`), joining a
     word hyphenated across a line break. The `.txt` is committed and is
@@ -269,43 +292,83 @@ changes the same files as S1.
     text (`ﬁ`) matches a quote that spells it out (`fi`). No effect on
     ASCII cases.
 - **Acceptance criteria:**
-  - [ ] Throwaway script with a small PDF built by fpdf2 and saved into a
+  - [x] Throwaway script with a small PDF built by fpdf2 and saved into a
         temp `real/` folder: a case with `paper_file` builds through
         `run.build_inputs`, and the stored paper's bytes equal the file's.
-  - [ ] Same script: `extract.py` on a PDF whose text has a word split
+  - [x] Same script: `extract.py` on a PDF whose text has a word split
         `pro-` / `liferation` across lines writes `proliferation` in the
         `.txt`.
-  - [ ] Same script: `score.check_quotes` on a fake run quoting a sentence
+  - [x] Same script: `score.check_quotes` on a fake run quoting a sentence
         of that `.txt` with `fi` where the text has `ﬁ`, as `stored paper`:
         not invented, not misattributed.
-  - [ ] `run.py --dry` builds every case in `evals/cases/` as before.
-  - [ ] `uv run ruff check` passes.
+  - [x] `run.py --dry` builds every case in `evals/cases/` as before.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals", "A case": `paper_file` / `pdf_file`,
     `evals/real/`, `extract.py`, and that the quote check and the judge
     read the committed `.txt`.
+  - Decisions made in implementation (S3):
+    - `extract.py` takes an optional folder (default `evals/real/`), so it
+      can be run on another folder (the acceptance script uses a temp one).
+      EVALUATION.md "A case" (the command).
+    - A hyphen at a line end is joined only when the next line starts with a
+      lowercase letter, so "COVID-" / "19" or a hyphen before a capitalised
+      name stays. Pages are joined with a blank line. No doc: `extract.py`'s
+      docstring and code show it.
+    - The `.txt` is written and read as UTF-8, so it works the same on
+      Windows (cp1252 default) as on macOS. No doc: code shows it.
+    - `case_text.REAL` is the one place the real folder is named;
+      `run.py` reads `_file` bytes through `case_text.real_pdf`. No doc:
+      code shows it.
 
-### S4: Six cases use real published papers and their real notices
+### S4: Four cases use real published papers and their real notices
 
-- **Goal:** Six cases attach a real open-access paper's PDF and its real
+- **Goal:** Four cases attach a real open-access paper's PDF and its real
   notice text, with a draft written for the eval that cites the paper, so
   the evals also test real layout, length and notice wording.
 - **Blocked by:** S3
 - **Files:** `backend/evals/real/` (the PDFs, their `.txt` texts,
-  `SOURCES.md`), six new case files `28_real_…` to `33_real_…`,
+  `SOURCES.md`), four new case files `28_real_…` to `31_real_…`,
   `docs/EVALUATION.md`, `docs/DECISIONS.md`, `docs/ROADMAP.md`
 - **Seams:** `run.py --dry`; `case_text`; the scorer command.
 - **Decisions:**
-  - Committed under `evals/real/` with `SOURCES.md` (DOI, title, URL
-    fetched from, date, licence, sha256 per file). ASSUMED (Q1).
-  - The six papers in Q2. Before a paper is used, its licence is checked
-    in Crossref's `license` field (or the PDF's own licence line); a paper
-    that isn't CC-BY (any version) is dropped, and `SOURCES.md` says why.
-    ASSUMED (Q2).
-  - Downloads by whoever runs S4; a file that can't be fetched is left out
-    and listed in the run's final report. ASSUMED (Q3).
-  - The case files are written by hand (by whoever runs S4), as JSON. No
-    script or LLM call generates their text.
+  - The real PDFs are committed under `evals/real/` with `SOURCES.md` (DOI,
+    title, URL fetched from, date, licence, sha256 per file) (user,
+    2026-11-06).
+  - Four papers, from RE-changes-explained.md §8 (user, 2026-11-06). All
+    are CC BY 4.0 for paper and notice in Crossref's `license` field
+    (checked 2026-11-06):
+    - R1 retraction: PLOS ONE `10.1371/journal.pone.0258361`, notice
+      `10.1371/journal.pone.0322065`
+    - E1 expression of concern: PLOS ONE `10.1371/journal.pone.0035065`,
+      notice `10.1371/journal.pone.0298436`
+    - C2 figures switched: PLOS ONE `10.1371/journal.pone.0309025`, notice
+      `10.1371/journal.pone.0320535`
+    - C6 new version: F1000Research `10.12688/f1000research.187739.1` and
+      `.2`
+  - Two papers were dropped and not replaced (user, 2026-11-06). `transient`.
+    - C1 admin correction, Sci Rep `10.1038/s41598-024-79772-7`: paper and
+      notice `10.1038/s41598-025-93099-x` are CC BY-NC-ND 4.0.
+    - E4 concern lifted, RSC Advances `10.1039/c3ra45263h`: no licence in
+      Crossref, no Europe PMC record, publisher page returns `403`.
+  - Before a paper is used, the download subagent checks its and its
+    notice's licences in Crossref's `license` field (or the PDF's own licence
+    line); a paper with either not CC-BY (any version) is dropped, and
+    `SOURCES.md` says why.
+  - A subagent downloads the PDFs with curl, not the implementer (user,
+    2026-11-06). It runs before the case file subagents, checks the licences,
+    runs `extract.py`, writes `SOURCES.md`, and returns only which files were
+    fetched and which failed, never the PDF or `.txt` text. A file that can't
+    be fetched is left out and listed in the run's final report for the user
+    to download by hand. `transient`.
+  - The case files are written directly as JSON by subagents. No script or
+    Gemini call generates their text.
+  - The implementer doesn't write the case files or read the real papers in
+    its own context: it spawns one subagent per case file (user, 2026-11-06).
+    Each subagent gets the case file path, the paper's `.txt` path, the
+    notice's source and this subtask's Decisions, reads them, writes the
+    file, runs `run.py --dry <case>`, and returns only the path and the
+    result, never the case or paper text. `transient`.
   - The notice is the real notice text from Europe PMC's `fullTextXML`
     (RE-changes-explained.md §8), as plain text in the case's `notice` or
     `documents` entry, as investigation stores it.
@@ -320,17 +383,17 @@ changes the same files as S1.
   - Category names of these cases start with `real: `, so the category
     table shows real and made-up cases apart.
 - **Acceptance criteria:**
-  - [ ] `run.py --dry` builds every case in `evals/cases/`, and each real
+  - [x] `run.py --dry` builds every case in `evals/cases/`, and each real
         case attaches its file's bytes unchanged (throwaway script compares
         sha256 with `SOURCES.md`).
-  - [ ] Throwaway script, `--with pypdf`: each committed PDF opens, has
+  - [x] Throwaway script, `--with pypdf`: each committed PDF opens, has
         more than one page, and its first page's text contains the paper's
         title from the case.
-  - [ ] Same script: for each real case, every notice sentence quoted in
+  - [x] Same script: for each real case, every notice sentence quoted in
         its `why` appears in its notice text, and the stored paper's `.txt`
         contains the paper's title.
-  - [ ] `SOURCES.md` lists a CC-BY licence for every committed file.
-  - [ ] `uv run ruff check` passes.
+  - [x] `SOURCES.md` lists a CC-BY licence for every committed file.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals": the real cases, `evals/real/SOURCES.md`, that
     drafts are always written for the eval, that real cases' categories
@@ -343,6 +406,29 @@ changes the same files as S1.
     may remember famous real papers; non-CC-BY papers are never committed.
   - ROADMAP.md: reword "Add cases from real PDFs" to what remains (more
     real cases, investigation cases).
+  - Decisions made in implementation (S4):
+    - The title criteria compare ignoring spaces: pypdf drops the spaces in
+      some PLOS title fonts ("Detectingphishingwebsites" in
+      `pone.0258361`, "correctionfor" in `pone.0309025`). The `.txt` stays as
+      extracted; a quote of the title still matches through the paper's
+      metadata title. EVALUATION.md "Evals" (real cases: check the `.txt`).
+    - The notice texts are not files in `evals/real/`: each case carries its
+      notice's text (from `research_evaluation.investigation.europepmc.
+      plain_text`), and `SOURCES.md` lists each notice's DOI, PMCID, Europe
+      PMC URL and licence. EVALUATION.md "Evals" (real cases).
+    - Case 31 (C6) has no notice: one medium `other:new_version` alert and a
+      `new_version` document with `text: null` and `pdf_file` v2 (Europe PMC
+      has no open-access record of v2); its `why` quotes v2's "Amendments
+      from Version 1" box and v1's abstract. EVALUATION.md "Evals" (real
+      cases).
+    - Real cases without a trap have no `tier` (as 12 made-up cases). No doc:
+      EVALUATION.md already says `tier` is optional.
+    - The five PDFs add about 9.4 MB to the repo. No doc: `SOURCES.md` lists
+      them.
+    - `evals/real/.gitattributes` marks `*.pdf` binary, so git never converts
+      line endings in these mostly-ASCII PDFs (e.g. `core.autocrlf` on
+      Windows), which would change their bytes and sha256 (a code-review
+      fix). EVALUATION.md "Evals" (real cases).
 
 ## Human checks
 

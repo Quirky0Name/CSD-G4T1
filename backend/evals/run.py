@@ -5,7 +5,7 @@ raw Evaluation JSON. Scoring happens later, on the saved files, so re-scoring co
     python evals/run.py --runs 3            # every case
 
 Reads GEMINI_API_KEY (and optionally GEMINI_MODEL, GEMINI_FALLBACK_MODELS) from the environment
-or backend/.env. Needs fpdf2 to turn the .txt files into PDFs (not a project dependency)."""
+or backend/.env. Needs fpdf2 to turn the cases' texts into PDFs (not a project dependency)."""
 
 import argparse
 import asyncio
@@ -24,6 +24,8 @@ from google.genai import types
 
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT.parent / "src"))
+
+import case_text
 
 from research_evaluation.impact.assess import assess
 from research_evaluation.impact.inputs import ReportInputs
@@ -48,27 +50,195 @@ def load_env() -> None:
         if sep and key.strip() in ("GEMINI_API_KEY", "GEMINI_MODEL", "GEMINI_FALLBACK_MODELS"):
             os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
 
+FONTS = ROOT / "fonts"
+FONT = "DejaVu"  # covers non-Latin-1 text (·, –, ≥, α, curly quotes), unlike the core fonts
+
+# rich PDF layout on A4, in mm
+MARGIN, GAP, CONTENT_TOP, BOTTOM = 18, 6, 20, 18
+BODY, LINE = 9.5, 4.6
+
+
+def new_pdf(cls: type[FPDF] = FPDF, *args) -> FPDF:
+    pdf = cls(*args)
+    pdf.add_font(FONT, "", FONTS / "DejaVuSans.ttf")
+    pdf.add_font(FONT, "B", FONTS / "DejaVuSans-Bold.ttf")
+    return pdf
+
+
 ## text to pdf
 def make_pdf(text: str) -> bytes:
-    pdf = FPDF()
+    pdf = new_pdf()
     pdf.add_page()
-    pdf.set_font("Helvetica", size=11)
+    pdf.set_font(FONT, size=11)
     for paragraph in text.split("\n"):
         pdf.multi_cell(0, 6, paragraph or " ", new_x="LMARGIN", new_y="NEXT")
     return bytes(pdf.output())
 
+
+class DocPdf(FPDF):
+    """A rich document (a case's `*_doc` field) as a journal-like PDF. On every page: the running
+    head, and the watermark in light grey, diagonal, drawn first so it sits behind the text. In
+    two columns, the title block spans the page and the sections flow down the left column, then
+    the right, then onto the next page."""
+
+    def __init__(self, doc: dict):
+        super().__init__(format="A4")
+        self.doc = doc
+        self.two_columns = doc.get("layout") == "two_column"
+        self.column = 0
+        self.column_top = CONTENT_TOP
+        # the title block spans the page; the columns start after it (build)
+        self.in_columns = False
+        self.set_margins(MARGIN, CONTENT_TOP, MARGIN)
+        self.set_auto_page_break(True, BOTTOM)
+
+    def header(self) -> None:
+        x, y = self.x, self.y
+        if watermark := self.doc.get("watermark"):
+            self.set_font(FONT, "B", 64)
+            self.set_text_color(222, 222, 222)
+            cx, cy = self.w / 2, self.h / 2
+            with self.rotation(45, x=cx, y=cy):
+                self.text(cx - self.get_string_width(watermark) / 2, cy + 8, watermark)
+        if head := self.doc.get("running_head"):
+            self.set_font(FONT, size=7.5)
+            self.set_text_color(90, 90, 90)
+            self.set_xy(MARGIN, 9)
+            self.cell(self.w - 2 * MARGIN, 4, head, align="C")
+        self.set_text_color(0, 0, 0)
+        self.set_xy(x, y)
+
+    @property
+    def accept_page_break(self) -> bool:
+        """In two columns, a full left column moves on to the right one instead of a new page."""
+        if self.in_columns and self.column == 0:
+            self.set_column(1)
+            self.set_y(self.column_top)
+            return False
+        if self.in_columns:
+            self.set_column(0)
+            self.column_top = CONTENT_TOP
+        return True
+
+    def set_column(self, column: int) -> None:
+        self.column = column
+        if not self.two_columns:
+            return
+        width = (self.w - 2 * MARGIN - GAP) / 2
+        left = MARGIN + column * (width + GAP)
+        self.set_left_margin(left)
+        self.set_right_margin(self.w - left - width)
+        self.x = left
+
+    def need(self, height: float) -> None:
+        """Move to the next column or page first when `height` doesn't fit below."""
+        if self.y + height > self.page_break_trigger and self.accept_page_break:
+            self.add_page()
+
+    def paragraph(self, text: str, size: float = BODY, style: str = "", gap: float = 1.5) -> None:
+        self.set_font(FONT, style, size)
+        for line in text.split("\n"):
+            self.multi_cell(0, LINE * size / BODY, line or " ", new_x="LMARGIN", new_y="NEXT")
+        self.ln(gap)
+
+    def table(self, table: dict) -> None:
+        if table.get("caption"):
+            self.paragraph(table["caption"], 8.5, "B", 1)
+        width = self.w - self.l_margin - self.r_margin
+        for r, row in enumerate(table["rows"]):
+            cell_w = width / len(row)
+            self.set_font(FONT, "B" if r == 0 else "", 8)
+            height = 4 * max(
+                len(self.multi_cell(cell_w, 4, c, dry_run=True, output="LINES")) for c in row
+            )
+            self.need(height)
+            x0, y0 = self.l_margin, self.y
+            for c, value in enumerate(row):
+                self.set_xy(x0 + c * cell_w, y0)
+                self.multi_cell(cell_w, 4, value, new_x="RIGHT", new_y="TOP")
+                self.rect(x0 + c * cell_w, y0, cell_w, height)
+            self.set_xy(x0, y0 + height)
+        self.ln(3)
+
+    def figure(self, figure: dict) -> None:
+        self.need(36)
+        self.set_draw_color(150, 150, 150)
+        self.rect(self.l_margin, self.y, self.w - self.l_margin - self.r_margin, 32)
+        self.set_draw_color(0, 0, 0)
+        self.set_y(self.y + 34)
+        if figure.get("caption"):
+            self.paragraph(figure["caption"], 8.5, gap=3)
+
+    def build(self) -> bytes:
+        """Lays the document out in case_text.doc_text's order, so the text matches."""
+        doc = self.doc
+        self.add_page()
+        if banner := doc.get("banner"):
+            self.set_font(FONT, "B", 10)
+            self.set_fill_color(253, 226, 226)
+            self.set_text_color(160, 0, 0)
+            self.multi_cell(0, 5.5, banner, border=1, fill=True, align="C", padding=1.5,
+                            new_x="LMARGIN", new_y="NEXT")
+            self.set_text_color(0, 0, 0)
+            self.ln(4)
+        self.paragraph(doc["title"], 16, "B", 2)
+        if doc.get("authors"):
+            self.paragraph(doc["authors"], 10, gap=3)
+        if doc.get("abstract"):
+            self.paragraph(case_text.ABSTRACT, 10, "B", 0.5)
+            self.paragraph(doc["abstract"], gap=4)
+        self.column_top = self.y
+        self.in_columns = self.two_columns
+        self.set_column(0)
+        for section in doc["sections"]:
+            if section.get("heading"):
+                self.need(3 * LINE)
+                self.paragraph(section["heading"], 10.5, "B", 0.5)
+            if section.get("text"):
+                self.paragraph(section["text"], gap=3)
+            if section.get("table"):
+                self.table(section["table"])
+            if section.get("figure"):
+                self.figure(section["figure"])
+        if doc.get("references"):
+            self.need(3 * LINE)
+            self.paragraph(case_text.REFERENCES, 10.5, "B", 0.5)
+            for reference in doc["references"]:
+                self.paragraph(reference, 8, gap=0.8)
+        return bytes(self.output())
+
+
+def make_doc_pdf(doc: dict) -> bytes:
+    return new_pdf(DocPdf, doc).build()
+
+
+def built_pdf(holder: dict, field: str) -> bytes | None:
+    """The PDF a case (or document) gives for `field` (paper, draft or pdf): built from its `_text`
+    or `_doc` form, or a `_file`'s bytes as they are; None when it gives none."""
+    kind = case_text.form(holder, field)
+    if kind == "file":
+        return case_text.real_pdf(holder[f"{field}_file"]).read_bytes()
+    if kind == "doc":
+        return make_doc_pdf(holder[f"{field}_doc"])
+    if kind == "text":
+        return make_pdf(holder[f"{field}_text"])
+    return None
+
+
 ## fake change notice
 def build_inputs(meta: dict) -> tuple[ReportInputs, bytes | None]:
     """A case lists its documents as `documents`: each has kind (notice, related, new_version or
-    current_version), doi, and optionally title, text, update_to_includes_paper and pdf_text (a
-    PDF stored for it). A single `notice` is still accepted; none means the alert has no notice."""
+    current_version), doi, and optionally title, text, update_to_includes_paper and pdf_text,
+    pdf_doc or pdf_file (a PDF stored for it). A single `notice` is still accepted; none means
+    the alert has no notice."""
     specs = list(meta.get("documents") or [])
     if meta.get("notice"):
         specs.insert(0, {"kind": "notice", **meta["notice"]})
     documents = []
     document_pdfs = []
     for i, spec in enumerate(specs, 1):
-        has_pdf = bool(spec.get("pdf_text"))
+        pdf = built_pdf(spec, "pdf")
+        has_pdf = pdf is not None
         document = DocumentInReport(
             id=i,
             kind=spec["kind"],
@@ -84,7 +254,7 @@ def build_inputs(meta: dict) -> tuple[ReportInputs, bytes | None]:
         )
         documents.append(document)
         if has_pdf:
-            document_pdfs.append((document, make_pdf(spec["pdf_text"])))
+            document_pdfs.append((document, pdf))
     report = Report(
         id=1,
         paper_id=PAPER_ID,
@@ -95,11 +265,10 @@ def build_inputs(meta: dict) -> tuple[ReportInputs, bytes | None]:
     inputs = ReportInputs(
         report=report,
         paper=PaperDetails.model_validate(meta["paper"]),
-        paper_pdf=make_pdf(meta["paper_text"]),
+        paper_pdf=built_pdf(meta, "paper"),
         document_pdfs=document_pdfs,
     )
-    draft = make_pdf(meta["draft_text"]) if meta.get("draft_text") else None
-    return inputs, draft
+    return inputs, built_pdf(meta, "draft")
 
 
 def fake_storage(draft: bytes | None) -> httpx.AsyncClient:

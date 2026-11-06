@@ -1,24 +1,591 @@
 {
   "category": "flag only, watermark on current copy",
   "tier": "hard",
-  "paper": {"doi": "10.9999/fake.2018.019", "title": "Soil carbon gains after winter cover cropping", "publication_year": 2018, "journal": "J. Fake Agronomy", "authors": ["Haugen, S.", "Rao, V."]},
-  "paper_text": "Soil carbon gains after winter cover cropping\nHaugen, S., Rao, V.  J. Fake Agronomy, 2018\n\nAbstract\nWinter cover crops raised topsoil carbon by 6% over three years.\n\nMethods\nSoil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2.",
-  "alerts": [{"id": 191, "change_type": "retraction", "change_key": "retraction:openalex", "alert_severity": "high", "description": "OpenAlex marks this paper as retracted; no notice was found.", "notice_doi": null, "detected_at": "2026-10-01T00:00:00Z"}],
-  "documents": [
-    {"kind": "current_version", "doi": "10.9999/fake.2018.019", "text": null, "pdf_source_url": "https://example.org/haugen2018.pdf", "pdf_text": "RETRACTED - this article has been withdrawn by the publisher.\n\nSoil carbon gains after winter cover cropping\nHaugen, S., Rao, V.  J. Fake Agronomy, 2018\n\nAbstract\nWinter cover crops raised topsoil carbon by 6% over three years.\n\nMethods\nSoil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2."}
+  "paper": {
+    "doi": "10.9999/fake.2018.019",
+    "title": "Soil carbon gains after winter cover cropping",
+    "publication_year": 2018,
+    "journal": "J. Fake Agronomy",
+    "authors": [
+      "Haugen, S.",
+      "Rao, V."
+    ]
+  },
+  "paper_doc": {
+    "layout": "two_column",
+    "running_head": "J. Fake Agronomy 2018; 41: 233-251 · doi:10.9999/fake.2018.019",
+    "title": "Soil carbon gains after winter cover cropping",
+    "authors": "Haugen, S.¹, Rao, V.²  ¹ Department of Soil Science, Fake Northern University; ² Institute of Crop Systems, Fake Plains College",
+    "abstract": "Winter cover crops are widely promoted as a way to store carbon in arable soils, but field evidence from cool, wet regions remains thin and is often based on single sampling dates. We followed paired plots on three farms through three full rotations, comparing a winter cover crop of rye and vetch with bare winter fallow. Winter cover crops raised topsoil carbon by 6% over three years. Gains were concentrated in the upper part of the sampled layer and were similar across the three farms despite differences in texture and drainage. We describe the sampling and analysis protocol in detail so that it can be reused by other field groups, and discuss what the gains mean for farm-scale carbon accounting.",
+    "sections": [
+      {
+        "heading": "1. Introduction",
+        "text": "Arable soils have lost a substantial part of the organic carbon they held under native vegetation, and rebuilding that stock is now a stated goal of many national soil strategies. Among the practices proposed, winter cover cropping is attractive because it fits into existing rotations, needs little new machinery and brings other benefits such as reduced nitrate leaching and less erosion during the wettest months of the year.\nThe mechanism by which cover crops add carbon is simple in outline. A living crop over winter fixes carbon that would otherwise not enter the system at all, and part of that carbon reaches the soil as root exudates, fine roots and incorporated shoots. Whether this input leads to a lasting increase in the soil stock depends on how quickly the new material is decomposed, how it interacts with soil minerals, and whether the extra residue changes the decomposition of carbon already present.\nField studies of cover crops and soil carbon have produced a wide range of results. Some report clear gains within a few years, others find no change, and a few report losses in the deeper layers. Part of this spread reflects genuine differences between climates, soils and crop mixtures, but part of it reflects differences in method. Studies differ in the depth sampled, the number of cores per plot, the season of sampling, the way stones and roots are removed, and the analytical method used to measure carbon. Because changes in soil carbon over a few years are small relative to the spatial variation within a field, these differences in method can easily be larger than the effect being measured.\nCool, wet regions are under-represented in this literature. Winters there are long enough for a cover crop to build substantial biomass, but low temperatures also slow decomposition, so the balance between input and loss may differ from the warmer regions where most trials have been run. Drainage is often imperfect, and soils can remain close to saturation for weeks, which affects both root growth and the fate of fresh residue.\nThe aims of this study were therefore twofold. First, we wanted to measure the change in topsoil carbon under a winter cover crop compared with bare fallow over three full rotations on working farms in a cool, wet region. Second, we wanted to set out a sampling and analysis protocol in enough detail that other groups could apply it and obtain comparable numbers. The protocol is given in Section 2 and the results in Section 3."
+      },
+      {
+        "heading": "2. Materials and methods",
+        "text": "2.1 Sites and design\nThe study ran on three commercial arable farms within 40 km of one another. The farms were chosen to span the range of textures common in the region, from a sandy loam on the upper terrace to a silty clay loam on the valley floor. On each farm, four pairs of strips were laid out in a single field, each pair consisting of one strip sown to a winter cover crop and one left as bare fallow after the harvest of the cash crop. Treatments were assigned at random within each pair. Strips were 24 m wide so that farm machinery could be used without crossing between treatments.\nThe cover crop was a mixture of winter rye and hairy vetch, drilled within ten days of the cash-crop harvest and terminated by shallow cultivation in early spring. The cash crops followed the farms' normal rotation of spring barley, field beans and spring wheat, and were managed identically on both treatments. Fertiliser rates were set by the farmers and applied uniformly across each field.",
+        "table": {
+          "caption": "Table 1. Site characteristics of the three farms at the start of the study.",
+          "rows": [
+            [
+              "Farm",
+              "Texture",
+              "Clay (%)",
+              "Drainage",
+              "Annual rainfall (mm)"
+            ],
+            [
+              "A",
+              "Sandy loam",
+              "12",
+              "Free",
+              "870"
+            ],
+            [
+              "B",
+              "Loam",
+              "21",
+              "Moderate",
+              "910"
+            ],
+            [
+              "C",
+              "Silty clay loam",
+              "33",
+              "Impeded",
+              "960"
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "2.2 Sampling protocol",
+        "text": "Soils were sampled in late autumn of the start year, before the first cover crop was sown, and again at the same time of year after each of the three rotations. On each sampling date, twelve cores were taken from each strip along a fixed W-shaped path, starting at least 5 m from the strip edges and the headlands. Core positions were located with a handheld satellite receiver and moved by up to one metre on later dates to avoid sampling the same hole.\nCores were taken with a 5 cm diameter split-tube corer driven to 15 cm. Each core was inspected in the field; cores that were compressed by more than 10% of their length were discarded and retaken nearby. The twelve cores from each strip were combined into a single composite sample, placed in a labelled bag and kept cool until processing. Separate intact cores were taken at four positions per strip for bulk density.\nIn the laboratory, composite samples were air dried, gently crushed and passed through a 2 mm sieve. Visible roots and plant fragments retained on the sieve were removed by hand and discarded, and stones were weighed so that results could be expressed on a fine-earth basis. A subsample of each composite was ground to a fine powder in a ball mill for carbon analysis, and the remainder was archived."
+      },
+      {
+        "heading": "2.3 Carbon analysis",
+        "text": "Soil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2. Ground subsamples of about 200 mg were weighed into tin capsules and analysed in an elemental analyser. Because the soils at all three farms were free of carbonate, as confirmed by the absence of effervescence with dilute acid, total carbon was taken to be organic carbon. Each sample was analysed in duplicate, and samples whose duplicates differed by more than 5% of their mean were rerun. A reference soil was included after every twenty samples to check for drift.\nCarbon concentrations were converted to stocks using the bulk density of the fine earth measured on the intact cores. Stocks were compared on an equivalent soil mass basis rather than at a fixed depth, so that small changes in bulk density caused by the cover crop did not appear as changes in carbon. The reference mass was taken from the bare fallow strips at the start of the study.",
+        "figure": {
+          "caption": "Figure 1. Layout of a paired strip and the W-shaped coring path used on every sampling date."
+        }
+      },
+      {
+        "heading": "2.4 Statistical analysis",
+        "text": "The change in carbon stock from the start of the study was analysed with a linear mixed model, with treatment, sampling year and their interaction as fixed effects, and farm and strip pair as random effects. Residuals were checked for normality and constant variance by inspection of diagnostic plots. Differences between treatments are reported as the relative change in stock under the cover crop compared with fallow, with 95% confidence intervals. All analyses were run in open-source statistical software."
+      },
+      {
+        "heading": "3. Results",
+        "text": "Cover crop biomass at termination varied from year to year with autumn sowing conditions but was established on every strip in every year. Rye made up most of the biomass on the free-draining farm, while vetch was more prominent on the farm with impeded drainage.\nOver the three rotations, topsoil carbon stocks under the cover crop rose relative to the fallow strips, and the difference grew steadily from one sampling date to the next. By the end of the study, winter cover crops had raised topsoil carbon by 6% over three years compared with bare fallow. The direction of the change was the same on all three farms, and the farm-by-treatment interaction was not significant.\nYields of the cash crops did not differ between treatments in any year. Bulk density was slightly lower under the cover crop on the silty clay loam, which is why stocks were compared on an equivalent soil mass basis.",
+        "table": {
+          "caption": "Table 2. Cover crop establishment and termination dates by year.",
+          "rows": [
+            [
+              "Year",
+              "Sowing",
+              "Termination",
+              "Established on all strips"
+            ],
+            [
+              "1",
+              "12 Sep",
+              "18 Mar",
+              "Yes"
+            ],
+            [
+              "2",
+              "20 Sep",
+              "25 Mar",
+              "Yes"
+            ],
+            [
+              "3",
+              "9 Sep",
+              "14 Mar",
+              "Yes"
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "4. Discussion",
+        "text": "The gain we observed is within the range reported for cover crops in temperate regions and shows that a measurable change can be detected within three rotations when sampling and analysis are tightly controlled. The consistency across farms with very different textures suggests that, in this climate, the input of fresh carbon from the cover crop is a stronger influence than soil texture on the short-term change in stock.\nSeveral features of the protocol were important. Compositing twelve cores per strip reduced the variation between strips to the point where small differences could be resolved. Removing roots on the sieve avoided counting fresh plant material as soil carbon, which would otherwise have exaggerated the effect of a crop that leaves a dense root mat. Comparing stocks on an equivalent soil mass basis removed an artefact caused by the looser soil under the cover crop.\nThe study has limits. It sampled only the topsoil, so it cannot say whether carbon gained near the surface was offset by changes deeper in the profile. Three rotations are also too short to show whether the gain will continue, level off or reverse if the practice stops. Finally, the farms were all in one region, and the results should be applied elsewhere with care.\nFor farm-scale carbon accounting, the results suggest that winter cover cropping can contribute to topsoil carbon in cool, wet regions, but that claims should rest on measurements made with a consistent protocol and repeated over several years rather than on single sampling dates."
+      },
+      {
+        "heading": "4.1 Comparison with earlier field studies",
+        "text": "Earlier work on cover crops and soil carbon in cool climates has mostly relied on a single sampling date at the end of a trial, comparing treated and untreated plots without a baseline. That design cannot separate a real change from differences that were present before the trial began, and it is particularly vulnerable to the patchiness of soil carbon within a field. By sampling every strip before the first cover crop was sown and after each rotation, we were able to express the result as a change from a known starting point on the same ground.\nStudies that sampled deeper profiles have sometimes found that gains near the surface were partly matched by losses below the plough layer. Our design did not test this, and we do not claim that the whole profile gained carbon. Studies on warmer soils have also reported faster gains in the first year followed by a slower rise; with only three rotations we cannot say whether the same pattern applies here.\nThe crop mixture matters as well. Rye produces a large, fibrous root system and a residue that decomposes slowly, while vetch adds nitrogen and a residue that breaks down quickly. A mixture of the two may combine a large carbon input with enough nitrogen to support the microbial processing that stabilises new carbon on mineral surfaces. Trials of single species would be needed to separate these effects."
+      },
+      {
+        "heading": "4.2 Sources of error in the protocol",
+        "text": "The largest source of error in short-term soil carbon studies is usually spatial variation, and the protocol was designed mainly to control it. Taking twelve cores per strip along the same path on every date, and moving each core position only slightly between dates, means that each composite represents the same part of the strip throughout the study. Discarding compressed cores avoids samples in which the 0-15 cm layer is under-represented.\nThe second source of error is fresh plant material. A winter cover crop leaves a dense mat of fine roots in the topsoil, and if those roots are ground with the soil they are counted as soil carbon. Hand removal of roots retained on the 2 mm sieve is slow, but in our experience it is the step most often skipped or done inconsistently between laboratories. Roots finer than the sieve mesh are not removed by this step and remain a small, unavoidable bias that affects both treatments.\nThe third source of error is bulk density. Because a cover crop can loosen the topsoil, a fixed-depth comparison would sample less soil mass under the cover crop than under fallow and would understate any gain. The equivalent soil mass correction removes this problem but depends on accurate bulk density cores, which is why four intact cores were taken per strip on every date.\nAnalytical error was small by comparison. Duplicate analysis, reruns of discordant pairs and the regular reference soil kept the laboratory contribution well below the variation between strips."
+      },
+      {
+        "heading": "4.3 Practical guidance for other field groups",
+        "text": "Groups wishing to apply the protocol should plan the sampling dates around the farm calendar rather than a fixed day. Sampling in late autumn, after harvest and before any autumn cultivation, gives soils that are moist enough to core cleanly but not so wet that cores compress. Sampling at the same point in the season each year matters more than the exact date.\nA two-person team can core one strip in about twenty minutes once the path has been marked. Marking the W-shaped path with fixed pegs at the field edge, and recording core positions on the first date, makes later dates much faster. Composite bags should be labelled with the farm, strip, date and depth before going into the field.\nIn the laboratory, root picking should be done by the same people throughout a study where possible, and the time spent on each sample recorded. Archiving a portion of every sieved sample allows later reanalysis if questions arise about a particular date or if a new analytical method is adopted."
+      },
+      {
+        "heading": "4.4 Implications for carbon payment schemes",
+        "text": "Several schemes now pay farmers for practices expected to raise soil carbon, and some are moving towards payment for measured change. Our results suggest that measured change under winter cover crops can be detected within a few rotations, but only with a sampling effort well above what is common in commercial soil testing. A scheme that relied on a few cores per field taken at different times of year would struggle to tell a real gain from sampling noise.\nSchemes should also be clear about the depth they account for. A topsoil gain such as ours is a meaningful result, but it should not be presented as a whole-profile gain without deeper sampling. Finally, because carbon gained under a cover crop may be lost if the practice stops, schemes need to consider how long the practice must continue for the gain to be counted."
+      },
+      {
+        "heading": "5. Conclusions",
+        "text": "Winter cover cropping with rye and vetch increased topsoil carbon compared with bare fallow on three contrasting farms over three rotations, without affecting cash-crop yields. A detailed, reusable protocol for sampling and measuring soil carbon is provided so that other studies can produce comparable estimates."
+      },
+      {
+        "heading": "Acknowledgements",
+        "text": "We thank the three farming families who hosted the trials, and the laboratory staff who processed the samples. The work was funded by a regional soil health programme."
+      },
+      {
+        "heading": "Appendix A. Field checklist for the sampling protocol",
+        "text": "The checklist below was carried by the field team on every sampling date. It summarises the steps in Section 2.2 in the order they are done, so that a new team member can follow the protocol without the full text.",
+        "table": {
+          "caption": "Table A1. Field checklist used on each sampling date.",
+          "rows": [
+            [
+              "Step",
+              "Action",
+              "Check"
+            ],
+            [
+              "1",
+              "Locate the strip and the start peg of the coring path",
+              "Start at least 5 m from strip edges and headlands"
+            ],
+            [
+              "2",
+              "Take twelve cores along the W-shaped path",
+              "Each core driven to 15 cm with the split-tube corer"
+            ],
+            [
+              "3",
+              "Inspect each core",
+              "Discard and retake any core compressed by more than 10%"
+            ],
+            [
+              "4",
+              "Combine the twelve cores into one composite",
+              "Bag labelled with farm, strip, date and depth"
+            ],
+            [
+              "5",
+              "Take four intact cores for bulk density",
+              "Cores kept upright and sealed"
+            ],
+            [
+              "6",
+              "Record core positions",
+              "Positions saved on the handheld receiver"
+            ],
+            [
+              "7",
+              "Keep samples cool until processing",
+              "Cool box checked before leaving the field"
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "Appendix B. Laboratory procedure",
+        "text": "On arrival, composite samples were logged and spread on trays to air dry at room temperature for about one week, turned daily. Dried samples were crushed gently with a wooden roller so that aggregates broke apart without grinding stones, then passed through a 2 mm sieve. Roots and plant fragments retained on the sieve were picked out with forceps under a lamp, and the time spent on each sample was recorded. Stones were weighed and discarded.\nThe sieved soil was split with a riffle box. One part was ground in a ball mill for carbon analysis, one part was sealed in a labelled jar for the archive, and the rest was kept for other analyses not reported here. Bulk density cores were dried at 105 °C to constant weight, and the mass of stones in each core was subtracted before calculating the density of the fine earth.\nThe elemental analyser was calibrated at the start of each run with a certified standard. Each run contained blanks, duplicates of every sample and a reference soil after every twenty samples. Runs in which the reference soil drifted outside its accepted range were repeated in full.",
+        "figure": {
+          "caption": "Figure B1. Flow of a composite sample from field bag to archive jar and elemental analyser."
+        }
+      }
+    ],
+    "references": [
+      "[1] Albers, K., Moreau, P. (2011). Organic carbon losses from arable soils since cultivation. J. Fake Soil Sci. 22: 101-114.",
+      "[2] Brandt, L. (2014). National strategies for soil carbon: a review. J. Fake Land Policy 8: 45-60.",
+      "[3] Castillo, R., Ng, H. (2012). Cover crops and nitrate leaching in winter. J. Fake Agronomy 35: 77-89.",
+      "[4] Dahl, E., Okafor, C. (2015). Root exudates as a carbon input to arable soils. J. Fake Rhizosphere Res. 4: 12-25.",
+      "[5] Eriksen, M. (2013). Priming of soil organic matter decomposition by fresh residue. J. Fake Soil Biol. 19: 210-223.",
+      "[6] Fischer, A., Gupta, R. (2016). A meta-analysis of cover crop effects on soil carbon. J. Fake Agroecol. 11: 300-318.",
+      "[7] Garcia, T. (2010). Spatial variation of soil carbon within arable fields. J. Fake Soil Sci. 21: 55-68.",
+      "[8] Holm, J., Keller, D. (2017). Sampling depth and the detection of soil carbon change. J. Fake Soil Sci. 28: 140-152.",
+      "[9] Ivanova, N. (2014). Winter cover crops in cool, wet climates. J. Fake Agronomy 37: 199-210.",
+      "[10] Johansson, P., Lee, S. (2012). Equivalent soil mass methods for carbon stock comparison. J. Fake Soil Sci. 23: 88-97.",
+      "[11] Kowalski, B. (2016). Dry combustion analysis of soil carbon: a practical guide. J. Fake Soil Anal. 6: 1-14.",
+      "[12] Lund, H., Mwangi, J. (2015). Root removal before soil carbon analysis. J. Fake Soil Anal. 5: 33-41.",
+      "[13] Moreno, G. (2013). Rye and vetch mixtures for winter cover. J. Fake Crop Sci. 14: 65-76.",
+      "[14] Nilsen, O., Park, Y. (2017). Bulk density changes under cover crops. J. Fake Soil Phys. 9: 120-131.",
+      "[15] Olsen, F. (2011). Mixed models for paired field trials. J. Fake Agric. Stat. 3: 22-35.",
+      "[16] Petrov, I., Sato, K. (2016). Drainage and residue decomposition in clay soils. J. Fake Soil Biol. 22: 400-412.",
+      "[17] Quinn, D. (2014). Carbon accounting on farms: methods and limits. J. Fake Land Policy 9: 150-166.",
+      "[18] Ramos, P., Underwood, T. (2015). Baseline sampling in soil carbon trials. J. Fake Soil Sci. 26: 33-45.",
+      "[19] Svensson, L. (2016). Soil carbon below the plough layer under changed management. J. Fake Soil Sci. 27: 180-194.",
+      "[20] Tran, H., Wilde, G. (2017). Early and late phases of soil carbon gain. J. Fake Agroecol. 12: 60-74.",
+      "[21] Uddin, M. (2015). Rye root systems and residue decomposition. J. Fake Crop Sci. 16: 200-213.",
+      "[22] Varga, Z., Ellis, J. (2016). Legume residue and microbial carbon stabilisation. J. Fake Soil Biol. 22: 15-29.",
+      "[23] Walsh, C. (2014). Within-field variation and the design of soil surveys. J. Fake Soil Anal. 4: 100-112.",
+      "[24] Xu, L., Brennan, R. (2017). Fine roots passing the 2 mm sieve. J. Fake Soil Anal. 7: 44-52.",
+      "[25] Young, A. (2013). Timing of soil sampling on arable farms. J. Fake Agronomy 36: 120-131.",
+      "[26] Zeller, K., Hart, B. (2016). Archiving soil samples for long-term studies. J. Fake Soil Anal. 6: 80-90.",
+      "[27] Abbott, N. (2017). Payment for measured soil carbon change. J. Fake Land Policy 12: 1-16.",
+      "[28] Becker, S., Ondo, F. (2016). Commercial soil testing and carbon verification. J. Fake Land Policy 11: 70-84.",
+      "[29] Cole, R. (2015). Permanence of soil carbon gains after practice change. J. Fake Agroecol. 10: 140-155."
+    ]
+  },
+  "alerts": [
+    {
+      "id": 191,
+      "change_type": "retraction",
+      "change_key": "retraction:openalex",
+      "alert_severity": "high",
+      "description": "OpenAlex marks this paper as retracted; no notice was found.",
+      "notice_doi": null,
+      "detected_at": "2026-10-01T00:00:00Z"
+    }
   ],
-  "draft_text": "Cover crops and carbon in clay soils\n\n2. Methods\nWe sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.\n\nReferences\n[5] Haugen, S., Rao, V. (2018). Soil carbon gains after winter cover cropping. J. Fake Agronomy.",
+  "documents": [
+    {
+      "kind": "current_version",
+      "doi": "10.9999/fake.2018.019",
+      "text": null,
+      "pdf_source_url": "https://example.org/haugen2018.pdf",
+      "pdf_doc": {
+        "layout": "two_column",
+        "running_head": "J. Fake Agronomy 2018; 41: 233-251 · doi:10.9999/fake.2018.019",
+        "watermark": "RETRACTED",
+        "title": "RETRACTED: Soil carbon gains after winter cover cropping",
+        "authors": "Haugen, S.¹, Rao, V.²  ¹ Department of Soil Science, Fake Northern University; ² Institute of Crop Systems, Fake Plains College",
+        "abstract": "Winter cover crops are widely promoted as a way to store carbon in arable soils, but field evidence from cool, wet regions remains thin and is often based on single sampling dates. We followed paired plots on three farms through three full rotations, comparing a winter cover crop of rye and vetch with bare winter fallow. Winter cover crops raised topsoil carbon by 6% over three years. Gains were concentrated in the upper part of the sampled layer and were similar across the three farms despite differences in texture and drainage. We describe the sampling and analysis protocol in detail so that it can be reused by other field groups, and discuss what the gains mean for farm-scale carbon accounting.",
+        "sections": [
+          {
+            "heading": "1. Introduction",
+            "text": "Arable soils have lost a substantial part of the organic carbon they held under native vegetation, and rebuilding that stock is now a stated goal of many national soil strategies. Among the practices proposed, winter cover cropping is attractive because it fits into existing rotations, needs little new machinery and brings other benefits such as reduced nitrate leaching and less erosion during the wettest months of the year.\nThe mechanism by which cover crops add carbon is simple in outline. A living crop over winter fixes carbon that would otherwise not enter the system at all, and part of that carbon reaches the soil as root exudates, fine roots and incorporated shoots. Whether this input leads to a lasting increase in the soil stock depends on how quickly the new material is decomposed, how it interacts with soil minerals, and whether the extra residue changes the decomposition of carbon already present.\nField studies of cover crops and soil carbon have produced a wide range of results. Some report clear gains within a few years, others find no change, and a few report losses in the deeper layers. Part of this spread reflects genuine differences between climates, soils and crop mixtures, but part of it reflects differences in method. Studies differ in the depth sampled, the number of cores per plot, the season of sampling, the way stones and roots are removed, and the analytical method used to measure carbon. Because changes in soil carbon over a few years are small relative to the spatial variation within a field, these differences in method can easily be larger than the effect being measured.\nCool, wet regions are under-represented in this literature. Winters there are long enough for a cover crop to build substantial biomass, but low temperatures also slow decomposition, so the balance between input and loss may differ from the warmer regions where most trials have been run. Drainage is often imperfect, and soils can remain close to saturation for weeks, which affects both root growth and the fate of fresh residue.\nThe aims of this study were therefore twofold. First, we wanted to measure the change in topsoil carbon under a winter cover crop compared with bare fallow over three full rotations on working farms in a cool, wet region. Second, we wanted to set out a sampling and analysis protocol in enough detail that other groups could apply it and obtain comparable numbers. The protocol is given in Section 2 and the results in Section 3."
+          },
+          {
+            "heading": "2. Materials and methods",
+            "text": "2.1 Sites and design\nThe study ran on three commercial arable farms within 40 km of one another. The farms were chosen to span the range of textures common in the region, from a sandy loam on the upper terrace to a silty clay loam on the valley floor. On each farm, four pairs of strips were laid out in a single field, each pair consisting of one strip sown to a winter cover crop and one left as bare fallow after the harvest of the cash crop. Treatments were assigned at random within each pair. Strips were 24 m wide so that farm machinery could be used without crossing between treatments.\nThe cover crop was a mixture of winter rye and hairy vetch, drilled within ten days of the cash-crop harvest and terminated by shallow cultivation in early spring. The cash crops followed the farms' normal rotation of spring barley, field beans and spring wheat, and were managed identically on both treatments. Fertiliser rates were set by the farmers and applied uniformly across each field.",
+            "table": {
+              "caption": "Table 1. Site characteristics of the three farms at the start of the study.",
+              "rows": [
+                [
+                  "Farm",
+                  "Texture",
+                  "Clay (%)",
+                  "Drainage",
+                  "Annual rainfall (mm)"
+                ],
+                [
+                  "A",
+                  "Sandy loam",
+                  "12",
+                  "Free",
+                  "870"
+                ],
+                [
+                  "B",
+                  "Loam",
+                  "21",
+                  "Moderate",
+                  "910"
+                ],
+                [
+                  "C",
+                  "Silty clay loam",
+                  "33",
+                  "Impeded",
+                  "960"
+                ]
+              ]
+            }
+          },
+          {
+            "heading": "2.2 Sampling protocol",
+            "text": "Soils were sampled in late autumn of the start year, before the first cover crop was sown, and again at the same time of year after each of the three rotations. On each sampling date, twelve cores were taken from each strip along a fixed W-shaped path, starting at least 5 m from the strip edges and the headlands. Core positions were located with a handheld satellite receiver and moved by up to one metre on later dates to avoid sampling the same hole.\nCores were taken with a 5 cm diameter split-tube corer driven to 15 cm. Each core was inspected in the field; cores that were compressed by more than 10% of their length were discarded and retaken nearby. The twelve cores from each strip were combined into a single composite sample, placed in a labelled bag and kept cool until processing. Separate intact cores were taken at four positions per strip for bulk density.\nIn the laboratory, composite samples were air dried, gently crushed and passed through a 2 mm sieve. Visible roots and plant fragments retained on the sieve were removed by hand and discarded, and stones were weighed so that results could be expressed on a fine-earth basis. A subsample of each composite was ground to a fine powder in a ball mill for carbon analysis, and the remainder was archived."
+          },
+          {
+            "heading": "2.3 Carbon analysis",
+            "text": "Soil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2. Ground subsamples of about 200 mg were weighed into tin capsules and analysed in an elemental analyser. Because the soils at all three farms were free of carbonate, as confirmed by the absence of effervescence with dilute acid, total carbon was taken to be organic carbon. Each sample was analysed in duplicate, and samples whose duplicates differed by more than 5% of their mean were rerun. A reference soil was included after every twenty samples to check for drift.\nCarbon concentrations were converted to stocks using the bulk density of the fine earth measured on the intact cores. Stocks were compared on an equivalent soil mass basis rather than at a fixed depth, so that small changes in bulk density caused by the cover crop did not appear as changes in carbon. The reference mass was taken from the bare fallow strips at the start of the study.",
+            "figure": {
+              "caption": "Figure 1. Layout of a paired strip and the W-shaped coring path used on every sampling date."
+            }
+          },
+          {
+            "heading": "2.4 Statistical analysis",
+            "text": "The change in carbon stock from the start of the study was analysed with a linear mixed model, with treatment, sampling year and their interaction as fixed effects, and farm and strip pair as random effects. Residuals were checked for normality and constant variance by inspection of diagnostic plots. Differences between treatments are reported as the relative change in stock under the cover crop compared with fallow, with 95% confidence intervals. All analyses were run in open-source statistical software."
+          },
+          {
+            "heading": "3. Results",
+            "text": "Cover crop biomass at termination varied from year to year with autumn sowing conditions but was established on every strip in every year. Rye made up most of the biomass on the free-draining farm, while vetch was more prominent on the farm with impeded drainage.\nOver the three rotations, topsoil carbon stocks under the cover crop rose relative to the fallow strips, and the difference grew steadily from one sampling date to the next. By the end of the study, winter cover crops had raised topsoil carbon by 6% over three years compared with bare fallow. The direction of the change was the same on all three farms, and the farm-by-treatment interaction was not significant.\nYields of the cash crops did not differ between treatments in any year. Bulk density was slightly lower under the cover crop on the silty clay loam, which is why stocks were compared on an equivalent soil mass basis.",
+            "table": {
+              "caption": "Table 2. Cover crop establishment and termination dates by year.",
+              "rows": [
+                [
+                  "Year",
+                  "Sowing",
+                  "Termination",
+                  "Established on all strips"
+                ],
+                [
+                  "1",
+                  "12 Sep",
+                  "18 Mar",
+                  "Yes"
+                ],
+                [
+                  "2",
+                  "20 Sep",
+                  "25 Mar",
+                  "Yes"
+                ],
+                [
+                  "3",
+                  "9 Sep",
+                  "14 Mar",
+                  "Yes"
+                ]
+              ]
+            }
+          },
+          {
+            "heading": "4. Discussion",
+            "text": "The gain we observed is within the range reported for cover crops in temperate regions and shows that a measurable change can be detected within three rotations when sampling and analysis are tightly controlled. The consistency across farms with very different textures suggests that, in this climate, the input of fresh carbon from the cover crop is a stronger influence than soil texture on the short-term change in stock.\nSeveral features of the protocol were important. Compositing twelve cores per strip reduced the variation between strips to the point where small differences could be resolved. Removing roots on the sieve avoided counting fresh plant material as soil carbon, which would otherwise have exaggerated the effect of a crop that leaves a dense root mat. Comparing stocks on an equivalent soil mass basis removed an artefact caused by the looser soil under the cover crop.\nThe study has limits. It sampled only the topsoil, so it cannot say whether carbon gained near the surface was offset by changes deeper in the profile. Three rotations are also too short to show whether the gain will continue, level off or reverse if the practice stops. Finally, the farms were all in one region, and the results should be applied elsewhere with care.\nFor farm-scale carbon accounting, the results suggest that winter cover cropping can contribute to topsoil carbon in cool, wet regions, but that claims should rest on measurements made with a consistent protocol and repeated over several years rather than on single sampling dates."
+          },
+          {
+            "heading": "4.1 Comparison with earlier field studies",
+            "text": "Earlier work on cover crops and soil carbon in cool climates has mostly relied on a single sampling date at the end of a trial, comparing treated and untreated plots without a baseline. That design cannot separate a real change from differences that were present before the trial began, and it is particularly vulnerable to the patchiness of soil carbon within a field. By sampling every strip before the first cover crop was sown and after each rotation, we were able to express the result as a change from a known starting point on the same ground.\nStudies that sampled deeper profiles have sometimes found that gains near the surface were partly matched by losses below the plough layer. Our design did not test this, and we do not claim that the whole profile gained carbon. Studies on warmer soils have also reported faster gains in the first year followed by a slower rise; with only three rotations we cannot say whether the same pattern applies here.\nThe crop mixture matters as well. Rye produces a large, fibrous root system and a residue that decomposes slowly, while vetch adds nitrogen and a residue that breaks down quickly. A mixture of the two may combine a large carbon input with enough nitrogen to support the microbial processing that stabilises new carbon on mineral surfaces. Trials of single species would be needed to separate these effects."
+          },
+          {
+            "heading": "4.2 Sources of error in the protocol",
+            "text": "The largest source of error in short-term soil carbon studies is usually spatial variation, and the protocol was designed mainly to control it. Taking twelve cores per strip along the same path on every date, and moving each core position only slightly between dates, means that each composite represents the same part of the strip throughout the study. Discarding compressed cores avoids samples in which the 0-15 cm layer is under-represented.\nThe second source of error is fresh plant material. A winter cover crop leaves a dense mat of fine roots in the topsoil, and if those roots are ground with the soil they are counted as soil carbon. Hand removal of roots retained on the 2 mm sieve is slow, but in our experience it is the step most often skipped or done inconsistently between laboratories. Roots finer than the sieve mesh are not removed by this step and remain a small, unavoidable bias that affects both treatments.\nThe third source of error is bulk density. Because a cover crop can loosen the topsoil, a fixed-depth comparison would sample less soil mass under the cover crop than under fallow and would understate any gain. The equivalent soil mass correction removes this problem but depends on accurate bulk density cores, which is why four intact cores were taken per strip on every date.\nAnalytical error was small by comparison. Duplicate analysis, reruns of discordant pairs and the regular reference soil kept the laboratory contribution well below the variation between strips."
+          },
+          {
+            "heading": "4.3 Practical guidance for other field groups",
+            "text": "Groups wishing to apply the protocol should plan the sampling dates around the farm calendar rather than a fixed day. Sampling in late autumn, after harvest and before any autumn cultivation, gives soils that are moist enough to core cleanly but not so wet that cores compress. Sampling at the same point in the season each year matters more than the exact date.\nA two-person team can core one strip in about twenty minutes once the path has been marked. Marking the W-shaped path with fixed pegs at the field edge, and recording core positions on the first date, makes later dates much faster. Composite bags should be labelled with the farm, strip, date and depth before going into the field.\nIn the laboratory, root picking should be done by the same people throughout a study where possible, and the time spent on each sample recorded. Archiving a portion of every sieved sample allows later reanalysis if questions arise about a particular date or if a new analytical method is adopted."
+          },
+          {
+            "heading": "4.4 Implications for carbon payment schemes",
+            "text": "Several schemes now pay farmers for practices expected to raise soil carbon, and some are moving towards payment for measured change. Our results suggest that measured change under winter cover crops can be detected within a few rotations, but only with a sampling effort well above what is common in commercial soil testing. A scheme that relied on a few cores per field taken at different times of year would struggle to tell a real gain from sampling noise.\nSchemes should also be clear about the depth they account for. A topsoil gain such as ours is a meaningful result, but it should not be presented as a whole-profile gain without deeper sampling. Finally, because carbon gained under a cover crop may be lost if the practice stops, schemes need to consider how long the practice must continue for the gain to be counted."
+          },
+          {
+            "heading": "5. Conclusions",
+            "text": "Winter cover cropping with rye and vetch increased topsoil carbon compared with bare fallow on three contrasting farms over three rotations, without affecting cash-crop yields. A detailed, reusable protocol for sampling and measuring soil carbon is provided so that other studies can produce comparable estimates."
+          },
+          {
+            "heading": "Acknowledgements",
+            "text": "We thank the three farming families who hosted the trials, and the laboratory staff who processed the samples. The work was funded by a regional soil health programme."
+          },
+          {
+            "heading": "Appendix A. Field checklist for the sampling protocol",
+            "text": "The checklist below was carried by the field team on every sampling date. It summarises the steps in Section 2.2 in the order they are done, so that a new team member can follow the protocol without the full text.",
+            "table": {
+              "caption": "Table A1. Field checklist used on each sampling date.",
+              "rows": [
+                [
+                  "Step",
+                  "Action",
+                  "Check"
+                ],
+                [
+                  "1",
+                  "Locate the strip and the start peg of the coring path",
+                  "Start at least 5 m from strip edges and headlands"
+                ],
+                [
+                  "2",
+                  "Take twelve cores along the W-shaped path",
+                  "Each core driven to 15 cm with the split-tube corer"
+                ],
+                [
+                  "3",
+                  "Inspect each core",
+                  "Discard and retake any core compressed by more than 10%"
+                ],
+                [
+                  "4",
+                  "Combine the twelve cores into one composite",
+                  "Bag labelled with farm, strip, date and depth"
+                ],
+                [
+                  "5",
+                  "Take four intact cores for bulk density",
+                  "Cores kept upright and sealed"
+                ],
+                [
+                  "6",
+                  "Record core positions",
+                  "Positions saved on the handheld receiver"
+                ],
+                [
+                  "7",
+                  "Keep samples cool until processing",
+                  "Cool box checked before leaving the field"
+                ]
+              ]
+            }
+          },
+          {
+            "heading": "Appendix B. Laboratory procedure",
+            "text": "On arrival, composite samples were logged and spread on trays to air dry at room temperature for about one week, turned daily. Dried samples were crushed gently with a wooden roller so that aggregates broke apart without grinding stones, then passed through a 2 mm sieve. Roots and plant fragments retained on the sieve were picked out with forceps under a lamp, and the time spent on each sample was recorded. Stones were weighed and discarded.\nThe sieved soil was split with a riffle box. One part was ground in a ball mill for carbon analysis, one part was sealed in a labelled jar for the archive, and the rest was kept for other analyses not reported here. Bulk density cores were dried at 105 °C to constant weight, and the mass of stones in each core was subtracted before calculating the density of the fine earth.\nThe elemental analyser was calibrated at the start of each run with a certified standard. Each run contained blanks, duplicates of every sample and a reference soil after every twenty samples. Runs in which the reference soil drifted outside its accepted range were repeated in full.",
+            "figure": {
+              "caption": "Figure B1. Flow of a composite sample from field bag to archive jar and elemental analyser."
+            }
+          }
+        ],
+        "references": [
+          "[1] Albers, K., Moreau, P. (2011). Organic carbon losses from arable soils since cultivation. J. Fake Soil Sci. 22: 101-114.",
+          "[2] Brandt, L. (2014). National strategies for soil carbon: a review. J. Fake Land Policy 8: 45-60.",
+          "[3] Castillo, R., Ng, H. (2012). Cover crops and nitrate leaching in winter. J. Fake Agronomy 35: 77-89.",
+          "[4] Dahl, E., Okafor, C. (2015). Root exudates as a carbon input to arable soils. J. Fake Rhizosphere Res. 4: 12-25.",
+          "[5] Eriksen, M. (2013). Priming of soil organic matter decomposition by fresh residue. J. Fake Soil Biol. 19: 210-223.",
+          "[6] Fischer, A., Gupta, R. (2016). A meta-analysis of cover crop effects on soil carbon. J. Fake Agroecol. 11: 300-318.",
+          "[7] Garcia, T. (2010). Spatial variation of soil carbon within arable fields. J. Fake Soil Sci. 21: 55-68.",
+          "[8] Holm, J., Keller, D. (2017). Sampling depth and the detection of soil carbon change. J. Fake Soil Sci. 28: 140-152.",
+          "[9] Ivanova, N. (2014). Winter cover crops in cool, wet climates. J. Fake Agronomy 37: 199-210.",
+          "[10] Johansson, P., Lee, S. (2012). Equivalent soil mass methods for carbon stock comparison. J. Fake Soil Sci. 23: 88-97.",
+          "[11] Kowalski, B. (2016). Dry combustion analysis of soil carbon: a practical guide. J. Fake Soil Anal. 6: 1-14.",
+          "[12] Lund, H., Mwangi, J. (2015). Root removal before soil carbon analysis. J. Fake Soil Anal. 5: 33-41.",
+          "[13] Moreno, G. (2013). Rye and vetch mixtures for winter cover. J. Fake Crop Sci. 14: 65-76.",
+          "[14] Nilsen, O., Park, Y. (2017). Bulk density changes under cover crops. J. Fake Soil Phys. 9: 120-131.",
+          "[15] Olsen, F. (2011). Mixed models for paired field trials. J. Fake Agric. Stat. 3: 22-35.",
+          "[16] Petrov, I., Sato, K. (2016). Drainage and residue decomposition in clay soils. J. Fake Soil Biol. 22: 400-412.",
+          "[17] Quinn, D. (2014). Carbon accounting on farms: methods and limits. J. Fake Land Policy 9: 150-166.",
+          "[18] Ramos, P., Underwood, T. (2015). Baseline sampling in soil carbon trials. J. Fake Soil Sci. 26: 33-45.",
+          "[19] Svensson, L. (2016). Soil carbon below the plough layer under changed management. J. Fake Soil Sci. 27: 180-194.",
+          "[20] Tran, H., Wilde, G. (2017). Early and late phases of soil carbon gain. J. Fake Agroecol. 12: 60-74.",
+          "[21] Uddin, M. (2015). Rye root systems and residue decomposition. J. Fake Crop Sci. 16: 200-213.",
+          "[22] Varga, Z., Ellis, J. (2016). Legume residue and microbial carbon stabilisation. J. Fake Soil Biol. 22: 15-29.",
+          "[23] Walsh, C. (2014). Within-field variation and the design of soil surveys. J. Fake Soil Anal. 4: 100-112.",
+          "[24] Xu, L., Brennan, R. (2017). Fine roots passing the 2 mm sieve. J. Fake Soil Anal. 7: 44-52.",
+          "[25] Young, A. (2013). Timing of soil sampling on arable farms. J. Fake Agronomy 36: 120-131.",
+          "[26] Zeller, K., Hart, B. (2016). Archiving soil samples for long-term studies. J. Fake Soil Anal. 6: 80-90.",
+          "[27] Abbott, N. (2017). Payment for measured soil carbon change. J. Fake Land Policy 12: 1-16.",
+          "[28] Becker, S., Ondo, F. (2016). Commercial soil testing and carbon verification. J. Fake Land Policy 11: 70-84.",
+          "[29] Cole, R. (2015). Permanence of soil carbon gains after practice change. J. Fake Agroecol. 10: 140-155."
+        ]
+      }
+    }
+  ],
+  "draft_doc": {
+    "layout": "one_column",
+    "title": "Cover crops and carbon in clay soils",
+    "authors": "Mbeki, T., Lindqvist, A.  (draft, not for circulation)",
+    "abstract": "Heavy clay soils are thought to respond slowly to changes in management, yet they hold a large share of the carbon in arable land. We are testing whether a winter cover crop changes topsoil carbon in clay soils over a short rotation, using paired strips on two farms. This draft describes the background, the design and the sampling methods, and reports the baseline measurements taken before the first cover crop was sown.",
+    "sections": [
+      {
+        "heading": "1. Introduction",
+        "text": "Clay soils cover a large part of the lowland arable area in many temperate countries. Their fine texture gives them a high capacity to protect organic matter on mineral surfaces and inside aggregates, and for that reason they are often thought to hold carbon more securely than lighter soils [1]. The same properties make them difficult to manage: they drain slowly, compact easily when worked wet, and offer a narrow window for sowing and cultivation in autumn and spring [2].\nInterest in cover crops on clay soils has grown with the push to raise soil carbon on farms. A winter cover crop adds carbon through roots and residue during months when the land would otherwise be bare, and it can also improve soil structure by drying the soil and binding aggregates with roots and fungal hyphae [3]. On clay soils, however, the extra input may be offset by slower decomposition of the residue in cold, wet conditions, or by changes in the way the soil is cultivated to establish and terminate the crop [4].\nMuch of what is known about cover crops and soil carbon comes from lighter soils and warmer climates. Clay soils in cool regions have received less attention, partly because trials on them are hard to run: sowing dates are often delayed, establishment is uneven, and field operations can be postponed by weeks after heavy rain. Short-term studies on clay are also hampered by the large stock of carbon already present, against which a small gain is hard to detect.\nThis project asks a narrow question. On clay soils under a normal spring-cereal rotation, does a winter cover crop change topsoil carbon compared with bare fallow within a short rotation, when sampling and analysis are standardised? The answer matters for farmers deciding whether to adopt the practice and for schemes that pay for soil carbon gains. Section 2 describes the farms and the design, and the methods used to sample and measure carbon. Section 3 gives the baseline data, and Section 4 sets out what remains to be done."
+      },
+      {
+        "heading": "1.1 Aims and hypotheses",
+        "text": "The project has three aims. The first is to measure the change in topsoil carbon under a winter cover crop and under bare fallow on the same clay fields, starting from a baseline taken before any cover crop was sown. The second is to record how reliably a cover crop can be established and terminated on clay without damaging soil structure, since a practice that fails in wet autumns will not be adopted however much carbon it adds. The third is to keep the field and laboratory work simple enough that the farmers themselves could repeat the sampling after the project ends.\nWe expect the cover crop to raise topsoil carbon relative to fallow, but we also expect the change to be slow, because of the large existing stock and the cold, wet conditions over winter. We further expect the size of any change to differ between the two farms, because they differ in clay content and in how recently field drainage was installed. Finally, we expect bulk density to fall slightly under the cover crop as roots open the soil, which would make a fixed-depth comparison misleading.\nThese expectations shaped the design. A baseline on every strip guards against differences that were present before the trial. Paired strips on the same field reduce the effect of differences between fields. And measuring bulk density alongside carbon allows stocks to be compared on the same mass of soil rather than the same depth."
+      },
+      {
+        "heading": "1.2 Working with farmers",
+        "text": "Both farms were recruited through a local farmer discussion group that had already tried cover crops on small areas. The farmers chose the field used on each farm, agreed the strip layout, and do all of the sowing, spraying and harvesting with their own machinery. The research team does the soil sampling, the biomass cuts and the laboratory work. Decisions that affect both treatments, such as the choice of cash crop and the fertiliser rate, stay with the farmers, which keeps the trial close to normal practice but means that some field operations happen later than a research station would schedule them."
+      },
+      {
+        "heading": "2. Methods",
+        "text": "2.1 Farms and design\nThe study uses two farms on heavy clay soils, both with field drainage installed in the last twenty years. On each farm, three pairs of strips were marked out in one field, with one strip of each pair sown to a winter cover crop and the other left bare after harvest. Treatment within each pair was decided by coin toss. Strip widths match the farmers' drills so that each strip can be sown in a single pass [6].\nThe cover crop is a mixture of winter oats and crimson clover, chosen with the farmers because both species establish reliably when sown late into cloddy seedbeds [7]. It is drilled as soon as the cash crop is harvested and terminated by spraying in late winter, so that the soil is not cultivated while wet [8]. The cash crops are spring barley followed by spring oats, managed identically on both treatments.\n\n2.2 Soil sampling and carbon measurement\nWe sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly. Using an established protocol rather than designing our own lets our numbers be compared directly with that study, and its handling of roots and bulk density addresses the two problems we expect to be largest on clay [9, 10]. Cores are taken in late autumn, before sowing and again after each rotation.\nBecause the clay soils crack deeply in dry summers, we added one step to the field procedure: cores that fall on a visible crack are discarded and retaken nearby, so that loose surface material falling into cracks is not sampled [11]. Otherwise no step of the protocol has been changed.\n\n2.3 Supporting measurements\nCover crop biomass is cut from four quadrats per strip just before termination, dried and weighed [12]. Soil moisture is logged at 10 cm depth in one strip of each treatment on each farm [13]. Cash-crop yields are taken from the farmers' yield monitors and checked against hand harvests from small areas [14].\n\n2.4 Analysis\nThe change in carbon stock between sampling dates will be analysed with a linear mixed model with treatment and year as fixed effects and farm and strip pair as random effects [15]. Stocks will be compared on an equivalent soil mass basis [16]. With three pairs per farm, a power calculation based on the baseline variation suggests that only a fairly large difference can be detected after one rotation, so the study is planned to run for at least three [17].",
+        "table": {
+          "caption": "Table 1. The two farms in this study.",
+          "rows": [
+            [
+              "Farm",
+              "Soil",
+              "Clay (%)",
+              "Strip pairs",
+              "Drainage installed"
+            ],
+            [
+              "North",
+              "Clay",
+              "44",
+              "3",
+              "2009"
+            ],
+            [
+              "South",
+              "Clay",
+              "51",
+              "3",
+              "2014"
+            ]
+          ]
+        }
+      },
+      {
+        "heading": "3. Baseline results",
+        "text": "Baseline cores were taken in the autumn before the first cover crop was sown. Carbon concentrations were similar between the strips later assigned to the cover crop and to fallow on each farm, as expected from random assignment, and were higher on the South farm, which has the higher clay content [18]. Bulk density was high on both farms, consistent with the compaction often seen on clay soils under arable cultivation [19].\nThe first cover crop established on all strips at the North farm. At the South farm, two strips were sown a week late after heavy rain, and establishment there was patchy in the wettest corners of the field. Biomass figures for the first winter will be added once the samples are processed."
+      },
+      {
+        "heading": "4. Next steps and open questions",
+        "text": "Sampling after the first rotation is scheduled for this autumn. Before then we will check whether the crack rule described in Section 2.2 removed many cores at baseline, since a large number of discarded cores could bias the sample towards the less cracked parts of each strip [20].\nTwo questions remain open. The first is whether a short rotation on clay is enough to detect any change at all, given the large existing stock; the power calculation suggests it may not be, and the study may need to be extended [21]. The second is whether the cover crop changes the depth at which carbon accumulates; sampling below 15 cm would answer this but would roughly double the field work, and we have not yet decided whether to add it [22]."
+      }
+    ],
+    "references": [
+      "[1] Abara, U., Fitzgerald, M. (2015). Mineral protection of organic carbon in clay soils. J. Fake Soil Sci. 26: 210-224.",
+      "[2] Bergström, K. (2012). Workability of clay soils in autumn and spring. J. Fake Soil Tillage 17: 44-57.",
+      "[3] Chandra, P., Weiss, L. (2016). Cover crop roots and soil aggregation. J. Fake Rhizosphere Res. 5: 101-115.",
+      "[4] Duarte, F. (2017). Residue decomposition in cold, wet clay soils. J. Fake Soil Biol. 23: 77-90.",
+      "[5] Haugen, S., Rao, V. (2018). Soil carbon gains after winter cover cropping. J. Fake Agronomy 41: 233-251. doi:10.9999/fake.2018.019",
+      "[6] Engel, B., Tanaka, M. (2014). Designing strip trials on commercial farms. J. Fake Agric. Stat. 6: 12-26.",
+      "[7] Ferrari, G. (2016). Late-sown cover crop species for heavy soils. J. Fake Crop Sci. 17: 140-151.",
+      "[8] Grant, H., Osei, K. (2019). Termination methods for winter cover crops. J. Fake Agronomy 42: 300-312.",
+      "[9] Hoffmann, R. (2015). Fresh roots as a source of error in soil carbon measurement. J. Fake Soil Anal. 5: 60-71.",
+      "[10] Ishikawa, T., Bauer, N. (2018). Bulk density of clay soils and carbon stock estimates. J. Fake Soil Phys. 10: 88-99.",
+      "[11] Jensen, A. (2013). Shrinkage cracks and soil sampling in clay. J. Fake Soil Phys. 8: 15-27.",
+      "[12] Kariuki, W., Long, E. (2017). Measuring cover crop biomass with quadrats. J. Fake Crop Sci. 18: 22-31.",
+      "[13] Lorenz, S. (2016). Low-cost soil moisture logging in field trials. J. Fake Agric. Eng. 12: 50-62.",
+      "[14] Martins, C., Ahmed, Z. (2018). Checking yield monitor data with hand harvests. J. Fake Agric. Eng. 14: 99-108.",
+      "[15] Novak, J. (2014). Mixed models for repeated soil measurements. J. Fake Agric. Stat. 6: 40-55.",
+      "[16] Ortega, L., Price, H. (2017). Equivalent soil mass: a worked example. J. Fake Soil Sci. 28: 301-310.",
+      "[17] Patel, S. (2019). Statistical power in soil carbon trials. J. Fake Agric. Stat. 11: 1-18.",
+      "[18] Quist, M., Rahman, A. (2015). Clay content and soil carbon in arable fields. J. Fake Soil Sci. 26: 400-411.",
+      "[19] Rossi, E. (2016). Compaction under arable cultivation on clay. J. Fake Soil Tillage 21: 130-142.",
+      "[20] Schmidt, D., Yilmaz, O. (2018). Bias from discarded cores in soil surveys. J. Fake Soil Anal. 8: 70-79.",
+      "[21] Torres, V. (2019). How long must soil carbon trials run? J. Fake Agroecol. 14: 210-225.",
+      "[22] Ulrich, P., Vance, K. (2017). Carbon below the plough layer under cover crops. J. Fake Soil Sci. 28: 500-514."
+    ]
+  },
   "expected": {
     "tags": {
-      "change.severity": {"accept": ["high"], "ordered": true},
-      "alert.about_this_paper": {"accept": ["yes"]},
-      "alert.scope": {"accept": ["whole_paper", "unclear"]},
-      "impact.cited": {"accept": [true]},
-      "impact.use.role": {"accept": ["methods_or_data"]},
-      "impact.use.affected": {"accept": ["yes"]},
-      "impact.impact_level": {"accept": ["high"], "ordered": true}
+      "change.severity": {
+        "accept": [
+          "high"
+        ],
+        "ordered": true
+      },
+      "alert.about_this_paper": {
+        "accept": [
+          "yes"
+        ]
+      },
+      "alert.scope": {
+        "accept": [
+          "whole_paper",
+          "unclear"
+        ]
+      },
+      "impact.cited": {
+        "accept": [
+          true
+        ]
+      },
+      "impact.use.role": {
+        "accept": [
+          "methods_or_data"
+        ]
+      },
+      "impact.use.affected": {
+        "accept": [
+          "yes"
+        ]
+      },
+      "impact.impact_level": {
+        "accept": [
+          "high"
+        ],
+        "ordered": true
+      }
     },
-    "hard_fail_if": ["change.severity == none", "change.severity == low", "impact.impact_level == none", "impact.impact_level == low"],
+    "hard_fail_if": [
+      "change.severity == none",
+      "change.severity == low",
+      "impact.impact_level == none",
+      "impact.impact_level == low"
+    ],
     "facts": {
       "must_include": [
         "says the current copy of the paper carries a retraction or withdrawal banner",
