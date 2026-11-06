@@ -204,6 +204,7 @@ SETUP.md), with the user's token.
 | A paper's reports (alerts, documents, evaluation) | `GET /papers/{id}/reports` |
 | A paper's alert severity | not a field: the highest `alert_severity` among its `new` alerts |
 | New-alert toast | no push: re-fetch alerts and toast unseen `new` ids |
+| Report-ready notification | no push: each refresh (every 30 s) re-fetches `GET /papers/{id}/reports` for every paper and notifies `assessed` ids it hasn't seen; the first load after sign-in (or a reload) only records them. No lean reports endpoint: it reuses the reports call, and only the caller's papers are considered |
 | The draft for a project | `POST` / `GET` / `DELETE /draft` |
 
 ### `GET /papers`
@@ -1124,8 +1125,8 @@ Management, evaluated in stages").
 **After the reply, in the background** (EVALUATION.md): investigation
 opens a report per paper with new alerts and stores its documents, then
 impact assesses each report it finished (`PUT
-/internal/reports/{reportId}/evaluation`), then the Telegram notification
-goes out. Nothing in it changes the reply, and Updating never waits for
+/internal/reports/{reportId}/evaluation`). Research Evaluation sends no
+notification. Nothing in it changes the reply, and Updating never waits for
 it. Without `GEMINI_API_KEY` reports stay `investigated`. When every
 Gemini model fails a step, the stored evaluation is a placeholder:
 `change_severity` and `impact_level` `low`, the three texts

@@ -17,8 +17,7 @@ POST /evaluate/changes (paper ids, from Updating)
        └─ background task, per paper evaluated without failure that had changes:
           3. investigation  investigation/   open a report, fetch its documents → report ids
           4. impact         impact/          Gemini, three steps → PUT evaluation → assessed
-          5. notify         notify.py        Telegram message for each assessed report
-POST /evaluate/reports (report ids, by hand) ─▶ 4 and 5 only
+POST /evaluate/reports (report ids, by hand) ─▶ 4 only
 ```
 
 ## The nudge: detection and rules
@@ -345,7 +344,7 @@ retry is a fallback.
 **When every model fails a step**, `assess` returns a placeholder
 evaluation: both levels `low`, all three texts `PLACEHOLDER_TEXT`
 (`schemas.py`), `assessment.placeholder` `true` with `failed_step` and each
-model's `failures`. It's stored and notified like any evaluation.
+model's `failures`. It's stored like any evaluation.
 
 **Other failures** (Storage Management unreachable, a `409`, a blank answer
 that fails the `PUT`): logged with the report id and cause, nothing
@@ -354,15 +353,7 @@ assessed. A gone paper or report (`PaperGone`, `ReportGone`) is a skip.
 
 ## Notification
 
-`notify.py` `TelegramNotifier.report_assessed`, called by
-`run.assess_report` right after the evaluation is stored (never for a
-skipped or failed report). One plain-text message to one hard-coded chat
-(`NOTIFY_TELEGRAM_CHAT_ID`) through the bot `TELEGRAM_BOT_TOKEN`, whoever
-owns the paper: report id, paper title and DOI, change severity and
-summary, impact level and evaluation, recommendation (a `none` change gets
-"Nothing to do."). Off unless both variables are set (blank counts as
-unset). It never raises: a failure is one log line and the report stays
-`assessed`. Bot setup is in SETUP.md.
+Research Evaluation sends no notification. The frontend notices assessed reports on its refresh (ARCHITECTURE.md).
 
 ## Evals
 
@@ -625,31 +616,26 @@ run `run.py --dry <case>` to check that it builds.
 | Detection, rules, per-paper evaluation | `changes.py`, `rules.py`, `evaluate.py` |
 | Investigation | `investigation/`: `http.py` (one GET, `FetchStatus`), `crossref.py`, `europepmc.py`, `investigate.py` (plan, fetch), `run.py` |
 | Impact | `impact/`: `llm.py` (Gemini client, `FallbackLlm`), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `assess.py`, `run.py` (`ImpactContext`) |
-| Notification | `notify.py` |
 | Shared with Updating | `backend/src/common/`: `doi.py` (`normalize_doi`), `service_token.py` (`ServiceTokenAuth`), `config.py` |
 | Dev stub of Storage Management | `backend/dev/stub_storage.py` (every internal endpoint in memory, plus `/dev/*` helpers) |
 | Tests | `backend/tests/research_evaluation/` (with `investigation/` and `impact/`); fixtures in `backend/tests/fixtures/` |
 | Evals of impact (dev only) | `backend/evals/`: `cases/`, `thresholds.json`, `run.py`, `judge.py`, `judge_check.py`, `score.py` (also the shared helpers `verdict`, `pass_rate`, `group_by`, `noise_floor`, `overall_mean`, `failure_line`), `compare.py`, `all.py` |
 
-The lifespan makes four HTTP clients: Storage Management's (base URL,
-service token, 10 s), one for Crossref and Europe PMC, one for Telegram
-(both with no base URL and no auth), and the Gemini client.
+The lifespan makes three HTTP clients: Storage Management's (base URL,
+service token, 10 s), one for Crossref and Europe PMC (no base URL and no
+auth), and the Gemini client.
 
 ## Gotchas
 
 - **The service token must never leave for an outside host.** Outside
-  calls (Crossref, Europe PMC, Telegram) use their own clients, never the
+  calls (Crossref, Europe PMC) use their own clients, never the
   Storage Management one.
-- **The bot token is in the Telegram URL**, and httpx's INFO log prints
-  every URL: `main.configure_logging` keeps the `httpx` logger at WARNING;
-  keep it so. A notification failure logs only a status code or exception
-  class.
 - **Never log bodies, prompts, the draft or model text.** Every `_cause`
   helper logs status codes and exception classes. (Known gaps: the
   default branch of `_cause` logs `str(exc)`; investigation's `_cause` has
   no `ValidationError` case and can quote part of a body.)
-- **Background tasks must never raise.** `investigate_paper`,
-  `assess_report` and the notifier catch everything; a report a crash
+- **Background tasks must never raise.** `investigate_paper`
+  and `assess_report` catch everything; a report a crash
   leaves `investigating` or `investigated` stays that way.
 - **`No paper <id>` is the only "gone" `404`.** For the paper PDF and the
   draft, any other `404` means "no file" / "no draft" (most projects have
@@ -659,15 +645,12 @@ service token, 10 s), one for Crossref and Europe PMC, one for Telegram
 - **Fetched text is data.** `prompts._defuse` escapes `<document` tags in
   any case or spacing inside document text; PDFs can't be defused, so the
   system instruction says never to follow instructions in them.
-- **Telegram:** plain text, no `parse_mode` (model text would break
-  Markdown/HTML); limit 4096 UTF-16 units, cut at 4095 + `…`; a bot can't
-  message a chat that never wrote to it (`403`).
 - **A placeholder locks the report:** an evaluation is written once, so
   `POST /evaluate/reports` skips it. Only `assessment.placeholder` tells it
   from a real `low`.
 - **Slow paths add up:** reports are assessed one after another, each up
   to (1 + fallbacks) × 3 × `IMPACT_LLM_TIMEOUT_SECONDS` (12 minutes with
-  the defaults), and each notification is awaited (up to 10 s).
+  the defaults).
 - **Free-tier Gemini:** about 20 requests per model per day (`429`), and
   `gemini-flash-latest` (currently `gemini-3.8-flash`) is often `503`
   ("high demand"). `gemini-2.5-flash` isn't available to new keys. A
@@ -683,9 +666,8 @@ service token, 10 s), one for Crossref and Europe PMC, one for Telegram
 - **Tests:** ASGITransport finishes background tasks before the nudge's
   response returns, so a test can check reports right after `nudge()`.
   `conftest.ExternalApis` fakes Crossref and Europe PMC; impact uses a
-  `FakeLlm`, Telegram a `FakeTelegram` (`tests/research_evaluation_support.py`).
-  Only `-m live` tests reach real APIs (Crossref, Europe PMC, Gemini,
-  Telegram).
+  `FakeLlm`. Only `-m live` tests reach real APIs (Crossref, Europe PMC,
+  Gemini).
 - **Evals spend the free-tier quota:** a full run is 23 cases × 3 runs ×
   up to 3 calls, far over about 20 requests per model per day. Run one or
   a few cases (`--runs 1`) while iterating, and give the judge its own key.

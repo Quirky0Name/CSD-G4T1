@@ -1,17 +1,26 @@
-// One shared fetch loop for tracked papers and their alerts, so the sidebar
-// toaster and both pages read the same data instead of polling three times.
+// One shared fetch loop for tracked papers and their alerts and reports, so
+// the sidebar toaster and both pages read the same data instead of polling
+// three times.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { listAlerts, listPapers, errorMessage, type Alert, type Paper } from './api'
+import {
+  listAlerts,
+  listPapers,
+  listReports,
+  errorMessage,
+  type Alert,
+  type Paper,
+  type UserReport,
+} from './api'
 import { CHANGE_TYPE_LABEL, ALERT_SEVERITY_LABEL } from './format'
 import { useToast } from './components/Toasts'
 
-const ALERT_REFRESH_MS = 60_000
+const TRACKING_REFRESH_MS = 30_000
 
 export type TrackingState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; papers: Paper[]; alerts: Alert[] }
+  | { status: 'ready'; papers: Paper[]; alerts: Alert[]; reports: UserReport[] }
 
 type TrackingContextValue = {
   state: TrackingState
@@ -26,6 +35,9 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   // null until the first successful load, which only seeds it — never toasts.
   const seenAlertIds = useRef<Set<number> | null>(null)
+  // Same rule for reports: the first load records the ones already assessed,
+  // later loads toast each report that has become assessed since, once.
+  const seenAssessedReportIds = useRef<Set<number> | null>(null)
   const refreshRef = useRef<() => Promise<void>>(() => Promise.resolve())
 
   useEffect(() => {
@@ -33,13 +45,12 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     let running: Promise<void> | null = null
     let queued: Promise<void> | null = null
 
-    function noticeNewAlerts(papers: Paper[], alerts: Alert[]) {
+    function noticeNewAlerts(paperTitle: Map<string, string>, alerts: Alert[]) {
       const seen = seenAlertIds.current
       if (seen === null) {
         seenAlertIds.current = new Set(alerts.map((alert) => alert.id))
         return
       }
-      const paperTitle = new Map(papers.map((paper) => [paper.id, paper.title ?? 'a tracked paper']))
       for (const alert of alerts) {
         if (alert.status !== 'new' || seen.has(alert.id)) continue
         seen.add(alert.id)
@@ -51,13 +62,39 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    function noticeAssessedReports(paperTitle: Map<string, string>, reports: UserReport[]) {
+      const assessed = reports.filter((report) => report.status === 'assessed')
+      const seen = seenAssessedReportIds.current
+      if (seen === null) {
+        seenAssessedReportIds.current = new Set(assessed.map((report) => report.id))
+        return
+      }
+      for (const report of assessed) {
+        if (seen.has(report.id)) continue
+        seen.add(report.id)
+        showToast({
+          tone: 'success',
+          message: `Report ready on "${paperTitle.get(report.paper_id)}"`,
+          action: { label: 'View', onClick: () => navigate(`/alerts?paper=${report.paper_id}`) },
+        })
+      }
+    }
+
     async function runOnce() {
       try {
         const papers = await listPapers()
-        const alerts = (await Promise.all(papers.map((paper) => listAlerts(paper.id)))).flat()
+        const [alertLists, reportLists] = await Promise.all([
+          Promise.all(papers.map((paper) => listAlerts(paper.id))),
+          Promise.all(papers.map((paper) => listReports(paper.id))),
+        ])
+        const alerts = alertLists.flat()
+        // newest first, as the reports list shows them
+        const reports = reportLists.flat().toSorted((a, b) => b.created_at.localeCompare(a.created_at))
         if (!mounted) return
-        setState({ status: 'ready', papers, alerts })
-        noticeNewAlerts(papers, alerts)
+        setState({ status: 'ready', papers, alerts, reports })
+        const paperTitle = new Map(papers.map((paper) => [paper.id, paper.title ?? 'a tracked paper']))
+        noticeNewAlerts(paperTitle, alerts)
+        noticeAssessedReports(paperTitle, reports)
       } catch (err) {
         if (!mounted) return
         setState({ status: 'error', message: errorMessage(err) })
@@ -88,7 +125,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     const interval = setInterval(() => {
       if (running) return
       void refresh()
-    }, ALERT_REFRESH_MS)
+    }, TRACKING_REFRESH_MS)
 
     return () => {
       mounted = false
