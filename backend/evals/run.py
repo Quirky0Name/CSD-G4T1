@@ -87,6 +87,8 @@ class DocPdf(FPDF):
         self.two_columns = doc.get("layout") == "two_column"
         self.column = 0
         self.column_top = CONTENT_TOP
+        # the title block spans the page; the columns start after it (build)
+        self.in_columns = False
         self.set_margins(MARGIN, CONTENT_TOP, MARGIN)
         self.set_auto_page_break(True, BOTTOM)
 
@@ -109,11 +111,11 @@ class DocPdf(FPDF):
     @property
     def accept_page_break(self) -> bool:
         """In two columns, a full left column moves on to the right one instead of a new page."""
-        if self.two_columns and self.column == 0:
+        if self.in_columns and self.column == 0:
             self.set_column(1)
             self.set_y(self.column_top)
             return False
-        if self.two_columns:
+        if self.in_columns:
             self.set_column(0)
             self.column_top = CONTENT_TOP
         return True
@@ -186,6 +188,7 @@ class DocPdf(FPDF):
             self.paragraph(case_text.ABSTRACT, 10, "B", 0.5)
             self.paragraph(doc["abstract"], gap=4)
         self.column_top = self.y
+        self.in_columns = self.two_columns
         self.set_column(0)
         for section in doc["sections"]:
             if section.get("heading"):

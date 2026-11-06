@@ -170,6 +170,10 @@ changes the same files as S1.
       sections flow down the left column, then the right; the first table row
       is the header (bold); a figure is an empty grey box above its caption.
       EVALUATION.md "A case" (table's first row is the header).
+    - A page break inside the full-width title block (banner, title,
+      authors, abstract) goes to a new page, not to a right column: the
+      columns start only after the abstract (`DocPdf.in_columns`; a
+      code-review fix). No doc: code shows it.
     - The judge shows a document's `text` and, when it differs, its stored
       PDF's text after "Stored PDF:" (a code-review fix: before, it showed
       only `text` when both existed, so it missed a watermark or banner the
@@ -421,6 +425,10 @@ changes the same files as S1.
       EVALUATION.md already says `tier` is optional.
     - The five PDFs add about 9.4 MB to the repo. No doc: `SOURCES.md` lists
       them.
+    - `evals/real/.gitattributes` marks `*.pdf` binary, so git never converts
+      line endings in these mostly-ASCII PDFs (e.g. `core.autocrlf` on
+      Windows), which would change their bytes and sha256 (a code-review
+      fix). EVALUATION.md "Evals" (real cases).
 
 ## Human checks
 
