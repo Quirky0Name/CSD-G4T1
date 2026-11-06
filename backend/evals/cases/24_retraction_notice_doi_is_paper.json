@@ -1,0 +1,553 @@
+{
+ "category": "notice is the paper itself",
+ "tier": "hard",
+ "paper": {
+  "doi": "10.9999/fake.2020.024",
+  "title": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial",
+  "publication_year": 2020,
+  "journal": "J. Fake Clinical Microbiology",
+  "authors": [
+   "Okafor, C.",
+   "Lindqvist, E.",
+   "Moreau, P.",
+   "Tanaka, H."
+  ]
+ },
+ "paper_doc": {
+  "layout": "two_column",
+  "running_head": "J. Fake Clinical Microbiology 2020; 56(1): 41–58 · doi:10.9999/fake.2020.024",
+  "title": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial",
+  "authors": "Chinedu Okafor¹, Elin Lindqvist², Pascal Moreau¹, Hiroshi Tanaka³\n¹ Department of Infectious Diseases, Fake Northern University Hospital · ² Clinical Trials Unit, Fake Institute of Medicine · ³ Department of Gastroenterology, Fake Coastal Medical Centre",
+  "abstract": "Background: Antibiotic-associated diarrhoea (AAD) is a common complication of antibiotic treatment in hospital and prolongs admission. Probiotics have been proposed for prevention, but trials in general medical inpatients have been small and heterogeneous. Methods: We conducted a double-blind, placebo-controlled, parallel-group trial in three hospitals. Adults starting a course of oral or intravenous antibiotics expected to last at least three days were randomised 1:1 to Lactobacillus rhamnosus GG (1 × 10¹⁰ colony-forming units twice daily) or a matching placebo, from the first day of antibiotics until seven days after the last dose. The primary outcome was AAD within 21 days of the first antibiotic dose. Results: 312 participants were randomised (156 per group). AAD occurred in 18 participants (11.5%) given LGG and 33 (21.2%) given placebo (adjusted risk ratio 0.55, 95% CI 0.32–0.92). Episodes were shorter with LGG, and adverse events were similar in the two groups. Conclusions: In hospitalised adults receiving antibiotics, L. rhamnosus GG given alongside the antibiotic course reduced AAD and was well tolerated. Trial registration: FAKE-CTR-2017-0412.",
+  "sections": [
+   {
+    "heading": "1. Introduction",
+    "text": "Antibiotic-associated diarrhoea is defined as diarrhoea that occurs during antibiotic treatment or in the weeks after it, without another clear cause. In hospitalised adults, reported incidence ranges widely, depending on the antibiotic class, the patient population and the definition of diarrhoea used [1–3]. Broad-spectrum agents such as aminopenicillins combined with a β-lactamase inhibitor, second- and third-generation cephalosporins and clindamycin carry the highest risk [4]. Most episodes are mild and resolve after the antibiotic is stopped, but they increase nursing workload, the risk of dehydration and electrolyte disturbance in frail patients, and the length of stay [5]. A minority are caused by toxigenic Clostridioides difficile, which carries substantial morbidity and mortality in older inpatients [6].\nThe mechanism most often proposed is disruption of the resident gut microbiota. Antibiotics reduce the diversity of the colonic community, reduce the fermentation of carbohydrates to short-chain fatty acids, and alter the metabolism of bile acids, which together impair water absorption and create a niche for opportunistic organisms [7,8]. Probiotics, live microorganisms that confer a health benefit when given in adequate amounts, have been studied as a way of limiting this disruption or speeding recovery from it [9].\nLactobacillus rhamnosus GG (LGG) is one of the most thoroughly characterised probiotic strains. It survives gastric acid and bile, adheres to intestinal mucus, and has been shown in laboratory studies to strengthen tight junctions and to modulate local immune responses [10,11]. Meta-analyses of probiotic trials for the prevention of AAD have generally reported a protective effect, but most of the included trials were in children or in outpatients, many were small, and the strains, doses and timing of administration varied considerably [12–14]. Trials in hospitalised adults receiving a range of antibiotics, the population in which AAD has the greatest effect on care, are fewer, and the largest of them used multi-strain preparations rather than a single, well-defined strain [15].\nWe therefore designed a pragmatic, multicentre, placebo-controlled trial of LGG given from the first day of antibiotic treatment in adults admitted to general medical and surgical wards. Our hypothesis was that LGG would reduce the incidence of AAD within 21 days of starting antibiotics."
+   },
+   {
+    "heading": "2. Methods",
+    "text": "2.1 Trial design and setting\nThis was a double-blind, randomised, placebo-controlled, parallel-group trial with 1:1 allocation, conducted on the general medical, care-of-the-elderly and general surgical wards of three teaching hospitals between October 2017 and May 2019. The protocol was approved by the regional research ethics committee and was registered before the first participant was enrolled. The trial is reported according to the CONSORT 2010 statement.\n\n2.2 Participants\nAdults aged 18 years or over were eligible if they had started, within the previous 48 hours, a course of oral or intravenous antibiotics that the treating clinician expected to last at least three days. Exclusion criteria were diarrhoea (three or more loose stools in 24 hours) at screening or in the previous seven days; known inflammatory bowel disease, short bowel syndrome or an ileostomy or colostomy; severe immunosuppression (neutrophil count below 0.5 × 10⁹/L, solid-organ or haematopoietic stem cell transplantation, or high-dose corticosteroids); a central venous catheter in situ, because of the theoretical risk of probiotic bacteraemia; acute pancreatitis; current use of probiotic supplements; pregnancy or breastfeeding; and inability to take oral capsules. Participants, or a consultee for those lacking capacity, gave written informed consent.\n\n2.3 Randomisation and masking\nA statistician not otherwise involved in the trial generated the allocation sequence by computer, using permuted blocks of variable size (four and six) stratified by hospital and by antibiotic risk class (high-risk agents versus others). Allocation was concealed through a web-based system that released the pack number only after the participant's eligibility had been confirmed. The probiotic and placebo capsules were identical in size, colour, weight and packaging and were supplied in numbered bottles. Participants, ward staff, research nurses, outcome assessors and the statisticians who performed the primary analysis were all unaware of group assignment until the database was locked.\n\n2.4 Intervention\nParticipants took one capsule containing 1 × 10¹⁰ colony-forming units (CFU) of LGG, or a placebo capsule containing microcrystalline cellulose, twice daily with food, starting on the day of randomisation and continuing until seven days after the last antibiotic dose. Capsule viability was tested at the start, middle and end of the trial by an independent laboratory, and the CFU count remained within the labelled specification throughout. Capsules were taken at least two hours apart from oral antibiotic doses. Adherence was recorded on a daily diary card while participants were in hospital and by pill count at the 21-day visit after discharge.\n\n2.5 Outcomes\nThe primary outcome was AAD within 21 days of the first antibiotic dose, defined as three or more loose or watery stools (Bristol stool chart types 6 or 7) in a 24-hour period, with no other identified cause. Stool frequency and consistency were recorded each day by nursing staff in hospital and by participants on a diary card after discharge, and a research nurse telephoned participants on days 7, 14 and 21. Secondary outcomes were the duration of AAD in participants who developed it; C. difficile infection, defined as diarrhoea with a positive toxin assay; length of hospital stay; and adverse events. Two clinicians unaware of the allocation reviewed every potential episode of diarrhoea against the case definition.\n\n2.6 Sample size\nWe assumed a 21-day AAD incidence of 20% in the placebo group, based on a pilot audit on the participating wards, and sought 80% power to detect an absolute reduction of ten percentage points at a two-sided significance level of 5%. Allowing for 10% loss to follow-up, this required 156 participants per group.\n\n2.7 Statistical analysis\nThe primary analysis followed the intention-to-treat principle and included all randomised participants. Participants lost to follow-up before day 21 without a recorded episode of AAD were assumed not to have had AAD in the primary analysis, and a sensitivity analysis used multiple imputation by chained equations. The primary outcome was compared with a log-binomial model adjusted for the stratification factors, giving a risk ratio with a 95% confidence interval. Duration of AAD was compared with the Mann-Whitney U test, and time to first episode was displayed as a Kaplan-Meier curve. A per-protocol analysis restricted to participants who took at least 80% of their capsules was prespecified. Analyses were done in R version 3.6."
+   },
+   {
+    "heading": "3. Results",
+    "text": "3.1 Participants\nOf 1,047 patients screened, 312 were randomised: 156 to LGG and 156 to placebo (Figure 1). The most common reasons for exclusion were an expected antibiotic course of fewer than three days, diarrhoea at screening and the presence of a central venous catheter. Baseline characteristics were similar in the two groups (Table 1). The most frequent indications for antibiotics were lower respiratory tract infection, urinary tract infection and skin or soft-tissue infection. Seven participants in the LGG group and nine in the placebo group were lost to follow-up before day 21. Median adherence was 93% in the LGG group and 94% in the placebo group.",
+    "table": {
+     "caption": "Table 1. Baseline characteristics of the participants.",
+     "rows": [
+      [
+       "Characteristic",
+       "LGG (n = 156)",
+       "Placebo (n = 156)"
+      ],
+      [
+       "Age, years, median (IQR)",
+       "71 (58–80)",
+       "70 (57–81)"
+      ],
+      [
+       "Female sex, n (%)",
+       "81 (51.9)",
+       "78 (50.0)"
+      ],
+      [
+       "Charlson comorbidity index, median (IQR)",
+       "4 (2–6)",
+       "4 (2–6)"
+      ],
+      [
+       "High-risk antibiotic class, n (%)",
+       "88 (56.4)",
+       "87 (55.8)"
+      ],
+      [
+       "Intravenous route at start, n (%)",
+       "102 (65.4)",
+       "99 (63.5)"
+      ],
+      [
+       "Proton pump inhibitor use, n (%)",
+       "61 (39.1)",
+       "64 (41.0)"
+      ],
+      [
+       "Planned antibiotic duration, days, median (IQR)",
+       "7 (5–10)",
+       "7 (5–10)"
+      ]
+     ]
+    },
+    "figure": {
+     "caption": "Figure 1. Flow of participants through the trial (CONSORT diagram)."
+    }
+   },
+   {
+    "heading": "3.2 Primary outcome",
+    "text": "Within 21 days of the first antibiotic dose, AAD occurred in 18 of 156 participants (11.5%) in the LGG group and in 33 of 156 (21.2%) in the placebo group (adjusted risk ratio 0.55, 95% CI 0.32–0.92; p = 0.02) (Table 2). The number needed to treat to prevent one episode of AAD was 11. The result was consistent in the sensitivity analysis with multiple imputation and in the per-protocol analysis. The effect was similar in participants receiving high-risk and other antibiotic classes, and in the three hospitals, although the trial was not powered for subgroup comparisons.",
+    "table": {
+     "caption": "Table 2. Primary and secondary outcomes.",
+     "rows": [
+      [
+       "Outcome",
+       "LGG (n = 156)",
+       "Placebo (n = 156)",
+       "Effect (95% CI)"
+      ],
+      [
+       "AAD within 21 days, n (%)",
+       "18 (11.5)",
+       "33 (21.2)",
+       "RR 0.55 (0.32–0.92)"
+      ],
+      [
+       "Duration of AAD, days, median (IQR)",
+       "2.0 (1.0–3.0)",
+       "3.5 (2.0–5.0)",
+       "p = 0.01"
+      ],
+      [
+       "C. difficile infection, n (%)",
+       "3 (1.9)",
+       "6 (3.8)",
+       "RR 0.50 (0.13–1.97)"
+      ],
+      [
+       "Length of stay, days, median (IQR)",
+       "8 (5–13)",
+       "9 (5–14)",
+       "p = 0.21"
+      ]
+     ]
+    },
+    "figure": {
+     "caption": "Figure 2. Kaplan-Meier estimate of the proportion of participants free of antibiotic-associated diarrhoea, by group, over the 21 days after the first antibiotic dose."
+    }
+   },
+   {
+    "heading": "3.3 Secondary outcomes",
+    "text": "Among participants who developed AAD, the median duration of diarrhoea was 2.0 days (IQR 1.0–3.0) in the LGG group and 3.5 days (IQR 2.0–5.0) in the placebo group. The Kaplan-Meier curves separated from the fourth day after the first antibiotic dose and remained apart to day 21 (Figure 2). C. difficile infection was confirmed in three participants in the LGG group and six in the placebo group; this difference was not statistically significant, and the trial was not designed to detect an effect on this outcome. Median length of stay did not differ significantly between the groups."
+   },
+   {
+    "heading": "3.4 Adverse events",
+    "text": "Adverse events were reported by 47 participants (30.1%) in the LGG group and 51 (32.7%) in the placebo group (Table 3). Bloating and flatulence were slightly more common with LGG. Serious adverse events, all judged unrelated to the trial capsules by the independent data monitoring committee, occurred in 14 participants in each group. No case of Lactobacillus bacteraemia was identified in either group; blood cultures taken for clinical reasons during the trial period were reviewed for all participants.",
+    "table": {
+     "caption": "Table 3. Adverse events up to day 21.",
+     "rows": [
+      [
+       "Event",
+       "LGG (n = 156)",
+       "Placebo (n = 156)"
+      ],
+      [
+       "Any adverse event, n (%)",
+       "47 (30.1)",
+       "51 (32.7)"
+      ],
+      [
+       "Bloating or flatulence, n (%)",
+       "15 (9.6)",
+       "11 (7.1)"
+      ],
+      [
+       "Nausea, n (%)",
+       "9 (5.8)",
+       "11 (7.1)"
+      ],
+      [
+       "Abdominal pain, n (%)",
+       "7 (4.5)",
+       "9 (5.8)"
+      ],
+      [
+       "Serious adverse event, n (%)",
+       "14 (9.0)",
+       "14 (9.0)"
+      ],
+      [
+       "Lactobacillus bacteraemia, n",
+       "0",
+       "0"
+      ]
+     ]
+    }
+   },
+   {
+    "heading": "4. Discussion",
+    "text": "In this multicentre trial of hospitalised adults starting a course of antibiotics, L. rhamnosus GG given twice daily from the first day of treatment until a week after the last dose reduced the incidence of AAD within 21 days by almost half compared with placebo, and shortened the episodes that did occur. The probiotic was well tolerated, with a small excess of bloating and no cases of probiotic bacteraemia in a population from which patients with central venous catheters and severe immunosuppression had been excluded.\nOur findings agree in direction with meta-analyses of probiotics for the prevention of AAD [12–14], but they extend that evidence in three ways. First, the trial was set in general medical, elderly-care and surgical wards, where most antibiotic prescribing in hospital takes place and where patients are older and more comorbid than in many earlier trials. Second, we used a single, well-characterised strain at a defined dose, with viability confirmed during the trial, which addresses the concern that commercial products may not contain what their labels state [16]. Third, the probiotic was started within 48 hours of the first antibiotic dose. Earlier work suggests that a delay in starting probiotics reduces their benefit [17], and a pragmatic protocol that starts on the ward is more likely to be followed in routine care.\nThe absolute risk reduction of about ten percentage points and the number needed to treat of 11 are of a size that could matter on busy wards, where each episode of diarrhoea requires stool charting, isolation until C. difficile is excluded, and additional nursing time. We did not, however, find a significant effect on length of stay, and the trial was too small to show an effect on C. difficile infection, which is the outcome of greatest clinical concern. A larger trial would be needed to answer that question.\n\n4.1 Strengths and limitations\nThe strengths of the trial are its concealed allocation, complete masking of participants, staff and outcome assessors, high adherence, and a case definition applied by two independent reviewers. Loss to follow-up was low and similar in the two groups. The trial has limitations. Stool diaries after discharge relied on participants, and some mild episodes may have been missed in both groups. We excluded patients with central venous catheters and severe immunosuppression, so the results cannot be applied to intensive care or haematology wards. The incidence of AAD in the placebo group was close to that assumed in the sample-size calculation, but incidence varies between hospitals and antibiotic policies, and the absolute benefit may differ elsewhere. Finally, we studied one strain at one dose, and the results should not be assumed to apply to other probiotic products."
+   },
+   {
+    "heading": "5. Conclusions",
+    "text": "In hospitalised adults starting antibiotics, L. rhamnosus GG at 1 × 10¹⁰ CFU twice daily, started within 48 hours and continued for a week after the antibiotic course, reduced antibiotic-associated diarrhoea and shortened its duration, with few adverse effects. Its effect on C. difficile infection remains to be established in a larger trial."
+   },
+   {
+    "heading": "Acknowledgements",
+    "text": "We thank the participants, the ward nursing teams who recorded stool charts, the research nurses at the three sites, and the members of the independent data monitoring committee and trial steering committee."
+   },
+   {
+    "heading": "Funding",
+    "text": "The trial was funded by a project grant from the Fake National Health Research Fund (grant FNHRF-2016-118). The trial capsules were manufactured by an independent pharmacy production unit. The funder had no role in the design of the trial, the collection, analysis or interpretation of the data, or the writing of the report."
+   },
+   {
+    "heading": "Conflicts of interest",
+    "text": "The authors declare no competing interests."
+   },
+   {
+    "heading": "Data availability",
+    "text": "De-identified participant data and the statistical analysis code are available from the corresponding author on reasonable request, after approval of a proposal by the trial steering committee."
+   },
+   {
+    "heading": "Article information",
+    "text": "Corresponding author: Chinedu Okafor, Department of Infectious Diseases, Fake Northern University Hospital.\nReceived 14 January 2020; revised 2 March 2020; accepted 18 March 2020.\nAvailable online 3 April 2020. Version of record published in the July 2020 issue: Volume 56, Issue 1, 1 July 2020, pages 41–58.\n© 2020 The Authors. Published by Fake Academic Press."
+   }
+  ],
+  "references": [
+   "[1] McFarland, L. V. (2008). Antibiotic-associated diarrhea: epidemiology, trends and treatment. J. Fake Gastroenterology, 3, 563–578.",
+   "[2] Abebe, T., Kowalski, J. (2014). Incidence of diarrhoea during antibiotic treatment in adult inpatients: a prospective cohort. J. Fake Hospital Medicine, 9, 210–217.",
+   "[3] Bauer, M., Sørensen, K. (2016). Definitions of antibiotic-associated diarrhoea in clinical trials: a systematic review. J. Fake Clinical Epidemiology, 74, 88–96.",
+   "[4] Haddad, R., Nguyen, L. (2015). Antibiotic class and the risk of diarrhoea in hospital: a case-control study. J. Fake Antimicrobial Therapy, 70, 1104–1111.",
+   "[5] Ferreira, A., Walsh, D. (2017). Costs and length of stay associated with hospital-onset diarrhoea. J. Fake Health Economics, 22, 301–309.",
+   "[6] Lindgren, P., Osei, K. (2018). Mortality after Clostridioides difficile infection in older inpatients. J. Fake Infectious Diseases, 217, 1450–1458.",
+   "[7] Patel, S., Hoffmann, U. (2016). Antibiotic perturbation of the human gut microbiota: diversity, function and recovery. J. Fake Microbial Ecology, 12, 45–59.",
+   "[8] Romero, J., Dubois, C. (2017). Bile acid metabolism after antibiotic exposure. J. Fake Gut Physiology, 31, 702–712.",
+   "[9] Hill, C., Sato, Y. (2014). Expert consensus on the definition and scope of the term probiotic. J. Fake Nutrition Reviews, 11, 506–514.",
+   "[10] Kumar, V., Ahlberg, T. (2012). Adhesion of Lactobacillus rhamnosus GG to intestinal mucus. J. Fake Applied Microbiology, 113, 1101–1110.",
+   "[11] Moreau, P., Ibrahim, F. (2015). Lactobacillus rhamnosus GG and epithelial tight junctions in vitro. J. Fake Cell Biology of the Gut, 7, 233–241.",
+   "[12] Grant, E., Zhou, M. (2012). Probiotics for the prevention of antibiotic-associated diarrhoea: a systematic review and meta-analysis. J. Fake Evidence Synthesis, 4, 1–39.",
+   "[13] Adeyemi, O., Kristensen, L. (2015). Strain-specific effects of probiotics on antibiotic-associated diarrhoea: a network meta-analysis. J. Fake Clinical Gastroenterology, 49, 612–623.",
+   "[14] Novak, H., Berger, S. (2017). Probiotics in adults receiving antibiotics: an updated meta-analysis. J. Fake Internal Medicine, 18, 77–89.",
+   "[15] Allen, B., Rossi, G. (2013). Multi-strain probiotics in older inpatients exposed to antibiotics: a multicentre trial. J. Fake Geriatric Medicine, 382, 1249–1257.",
+   "[16] Teo, W., Marsh, R. (2016). Label accuracy of commercial probiotic products. J. Fake Food Microbiology, 59, 120–127.",
+   "[17] Castillo, M., Varga, Z. (2018). Timing of probiotic administration relative to antibiotics: a pooled analysis. J. Fake Pharmacotherapy, 38, 330–339.",
+   "[18] Schulz, K. F., Altman, D. G., Moher, D. (2010). CONSORT 2010 statement: updated guidelines for reporting parallel group randomised trials. J. Fake Trial Methods, 340, c332.",
+   "[19] Lewis, S. J., Heaton, K. W. (1997). Stool form scale as a useful guide to intestinal transit time. J. Fake Gastroenterology Methods, 32, 920–924.",
+   "[20] White, I. R., Royston, P., Wood, A. M. (2011). Multiple imputation using chained equations: issues and guidance for practice. J. Fake Statistics in Medicine, 30, 377–399."
+  ]
+ },
+ "alerts": [
+  {
+   "id": 241,
+   "change_type": "retraction",
+   "change_key": "retraction",
+   "alert_severity": "high",
+   "description": "This paper has been retracted (notice 10.9999/fake.2020.024, 2020-07-01). Its findings should no longer be relied on.",
+   "notice_doi": "10.9999/fake.2020.024",
+   "detected_at": "2026-10-01T00:00:00Z"
+  }
+ ],
+ "documents": [
+  {
+   "kind": "current_version",
+   "doi": "10.9999/fake.2020.024",
+   "title": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial",
+   "text": null,
+   "pdf_source_url": "https://example.org/okafor2020.pdf",
+   "pdf_doc": {
+    "layout": "two_column",
+    "running_head": "J. Fake Clinical Microbiology 2020; 56(1): 41–58 · doi:10.9999/fake.2020.024",
+    "title": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial",
+    "authors": "Chinedu Okafor¹, Elin Lindqvist², Pascal Moreau¹, Hiroshi Tanaka³\n¹ Department of Infectious Diseases, Fake Northern University Hospital · ² Clinical Trials Unit, Fake Institute of Medicine · ³ Department of Gastroenterology, Fake Coastal Medical Centre",
+    "abstract": "Background: Antibiotic-associated diarrhoea (AAD) is a common complication of antibiotic treatment in hospital and prolongs admission. Probiotics have been proposed for prevention, but trials in general medical inpatients have been small and heterogeneous. Methods: We conducted a double-blind, placebo-controlled, parallel-group trial in three hospitals. Adults starting a course of oral or intravenous antibiotics expected to last at least three days were randomised 1:1 to Lactobacillus rhamnosus GG (1 × 10¹⁰ colony-forming units twice daily) or a matching placebo, from the first day of antibiotics until seven days after the last dose. The primary outcome was AAD within 21 days of the first antibiotic dose. Results: 312 participants were randomised (156 per group). AAD occurred in 18 participants (11.5%) given LGG and 33 (21.2%) given placebo (adjusted risk ratio 0.55, 95% CI 0.32–0.92). Episodes were shorter with LGG, and adverse events were similar in the two groups. Conclusions: In hospitalised adults receiving antibiotics, L. rhamnosus GG given alongside the antibiotic course reduced AAD and was well tolerated. Trial registration: FAKE-CTR-2017-0412.",
+    "sections": [
+     {
+      "heading": "1. Introduction",
+      "text": "Antibiotic-associated diarrhoea is defined as diarrhoea that occurs during antibiotic treatment or in the weeks after it, without another clear cause. In hospitalised adults, reported incidence ranges widely, depending on the antibiotic class, the patient population and the definition of diarrhoea used [1–3]. Broad-spectrum agents such as aminopenicillins combined with a β-lactamase inhibitor, second- and third-generation cephalosporins and clindamycin carry the highest risk [4]. Most episodes are mild and resolve after the antibiotic is stopped, but they increase nursing workload, the risk of dehydration and electrolyte disturbance in frail patients, and the length of stay [5]. A minority are caused by toxigenic Clostridioides difficile, which carries substantial morbidity and mortality in older inpatients [6].\nThe mechanism most often proposed is disruption of the resident gut microbiota. Antibiotics reduce the diversity of the colonic community, reduce the fermentation of carbohydrates to short-chain fatty acids, and alter the metabolism of bile acids, which together impair water absorption and create a niche for opportunistic organisms [7,8]. Probiotics, live microorganisms that confer a health benefit when given in adequate amounts, have been studied as a way of limiting this disruption or speeding recovery from it [9].\nLactobacillus rhamnosus GG (LGG) is one of the most thoroughly characterised probiotic strains. It survives gastric acid and bile, adheres to intestinal mucus, and has been shown in laboratory studies to strengthen tight junctions and to modulate local immune responses [10,11]. Meta-analyses of probiotic trials for the prevention of AAD have generally reported a protective effect, but most of the included trials were in children or in outpatients, many were small, and the strains, doses and timing of administration varied considerably [12–14]. Trials in hospitalised adults receiving a range of antibiotics, the population in which AAD has the greatest effect on care, are fewer, and the largest of them used multi-strain preparations rather than a single, well-defined strain [15].\nWe therefore designed a pragmatic, multicentre, placebo-controlled trial of LGG given from the first day of antibiotic treatment in adults admitted to general medical and surgical wards. Our hypothesis was that LGG would reduce the incidence of AAD within 21 days of starting antibiotics."
+     },
+     {
+      "heading": "2. Methods",
+      "text": "2.1 Trial design and setting\nThis was a double-blind, randomised, placebo-controlled, parallel-group trial with 1:1 allocation, conducted on the general medical, care-of-the-elderly and general surgical wards of three teaching hospitals between October 2017 and May 2019. The protocol was approved by the regional research ethics committee and was registered before the first participant was enrolled. The trial is reported according to the CONSORT 2010 statement.\n\n2.2 Participants\nAdults aged 18 years or over were eligible if they had started, within the previous 48 hours, a course of oral or intravenous antibiotics that the treating clinician expected to last at least three days. Exclusion criteria were diarrhoea (three or more loose stools in 24 hours) at screening or in the previous seven days; known inflammatory bowel disease, short bowel syndrome or an ileostomy or colostomy; severe immunosuppression (neutrophil count below 0.5 × 10⁹/L, solid-organ or haematopoietic stem cell transplantation, or high-dose corticosteroids); a central venous catheter in situ, because of the theoretical risk of probiotic bacteraemia; acute pancreatitis; current use of probiotic supplements; pregnancy or breastfeeding; and inability to take oral capsules. Participants, or a consultee for those lacking capacity, gave written informed consent.\n\n2.3 Randomisation and masking\nA statistician not otherwise involved in the trial generated the allocation sequence by computer, using permuted blocks of variable size (four and six) stratified by hospital and by antibiotic risk class (high-risk agents versus others). Allocation was concealed through a web-based system that released the pack number only after the participant's eligibility had been confirmed. The probiotic and placebo capsules were identical in size, colour, weight and packaging and were supplied in numbered bottles. Participants, ward staff, research nurses, outcome assessors and the statisticians who performed the primary analysis were all unaware of group assignment until the database was locked.\n\n2.4 Intervention\nParticipants took one capsule containing 1 × 10¹⁰ colony-forming units (CFU) of LGG, or a placebo capsule containing microcrystalline cellulose, twice daily with food, starting on the day of randomisation and continuing until seven days after the last antibiotic dose. Capsule viability was tested at the start, middle and end of the trial by an independent laboratory, and the CFU count remained within the labelled specification throughout. Capsules were taken at least two hours apart from oral antibiotic doses. Adherence was recorded on a daily diary card while participants were in hospital and by pill count at the 21-day visit after discharge.\n\n2.5 Outcomes\nThe primary outcome was AAD within 21 days of the first antibiotic dose, defined as three or more loose or watery stools (Bristol stool chart types 6 or 7) in a 24-hour period, with no other identified cause. Stool frequency and consistency were recorded each day by nursing staff in hospital and by participants on a diary card after discharge, and a research nurse telephoned participants on days 7, 14 and 21. Secondary outcomes were the duration of AAD in participants who developed it; C. difficile infection, defined as diarrhoea with a positive toxin assay; length of hospital stay; and adverse events. Two clinicians unaware of the allocation reviewed every potential episode of diarrhoea against the case definition.\n\n2.6 Sample size\nWe assumed a 21-day AAD incidence of 20% in the placebo group, based on a pilot audit on the participating wards, and sought 80% power to detect an absolute reduction of ten percentage points at a two-sided significance level of 5%. Allowing for 10% loss to follow-up, this required 156 participants per group.\n\n2.7 Statistical analysis\nThe primary analysis followed the intention-to-treat principle and included all randomised participants. Participants lost to follow-up before day 21 without a recorded episode of AAD were assumed not to have had AAD in the primary analysis, and a sensitivity analysis used multiple imputation by chained equations. The primary outcome was compared with a log-binomial model adjusted for the stratification factors, giving a risk ratio with a 95% confidence interval. Duration of AAD was compared with the Mann-Whitney U test, and time to first episode was displayed as a Kaplan-Meier curve. A per-protocol analysis restricted to participants who took at least 80% of their capsules was prespecified. Analyses were done in R version 3.6."
+     },
+     {
+      "heading": "3. Results",
+      "text": "3.1 Participants\nOf 1,047 patients screened, 312 were randomised: 156 to LGG and 156 to placebo (Figure 1). The most common reasons for exclusion were an expected antibiotic course of fewer than three days, diarrhoea at screening and the presence of a central venous catheter. Baseline characteristics were similar in the two groups (Table 1). The most frequent indications for antibiotics were lower respiratory tract infection, urinary tract infection and skin or soft-tissue infection. Seven participants in the LGG group and nine in the placebo group were lost to follow-up before day 21. Median adherence was 93% in the LGG group and 94% in the placebo group.",
+      "table": {
+       "caption": "Table 1. Baseline characteristics of the participants.",
+       "rows": [
+        [
+         "Characteristic",
+         "LGG (n = 156)",
+         "Placebo (n = 156)"
+        ],
+        [
+         "Age, years, median (IQR)",
+         "71 (58–80)",
+         "70 (57–81)"
+        ],
+        [
+         "Female sex, n (%)",
+         "81 (51.9)",
+         "78 (50.0)"
+        ],
+        [
+         "Charlson comorbidity index, median (IQR)",
+         "4 (2–6)",
+         "4 (2–6)"
+        ],
+        [
+         "High-risk antibiotic class, n (%)",
+         "88 (56.4)",
+         "87 (55.8)"
+        ],
+        [
+         "Intravenous route at start, n (%)",
+         "102 (65.4)",
+         "99 (63.5)"
+        ],
+        [
+         "Proton pump inhibitor use, n (%)",
+         "61 (39.1)",
+         "64 (41.0)"
+        ],
+        [
+         "Planned antibiotic duration, days, median (IQR)",
+         "7 (5–10)",
+         "7 (5–10)"
+        ]
+       ]
+      },
+      "figure": {
+       "caption": "Figure 1. Flow of participants through the trial (CONSORT diagram)."
+      }
+     },
+     {
+      "heading": "3.2 Primary outcome",
+      "text": "Within 21 days of the first antibiotic dose, AAD occurred in 18 of 156 participants (11.5%) in the LGG group and in 33 of 156 (21.2%) in the placebo group (adjusted risk ratio 0.55, 95% CI 0.32–0.92; p = 0.02) (Table 2). The number needed to treat to prevent one episode of AAD was 11. The result was consistent in the sensitivity analysis with multiple imputation and in the per-protocol analysis. The effect was similar in participants receiving high-risk and other antibiotic classes, and in the three hospitals, although the trial was not powered for subgroup comparisons.",
+      "table": {
+       "caption": "Table 2. Primary and secondary outcomes.",
+       "rows": [
+        [
+         "Outcome",
+         "LGG (n = 156)",
+         "Placebo (n = 156)",
+         "Effect (95% CI)"
+        ],
+        [
+         "AAD within 21 days, n (%)",
+         "18 (11.5)",
+         "33 (21.2)",
+         "RR 0.55 (0.32–0.92)"
+        ],
+        [
+         "Duration of AAD, days, median (IQR)",
+         "2.0 (1.0–3.0)",
+         "3.5 (2.0–5.0)",
+         "p = 0.01"
+        ],
+        [
+         "C. difficile infection, n (%)",
+         "3 (1.9)",
+         "6 (3.8)",
+         "RR 0.50 (0.13–1.97)"
+        ],
+        [
+         "Length of stay, days, median (IQR)",
+         "8 (5–13)",
+         "9 (5–14)",
+         "p = 0.21"
+        ]
+       ]
+      },
+      "figure": {
+       "caption": "Figure 2. Kaplan-Meier estimate of the proportion of participants free of antibiotic-associated diarrhoea, by group, over the 21 days after the first antibiotic dose."
+      }
+     },
+     {
+      "heading": "3.3 Secondary outcomes",
+      "text": "Among participants who developed AAD, the median duration of diarrhoea was 2.0 days (IQR 1.0–3.0) in the LGG group and 3.5 days (IQR 2.0–5.0) in the placebo group. The Kaplan-Meier curves separated from the fourth day after the first antibiotic dose and remained apart to day 21 (Figure 2). C. difficile infection was confirmed in three participants in the LGG group and six in the placebo group; this difference was not statistically significant, and the trial was not designed to detect an effect on this outcome. Median length of stay did not differ significantly between the groups."
+     },
+     {
+      "heading": "3.4 Adverse events",
+      "text": "Adverse events were reported by 47 participants (30.1%) in the LGG group and 51 (32.7%) in the placebo group (Table 3). Bloating and flatulence were slightly more common with LGG. Serious adverse events, all judged unrelated to the trial capsules by the independent data monitoring committee, occurred in 14 participants in each group. No case of Lactobacillus bacteraemia was identified in either group; blood cultures taken for clinical reasons during the trial period were reviewed for all participants.",
+      "table": {
+       "caption": "Table 3. Adverse events up to day 21.",
+       "rows": [
+        [
+         "Event",
+         "LGG (n = 156)",
+         "Placebo (n = 156)"
+        ],
+        [
+         "Any adverse event, n (%)",
+         "47 (30.1)",
+         "51 (32.7)"
+        ],
+        [
+         "Bloating or flatulence, n (%)",
+         "15 (9.6)",
+         "11 (7.1)"
+        ],
+        [
+         "Nausea, n (%)",
+         "9 (5.8)",
+         "11 (7.1)"
+        ],
+        [
+         "Abdominal pain, n (%)",
+         "7 (4.5)",
+         "9 (5.8)"
+        ],
+        [
+         "Serious adverse event, n (%)",
+         "14 (9.0)",
+         "14 (9.0)"
+        ],
+        [
+         "Lactobacillus bacteraemia, n",
+         "0",
+         "0"
+        ]
+       ]
+      }
+     },
+     {
+      "heading": "4. Discussion",
+      "text": "In this multicentre trial of hospitalised adults starting a course of antibiotics, L. rhamnosus GG given twice daily from the first day of treatment until a week after the last dose reduced the incidence of AAD within 21 days by almost half compared with placebo, and shortened the episodes that did occur. The probiotic was well tolerated, with a small excess of bloating and no cases of probiotic bacteraemia in a population from which patients with central venous catheters and severe immunosuppression had been excluded.\nOur findings agree in direction with meta-analyses of probiotics for the prevention of AAD [12–14], but they extend that evidence in three ways. First, the trial was set in general medical, elderly-care and surgical wards, where most antibiotic prescribing in hospital takes place and where patients are older and more comorbid than in many earlier trials. Second, we used a single, well-characterised strain at a defined dose, with viability confirmed during the trial, which addresses the concern that commercial products may not contain what their labels state [16]. Third, the probiotic was started within 48 hours of the first antibiotic dose. Earlier work suggests that a delay in starting probiotics reduces their benefit [17], and a pragmatic protocol that starts on the ward is more likely to be followed in routine care.\nThe absolute risk reduction of about ten percentage points and the number needed to treat of 11 are of a size that could matter on busy wards, where each episode of diarrhoea requires stool charting, isolation until C. difficile is excluded, and additional nursing time. We did not, however, find a significant effect on length of stay, and the trial was too small to show an effect on C. difficile infection, which is the outcome of greatest clinical concern. A larger trial would be needed to answer that question.\n\n4.1 Strengths and limitations\nThe strengths of the trial are its concealed allocation, complete masking of participants, staff and outcome assessors, high adherence, and a case definition applied by two independent reviewers. Loss to follow-up was low and similar in the two groups. The trial has limitations. Stool diaries after discharge relied on participants, and some mild episodes may have been missed in both groups. We excluded patients with central venous catheters and severe immunosuppression, so the results cannot be applied to intensive care or haematology wards. The incidence of AAD in the placebo group was close to that assumed in the sample-size calculation, but incidence varies between hospitals and antibiotic policies, and the absolute benefit may differ elsewhere. Finally, we studied one strain at one dose, and the results should not be assumed to apply to other probiotic products."
+     },
+     {
+      "heading": "5. Conclusions",
+      "text": "In hospitalised adults starting antibiotics, L. rhamnosus GG at 1 × 10¹⁰ CFU twice daily, started within 48 hours and continued for a week after the antibiotic course, reduced antibiotic-associated diarrhoea and shortened its duration, with few adverse effects. Its effect on C. difficile infection remains to be established in a larger trial."
+     },
+     {
+      "heading": "Acknowledgements",
+      "text": "We thank the participants, the ward nursing teams who recorded stool charts, the research nurses at the three sites, and the members of the independent data monitoring committee and trial steering committee."
+     },
+     {
+      "heading": "Funding",
+      "text": "The trial was funded by a project grant from the Fake National Health Research Fund (grant FNHRF-2016-118). The trial capsules were manufactured by an independent pharmacy production unit. The funder had no role in the design of the trial, the collection, analysis or interpretation of the data, or the writing of the report."
+     },
+     {
+      "heading": "Conflicts of interest",
+      "text": "The authors declare no competing interests."
+     },
+     {
+      "heading": "Data availability",
+      "text": "De-identified participant data and the statistical analysis code are available from the corresponding author on reasonable request, after approval of a proposal by the trial steering committee."
+     },
+     {
+      "heading": "Article information",
+      "text": "Corresponding author: Chinedu Okafor, Department of Infectious Diseases, Fake Northern University Hospital.\nReceived 14 January 2020; revised 2 March 2020; accepted 18 March 2020.\nAvailable online 3 April 2020. Version of record published in the July 2020 issue: Volume 56, Issue 1, 1 July 2020, pages 41–58.\n© 2020 The Authors. Published by Fake Academic Press."
+     }
+    ],
+    "references": [
+     "[1] McFarland, L. V. (2008). Antibiotic-associated diarrhea: epidemiology, trends and treatment. J. Fake Gastroenterology, 3, 563–578.",
+     "[2] Abebe, T., Kowalski, J. (2014). Incidence of diarrhoea during antibiotic treatment in adult inpatients: a prospective cohort. J. Fake Hospital Medicine, 9, 210–217.",
+     "[3] Bauer, M., Sørensen, K. (2016). Definitions of antibiotic-associated diarrhoea in clinical trials: a systematic review. J. Fake Clinical Epidemiology, 74, 88–96.",
+     "[4] Haddad, R., Nguyen, L. (2015). Antibiotic class and the risk of diarrhoea in hospital: a case-control study. J. Fake Antimicrobial Therapy, 70, 1104–1111.",
+     "[5] Ferreira, A., Walsh, D. (2017). Costs and length of stay associated with hospital-onset diarrhoea. J. Fake Health Economics, 22, 301–309.",
+     "[6] Lindgren, P., Osei, K. (2018). Mortality after Clostridioides difficile infection in older inpatients. J. Fake Infectious Diseases, 217, 1450–1458.",
+     "[7] Patel, S., Hoffmann, U. (2016). Antibiotic perturbation of the human gut microbiota: diversity, function and recovery. J. Fake Microbial Ecology, 12, 45–59.",
+     "[8] Romero, J., Dubois, C. (2017). Bile acid metabolism after antibiotic exposure. J. Fake Gut Physiology, 31, 702–712.",
+     "[9] Hill, C., Sato, Y. (2014). Expert consensus on the definition and scope of the term probiotic. J. Fake Nutrition Reviews, 11, 506–514.",
+     "[10] Kumar, V., Ahlberg, T. (2012). Adhesion of Lactobacillus rhamnosus GG to intestinal mucus. J. Fake Applied Microbiology, 113, 1101–1110.",
+     "[11] Moreau, P., Ibrahim, F. (2015). Lactobacillus rhamnosus GG and epithelial tight junctions in vitro. J. Fake Cell Biology of the Gut, 7, 233–241.",
+     "[12] Grant, E., Zhou, M. (2012). Probiotics for the prevention of antibiotic-associated diarrhoea: a systematic review and meta-analysis. J. Fake Evidence Synthesis, 4, 1–39.",
+     "[13] Adeyemi, O., Kristensen, L. (2015). Strain-specific effects of probiotics on antibiotic-associated diarrhoea: a network meta-analysis. J. Fake Clinical Gastroenterology, 49, 612–623.",
+     "[14] Novak, H., Berger, S. (2017). Probiotics in adults receiving antibiotics: an updated meta-analysis. J. Fake Internal Medicine, 18, 77–89.",
+     "[15] Allen, B., Rossi, G. (2013). Multi-strain probiotics in older inpatients exposed to antibiotics: a multicentre trial. J. Fake Geriatric Medicine, 382, 1249–1257.",
+     "[16] Teo, W., Marsh, R. (2016). Label accuracy of commercial probiotic products. J. Fake Food Microbiology, 59, 120–127.",
+     "[17] Castillo, M., Varga, Z. (2018). Timing of probiotic administration relative to antibiotics: a pooled analysis. J. Fake Pharmacotherapy, 38, 330–339.",
+     "[18] Schulz, K. F., Altman, D. G., Moher, D. (2010). CONSORT 2010 statement: updated guidelines for reporting parallel group randomised trials. J. Fake Trial Methods, 340, c332.",
+     "[19] Lewis, S. J., Heaton, K. W. (1997). Stool form scale as a useful guide to intestinal transit time. J. Fake Gastroenterology Methods, 32, 920–924.",
+     "[20] White, I. R., Royston, P., Wood, A. M. (2011). Multiple imputation using chained equations: issues and guidance for practice. J. Fake Statistics in Medicine, 30, 377–399."
+    ]
+   }
+  }
+ ],
+ "draft_doc": {
+  "layout": "one_column",
+  "running_head": "Trial protocol · draft v0.4 · not for circulation",
+  "title": "Preventing antibiotic-associated diarrhoea on general medical wards: protocol for a pragmatic stepped-wedge cluster trial of a probiotic care bundle",
+  "authors": "Mei Ling Tan, Arjun Raghavan, Sofia Brandt\nSchool of Health Sciences, Fake Metropolitan University",
+  "abstract": "Background: Diarrhoea that starts during or after antibiotic treatment is common on general medical wards. It adds to nursing workload, leads to stool testing and isolation, and can delay discharge. Individual trials and meta-analyses suggest that some probiotic strains prevent it, but the evidence has rarely been turned into routine ward practice. Aim: To test whether a probiotic care bundle, introduced ward by ward, reduces the incidence of antibiotic-associated diarrhoea among adult inpatients compared with usual care. Design: A pragmatic stepped-wedge cluster trial on eight general medical wards in two hospitals over 18 months, with an embedded process evaluation. Outcomes: The primary outcome is antibiotic-associated diarrhoea within 21 days of the first antibiotic dose. Secondary outcomes include C. difficile testing and infection, isolation days, length of stay and adherence to the bundle.",
+  "sections": [
+   {
+    "heading": "1. Introduction",
+    "text": "Antibiotics are among the most frequently prescribed medicines in hospital, and on a typical general medical ward between a third and a half of patients are receiving at least one antibiotic on any given day [1]. Diarrhoea is one of their most common adverse effects. Antibiotic-associated diarrhoea (AAD) is usually defined as three or more loose or watery stools in 24 hours, starting during antibiotic treatment or in the weeks after it, with no other identified cause [2]. Most episodes are mild and resolve once the antibiotic is stopped. They are nonetheless disruptive. A new episode of diarrhoea on a ward triggers stool charting, a stool sample for Clostridioides difficile testing, and in many hospitals isolation in a side room until the result is known, which puts pressure on the limited number of single rooms [3]. For older and frail patients, diarrhoea also brings a risk of dehydration, acute kidney injury, falls during urgent trips to the toilet, and pressure damage to the skin [4].\nThe risk of AAD depends on the antibiotic, the patient and the ward. Broad-spectrum agents, longer courses, older age, multiple comorbidities and the use of acid-suppressing medicines all increase it [5,6]. Antimicrobial stewardship programmes have reduced unnecessary prescribing in many hospitals, but most patients who receive antibiotics on medical wards do need them, and stewardship alone cannot remove the risk [7]. There is therefore interest in measures that can be given alongside a necessary antibiotic course to reduce its effect on the gut.\nProbiotics are the most studied of these measures. They are thought to work by limiting the loss of diversity in the gut microbiota during antibiotic treatment, by competing with opportunistic organisms for nutrients and binding sites, and by supporting the barrier function of the intestinal lining [8,9]. Several systematic reviews have concluded that probiotics, taken together, reduce the incidence of AAD, although they disagree about the size of the effect and about which strains and doses are effective [10–12]. The reviews also note that many of the underlying trials were small, were done in children or outpatients, or gave probiotics late in the antibiotic course.\nDespite this body of evidence, probiotics are used inconsistently on medical wards. In a survey of prescribers in our region, fewer than one in five reported ever recommending a probiotic to an inpatient receiving antibiotics, and those who did chose a variety of over-the-counter products at different doses [13]. Uncertainty about which product to use, concern about safety in frail patients, and the lack of a simple process for starting probiotics at the same time as antibiotics were the main reasons given. These are problems of implementation rather than of efficacy alone, and they are best addressed by a trial that tests a defined intervention as it would be delivered in routine care.\nThis protocol describes such a trial. We will introduce a probiotic care bundle, consisting of a single probiotic strain at a fixed dose, an electronic prescribing prompt and a ward-based education package, on eight general medical wards in a stepped sequence, and compare the incidence of AAD in periods before and after each ward adopts the bundle."
+   },
+   {
+    "heading": "2. Background: the burden of AAD on our wards",
+    "text": "To inform the design, we audited the stool charts and antibiotic prescriptions of all adults admitted to the eight participating wards over a four-week period in 2025. Of 1,214 admissions, 486 patients received at least one antibiotic for three days or longer. Among these patients, the audit identified new diarrhoea meeting the case definition above in a substantial minority, most often in those receiving aminopenicillin combinations or cephalosporins. Each episode was associated with a median of two stool samples sent for C. difficile testing and, where a side room was available, a median of two days in isolation. The audit did not collect outcomes after discharge, so it is likely to have underestimated the true incidence within 21 days.\nThe audit also showed wide variation between wards in how diarrhoea was recorded. Two wards used a structured stool chart for every patient; the others recorded stool frequency only once diarrhoea had been noticed. This variation matters for the trial: if wards change how carefully they record diarrhoea when they adopt the bundle, a difference between periods could reflect better recording rather than fewer episodes. We therefore plan to introduce a single structured stool chart on all eight wards before the trial starts, and to assess outcomes from it in the same way throughout (Section 4.5).\nAAD is not the only outcome that matters to patients and to the hospital. Unnecessary isolation reduces the availability of side rooms for patients who need them, and repeated stool testing adds laboratory workload. Length of stay is influenced by many factors other than diarrhoea, but even a small reduction would have value at a time of high bed occupancy [14]. We have included these outcomes as secondary outcomes, with the caution that the trial is powered only for the primary outcome."
+   },
+   {
+    "heading": "3. Rationale for the intervention",
+    "text": "We chose a single, well-characterised strain rather than a multi-strain product for three reasons. First, the effects of probiotics appear to be strain specific, and pooling different products in meta-analyses may hide differences between them [11]. Second, a single strain with a defined dose can be supplied consistently by the hospital pharmacy throughout the trial. Third, single-strain products are easier to assess for safety in frail inpatients, because the organism is known and can be identified if it is ever isolated from a blood culture [15].\nThe strongest single-trial evidence for the strain we have chosen comes from Okafor et al. [16], a double-blind randomised trial of 312 hospitalised adults on general medical, elderly-care and surgical wards. In that trial, Lactobacillus rhamnosus GG at 1 × 10¹⁰ CFU twice daily, started within 48 hours of the first antibiotic dose and continued for seven days after the last, reduced AAD within 21 days from 21.2% with placebo to 11.5%, and shortened the episodes that did occur. Its population and setting are closer to ours than those of any other trial we identified, and we have adopted its dose, its timing and its 21-day case definition unchanged, so that our results can be compared directly with it. We also base our sample-size assumptions on its effect (Section 4.6).\nThe other components of the bundle address the barriers identified in our survey [13]. An electronic prescribing prompt will appear when a qualifying antibiotic is prescribed for an eligible patient, offering the probiotic as a linked prescription that the prescriber can accept or decline. Ward pharmacists will review declined prompts on their daily round. A short education package for nurses and doctors will explain the rationale, the exclusion criteria and how to record stool frequency on the structured chart. These components are based on implementation studies of other ward-level prescribing changes, which found that prompts embedded in the prescribing system combined with pharmacist follow-up were more effective than education alone [17,18]."
+   },
+   {
+    "heading": "4. Methods",
+    "text": "4.1 Design\nThe trial is a pragmatic stepped-wedge cluster randomised trial. The eight wards are the clusters. All wards start in the control (usual care) condition, and every three months two wards, chosen at random, cross over to the bundle, until all eight have adopted it after twelve months. A final six-month period with all wards on the bundle completes the 18-month trial. A stepped-wedge design was chosen because the hospital board has agreed to introduce the bundle on all wards, and the design allows every ward to receive it while still providing a randomised comparison [19].\n\n4.2 Setting and participants\nThe trial will take place on eight general medical wards in two hospitals. All adults aged 18 years or over who start a course of antibiotics expected to last at least three days during their admission will be included in the outcome assessment. Patients will be excluded from receiving the probiotic, but not from the outcome assessment, if they have a central venous catheter, severe immunosuppression, acute pancreatitis, inflammatory bowel disease or an ostomy, matching the exclusions of the trial on which the dose is based [16].\n\n4.3 The probiotic care bundle\nThe bundle has three parts: the probiotic, supplied by the hospital pharmacy as capsules of L. rhamnosus GG at 1 × 10¹⁰ CFU, taken twice daily with food and at least two hours apart from oral antibiotic doses; the electronic prescribing prompt; and the education package. The probiotic will continue after discharge until seven days after the last antibiotic dose, with capsules supplied in the discharge medicines.\n\n4.4 Usual care\nIn the control periods, wards will continue their current practice. Prescribers may recommend a probiotic if they wish, and any such use will be recorded.\n\n4.5 Outcomes\nThe primary outcome is AAD within 21 days of the first antibiotic dose, defined as three or more loose or watery stools (Bristol types 6 or 7) in 24 hours with no other identified cause. Stool frequency will be taken from the structured stool chart in hospital and from a telephone call on day 21 after discharge. Two assessors who do not work on the participating wards will apply the case definition to every potential episode. Secondary outcomes are the number of stool samples sent for C. difficile testing per 100 antibiotic courses; confirmed C. difficile infection; days in isolation for diarrhoea; length of stay; and the proportion of eligible patients who receive the probiotic within 48 hours of their first antibiotic dose.\n\n4.6 Sample size\nWe assume an incidence of AAD of about 20% under usual care, consistent with our audit and with the placebo group of Okafor et al. [16], and a relative reduction of 40% with the bundle, which is smaller than the reduction in that trial to allow for incomplete adoption in routine care. With eight clusters, five periods, an intracluster correlation of 0.02 and an average of 60 eligible patients per ward per period, the design gives 85% power at a two-sided significance level of 5% [20]. The calculation will be repeated with the intracluster correlation observed at the end of the first period.\n\n4.7 Analysis\nThe primary outcome will be analysed with a mixed-effects logistic regression with a fixed effect for the bundle and for each period, to account for secular trends, and a random effect for ward. Secondary outcomes will be analysed with the appropriate generalised linear mixed models. The primary analysis will compare periods by the condition each ward was assigned to, whatever the adherence to the bundle. A process evaluation, using adherence data and interviews with ward staff, will describe how the bundle was delivered and help to interpret the results [21]."
+   },
+   {
+    "heading": "5. Ethics and dissemination",
+    "text": "The trial will seek approval from the regional research ethics committee. Because the bundle is introduced as a service change at ward level and outcome data are collected from routine records, we will request a waiver of individual consent for the outcome assessment, with information posters on the wards and the option for patients to decline the use of their data. Patients will be told about the probiotic and may decline it. Results will be reported according to the CONSORT extension for stepped-wedge cluster trials and presented to the hospital board, the antimicrobial stewardship committee and the participating ward teams [22]."
+   },
+   {
+    "heading": "6. Timeline",
+    "text": "Months 1–3: approvals, pharmacy supply, structured stool chart introduced on all wards, staff training on outcome recording. Months 4–21: trial periods, with two wards crossing over every three months. Months 22–24: final data collection, analysis and reporting."
+   }
+  ],
+  "references": [
+   "[1] Harris, J., Mbeki, N. (2019). Point prevalence of antibiotic use on general medical wards. J. Fake Hospital Pharmacy, 26, 112–118.",
+   "[2] Bauer, M., Sørensen, K. (2016). Definitions of antibiotic-associated diarrhoea in clinical trials: a systematic review. J. Fake Clinical Epidemiology, 74, 88–96.",
+   "[3] Ferreira, A., Walsh, D. (2017). Costs and length of stay associated with hospital-onset diarrhoea. J. Fake Health Economics, 22, 301–309.",
+   "[4] Quinn, R., Akhtar, S. (2018). Harms of diarrhoea in frail older inpatients: a cohort study. J. Fake Geriatric Medicine, 47, 655–661.",
+   "[5] Haddad, R., Nguyen, L. (2015). Antibiotic class and the risk of diarrhoea in hospital: a case-control study. J. Fake Antimicrobial Therapy, 70, 1104–1111.",
+   "[6] Okonkwo, B., Jensen, P. (2017). Proton pump inhibitors and hospital-onset diarrhoea. J. Fake Clinical Pharmacology, 83, 1544–1551.",
+   "[7] Davies, L., Marchetti, F. (2020). Antimicrobial stewardship on medical wards: a ten-year review. J. Fake Infection Control, 104, 23–31.",
+   "[8] Patel, S., Hoffmann, U. (2016). Antibiotic perturbation of the human gut microbiota: diversity, function and recovery. J. Fake Microbial Ecology, 12, 45–59.",
+   "[9] Kumar, V., Ahlberg, T. (2012). Adhesion of Lactobacillus rhamnosus GG to intestinal mucus. J. Fake Applied Microbiology, 113, 1101–1110.",
+   "[10] Grant, E., Zhou, M. (2012). Probiotics for the prevention of antibiotic-associated diarrhoea: a systematic review and meta-analysis. J. Fake Evidence Synthesis, 4, 1–39.",
+   "[11] Adeyemi, O., Kristensen, L. (2015). Strain-specific effects of probiotics on antibiotic-associated diarrhoea: a network meta-analysis. J. Fake Clinical Gastroenterology, 49, 612–623.",
+   "[12] Novak, H., Berger, S. (2017). Probiotics in adults receiving antibiotics: an updated meta-analysis. J. Fake Internal Medicine, 18, 77–89.",
+   "[13] Tan, M. L., Brandt, S. (2024). Prescribers' use of probiotics for inpatients receiving antibiotics: a regional survey. J. Fake Health Services Research, 9, 140–148.",
+   "[14] Whitfield, G., Asante, E. (2022). Bed occupancy and the value of shorter stays. J. Fake Health Policy, 15, 201–210.",
+   "[15] Lund, A., Ferraro, D. (2019). Probiotic bacteraemia in hospitalised adults: a case series and review. J. Fake Clinical Infection, 68, 1890–1897.",
+   "[16] Okafor, C., Lindqvist, E., Moreau, P., Tanaka, H. (2020). Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial. J. Fake Clinical Microbiology, 56(1), 41–58. doi:10.9999/fake.2020.024",
+   "[17] Byrne, K., Yilmaz, O. (2018). Electronic prescribing prompts and pharmacist follow-up: an interrupted time series. J. Fake Medical Informatics, 25, 1320–1327.",
+   "[18] Sandoval, I., Petrov, A. (2021). Education alone versus education with decision support for ward prescribing changes. J. Fake Implementation Science, 16, 55–64.",
+   "[19] Hussey, M. A., Hughes, J. P. (2007). Design and analysis of stepped wedge cluster randomized trials. J. Fake Contemporary Clinical Trials, 28, 182–191.",
+   "[20] Hemming, K., Taljaard, M. (2016). Sample size calculations for stepped wedge and cluster randomised trials: a unified approach. J. Fake Clinical Epidemiology, 69, 137–146.",
+   "[21] Moore, G. F., Audrey, S. (2015). Process evaluation of complex interventions: guidance. J. Fake Research Methods, 350, h1258.",
+   "[22] Hemming, K., Taljaard, M., Grimshaw, J. (2018). Reporting of stepped wedge cluster randomised trials: extension of the CONSORT 2010 statement. J. Fake Trial Methods, 363, k1614."
+  ]
+ },
+ "expected": {
+  "tags": {
+   "change.severity": {
+    "accept": [
+     "none"
+    ],
+    "ordered": true
+   },
+   "alert.about_this_paper": {
+    "accept": [
+     "no"
+    ]
+   },
+   "impact.cited": {
+    "accept": [
+     null
+    ]
+   },
+   "impact.impact_level": {
+    "accept": [
+     null
+    ]
+   }
+  },
+  "hard_fail_if": [
+   "change.severity == high",
+   "change.severity == medium"
+  ],
+  "facts": {
+   "must_include": [
+    "says the alert's retraction notice is the paper's own DOI, so following it leads back to the paper itself rather than to a separate retraction notice",
+    "says the alert's date (1 July 2020) is the paper's own issue publication date, not the date of a retraction",
+    "says nothing else shows a retraction: the current copy has no retraction banner or watermark and its title has no RETRACTED prefix"
+   ],
+   "must_not_include": [
+    "says the tracked paper was retracted",
+    "states a reason for a retraction",
+    "recommends removing or replacing the citation"
+   ]
+  },
+  "why": "RE-changes-explained.md §1, R3 (and §7, §8 R3): the publisher registered the article as its own 'retraction', so the high alert's notice DOI is the paper's own DOI and following it leads back to the paper; its date is the paper's issue date (\"1 July 2020\"), not a retraction date. Investigation plans no notice document for a notice DOI equal to the paper's (EVALUATION.md, R3), only the current copy, which is unchanged: no banner, no watermark, and its Crossref title is unchanged. Rubric: a notice whose DOI is the paper's own with no other sign of a change is about_this_paper 'no' and severity none, so the pipeline stops before the draft is read. The draft's sample size and dose rest on the paper, so a model that trusts the alert would wrongly tell the researcher to drop the citation."
+ }
+}

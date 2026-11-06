@@ -223,19 +223,44 @@ changes the same files as S1.
   - Case 19's watermark is the rich `watermark` field on its
     `current_version` document, with "RETRACTED:" before the title.
 - **Acceptance criteria:**
-  - [ ] `run.py --dry` builds every case in `evals/cases/`.
-  - [ ] Throwaway script, `--with pypdf`: each rich paper has at least 5
+  - [x] `run.py --dry` builds every case in `evals/cases/`.
+  - [x] Throwaway script, `--with pypdf`: each rich paper has at least 5
         pages and each rich draft at least 3 pages and 20 references.
-  - [ ] Same script: for each rewritten and new case, every value quoted in
+  - [x] Same script: for each rewritten and new case, every value quoted in
         its `why` in double quotes appears in `case_text`'s text of the
         case, and the page-1 text of a rich draft doesn't contain the
         tracked paper's reference.
-  - [ ] Same script: 22's `expected` equals 02's, and both use the rich
+  - [x] Same script: 22's `expected` equals 02's, and both use the rich
         format.
-  - [ ] `uv run ruff check` passes.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals": the case count (the number of files in
     `evals/cases/`) and that some cases use full-length rich PDFs.
+  - Decisions made in implementation (S2):
+    - Case 24 (R3) stores no notice document, only a `current_version` at
+      the paper's DOI whose PDF is the unchanged paper, because
+      investigation stores no notice document for an own-DOI notice
+      (`investigate.py`); `expected` is severity none and
+      `about_this_paper` no, from the prompt's rubric ("no" when the
+      notice's DOI is the paper's own and nothing else shows a change).
+      EVALUATION.md "Evals" (the case list).
+    - Case 25 (R8) follows case 17: the reinstatement resolves the
+      retraction in the same report, so severity is none and both alerts
+      are about the paper. EVALUATION.md "Evals" (the case list).
+    - Case 27 is a self-referencing withdrawal: the current copy's text and
+      its one-page `pdf_doc` are the withdrawal statement, so it is not a
+      paper and has no 5-page minimum; severity high, about the paper.
+      EVALUATION.md "Evals" (the case list).
+    - Case 19's current copy is the stored paper with the watermark and
+      "RETRACTED: " title and no banner; its `pdf_doc` was copied from the
+      hand-written `paper_doc` by a one-off script (no text generated),
+      which also re-indented the file. No doc: the case file shows it.
+    - In variant 22 the Methods section comes first, so one Methods sentence
+      (no citation of the tracked paper) is on the draft's page 1; the
+      tested citation is on page 2 in both 02 and 22. No doc: case-local.
+    - Draft reference lists are alphabetical, so citation numbers changed
+      (e.g. 18's [4] became [15]); no `expected` changed in any rewritten
+      case. No doc: case-local.
 
 ### S3: A case can attach a real PDF, read through its extracted text
 
