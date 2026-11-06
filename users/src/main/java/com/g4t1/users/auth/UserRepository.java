@@ -20,4 +20,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Transactional
     @Query("delete from User u where u.id = :id")
     void deleteIfPresent(UUID id);
+
+    @Modifying
+    @Transactional
+    @Query("delete from User u where u.email = :email")
+    void deleteByEmail(String email);
 }

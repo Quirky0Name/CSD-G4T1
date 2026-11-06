@@ -37,6 +37,17 @@ public class TokenService {
                 .compact();
     }
 
+    // the same token plus role=admin, which Storage Management and User Management read as the admin
+    public String issueAdmin(UUID userId) {
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("role", "admin")
+                .expiration(Date.from(now.plus(LIFETIME)))
+                .signWith(key, Jwts.SIG.HS256)
+                .compact();
+    }
+
     // for User Management's own calls into Storage Management's /internal/**, which only takes service tokens
     public String issueServiceToken() {
         Instant now = Instant.now();
