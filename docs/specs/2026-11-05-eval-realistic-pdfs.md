@@ -376,17 +376,17 @@ changes the same files as S1.
   - Category names of these cases start with `real: `, so the category
     table shows real and made-up cases apart.
 - **Acceptance criteria:**
-  - [ ] `run.py --dry` builds every case in `evals/cases/`, and each real
+  - [x] `run.py --dry` builds every case in `evals/cases/`, and each real
         case attaches its file's bytes unchanged (throwaway script compares
         sha256 with `SOURCES.md`).
-  - [ ] Throwaway script, `--with pypdf`: each committed PDF opens, has
+  - [x] Throwaway script, `--with pypdf`: each committed PDF opens, has
         more than one page, and its first page's text contains the paper's
         title from the case.
-  - [ ] Same script: for each real case, every notice sentence quoted in
+  - [x] Same script: for each real case, every notice sentence quoted in
         its `why` appears in its notice text, and the stored paper's `.txt`
         contains the paper's title.
-  - [ ] `SOURCES.md` lists a CC-BY licence for every committed file.
-  - [ ] `uv run ruff check` passes.
+  - [x] `SOURCES.md` lists a CC-BY licence for every committed file.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals": the real cases, `evals/real/SOURCES.md`, that
     drafts are always written for the eval, that real cases' categories
@@ -399,6 +399,25 @@ changes the same files as S1.
     may remember famous real papers; non-CC-BY papers are never committed.
   - ROADMAP.md: reword "Add cases from real PDFs" to what remains (more
     real cases, investigation cases).
+  - Decisions made in implementation (S4):
+    - The title criteria compare ignoring spaces: pypdf drops the spaces in
+      some PLOS title fonts ("Detectingphishingwebsites" in
+      `pone.0258361`, "correctionfor" in `pone.0309025`). The `.txt` stays as
+      extracted; a quote of the title still matches through the paper's
+      metadata title. EVALUATION.md "Evals" (real cases: check the `.txt`).
+    - The notice texts are not files in `evals/real/`: each case carries its
+      notice's text (from `research_evaluation.investigation.europepmc.
+      plain_text`), and `SOURCES.md` lists each notice's DOI, PMCID, Europe
+      PMC URL and licence. EVALUATION.md "Evals" (real cases).
+    - Case 31 (C6) has no notice: one medium `other:new_version` alert and a
+      `new_version` document with `text: null` and `pdf_file` v2 (Europe PMC
+      has no open-access record of v2); its `why` quotes v2's "Amendments
+      from Version 1" box and v1's abstract. EVALUATION.md "Evals" (real
+      cases).
+    - Real cases without a trap have no `tier` (as 12 made-up cases). No doc:
+      EVALUATION.md already says `tier` is optional.
+    - The five PDFs add about 9.4 MB to the repo. No doc: `SOURCES.md` lists
+      them.
 
 ## Human checks
 

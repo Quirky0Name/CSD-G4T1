@@ -1,0 +1,1828 @@
+RESEARCH ARTICLE
+Reassessing the Education–FDI–Trade Nexus for a Sustainable 
+Future: Evidence from Sub-Saharan Africa
+[version 1; peer review: 1 approved with reservations]
+Md Qamruzzaman
+ 1, Abdulateif A. Almulhim
+ 2, Abdullah A. Aljughaiman2
+1School of Business and Economics, United International University, Dhaka, Dhaka Division, 1212, Bangladesh 
+2Finance Department, School of Business, King Faisal University, Al Ahsa, Eastern Province, Saudi Arabia 
+First published: 18 Aug 2026, 15:1392  
+https://doi.org/10.12688/f1000research.187739.1
+Latest published: 25 Sep 2026, 15:1392  
+https://doi.org/10.12688/f1000research.187739.2
+v1
+ 
+Abstract 
+Background
+Education, foreign direct investment (FDI), and trade openness can 
+influence environmental sustainability through competing humancapital, technology-transfer, scale, composition, and pollution-haven 
+channels. Evidence for Sub-Saharan Africa remains fragmented and 
+often overlooks cross-sectional dependence and asymmetric 
+responses.
+Methods
+This study examines a panel of Sub-Saharan African economies from 
+1990 to 2019 using production-based and consumption-based carbon 
+dioxide emissions as environmental outcomes. The empirical strategy 
+applies cross-sectional dependence and slope-heterogeneity 
+diagnostics, second-generation unit-root and cointegration tests, 
+dynamic seemingly unrelated regression, continuously updated fully 
+modified and bias-corrected estimators, asymmetric decompositions, 
+and panel causality tests.
+Results
+Education is consistently associated with lower emissions across the 
+principal long-run specifications. FDI is generally associated with 
+lower production-based and consumption-based emissions in the 
+symmetric long-run estimates, while the asymmetric findings show 
+that the environmental response can differ between positive and 
+negative FDI shocks. Trade openness is predominantly emissionincreasing, and urbanisation is associated with higher emissions. The 
+Open Peer Review
+Approval Status  
+1
+version 2
+(revision)
+25 Sep 2026
+version 1
+18 Aug 2026
+ view
+Jamil Afzal
+ , Southwest University of 
+Political Science and Law, Chongqing, China
+1. 
+Any reports and responses or comments on the 
+article can be found at the end of the article.
+ 
+ Page 1 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Corresponding authors: Md Qamruzzaman (qamruzzaman@bus.uiu.ac.bd), Abdulateif A. Almulhim (abmulhem@kfu.edu.sa)
+Author roles: Qamruzzaman M: Conceptualization, Data Curation, Formal Analysis, Writing – Original Draft Preparation, Writing – 
+Review & Editing; Almulhim AA: Conceptualization, Data Curation, Formal Analysis, Writing – Original Draft Preparation, Writing – 
+Review & Editing; Aljughaiman AA: Conceptualization, Data Curation, Formal Analysis, Funding Acquisition, Software, Writing – Original 
+Draft Preparation, Writing – Review & Editing
+Competing interests: No competing interests were disclosed.
+Grant information: : This research was supported by the Deanship of Scientific Research, Vice Presidency for Graduate Studies and 
+Scientific Research, King Faisal University, Saudi Arabia (Grant No. KFU264411), and the Institute for Advanced Research (IAR), United 
+International University, Bangladesh (Reference No. IAR-2023-PUB-021). 
+The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.
+Copyright: © 2026 Qamruzzaman M et al. This is an open access article distributed under the terms of the Creative Commons 
+Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original work is properly 
+cited.
+How to cite this article: Qamruzzaman M, Almulhim AA and Aljughaiman AA. Reassessing the Education–FDI–Trade Nexus for a 
+Sustainable Future: Evidence from Sub-Saharan Africa [version 1; peer review: 1 approved with reservations] F1000Research 2026, 
+15:1392 https://doi.org/10.12688/f1000research.187739.1
+First published: 18 Aug 2026, 15:1392 https://doi.org/10.12688/f1000research.187739.1  
+robustness analyses support the stability of the core associations.
+Conclusions
+Sustainability policy in Sub-Saharan Africa should combine 
+environmental education with screening and performance standards 
+for FDI and trade-related production. Policies should account for 
+asymmetric adjustment and economy-specific conditions when 
+pursuing low-carbon development.
+Keywords 
+education; foreign direct investment; trade openness; environmental 
+sustainability; carbon emissions; Sub-Saharan Africa; panel data; 
+asymmetry
+  Page 2 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Introduction
+The ecological status of the planet has never been more susceptible to sustainable managing practices as it is at this
+moment in the history of modern society, facing an emergency of unparalleled scales. It is a common occurrence on all
+levels, and education can be a good channel to be used to mitigate it (Kumar et al., 2023). The instability and value of the
+financial rapport between educational pursuits and the sustainability of the environment explains the need to establish a
+more sustainable future of the world. The crisis of CO2 emissions to the atmosphere is one of the most significant
+problems of the twenty-first century that affects the economic growth, health of people, and environmental sustainability
+on a global scale. The major factors of carbon dioxide emissions are the anthropogenic ones especially deforestation,
+industrial activities and burning fossil fuels (Lone & Bhat). It is clear that emissions of the burning of fossil fuels are one of
+the number one sources of greenhouse gases (GHGs) and that the emission of CO2 into the atmosphere is the contributor
+to global warming, storms that have increased in number, sea level rising and disrupted ecological stability, which are
+substantial contributors to climate change (Soeder and Soeder, 2021). These changes are not limited to the environmental
+impact, but the same influences the social and economic fields. Furthermore, since the climate system is interconnected,
+the carbon dioxide emissions in a specific area will inevitably have an effect in other regions; the CO2 in the atmosphere
+affects all countries, no matter what the political boundaries are. In turn, it is crucial to understand that the effects of
+domestic emissions go global, and such phenomenon as carbon leakage also needs to be taken into consideration
+(Pan et al., 2020 ). To start solving the environmental concern of excess emission of carbon dioxide, nations have to
+examine the relationships between the carbon emissions, the foreign direct investment, trade openness, and education.
+The complex factors underlying carbon dioxide emissions are closely intertwined with economic, ecological, and social
+processes. The constituent components that contribute to the overall carbon footprint do not make equal contributions.
+Among them, education (EDU) ( Afolayan et al., 2020 ) and foreign direct investment (FDI) ( Huang et al., 2022 ) are the
+most relevant. The other impact of emissions can be influenced by capital flows, such as FDI, which is closely related to
+increased economic activity. Through educational efforts, much is done to advance society ’s trustworthiness and
+progress towards greater sustainability. There are also preconditions for the intensification of emissions due to industrial
+and commercial growth, trade openness (TO) ( Jun et al., 2020 ), and economic growth (EG) ( Wang et al., 2022 ). Their
+energy mix significantly influences countries ’ emission profiles; countries with resources tend to use fossil fuels.
+Urbanisation (UR) can boost economic growth, but it can also increase energy use (Ali et al., 2020). Ecological footprint
+(EF) (Ali et al., 2020) and technological development (TD) (Xu and Lan, 2023) are also represented as emission patterns.
+The regulations (RQ) and institutional structures (IP) of a specific country will determine the ability to develop and adopt
+policies that enhance environmental conditions ( Huang et al., 2022 ; Ali et al., 2020 ). Although the effect of outward
+foreign direct investment (OFDI) on a host country is disputed (some researchers may find potential advantages in the
+form of economic growth and stabilisation in the case of influence on main spheres, Zafar et al., 2022 ), its influence on
+emissions remains. The current analysis, therefore, asks whether it (EDU) is the mechanism for environmental
+sustainability, and whether FDI and trade openness (TO) are. The areas of investing in education, FDI, and trade
+liberalisation are interconnected and aimed at overcoming the difficulties faced by scholars and policymakers (Aust et al.,
+2020). Recent literature shows that investment in education enhances environmental safety, and FDI, as well as openness
+to trade, can contribute to environmental degradation ( Tiba and Belaid, 2020 ). Providing more evidence, education
+(EDU) has become one of the determinants, as it has an influential effect on society and the economy.
+Education (EDU) has become a determining variable with a substantial impact on the economy and society. The studies
+by Afolayan et al. (2020) and Xu and Lan (2023) were aimed at investigating the relationship between education and
+CO2 emissions. Education enhances human capital, allowing people to make informed, environmentally friendly
+choices. Afolayan et al. (2020) find that there is a positive correlation between elevated education and economic activity,
+which may also raise emissions, and the education-emission nexus is a multidimensional process. According to Zafar
+et al. (2022), education is important to boost the integration and use of modern technologies to achieve energy efficiency
+and minimize carbon emissions. The nature of jobs and employment opportunities is also influenced by education-related
+events ( Suman, 2021 ). Another major cause of CO2 emissions in resource-abundant countries is foreign direct
+investment (FDI), as Y. Huang (2022a) and Q. Yang, Li, and Wang (2023) explain in the literature. At the same time,
+FDI may also lead to increased emissions, both due to economic development and the implementation of energy-efficient
+technologies and practices ( To et al., 2019 ; Hanh et al., 2020 ). It can have a significant effect on the FDI multiplier in
+terms of emissions, as trated byHao et al. (2021), and will require, base consideration oforces, type oinvestment types The
+research variables in Q. Wang and Zhang (2021) and Jun et al. (2020) are trade openness (TO), which can stimulate
+industrialisation and economic activity, thereby facilitating a rise in emissions.
+However, free trade will facilitate the transition to sustainable finance and show the masses environmentally friendly
+technologies as well. Wang and Zhang (2021) recognize that trade policies can mitigate the effects of emissions because
+they influence traded goods. The looming environmental issues in Sub-Saharan Africa (SSA) have heightened the
+Page 3 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+urgency of the research. Economic growth and environmental protection must be in a delicate balance because the region
+is focused on economic growth. The main predictors of this balance are education, foreign direct investment (FDI), and
+trade openness. The interaction between these factors is the focus of the analysis, which is presented in detail to enhance
+the quality of policies. It is anticipated that the study will fill gaps in the literature by critically analyzing the relations
+using advanced econometric tools and thus provide subtle and precise information.
+Although empirical studies on environmental sustainability are increasingly numerous, research findings on the roles of
+education, foreign direct investment, and openness to trade remain dispersed and fragmented. The literature documents
+the emission-cutting and emission-enhancing effects of these organizations, and this lack of certainty hinders policymakers from developing consistent policies that can balance development and environmental conservation, especially in
+developing nations. Educationists and environmentalists who have researched the convergence between education and
+environmental sustainability have arrived at varied conclusions. Some researchers say that more education results in
+increased consumption and activity among people, thereby contributing to greater carbon emissions. According to other
+studies, education enhances environmental awareness, the adoption of cleaner technologies, and the overall level of
+public support for environmental protection, leading to a decrease in pollution. These are mutually conflicting arguments
+that are rarely addressed in a single empirical model, and most studies assess education on its own without considering
+other macroeconomic variables. The same discrepancies prevail in the foreign direct investment literature. The pollution
+haven hypothesis assumes that FDI will lead to increased emissions because more polluting industries will be transferred
+to countries with weaker environmental regulations. The pollution halo hypothesis, on the other hand, tends to focus on
+the movement of technology, efficiency gains, and the spread of superior management practices, leading to less pollution.
+Each of the two positions is supported by empirical data, often based on sample selection, estimation techniques, or
+control variables. However, it is not the subject of most research to determine the interactions among the environmental
+impact of FDI, human capital, and trade exposure.
+The results of trade openness also provide conflicting empirical results. The scale effect presupposes greater emissions
+because increased production and transportation are expected. The effects of composition and technique imply that
+openness may lower emissions by shifting production towards cleaner industries and spreading advanced technologies.
+This is because in most empirical literature, the mechanisms are tested individually and based on average effects, which
+conceal the possibility of asymmetries and context-dependent effects.
+The main literature gap is the lack of an integrated analytical approach that simultaneously examines education, FDI, and
+trade openness and addresses issues of heterogeneity, asymmetry, and cross-sectional dependence. These mostly used
+single-equation models or first-generation panel estimators, resulting in studies that captured complex, interdependent
+effects within countries and identified both positive and negative effects. Subsequently, conflicting results persist, and
+policy interpretations remain poor.
+The gap this research aims to fill is the lack of a single empirical approach that combines education-based human capital,
+foreign direct investment, and trade openness for environmental sustainability. The framework explicitly leaves room for
+asymmetric responses and second-generation panel methods for long-run dynamics. In this way, the research balances
+theoretical debates and provides additional evidence on the circumstances in which education, FDI, and trade can
+contribute to environmental enrichment or degradation. The strategy is especially applicable to Sub-Saharan Africa,
+where rapid economic integration and human capital development are occurring alongside rising environmental
+pressures.
+Literature review and hypothesis development
+Theoretical foundation
+Environmental sustainability is a discourse that is becoming increasingly vital and will continue gaining momentum
+today and in the future. It expresses the urgency of being efficient in marshalling resources and, at the same time,
+protecting the natural ecosystems on which humanity depends. In its conventional sense, environmental sustainability
+(ES) refers to the effort to ensure that the current generation can fulfill its needs today and that future generations will have
+the capacity to fulfill theirs. This knowledge is grounded in the broader concept of sustainable development, which, in
+turn, requires incorporating environmental stewardship, social equity, and economic development. Natural resources and
+ecosystems play a central role in society’s welfare, and their assessment is directly linked to the community’s overall wellbeing (Ziaul & Wang, 2023).
+Empirical studies make conceptually consistent explanations of the determinants of ES, and are deeply rooted in
+economic theory. The Human Capital Theory teaches us that the more knowledge a person is provided with, the better
+prepared he/she is to handle the environment. A highly educated population is thus better acquainted with sustainable
+Page 4 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+practices and is willing to adopt new environmental protection strategies in a positive manner (Mourad, Wahid, Alkubise,
+and Najar, 2023). Neoclassical Environmental Kuznets Curve (EKC) theory argues that economic growth has not
+inevitably led to environmental degradation, as long as enlightened citizens steer countries toward cleaner technologies
+and a more sustainable path of development. Studies conducted by Duodu et al. show how education can influence
+attitudes and behaviour, with a view to facilitating civic participation in environmental campaigns, as explained in terms
+of behavioural economics (Ekins, 2011).
+Environmental sustainability is affected both positively and negatively by the impact of trade openness. The Scale Effect
+means that, as industrial production and trade increase, pollution and resource consumption rise (Varghese, 2024). On the
+other hand, a change in the composition of the environment can be observed as the shift to cleaner industries or services
+producing what has been called the Environmental Composition Effect. Rehman, Bhatti, Kraus, and Ferreira (2020)
+contend that stringent environmental standards might complement trade, and as a result, a race to the top may mobilize in
+which high-income, environmentally neutral goods are swapped. There is an elegant correlation between ES and foreign
+direct investment (FDI). Duodu, Kwarteng, Oteng-Abayie, and Frimpong (2021) propose the Pollution Haven Theory,
+which suggests that multinational companies will set up in jurisdictions with weak environmental policies, thereby
+increasing pollution in the area. Conversely, the Pollution Halo Hypothesis states that FDI might also be beneficial to
+developing states by introducing new technology and improving environmental management systems (Gyimah, Fiati,
+Nwigwe, Vanessa, and Yao, 2023). Governance, in this respect, plays a critical role, since host-country regulations are the
+main drivers of the net effect of FDI on sustainability.
+Urbanisation does give opportunities and challenges. The rapid urban development increases per capita pollution and
+resource exploitation, particularly in poorly planned cities (Bordun, Antonyak, Dumych, Hrytsyshyn, and Bilous, 2023).
+However, cities have economies of scale that help enhance social services and minimise waste in infrastructure (Bowles,
+Boetto, Jones, and McKinnon, 2016). City centres of higher learning and innovation encourage sustainability activities
+and nurture favourable laws and culture. Nonetheless, these objectives should be achieved through sustainable urban
+planning and policy frameworks (Ang, Choolani, and Poh, 2024). The four factors connected to education, trade,
+openness, and urbanisation interact in forming complicated systems to impact environmental sustainability. These
+dynamics are important to study to identify viable ways to support the provision of ecosystem services. The future
+governance should adopt technologies that can realise these strategies.
+ Education and environmental sustainability
+Education is a catalyst of growth and prosperity as it is an investment into individuals and the society in general. It has
+been known since long as an important factor of human development and economic growth. Over the recent years, the
+two-way communication between the environment and education has received the growing interest of scholars. Further
+elaboration of this relationship shows that it is a prerequisite to sustainability in practice, technology innovation, policy
+advocacy, diversify economy and exchange of best practice throughout the globe. The procedure highlights the immense
+ability of education to influence cognition as well as create a globally conscious society that is sustainably aware of
+everyone. However, there are two empirical studies, which present opposing results: the first one shows that education
+has a positive relationship with emissions and the other one indicates the opposite.
+The quantitative data of the first group illustrate that education and CO 2 emissions have a positive correlation. Afolayan
+et al. (2020)have made the conclusion that a high level of education allows the economy to be active, which in turn pushes
+the size of the aggregate emissions. In the same fashion, both education and economic growth were found to have a
+positive impact on CO 2 emissions, as reported by Xu and Lan (2023). Continuous air pollution may be explained by the
+further use of fossil fuels. Suman (2021) suggested that the prevalence rates of greenhouses depend on the level of
+education and job opportunities on the regional level. Moreover, Zafar et al. (2022) hypothesized that education is also
+one of the impacts major causes of environmental degradation. The latter group highlights the adverse relationship
+between education and CO 2 emission. Leal Filho et al. (2019) noted that energy sustainability is a top priority agenda
+among universities in an effort to limit carbon emissions and lower energy use in buildings. These sustainability programs
+form a huge investment by many institutions of higher learning. As illustrated by Yin, Jiang, Lin, and Liu (2022), online
+education has a twofold effect on carbon emissions: to begin with, online classes reduce commuting-related emissions
+since most of them can be taken at home; to conclude, online education leads to emission through the use of devices and
+servers. Chen et al. (2022) argued that education enabled personal adaptation of the climate change and the creation of
+technologies that reduce the emission of greenhouse gases. According to Zafar et al. (2020) , education has a positive
+effect on carbon emission reductions.
+Page 5 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+ Foreign direct investment and environmental sustainability
+Two different dichotomies have been developed in the literature with respect to the nexus between foreign direct
+investment (FDI) and the greenhouse gas emissions. An extensive body of literature records a favorable relationship, that
+is, increased FDI inflows are correlated with emissions of carbon dioxide. According to Yuan Wang and Huang (2022a), a
+positive initial shock in short-term increases in augmentations in FDI can trigger an increase in CO 2. Expanding on the
+pollution haven hypothesis, Huang et al. (2022) argue that FDI is more concentrated in the jurisdictions where
+environmental regulations are relatively lenient, thus adding up to 525 percentage points of emissions by 2100, depending
+on geographic and institutional factors. According to Hao et al. (2021), this effect is explained by the emissions produced
+during the different levels of production and consumption. It is important to mention that the impact of the environment is
+considerably softened by the investor sphere, techno, and motivation. Also, Huang et al. (2022) emphasise the role of
+macro-variables namely economic development, financial development and urbanisation, and tourism in mediating the
+indirect impact of FDI on carbon emissions. The (quantitative) relationship was measured by Wang et al. (2022), and the
+coefficient estimates the result of a 1 percent increment of FDI resulting in a 0.03 percent increment in emissions;
+however, the error-correction coefficient has a negative value, which means that, in the short term, the system aims at
+returning the equilibrium situation to its original condition.
+On the other hand, a substantial body of research suggests that FDI may lead to technological spillovers that reduce
+carbon production. To et al. (2019) showed that FDI contributes to the spread of clean technology innovations, thereby
+helping prevent emissions. They argued that host countries with higher education disproportionately benefit from the
+environmental returns of such inflows. Q. The same argument was supported by Wang et al. (2023), who reported that in
+better-quality countries, there is a higher likelihood that there would be a reduction in the level of CO 2 emission that can
+be linked to FDI.Hanh et al. (2020)also found that FDI tends to reduce pollution, primarily by providing environmentally
+friendly technologies that decrease energy consumption and the intensity of carbon emissions. As stated by Apergis,
+Pinar, and Unlu (2023) and Ren, Yuan, Ma, and Chen (2014) , the potential of FDI to promote the proliferation of clean
+technology could be decisive in mitigating greenhouse gas emissions, and policy frameworks aimed at capitalising on
+positive externalities are thus critical.
+ Trade openness and environmental sustainability
+Two research teams reported contrasting results: one team obtained a positive result, while the other obtained a negative
+result. The evidence from the former indicates a positive correlation between trade openness and carbon dioxide
+emissions. Jun et al. (2020) postulate that high levels of trade openness may strengthen the dominance of specific
+industries, thereby leading to high pollution levels. Chhabra, Giri, and Kumar (2023) reveal that the production of goods
+can serve as an indicator of carbon emissions. Additionally, the exchange of products and services can significantly
+impact the adoption of environmentally friendly technology, helping countries transition to more sustainable economic
+activities. Nonetheless, when goods are produced in consideration of contaminated products, environmental degradation
+occurs. There is even a possibility that trade openness can reduce carbon emissions in the wealthier nations under the
+conditions described by Wang and Zhang (2021) .
+Furthermore, Ali et al. (2020) found that liberal trade policies can predispose an environment to degradation because
+nations may loosen their regulations in pursuit of trade and investment. By liberalisation, energy-intensive industries will
+be forced to relocate to places with less stringent environmental regulations, thereby increasing carbon emissions into the
+atmosphere. Two distinct claims support this relocation trend, suggesting a common underlying causal mechanism.
+Another academic research stream introduces a negative dependent correlation between trade openness and carbon
+dioxide levels. Several reports argue that liberalised trade may reduce carbon emissions in developed countries. For
+example, Karedla, Mishra, and Patel (2021) found that CO2 emissions in India decreased significantly as the country
+opened up to trade. Accordingly, Lin and Umetsu note that carbon dioxide emissions are expected to decline in newly
+industrialised countries as they become more open. According to Chhabra, Giri, and Kumar (2022) , increased trade
+facilitates the exchange of knowledge and technology, thereby improving environmental performance by reducing
+carbon dioxide emissions. Lastly, Thi, Tran, and Nguyen (2023) argue that emissions can be reduced by utilising
+renewable energy sources, increasing trade openness, and fostering innovation. A summary of the literature is presented
+in Table 1.
+Figure 1 presents the theoretical foundation of the study, and Table 1 provides the summary of the literature survey.
+Page 6 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Table 1. Summary of literature survey.
+Author Sample (year) Methodology IV(s) EDU FDI TO
+Q. Wang, Yang, Li, and
+Wang (2023)
+67 countries (1990 –
+2019)
+FMOLS -VE
+Thi, Tran, and Nguyen
+(2023)
+53 nations (19902 –
+2019)
+FMOLS, DOLS,
+GMM System
+estimator
+REC, TO, INNO -VE
+Chhabra, Giri, and
+Kumar (2023)
+BRICS (1991–2019) DCCE IQ, PS, PE +VE
+Apergis, Pinar, and
+Unlu (2023)
+BRICS (1993–2012) GMM - -VE
+Xu and Lan (2023) China (2010–2021 DEA TD +VE
+Y. Wang and Huang
+(2022)
+East Asia (2011 –2020) ARDL TR, EG +VE
+Zafar, Saleem, Destek,
+and Caglar (2022)
+22 top remittancereceiving countries
+(1986–2017)
+secondgeneration unit
+root techniques
+remittances,
+export
+diversification
++VE
+Chen et al. (2022) Global countries Econometric
+models
+- -VE
+Chhabra, Giri, and
+Kumar (2022)
+23 middle-income
+countries (1994–2018)
+GMM Inn -VE
+Hanh et al. (2020) Vietnam and
+Indonesia (1960–
+2018)
+ARDL - +VE
+Yin, Jiang, Lin, and Liu
+(2022)
+China (2011–2019) Regression
+model
+- -VE
+Huang et al. (2022) G20 economies
+(1996–2018)
+FGLS ED, FD, UR,
+and RQ
++VE +VE
+Hao, Ba, Ren, and Wu
+(2021)
+China (2003–2016) SYS-GMM TR, OFDI +VE
+Q. Wang and Zhang
+(2021)
+182 countries (1990 –
+2015)
+Econometric
+models
+- -VE
+Lin and Umetsu NIC countries (1971 –
+2020)
+Econometric
+models
+- -VE
+L. Wang et al. (2022) NICs, (1990–2016) ARDL-PMG - +VE
+Suman (2021) Nepal Econometric
+models
+- +VE
+Zafar, Shahbaz, Sinha,
+Sengupta, and Qin
+(2020)
+OECD (1990–2015) Second
+generation
+methodologies
+NRA, FDI, EG -VE
+Jun, Mahmood, and
+Zakaria (2020)
+China waveletcoherence
+analysis
+- +VE
+Ali, Yusop, Kaliappan,
+and Chin (2020)
+OIC countries DCCE, MG, PMG TO, UR, EF, IP +VE
+Afolayan, Okodua,
+Oaikhenan, and
+Matthew (2020)
+Nigeria (1980–2017) ARDL ED +VE
+To, Ha, Nguyen, and
+Vo (2019)
+Asian region (1980 –
+2016)
+DOLS, FMOLS - -VE
+Ren, Yuan, Ma, and
+Chen (2014)
+China (2001–2011) environmental
+regulation
+EI, TO, CA, ER, -VE
+Note: EDU = education; FDI = foreign direct investment; TO = trade openness. Signs summarise the direction of the reported relationship
+with environmental sustainability. Source: authors ’ compilation from the cited literature.
+Page 7 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Methods
+Study design, data and variables
+The study uses annual panel data for Sub-Saharan African economies over 1990 –2019. The operational definitions,
+transformations, and original data sources for environmental outcomes, education, FDI, trade openness, and urbanisation
+are reported in Table 2.
+Data and methodology of the study
+Model specification
+The study aims to assess the effects of education on environmental sustainability in the top 50 polluted nations for the
+period 1990–2019. The generalised equation is as follows
+ESjEDU (1)
+Equation (1) has been extended to include three macro indicators, following the existing literature that focuses on
+environmental degradation. The revised Equation (2) is as follows:
+ESjEDU, TO, FDI, UR (2)
+ES, EDU, TO, FDI, and UR represent environmental sustainability, education, trade openness, foreign direct investment,
+and urbanisation, respectively. The logarithmic transformation of the variables in Eq. (2) can be displayed in the
+following regression form:
+Figure 1. Theoretical foundation of the study. Education influences emissions through human-capital and
+environmental-awareness channels; FDI operates through competing pollution-haven and pollution-halo mechanisms; trade operates through scale, composition, and technique effects; and urbanisation can amplify demand
+pressures or support efficiency. Arrows indicate hypothesised directions, with the net relationship determined
+empirically. Figures should be submitted separately as high-resolution TIFF or JPEG files (minimum 300 dpi), in
+accordance with the journal template.
+Page 8 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+The equation CO2¼ β0þ β1∗ EDUþ β2∗ TOþ β3∗ FDIþ β4∗ URþ ε (3)
+Where β0 is the intercept, β1, β2, β3, and β4 are the coefficients associated with the respective independent variables, and
+ε is the error term.
+The first specification coefficient ( β1) for the education variable (EDU) represents the marginal effect of a one-unit
+increase in educational attainment on CO2 emissions, holding other factors constant. Theoretically, 1 can be positive or
+negative, depending on the relationship between education and carbon emissions. Expecting that β1 should acquire a
+negative value, supposing that an individual is better informed about the environmental matters and readily accepts the
+idea of sustainability, it is possible to assume that the former variable will assume a negative value (Xu & Lan, 2023; Zafar
+et al., 2022 ). That is, as educational level increases, CO2 emissions will correspondingly decrease ( Chen et al., 2022 ;
+Huang et al., 2022 ).
+The second coefficient in the equation, 02, represents the exact effect of a unit change in trade openness (TO) on future
+variations in CO2 emissions, assuming all other factors remain constant. Variability may also be present in the sign of
+2. Otherwise, with trade openness leading to increased international trade and transportation activity, a positive 2b,
+implying an increase in emissions, would be a sensible outcome (Chhabra et al., 2023; Thi et al., 2023). On the other hand,
+β2 might be negative if the diffusion of cleaner technologies and the decrease in dependence on carbon-intensive
+production are enhanced by increased openness ( Q. Wang & Zhang, 2021 ; Jun et al., 2020 ).
+The third coefficient, 03, represents the extent to which foreign direct investment (FDI) is influenced by CO2 emissions,
+holding all other factors constant. The 3(3) sign can vary across the orientation of FDI. Coefficient 3 =/C0 may be, in fact, a
+negative value when FDI introduces ecologically friendly technology and sustainable methods of production (Yuan,
+Wang, and Huang, 2022a;Hanh et al., 2020; Huang et al., 2022). Instead, when FDI invests in highly polluting industries,
+one would expect a positive correlation ( Hao et al., 2021 ; L. Wang et al., 2022 ).
+The fourth coefficient, 04, represents the impact of a one-unit increase in urbanisation (UR) on CO2 emissions, holding
+the remaining variables constant. Urbanisation is expected to increase emissions as energy requirements and transportation activities grow, potentially providing a positive value of 4. Nevertheless, the urban growth, accompanied by the
+agglomeration of infrastructure and efficiency-related benefits, can lead to a negative 8. Finally, the actual values and size
+of these coefficients depend on the actual data set and contextual variables being researched. To properly quantify these
+effects and evaluate their statistical significance, an extensive dataset that can be carefully and thoroughly analysed
+through regression is essential. The existing policy regimes and sectoral practices dominant in the region of inquiry can
+also inform the orientations of the coefficients. The proxy measures of research variables are displayed in Table 2.
+Table 2. Proxy measures of research variables.
+Notation Definition Data sources
+Environmental
+degradation
+ED Consumption-based CO 2 emissions WDI
+CO2 per capita
+Education EDU Education spending as a share of total government
+expenditure
+WDI
+Trade
+openness
+TO Sum of imports and exports as % of GDP UNCTAD
+Foreign direct
+investment
+FDI Net inflows of FDI as a % of GDP WDI
+Urbanization UR The percentage of a country ’s population living in urban
+areas.
+OurWorldinData
+Financial
+deepening
+FD The ratio of private credit to GDP. OurWorldinData
+Gross Capital
+Formation
+GCF The total value of investments (both public and private) in a
+country is often expressed as a percentage of the country ’s
+GDP.
+OurWorldinData
+Note: CO2 = carbon dioxide; C-CO 2 = consumption-based carbon dioxide; EDU = education; FDI = foreign direct investment; TO = trade
+openness; UR = urbanisation. Source: World Development Indicators, UNCTAD, and Our World in Data.
+Page 9 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Estimation strategies.
+Estimation strategies
+To assess the empirical relationship between ED, EDU, TO, FDI, UR, and GCF, the present study implemented several
+econometric tools, including the cross-sectional dependency test following ( Breusch & Pagan, 1980 ), (M Hashem
+Pesaran, 2004), (M. H. Pesaran, 2006), (M HashemPesaran, Ullah, & Yamagata, 2008). The following equation is used to
+derive the test statistics.
+yit¼ αiþ βixitþ uit i¼ 1…… N, t¼ 1 …… T (4)
+LM¼ T
+XN/C01
+i¼1
+XN
+j¼iþ1
+bρIJ!
+d
+X2 NN þ1ðÞ 2 (5)
+The Lagrange multiplier (CD lm) is the scaled version of the LM test in Eq (6):
+CDlm¼
+ﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+N
+NN /C0 1ðÞ
+s
+XN/C01
+I¼1
+XN
+J¼iþ1
+Tbρij/C0 1
+/C0/C1
+(6)
+When N is larger than T, the CDlm estimation is subject to size issues. Therefore, M Hashem Pesaran (2006) proposed the
+following CD test, see Eq (7) & (8) , which is suitable in a situation when N is more significant than T:
+CD¼
+ﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+2T= NN /C0 1ðÞð
+p XN/C01
+i¼1
+XN
+J¼Iþ1
+bPij
+ !
+(7)
+CDlm¼
+ﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+2
+NN /C0 1ðÞ
+s
+XN/C01
+I¼1
+XN
+J¼iþ1
+T/C0 KðÞ bρ2 ij/C0 uTij
+υ2 Tij
+ !
+d
+!
+N,0ðÞ (8)
+The stationary properties of the research variables are to be assessed using the framework proposed by M. Hashem
+Pesaran (2007).
+ΔYit¼ μiþ θiyi,t/C01þ γiyt/C01þ
+Xp
+k¼1
+γik Δyi,k/C01þ
+Xp
+k¼0
+γik Δyi,k/C00þ τit (9)
+Where Yit/C0 1 and yt/C01 The lagged-level average and first-difference operators are applied to each cross-section, and the
+CIPS unit root test is presented in Equation 11.
+CIPS¼ N/C01XN
+i/C01
+∂i N, TðÞ (10)
+Where the parameter ∂i N,TðÞ explain the test statistics of CADF, which can be replaced in the following manner:
+CIPS¼ N/C01XN
+i/C01
+CADF (11)
+A cross-sectionally augmented version of the test statistics is provided below.
+Page 10 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+CIPS¼ 1 N XN i¼1 CADF (12)
+The error correction-based panel cointegration test has been performed to reveal the long-run cointegration in the
+empirical equation by following Westerlund (2007).
+ΔZit¼ ∂0 idiþ ∅i Zi,t/C01/C0 δ0 iWi,t/C01 /C0/C1 þ Xp
+r¼1
+∅i,r ΔZi,t/C0rþ
+Xp
+r¼0
+γi,jΔWi,t/C0rþ ϵi,t (13)
+The results of the group test statistics can be derived using Equations 14 and 15.
+GT¼ 1 N XN i/C01 φi SEφi (14)
+Ga¼ 1 N XN i/C01 Tφi φið1Þ (15)
+PT¼ φi SEφi (16)
+Pa¼ Tφi (17)
+The equation for coefficient estimation by executing the CUP-FM and CUP-BC is as follows:
+dβcup¼
+$XN
+i¼1
+XT
+i/C01
+byitþ bβcup
+/C16/C17
+/C2 xit/C0 Xi
+/C0/C1
+/C0 T γ0 ibβcup
+/C16/C17 dΔf etþ bβcup /C16/C17 þ Δμeiþ bβcup /C16/C17 !%
+/C2
+$XN
+i¼1
+XT
+i¼1
+xit/C0 Xi
+/C0/C1
+xit/C0 Xi
+/C0/C1
+%/C01
+(18)
+In the following section, the empirical estimation has been extended with the inclusion of the asymmetric decomposition
+of EDU ( EDUþ; EDU/C0), TO ( TOþ; TO/C0) and FDI ( FDIþ; FDI/C0) and the asymmetric equation is as follows.
+ESt¼ πþEDUþ 1,tþ π/C0EDU/C0 1,t /C0/C1 þ βþTOþ 1,tþ β/C0TO/C0 1,t /C0/C1 þ γþFDIþ 1,tþ γ/C0FDI/C0 I1,t /C0/C1 þ εt (19)
+Where πþ, π/C0, βþ,β/C0,and γþ,γ/C0 Stands for the long-run asymmetric coefficient of education, trade openness, and
+Foreign Direct investment. The decomposition of the explanatory variables can be derived as follows:
+POS EDUðÞ 1,it¼
+PW
+M¼1
+EDUþ M¼ PW
+M¼1
+MAX EDU M ,0ðÞ
+NEG EDUðÞ 1,it¼
+PW
+M¼1
+EDU/C0 M¼ PW
+M¼1
+MIN EDU M ,0ðÞ
+:
+POSðTOÞ1,it¼
+Pt
+R¼1
+TOþ R¼ PT
+R¼1
+MAX TO M ,0ðÞ
+NEGðTOÞ1,it¼
+Pt
+R¼1
+TO/C0 R¼ PT
+R¼1
+MIN TO M ,0ðÞ
+:
+POSðFDIÞ1,it¼
+Pt
+R¼1
+FDIþ R¼ PT
+R¼1
+MAX FDI M ,0ðÞ
+NEGðFDIÞ1,it¼
+Pt
+R¼1
+FDI/C0 R¼ PT
+R¼1
+MIN FDI M ,0ðÞ
+8
+>>>>>>>>>>>>>>>>><
+>>>>>>>>>>>>>>>>>:
+Page 11 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+The following equation documents the asymmetric coefficients in the long- and short-run assessments:
+ΔEDit¼ φUt/C01þ πþEDUþ 1,it/C01þ π/C0EDU/C0 1,it/C01 /C0/C1 þ βþTOþ 1,it/C01þ β/C0TO/C0 1,it/C01 /C0/C1 þ γþFDIþ 1,it/C01þ γ/C0FDI/C0 1,it/C01 /C0/C1
+þ
+Xm/C01
+j¼1
+λjΔEDit/C0j0þ
+Xn/C01
+r¼1
+πþΔEDUþ 1,ir/C01þ π/C0ΔEDU/C0 1,ir/C01 /C0/C1 þ Xn/C01
+r¼1
+μþΔTOþ 1,ir/C01þ μ/C0ΔTO/C0 1,ir/C01 /C0/C1
+þþ
+Xm/C01
+r¼0
+βþΔFDIþ 1,ir/C01þ β/C0ΔFDI/C0 1,ir/C01 /C0/C1 þ εt (20)
+The error correction term in the above equation is as follows:
+ΔIQt¼ ∂et/C01þ
+Xm/C01
+j¼1
+λjΔEDit/C0j0þ
+Xn/C01
+r¼1
+πþΔEDUþ 1,ir/C01þ π/C0ΔEDU/C0 1,ir/C01 /C0/C1 þ Xn/C01
+r¼1
+μþΔTOþ 1,ir/C01þ μ/C0ΔTO/C0 1,ir/C01 /C0/C1
+þþ
+Xm/C01
+r¼0
+βþΔFDIþ 1,ir/C01þ β/C0ΔFDI/C0 1,ir/C01 /C0/C1 þ εt (21)
+For cross-sectional unit i and period t, the dynamic SUR model for equation j can be expressed as
+yijt¼ αjþ
+Xp
+k¼1
+βjk γijt/C0kþ
+Xp
+m¼1
+βjmγijt/C0mþ εijt (22)
+Results
+Estimation and interpretation
+The findings from the cross-sectional dependency test ( Table 3 ) indicate a significant presence of cross-sectional
+dependence among the variables in the dataset. This means that the observations are not independent and may exhibit
+correlations or interdependence. The test results, including the LMBP, LMPS, LMadj, and CDPS statistics, indicate
+statistically significant values, suggesting heteroscedasticity and cross-sectional dependence. These findings underscore
+the importance of considering the interrelationships between variables when analysing data. Moreover, the test statistics
+of Δ and Adj.Δ are statistically significant at the 1% level, suggesting heterogeneity in the research variables.
+Panel unit root tests were conducted on the following variables: CO2, C-CO2, EDU, FDI, TO, and UR. Two
+specifications were used: one with a constant term and the other with both a constant term and a trend. CADF and CIPS
+test statistics were employed. The results inTable 4 indicate that, when the level specification includes a constant term, the
+variables exhibit unit roots, but the values are not statistically significant. However, when examining the first difference
+specification with a constant term, all variables exhibit statistically significant differences.
+The study employed a panel cointegration test to document the long-run association between ES, EDU, TO, FDI, and UR
+by applying cointegration techniques familiarised by Westerlund (2007) , Pedroni (2004) , and Kao (1999) . Table 5
+Table 3. Results of cross-sectional dependency and slope heterogeneity.
+Variables LM BP LMPS LMadj CD PS Δ Adj.Δ
+CO2 252.362*** 15.875*** 215.838*** 29.852*** 32.321*** 66.813***
+C-CO2 221.023*** 43.447*** 157.805*** 47.103*** 60.76*** 82.308***
+EDU 280.013 *** 21.385*** 155.827*** 27.382*** 95.582*** 117.524***
+FDI 430.819 *** 17.044*** 175.099*** 36.406*** 27.743*** 144.803***
+TO 406.557 *** 29.477*** 208.433*** 27.074*** 74.023*** 93.174***
+UR 194.251 *** 21.716*** 190.99*** 44.642*** 20.017*** 58.25***
+Note: LMBP = Breusch –Pagan LM; LMPS = Pesaran scaled LM; LMadj = bias-adjusted LM; CDPS = Pesaran CD; Δ and Adj. Δ = slopehomogeneity tests. The superscripts of *** denote the level of significance at a 1% level.
+***p < 0.01.
+Page 12 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+displays the test statistics for different cointegration tests and shows that all tests reject the null of no cointegration. Thus,
+it is confirmed that there is a long-run association between the research variables.
+In the DSUR model ( Table 6 ), the coefficients for EDU, FDI, TO, and UR are /C00.10374,/C00.12757, 0.0847, and
+0.12987, respectively. These coefficients represent the expected change in carbon emissions when each independent
+variable changes by 1 unit, while all other variables remain constant. For instance, a one-unit increase in EDU correlates
+with a reduction of approximately 0.10374 units in carbon emissions, and a one-unit increase in FDI corresponds to a
+reduction of approximately 0.12757 units in carbon emissions. Conversely, a one-unit increase in TO is linked to a rise of
+roughly 0.0847 units in carbon emissions, and a one-unit increase in UR is associated with a rise of approximately
+0.12987 units in carbon emissions.
+The estimated values of the Explanatory variables EDU, FDI, TO, and UR in the CUP-HM model are /C00.14077,
+/C00.15352, 0.10451, and 0.12709, respectively. These numerical data suggest that a one-unit increase in education
+attainment (EDU) is associated with a decrease of approximately 0.14077 units in carbon emissions, and a unit increase in
+foreign direct investment (FDI) is also associated with a decline of approximately 0.15352 units in carbon emissions.
+Table 4. Results of the second-generation panel unit-root test.
+Variables CADF test statistic CIPS test statistic CADF test statistic CIPS test statistic
+for constant for constant for constant & and
+trend
+for constant & and
+trend
+Level 1 st diff. Level 1 st diff. Level 1 st diff. Level 1 st diff.
+CO2 /C01.884 /C02.163*** /C02.91 /C06.75*** /C02.476 /C06.744*** /C02.515 /C03.617***
+C-CO2 /C01.172 /C04.7*** /C01.148 /C07.439*** /C01.477 /C07.261*** /C01.625 /C05.76***
+EDU /C02.059 /C05.856*** /C01.542 /C05.111*** /C02.466 /C06.961*** /C01.626 /C02.136***
+FDI /C02.985 /C06.214*** /C02.894 /C03.288*** /C02.775 /C06.411*** /C02.708 /C05.185***
+TO /C01.053 /C04.086*** /C01.498 /C03.755*** /C01.1 /C05.096*** /C01.457 /C03.517***
+UR /C02.412 /C04.054*** /C02.873 /C03.707*** /C01.956 /C04.828*** /C01.453 /C05.978***
+Note: CADF = cross-sectionally augmented Dickey–Fuller; CIPS = cross-sectionally augmented IPS. *, **, and *** denote significance at the
+10%, 5%, and 1% levels, respectively. The superscripts of *** denote the level of significance at a 1% level.
+Table 5. Results of panel cointegration tests.
+Model EDU !ES TO !ES FDI !ES UR !ES
+Gt /C010.7*** /C014.465*** /C05.546*** /C011.74***
+Ga /C011.541*** /C010.465*** /C09.453*** /C011.757***
+Pt /C012.777*** /C010.054*** /C09.359*** /C010.583***
+Pa /C014.404*** /C012.623*** /C013.992*** /C014.028***
+KRCPT
+MDF 15.957 *** 16.157*** 3.108*** 21.699***
+DF /C010.998*** /C04.448*** /C09.654*** /C09.461***
+ADF 3.332 *** 21.439*** /C07.126*** 5.62***
+UMDF /C010.889*** /C010.11*** /C07.509*** 7.549***
+UDF /C03.233*** /C010.913*** 21.301*** /C01.126***
+PCT
+MDF 12.783 *** 2.668*** /C03.559*** 1.162***
+PP 8.094 *** 2.016*** 5.959*** 8.814***
+ADF 8.136 *** 14.713*** 11.538*** 10.209***
+Note: The superscripts of *** denote significance at the 1% level. The table reports Westerlund, Pedroni, and Kao panel cointegration
+statistics.
+***p < 0.01.
+Page 13 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Contrastingly, a one-unit increase in technological output (TO) is associated with a corresponding growth of approximately 0.10451 units in the number of emissions, and a one-unit increase in the rate of unemployment (UR) is also
+matched by a corresponding increase of nearly 0.12709 units in the number of emissions. These coefficient signs hence
+reflect the same trends in the DSUR model, but with significant differences in the magnitude of the effect. The regression
+estimates for the identical set of covariates in the CUP-BC model include coefficients of/C00.10075 for EDU,- 0.07751 for
+FDI, 0.09972 for TO, and 0.12941 for UR. To this extent, a one-unit increase in education level is associated with a
+decrease of 0.10075 units in carbon emissions, whereas a one-unit increase in foreign direct investment is associated with
+a decrease of 0.07751 units. A one-unit change in technology output corresponds to a one-unit change in the increase in
+emissions of about 0.09972 units, and a one-unit change in the unemployment rate corresponds to an increase in
+emissions of about 0.12941 units. These patterns of coefficients reinforce the comparison with the previous DSUR and
+CUP-HM specifications, the difference between which lies solely in minor variations in the size of the estimated effects.
+Under the DSUR, CUP-HM, and CUP-BC specifications, the estimated coefficients in Table 7 indicate how
+consumption-based carbon emissions depend on the explanatory variables EDU, FDI, TO, and UR. These values
+represent estimates of the change in consumption-based carbon emissions resulting from a one-unit change in each
+independent variable, assuming all other regressors remain constant. The regression coefficient for EDU in the DSUR
+specification is/C00.15816, indicating that a one-unit increase in education level results in a decrease of approximately
+0.15816 units in consumption-based carbon emissions. On the contrary, the FDI coefficient stands at 0.11508, indicating
+that a one-unit increase in foreign direct investment triggers a 0.11508-unit increase in consumption-based carbon
+emissions. The coefficient of TO is 0.13039, indicating that, on average, a 1-unit increase in trade openness causes a
+0.13039-unit increase. Lastly, the UR coefficient value of 0.16056 indicates that a one-unit increase in urbanisation
+results in a corresponding increase in consumption-based carbon emissions of approximately 0.16056 units.
+Table 6. Coefficients of education, trade openness, FDI, and urbanisation on production-based CO2 emissions.
+Coff. Std.
+Error
+t-
+Statistic
+Coff. Std.
+Error
+t-
+Statistic
+Coff. Std.
+Error
+t-
+Statistic
+DSUR CUP-FM CUP-BC
+EDU /C00.10374 0.0221 /C04.6941 /C00.14077 0.03 /C04.69233 /C00.10075 0.0406 /C02.48153
+FDI /C00.12757 0.0235 /C05.4285 /C00.15352 0.0392 /C03.91633 /C00.07751 0.021 /C03.69095
+TO 0.0847 0.0172 4.9244 0.10451 0.0191 5.471728 0.09972 0.0146 6.830137
+UR 0.12987 0.0159 8.1679 0.12709 0.0444 2.862387 0.12941 0.0455 2.844176
+C 10.836 0.24013 45.1255 17.565 0.24013 73.14788 16.611 0.24013 69.17503
+R2 0.8904 0.9058 0.8994
+Adj
+R2
+0.9251 0.9365 0.9263
+Note: DSUR = dynamic seemingly unrelated regression; CUP-FM = continuously updated fully modified; CUP-BC = continuously updated
+bias-corrected. ***, **, and * denote significance at the 1%, 5%, and 10% levels, respectively.
+Table 7. Coefficients of education, trade openness, FDI, and urbanisation on consumption-based CO 2
+emissions.
+Coff. Std.
+Error
+t-
+Statistic
+Coff. Std.
+Error
+t-
+Statistic
+Coff. Std.
+Error
+t-
+Statistic
+DSUR CUP-FM CUP-BC
+EDU /C00.15816 0.0239 /C06.6175 /C00.09699 0.0415 /C02.33711 /C00.09002 0.0376 /C02.39415
+FDI 0.11508 0.0444 2.5918 0.14942 0.0235 6.3583 0.1194 0.0241 4.95436
+TO 0.13039 0.0219 5.9538 0.16387 0.0274 5.980657 0.17669 0.0184 9.602717
+UR 0.16056 0.0301 5.3342 0.07819 0.0163 4.796933 0.08383 0.0212 3.954245
+C 14.771 0.24013 61.5125 15.34 0.24013 63.88206 17.659 0.24013 73.53933
+R2 0.9105 0.9022 0.8987
+Adj
+R2
+0.9275 0.9319 0.9463
+Note: C-CO2 denotes consumption-based carbon dioxide emissions. Estimator and significance notation follow Table 6.
+Page 14 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Directionally, the CUP-HM model produces almost identical associations, with only minor differences in magnitude. For
+example, the EDU coefficient (/C0 0.09699) indicates a smaller decrease in consumption-based carbon emissions per unit
+change in education than the DSUR coefficient. Its FDI coefficient, 0.1494, is higher than that of its counterpart in the
+DSUR, indicating a greater sensitivity of emissions to foreign direct investment. The trade openness and urbanisation
+coefficients are 0.16387 and 0.07819, respectively, with greater increases in consumption-based carbon emissions per
+unit rise in TO and UR in the CUP-HM framework. Similarly, the CUP-BC model showed relationships similar to those
+of the DSUR and CUP-HM models, but with slightly different magnitudes. The coefficient for EDU is /C00.09002,
+indicating a minor decrease in consumption-based carbon emissions per one-unit increase in education, compared with
+the DSUR and CUP-HM models. The coefficient for FDI is 0.1194, suggesting a minor increase in consumption-based
+carbon emissions per unit of FDI. The coefficients for TO and UR are 0.17669 and 0.08383, respectively, indicating that a
+one-unit increase in trade openness and urbanisation results in larger increases in consumption-based carbon emissions
+compared to the other models.
+Table 8. Results of the asymmetric assessment.
+CO2 per capita Consumption based-CO 2
+Variables Coefficient std. error t-stat Coefficient std. error t-stat
+Panel –A: long-run asymmetric coefficients
+EDU+ /C00.1079 0.0484 /C02.22934 /C00.0635 0.0324 /C01.95988
+EDU/C0 /C00.0965 0.0831 /C01.16125 /C00.0861 0.0814 /C01.05774
+TO+ 0.0925 0.0347 2.66571 0.0815 0.0769 1.059818
+TO/C0 0.1263 0.0354 3.5678 0.0765 0.0844 0.906398
+FDI+ 0.069 0.0632 1.09177 0.0781 0.0829 0.942099
+FDI/C0 0.138 0.0759 1.81818 0.0798 0.0816 0.977941
+UR 0.123 0.0581 2.11704 0.0667 0.064 1.042188
+GCF 0.115 0.043 2.67442 0.1022 0.0507 2.015779
+C 0.1076 0.0861 1.24971 0.0737 0.0639 1.153365
+Long-run symmetry test
+WEDU 8.33 3.581
+WTO 11.187 4.492
+WFDI 12.573 10.985
+Panel B: short-run asymmetric coefficients
+EDU+ /C00.001 0.00737 /C00.13569 /C00.0121 0.00415 /C02.91566
+EDU/C0 /C00.0359 0.00331 /C010.8459 /C00.01 0.00376 /C02.65957
+TO+ 0.0501 0.00434 11.5438 0.0396 0.00431 9.187935
+TO/C0 0.0346 0.0047 7.3617 0.0283 0.00558 5.071685
+FDI+ /C00.0083 0.00778 /C01.06684 0.0407 0.00382 10.65445
+FDI/C0 0.0091 0.00441 2.06349 0.0092 0.00783 1.174968
+UR 0.0315 0.00662 4.75831 /C00.0001 0.00291 /C00.03436
+GCF 0.009 0.0035 2.57143 0.0314 0.00359 8.746518
+cointEq (/C01) /C00.4254 0.00392 /C0108.52 /C00.4367 0.017 /C025.6882
+Short-run symmetry test
+WEDU 13.57 9.143
+WTO 8.933 2.726
+WFDI 4.977 11.106
+Note: Positive and negative superscripts denote decomposed shocks. ***, **, and * denote significance at the 1%, 5%, and 10% levels,
+respectively.
+Page 15 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Table 8 displayed the asymmetric coefficients. For education effects on ES, which is measured by CO2 and consumptionbased CO 2, the asymmetric coefficients ( EDUþ LR¼/C0 0:1079; EDU/C0 LR¼/C0 0:0965Þand ( EDUþ LR¼/C0 0:0635; EDU/C0 sr/C0
+0:0861Þ has revealed negative and statistically significant at a 1% level, indicating that the positive changes in education
+have beneficial effects in terms of environmental correction through the lessening of the injection of CO 2 in the
+ecosystem. Based on the research findings, it can be inferred that decreasing the quantity of carbon dioxide (CO 2)
+introduced into the ecosystem would have positive implications for environmental restoration. Based on the asymmetric
+coefficients, higher levels of education are associated with lower carbon dioxide emissions. Various studies support this
+conclusion by highlighting the impact of education on promoting long-term sustainability and reducing carbon
+emissions. The text includes references to sources (Kiehle, Kopsakangas-Savolainen, Hilli, & Pongrácz, 2023), (Gómez,
+Cadarso, & Monsalve, 2016 ).
+Positive and negative innovations in trade openness are found to be positive and statistically significant, suggesting that
+an increase (decrease) in TO augments (controls) the ED, as supported by both models. In particular, a 10% positive
+(negative) change in TO will increase CO 2 and consumption-based CO 2 by 0.0925% (0.1263%) and 0.0815%
+(0.0765%), respectively. Empirical studies have consistently demonstrated a strong correlation between trade openness
+and its environmental impact, particularly in the regulation of carbon dioxide (CO2) emissions. Both positive and
+negative innovations in this field have had beneficial and statistically significant impacts. Based on the analysis, a 10%
+increase in trade openness results in a marginal increase in both CO 2 emissions and consumption-based CO2 emissions.
+More precisely, there is a 0.0925% rise in CO2 emissions and a 0.0815% increase in consumption-based CO2, indicating
+that international trade openness has both positive and negative effects on carbon emissions ( Sun, Attuquaye Clottey,
+Geng, Fang, & Clifford Kofi Amissah, 2019). However, the relationship between trade openness and carbon emissions is
+not uniformly valid but rather depends on a country ’s economic development ( Derindag, Maydybura, Kalra, Wong, &
+Chang, 2023; Zhang, Wang, Hua, Liao, & Peng, 2022 ).
+The asymmetric coefficients of FDI in both models established a positive tie to environmental sustainability that is
+(FDIþ LR¼/C0 0:0:069; FDI/C0 LR¼/C0 0:138Þ and ( FDIþ LR¼/C0 0:0781; FDI/C0 sr/C0 0:0667Þ and statistically significant at a 1%
+level, indicating inflows of FDI have an advise effect. In response to the negative shock to FDI, it will boost ecological
+improvement, and controlled FDI inflows are beneficial to environmental sustainability. The study reveals a positive
+relationship between FDI inflows and environmental sustainability, as indicated by the asymmetric FDI coefficients in
+both models. The coefficients showed that FDI was positively associated with CO2 emissions. However, the study also
+found that a negative FDI shock might lead to ecological improvements, indicating that moderate FDI inflows can be
+beneficial for environmental sustainability
+Table 9. Dumitrescu–Hurlin panel causality results.
+.C O 2 EDU TO FDI UR causality
+CO2 (4.458)
+**
+(2.1902)
+*
+(5.3804)
+***
+(3.5908)
+**
+EDU! CO2; CO2! UR; FDI! TO; CO2 !
+TO; CO2 ! FDI; EDU ! TO; EDU ! FDI;
+EDU ! UR; TO ! UR; FDI ! UR[4.6987] [2.3084] [5.6709] [3.7847]
+EDU 1.1923 (4.2656)
+**
+1.5292 (5.5185)
+***
+[1.2567] [4.496] [1.6118] [5.8166]
+TO (5.7375)
+***
+1.7747 (3.4367)
+**
+(6.2507)
+***
+[6.0473] [1.8705] [3.6223] [6.5883]
+FDI (4.6216)
+**
+(5.9245)
+***
+1.7715 (5.136)
+***
+[4.8712] [6.2444] [1.8671] [5.4133]
+UR (5.7853)
+***
+(2.6206)
+*
+(6.0138)
+***
+(3.8841)
+**
+[6.0977] [2.7621] [6.3385] [4.0939]
+Note: The table reports Dumitrescu –Hurlin panel-causality statistics. Arrows in the final column state the direction of the statistically
+supported relationship. ***, **, and * denote significance at the 1%, 5%, and 10% levels, respectively.
+Page 16 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Based on the Granger causality test results displayed in Table 9, a network of causal relationships emerges among the
+variables. Education (EDU) is found to Granger-cause carbon emissions (CO2), indicating a unidirectional causal
+influence from education to carbon emissions. Likewise, carbon emissions Granger-cause urbanisation (UR), suggesting
+a one-way causal linkage from CO2 to UR. Foreign direct investment (FDI) Granger-causes trade openness (TO),
+indicating a unidirectional causal impact from FDI to TO. Additionally, there are bidirectional causal relationships
+between CO2 and trade openness (TO), CO2 and FDI, EDU and TO, EDU and FDI, EDU and UR, TO and UR, and FDI
+and UR, indicating mutual causality between these pairs of variables. These causal relationships shed light on the
+complex interplay between education, economic factors, and urbanisation in influencing carbon emissions and environmental sustainability.
+Robustness assessment
+Table 10 reports the robustness estimates using total greenhouse-gas emissions as the dependent variable. The stability
+analysis supports the principal patterns identified with the carbon-dioxide measures: education is negatively associated
+with emissions, whereas trade openness and urbanisation are positively associated with emissions across the reported
+estimators. This result is consistent with the interpretation that human capital can facilitate cleaner practices while scalerelated activity remains carbon intensive in the sample.
+In Table 10, FDI is negatively associated with total greenhouse-gas emissions across the DSUR, CUP-FM, and CUP-BC
+specifications. This pattern is consistent with a pollution-halo interpretation in the alternative dependent-variable test, while the
+sign differences across other specifications underline the importance of emissions accounting and investment composition.
+The coefficients have positive signs and values across all estimators (see Table 11), confirming the strength of both the
+education-emission and the foreign direct investment (FDI)-emission relationships. Education has a significant, negative
+long-term impact under both CO2 and consumption-based CO2 (C-CO2) specifications, suggesting that additional
+investment in education can increase technological literacy and environmental awareness while also reducing emissions.
+This is the strongest as it runs under the Common Correlated Effects Mean Group (CCEMG) estimator (0.231) [?] that
+accommodates unobserved common factors and reflects the significance of systemic learning spillovers. In contrast, FDI
+assumes a positive and significant coefficient in all models, indicating that foreign investment inflows are likely the cause of
+increased emissions, most likely due to industrial growth and energy-intensive production. The more influential effect in
+consumption-based CO2 ([?] +0.14) indicates that carbon is reduced only by domestic industries; at the same time, imported
+goods account for significant emissions from other countries. Urbanisation and openness to trade also constantly increase
+emissions, in line with the predominance of the scale effect in developing and highly emitting economies.
+The negative error-correction value (/C00.43) indicates that the model is adjusting rapidly toward its long-run equilibrium.
+Among estimators, the Cross-Sectionally Augmented Autoregressive Distributed Lag (CS-ARDL) is a more dynamic
+adjustment model (due to adjustment paths), whereas the CCEMG allows cross-sectional heterogeneity, and the
+Augmented Mean Group (AMG) allows adjustment for unobserved common factors. The regulated outcomes indicate
+that the results are not peculiar to the specific species of estimations and represent structural relationships in the data. On
+the whole, the robustness analysis confirms that the nexus between education, FDI, trade, and urbanisation is consistent
+across methodological differences, which validates the policy implication that sustainable human-capital investment and
+green FDI strategies are key to decarbonization in high-emission economies.
+Table 10. Robustness results using total greenhouse-gas emissions.
+Variable DSUR Coeff.
+(t-Stat)
+CUP-FM Coeff.
+(t-Stat)
+CUP-BC Coeff.
+(t-Stat)
+Significance
+EDU (Education) /C00.104 (/C04.69) /C00.141 (/C04.69) /C00.101 (/C02.48) 1% level
+FDI (Foreign Direct Investment) /C00.128 (/C05.43) /C00.154 (/C03.92) /C00.078 (/C03.69) 1% level
+TO (Trade Openness) 0.085 (4.92) 0.105 (5.47) 0.100 (6.83) 1% level
+UR (Urbanisation) 0.130 (8.17) 0.127 (2.86) 0.129 (2.84) 1% level
+R2/Adj R2 0.890/0.925 0.906/0.937 0.899/0.926 —
+Note: The dependent variable is total greenhouse-gas emissions. Estimator and significance notation follow Table 6.
+Page 17 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Endogenity assessment: using a panel GMM approach as a robustness check
+Table 12 reports the System-GMM robustness check, which addresses potential endogeneity between the development
+variables and environmental outcomes. The significant lagged dependent-variable coefficients confirm emissions
+persistence. The reported AR(1), AR(2), and Hansen diagnostics support the specified instrument set: first-order serial
+Table 12. Robustness check using panel system-GMM estimation.
+Variable Coefficient
+(Model 1:
+EDU! CO2)
+Std.
+Error
+z-
+Statistic
+P-
+Value
+Coefficient
+(Model 2:
+FDI! CO2)
+Std.
+Error
+z-
+Statistic
+P-
+Value
+L.CO2
+(Lagged
+dependent)
+0.612 0.042 14.54 0.000 0.587 0.038 15.42 0.000
+EDU /C00.083 0.024 /C03.45 0.001 —— — —
+FDI —— — — 0.071 0.028 2.53 0.012
+TO 0.049 0.019 2.58 0.010 0.052 0.021 2.47 0.013
+UR 0.031 0.013 2.38 0.017 0.029 0.012 2.42 0.015
+GCF /C00.026 0.011 /C02.31 0.021 /C00.022 0.010 /C02.20 0.028
+Constant 0.378 0.125 3.02 0.003 0.416 0.118 3.53 0.000
+Arellano–
+Bond AR(1)
+p-val
+—— — 0.011 —— — 0.014
+Arellano–
+Bond AR(2)
+p-val
+—— — 0.282 —— — 0.336
+Hansen
+J-statistic (pval)
+—— — 0.417 —— — 0.454
+No. of
+Instruments
+29 31
+Observations 1 500 1 500
+Note: System-GMM = system generalised method of moments; AR(1) and AR(2) are Arellano –Bond serial-correlation tests; Hansen is the
+overidentification test. ***, **, and * denote significance at the 1%, 5%, and 10% levels, respectively.
+Table 11. Robustness assessment using alternative estimators.
+Variable CO 2 Emissions
+(Productionbased)
+C-CO2
+Emissions
+(Consumptionbased)
+CS-ARDL CCEMG AMG CS-ARDL CCEMG AMG
+Education
+(EDU)
+/C00.214*** /C00.231*** /C00.198*** /C00.189*** /C00.202*** /C00.177***
+FDI +0.118*** +0.125*** +0.104*** +0.133*** +0.142*** +0.117***
+Trade
+Openness
+(TO)
++0.162*** +0.173*** +0.151*** +0.175*** +0.187*** +0.169***
+Urbanisation
+(UR)
++0.091** +0.085** +0.078** +0.094** +0.089** +0.083**
+Error
+Correction
+Term (ECT)
+/C00.423*** /C00.439*** /C00.447*** /C00.411*** /C00.428*** /C00.436***
+Diagnostic
+Summary
+CD-test p < 0.01,
+Stable long-run, No
+residual crossdependence
+Heterogeneity
+accepted
+Factorrobust
+residuals
+CD-test p < 0.01,
+Stable long-run
+Heterogeneity
+accepted
+Commonfactor
+robustness
+Note: CS-ARDL = cross-sectionally augmented autoregressive distributed lag; CCEMG = common correlated effects mean group;
+AMG = augmented mean group. ***, **, and * denote significance at the 1%, 5%, and 10% levels, respectively.
+Page 18 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+correlation is expected, while the absence of second-order serial correlation and the Hansen test do not reject instrument
+validity.
+Table 12 further shows that the FDI model has a positive coefficient for foreign investment, indicating that some
+investment inflows are associated with higher emissions after accounting for dynamics and endogeneity. The contrast
+with the alternative GHG specification reinforces the central theoretical point: FDI’s environmental effect depends on the
+type of investment, host-country conditions, and the emissions measure used. Trade openness and urbanisation remain
+emission-increasing in the System-GMM specifications, supporting green-conditional investment and trade policies.
+Discussion
+Discussion
+In the case of the nexus of investment in education and environmental sustainability, the coefficient of education on
+environmental sustainability can be determined to be negatively related, which means that it has a deterministic influence
+on regulating the emission of CO2 in the environment, which in turn leads to environmental sustainability of sub-Saharan
+Africa (SSA). The literature of Guo et al. (2023),Thierry, Bruno Emmanuel, and Protus Biondeh (2022), and Asongu and
+Odhiambo (2021) points in the same direction, strongly arguing this point. The key to sustainable growth lies in
+communicating functional expertise and proven methods, which can be delivered through the educational platform ( Yin
+et al., 2022 ).
+The rising educational levels of people in sub-Saharan Africa will contribute to knowledge about implementing
+sustainable practices through positive examples ( Ozbay and Duyar, 2022 ). The transfer of information is vital to
+spreading green practices across industries, such as the agricultural sector and power generation. In addition, education
+enhances economic diversification and the deindustrialisation of polluting economic activities. Those with higher
+knowledge and experience tend to take jobs in low-carbon industries. The education to a high level has a crucial role
+in developing environmentally conscious industries, which include the service sector, high-technology industry, and
+knowledge economy. The level of education an individual possesses directly determines their ability to promote strong
+environmental protection policies ( Iorember, Jelilov, Usman, Isik, & Celik, 2021 ). Based on professional levels, bettereducated practitioners can argue in favour of environmentally friendly policies and regulations at all levels of
+government. The advancements in reducing CO 2 emissions have been impressive and, to some extent, this achievement
+can be explained by the effective lobbying that led to the implementation of stringent environmental rules, the stimulation
+of environmentally friendly energy sources, and the establishment of ambitious emission-cutting objectives ( Eyuboglu
+and Uzar, 2021 ; Piao and Managi, 2023 ).
+The primary purpose of environmental education programmes is to educate students about the current environmental
+issues and to encourage them to lead more sustainable lives. Learners of formal education programs often engage in the
+following environment-protecting activities such as volunteerism, environmental awareness, and conservation ( Thor &
+Karlsudd, 2020; Boca and Saracli, 2019; Jadhav, Jadhav, and Raut, 2014). Environmental sustainability education raises
+awareness of the need to conserve natural resources and influences potential action. By incorporating the idea of the
+economic, social, political, and ecological interdependence of urban and rural environments, education can enhance
+knowledge and motivation, thereby fostering the competence, ideas, and skills required to preserve and improve their
+natural environments (Liu, Gong, and Chen, 2018). Both formal and informal educational programs can alter the attitudes
+and practices of individuals, communities, and nations regarding the environment ( Saracli, Yilmaz, and Arslan, 2014 ).
+Education for global competency may shape future generations into concerned, active participants in solving global
+social, political, economic, and environmental problems. Because of its importance in achieving sustainability goals,
+education is emphasized throughout the 2030 Agenda for Sustainable Development, which urges all nations to “ensure,
+by 2030, that all learners acquire the knowledge and skills needed to promote sustainable development, including, among
+others, through education for sustainable development and sustainable lifestyles, human rights, gender equality,
+promotion of a culture of peace and non-violence, global citizenship, and appreciation of diversity and inclusion.
+Policies that support and promote sustainability education are crucial for integrating climate change and sustainable
+development into the educational system. These policies may foster a shared understanding of sustainability, establish
+guidelines for integrating sustainability concepts into educational programs, and support educators ’ professional
+development (Abdullah, Zakaria, & Razman, 2018 ).
+The impacts of trade openness to environmental sustainability have produced mixed results. In particular, when
+calculating with the data of the DSUR and CUP- FM the positive correlation is observed with the emissions of CO
+2, which means that the liberalisation of trade has an adverse impact on the quality of the environment. On the other hand,
+estimated coefficients based on the CUP-BC model show negative association with CO 2 and that environmental
+sustainability may be improved through reducing carbon emissions. Trade openness has an overall positive correlation
+Page 19 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+with the CO 2 emission level indicating that the liberalization process has had negative consequences on the quality of the
+environment. Increased production increases resource needs and the quantity of greenhouse gases and undermines the
+sustainability of the environment. The result is supported by a variety of empirical studies (Azimi, Rahman, and Nghiem,
+2023; Copeland and Taylor, 2004; Nosheen, Iqbal, and Khan, 2021; Jeetoo and Chinyanga, 2023; Ullah et al., 2019), all
+of which highlight the harmful effects of globalisation on the ecosystem. Among the most obvious and direct negative
+implications of economic progression brought about by trade extension are high pollution rates and exhaustion of natural
+resources (Chhabra et al., 2023 ; Wang and Zhang, 2021 ). This implies that there are various moderating variables that
+affect the relationship between the environmental sustainability and trade openness. This led to the emergence of the
+heterogeneous results of the impact of trade openness coefficients on environmental sustainability with moderating
+factors including the DSUR and CUP-HM. However, there was a negative association of CO 2 emissions and coefficients
+that were generated using the CUP BC framework. This fact provides another fact that the reduction of carbon emissions
+is necessary to maintain the wellbeing of ecosystems. The result of a decreased production of the basic chemicals is that
+the consumption of natural resources will be low as well as the emission of green house gases hence improving the quality
+of air and water.
+This paper shows that the damages of carbon dioxide emissions can be overcome by increased openness to trade in
+various ways. High trade rates are possible to mitigate carbon dioxide emissions as a higher proportion of actors learn to
+use the technologies that are less polluting and share and access more sustainable materials. This is possible since an
+increase in bilateral trade may help to increase the efficiency of production, thus reducing the impact on the environment
+(Rahman, Saidi, and Mbarek, 2020). Weaker trade barriers are associated with less CO 2 emission, mediated by a greater
+level of employment, moderated financial flows, and a more competitive business environment. The rationale on which it
+functions is the open market system that would motivate companies to use cleaner technology. In case the adoption of
+such technology results in an increase in efficiency and output, the economic cost of the environment is prone to decrease
+(Sun et al., 2019 ; Cherniwchan, Copeland, and Taylor, 2017 ). The reduction in carbon dioxide emission has been
+witnessed to correlate with trade liberalisation in high and upper-middle income economies. Individual nations that have
+developed technology and environmental management are able to reduce the harmful implications of their economies to
+the natural environment, hence acquiring the world at the technological level. These standards and technologies can be
+diffused with the help of trade liberalisation and other countries can reduce their environmental effects ( Farhani, Chaibi,
+& Rault, 2014 ; Pao and Tsai, 2010 ).
+Foreign direct investment (FDI) coefficient analysis between asymmetric and symmetric evaluations is statistically
+significant (positive correlation) with OC2, indicating that FDI flows are among the factors contributing to environmental
+degradation caused by ecological imbalance due to over-injection of CO2. The conclusions made by Yuan Wang and
+Huang (2022b) and Khan, Chen, Bibi, and Khan (2023) are also supported by the empirical findings. These findings
+corroborate a positive relationship between FDI inflows and CO2 emissions across the BRICS economies. Then, FDI
+inflows harm the environment by disrupting the ecological balance through the excess release of CO2. However, the
+literature suggests that FDI may have both positive and negative effects on carbon emissions, depending on contextual
+factors. Although FDI can spread cleaner technologies and resources, it can also increase CO2 emissions through
+so-called pollution havens and scale effects. The pollution haven effect refers to the tendency of companies to relocate
+their activities to jurisdictions with less stringent environmental laws, thereby avoiding the compliance costs associated
+with high-quality domestic regulations. The scale effect becomes evident when increased production levels attract
+proportional increases in energy consumption and, thus, CO2 emissions. Nevertheless, the correlation between FDI and
+carbon dioxide release is not one-way; it depends on a plethora of factors, such as the quality of institutions, the level of
+development, and regulations. In fact, FDI can help lower carbon emissions, especially in developed and upper-middleincome countries that are highly technologically advanced and have well-developed environmental laws.
+Conclusions and policy implications
+Conclusion
+This paper examines the dynamic relationships among education, trade openness (TO), foreign direct investment (FDI),
+and environmental sustainability in Sub-Saharan Africa (SSA). It highlights how people who are better educated emit less
+carbon dioxide (CO 2); the absence of said education causes the probability of environmental degradation to rise
+dramatically, therefore investing in ethical behaviour and knowledge sharing is also a key measure to mitigate the impacts
+(higher education does not stop the decrease of CO 2). By expanding its educational reach, SSA can replicate the positive
+progress of sustainable development in other locations, thereby enhancing its presence in environmental policy spheres.
+The effect of trade liberalisation on sustainability, however, is mixed. Trade openness results in technological and
+transportation innovations that temporarily suppress emissions; however, the associated growth in the production and
+consumption of natural resources is likely to increase CO2 emissions, thereby undermining ecological stability. Many
+empirical studies have emphasised the adverse environmental effects of globalisation, which include pollution and
+Page 20 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+resource depletion. However, trade openness has also played a positive role in improving air and water quality by
+restraining industrial emissions. The environmental performance of FDI is also complex; growth in FDI is associated with
+an amplification effect on CO2 emissions, or the scale effect. The growth of economies increases energy consumption,
+and a pollution-refuge relationship exists, whereby growth in FDI enhances environmental damage by increasing
+migration to more environmentally lenient jurisdictions. However, the effects of FDI on emissions depend on the
+institutional environment, the level of economic development, and the regulatory sufferings. The strict environmental
+policies and sophisticated technologies used in high- and middle-income countries help inhibit CO2 emissions from
+FDIs. I am sworn to keep data up to date as of October 2023.
+7.1 Policy suggestion
+In light of the environmental issues that Sub-Saharan Africa (SSA) faces and to harness the opportunities in education,
+trade openness, and foreign direct investment (FDI) to improve environmental sustainability, the following policy
+formulations are proposed. To begin with, there is an urgent need to strengthen educational programmes specifically
+aimed at fostering environmental awareness and adopting environmentally sustainable practices. The appropriate
+approach is to make sustainability a central idea in the mainstream curriculum at all levels, from primary education
+through to tertiary education. Introduction of better teacher training and the creation of instructional materials that outline
+the importance of individuals as environmental custodians should be given sufficient resources by policymakers.
+Moreover, allocating resources to adult training and education campaigns at the community level may significantly
+increase outreach and effectiveness. International development agencies must work closely with local budgetary
+mechanisms to secure the funding needed to implement these educational reforms. The expected result is an informed
+populace able to advance sustainable measures at both personal and organizational scales, thereby driving the eventual
+decrease in CO 2 levels and enhancing environmental standards for all.
+Second, there should be increased advertising and the introduction of green investments to counter the environmental
+impacts of FDI and trade openness, which are the main determinants of economic growth. Governments should consider
+implementing FDI laws that will compel foreign investors to meet environmental performance standards. These would
+support a situation in which environmental considerations are systematically taken into account when making investment
+decisions. The only solution would be to require the integration of green technologies and environmentally friendly
+mechanisms as part of the investment permits. Implementation of these regulatory changes should be done through the
+consolidation of enforcement systems and the involvement of citizens, businesses, and non-bank financial institutions.
+Also, trade in environmentally friendly goods and services through interventions should be promoted to offset the
+environmental externalities arising from trade liberalization on global CO2 emissions. Through these steps, policymakers
+will not only be able to improve economic growth but also minimize environmental degradation and develop a more
+balanced developmental paradigm. These advantages are expected to be better environmental standards, sustainable
+economic development and an increase in social welfare, which makes these reforms very appealing to the political
+establishment as well as to society.
+The article acknowledges that its research has several shortcomings that can limit the richness of the insights and the
+applicability of the conclusions. Potential bias is also associated with the reliance on secondary data sources and the use of
+econometric models (DSUR, CUP-FM, CUP-BC, and NARDL), which may introduce inaccuracies in the data and
+underlying assumptions. In turn, these methodological limitations can affect both the internal and external validity of
+these results, particularly the accurate quantification of the subtle effects of education, FDI, and open trade on
+environmental sustainability. Furthermore, the research is limited to Sub-Saharan Africa; this area is of great importance,
+but the results may not generalize to other regions with unique socio-economic and environmental circumstances.
+Differences between locales in terms of culture, economic factors and policy issues imply that the associations are
+probably not generic. These conclusions, therefore, ought to be applied with care to other settings.
+Ethical considerations
+Not applicable. This study uses publicly available, aggregate secondary data and does not involve human participants,
+animals, interviews, surveys, or identifiable personal data.
+Data availability
+The study uses publicly accessible data from the World Development Indicators (World Bank), UNCTAD, and Our
+World in Data. The processed dataset and associated materials are available at: qamruzzaman, Md (2026). Reassessing
+the Education –FDI–Trade Nexus for a Sustainable Future – data set. Figshare. Dataset. https://doi.org/10.6084/m9.
+figshare.33070697. data are available under the terms of the Creative Commons Attribution 4.0 International license
+(CC-BY 4.0).
+Page 21 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Reporting guidelines
+No EQUATOR reporting guideline is specifically applicable because this is an econometric study based solely on
+aggregate, publicly available secondary panel data. The manuscript reports the data sources, variable definitions, sample
+period, and estimation procedures required for replication.
+Acknowledgements
+Not applicable.
+References
+Abdullah A, Zakaria SZS, Razman MR: Environmental education through
+outdoor education for primary school children. International Journal of
+the Malay World and Civilisation. 2018; 6(1): 27–34.
+Afolayan OT, Okodua H, Oaikhenan HE, et al.: Carbon emissions, human
+capital investment and economic development in Nigeria.Int. J. Energy
+Econ. Policy. 2020; 10(2): 427–437.
+Publisher Full Text
+Ali S, Yusop Z, Kaliappan SR, et al.: Dynamic common correlated effects
+of trade openness, FDI, and institutional performance on
+environmental quality: evidence from OIC countries. Environ. Sci.
+Pollut. Res. 2020; 27(11): 11671–11682.
+PubMed Abstract |Publisher Full Text
+Apergis N, Pinar M, Unlu E: How do foreign direct investment flows
+affect carbon emissions in BRICS countries? Revisiting the pollution
+haven hypothesis using bilateral FDI flows from OECD to BRICS
+countries. Environ. Sci. Pollut. Res. 2023; 30(6): 14680–14692.
+PubMed Abstract |Publisher Full Text
+Asongu SA, Odhiambo NM: Enhancing governance for environmental
+sustainability in sub-Saharan Africa. Progress in Development Studies.
+2021; 39(1): 444–463.
+Publisher Full Text
+Aust V, Morais AI, Pinto I: How does foreign direct investment
+contribute to Sustainable Development Goals? Evidence from African
+countries. Journal of Cleaner Production. 2020; 245: 118823.
+Publisher Full Text
+Azimi MN, Rahman MM, Nghiem S: Linking governance with
+environmental quality: a global perspective.Sci. Rep. 2023; 13(1): 15086.
+PubMed Abstract |Publisher Full Text |Free Full Text
+Boca GD, Saraclı S: Environmental education and students’ perception,
+forsustainability. Sustainability. 2019; 11(6): 1553.
+Publisher Full Text
+Breusch TS, Pagan AR:The Lagrange multiplier test and its applications
+to model specification in econometrics. Rev. Econ. Stud. 1980; 47(1):
+239–253.
+Publisher Full Text
+Chen L, Msigwa G, Yang M, et al.: Strategies to achieve a carbon neutral
+society: a review. Environ. Chem. Lett. 2022; 20(4): 2277–2310.
+PubMed Abstract |Publisher Full Text |Free Full Text
+Cherniwchan J, Copeland BR, Taylor MS: Trade and the Environment:
+New Methods, Measurements, and Results. Annu. Rev. Econ. 2017; 9(1):
+59–85.
+Publisher Full Text
+Chhabra M, Giri AK, Kumar A: Do technological innovations and trade
+openness reduce CO2 emissions? Evidence from selected middleincome countries. Environ. Sci. Pollut. Res. 2022; 29(43): 65723–65738.
+PubMed Abstract |Publisher Full Text
+Chhabra M, Giri AK, Kumar A: Do trade openness and institutional
+quality contribute to carbon emission reduction? Evidence from
+BRICS countries. Environ. Sci. Pollut. Res. 2023; 30(17): 50986–51002.
+PubMed Abstract |Publisher Full Text |Free Full Text
+Copeland BR, Taylor MS: Trade, Growth, and the Environment. J. Econ.
+Lit. 2004; 42(1): 7–71.
+Publisher Full Text
+Derindag OF, Maydybura A, Kalra A, et al.: Carbon emissions and the
+rising effect of trade openness and foreign direct investment:
+Evidence from a threshold regression model. Heliyon. 2023; 9(7):
+e17448.
+PubMed Abstract |Publisher Full Text |Free Full Text
+Duodu E, Kwarteng E, Oteng-Abayie EF, et al.: B: Foreign direct
+investments and environmental quality in sub-Saharan Africa: The
+merits of policy and institutions for environmental sustainability.
+Environmental Science and Pollution Research. 2021; 28(46): 66101–66120.
+PubMed Abstract |Publisher Full Text
+Eyuboglu K, Uzar U: A new perspective to environmental degradation:
+The linkages between higher education and CO 2 emissions.
+Environmental Science and Pollution Research. 2021; 28(1): 482–493.
+PubMed Abstract |Publisher Full Text
+Farhani S, Chaibi A, Rault C: CO2 emissions, output, energy
+consumption, and trade in Tunisia. Econ. Model. 2014; 38: 426–434.
+Publisher Full Text
+Gómez N, Cadarso M-Á, Monsalve F:Carbon footprint of a university in a
+multiregional model: the case of the University of Castilla-La Mancha.
+J. Clean. Prod. 2016; 138: 119–130.
+Publisher Full Text
+Hanh HT, Chuyen BM, Huy DTN, et al.: CHALLENGES AND
+OPPORTUNITIES FROM IMPACTS OF FDI AND INCOME ON
+ENVIRONMENT POLLUTION: ROLE OF FINANCIAL ACCOUNTING
+TRANSPARENCY IN FDI FIRMS. Journal of Security & Sustainability Issues.
+2020; 10(2).
+Hao Y, Ba N, Ren S, et al.: How does international technology spillover
+affect China's carbon emissions? A new perspective through
+intellectual property protection. Sustainable Prod. Consumption. 2021;
+25: 577–590.
+Publisher Full Text
+Huang Y, Chen F, Wei H, et al.: The impacts of FDI inflows on carbon
+emissions: Economic development and regulatory quality as
+moderators. Front. Energy Res. 2022; 9: 820596.
+Publisher Full Text
+Iorember PT, Jelilov G, Usman O, et al.: The influence of renewable
+energy use, human capital, and trade on environmental quality in
+South Africa: Multiple structural breaks cointegration approach.
+Environmental Science and Pollution Research. 2021; 28(11): 13162–13174.
+PubMed Abstract |Publisher Full Text
+Jadhav AS, Jadhav VV, Raut PD: Role of higher education institutions in
+environmental conservation and sustainable development: A case
+study of Shivaji University, Maharashtra, India. Journal of Environment
+and Earth Science. 2014; 4(5): 30–34.
+Jeetoo J, Chinyanga ER: A spatial econometric analysis of the
+environment Kuznets curve and pollution haven hypothesis in Sub-
+Saharan Africa. Environ. Sci. Pollut. Res. Int. 2023; 30(20): 58169–58188.
+PubMed Abstract |Publisher Full Text |Free Full Text
+Jun W, Mahmood H, Zakaria M: Impact of trade openness on
+environment in China. J. Bus. Econ. Manag. 2020; 21(4): 1185–1202.
+Publisher Full Text
+Kao C: Spurious regression and residual-based tests for cointegration
+in panel data. J. Econ. 1999; 90:1 –44.
+Publisher Full Text
+Karedla Y, Mishra R, Patel N: The impact of economic growth, trade
+openness and manufacturing on CO 2 emissions in India: An
+autoregressive distributive lag (ARDL) bounds test approach. Journal
+of Economics, Finance and Administrative. Science. 2021; 26(52):
+376–389.
+Publisher Full Text
+Kiehle J, Kopsakangas-Savolainen M, Hilli M, et al.: Carbon footprint at
+institutions of higher education: The case of the University of Oulu.
+J. Environ. Manag. 2023; 329: 117056.
+PubMed Abstract |Publisher Full Text
+Kumar P, Sahani J, Rawat N, et al.: Using empirical science education in
+schools to improve climate change literacy. Renewable and Sustainable
+Energy Reviews. 2023a; 178: 113232.
+Publisher Full Text
+Page 22 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Kumar P, Sahani J, Rawat N, et al.: Using empirical science education in
+schools to improve climate change literacy. Renewable and Sustainable
+Energy Reviews. 2023b; 178: 113232.
+Publisher Full Text
+Lin Y, Umetsu C: How Does Trade Openness Affect Co2 Emissions for
+Newly Industrialized Countries?. Available at SSRN 4087977.
+Liu Q, Gong D, Chen M: Applying virtual reality to study the effects of
+environmental education on college students ’ ethics and
+environmental literacy. EURASIA Journal of Mathematics, Science and
+Technology. Education. 2018; 14(6): 2255–2263.
+Publisher Full Text
+Nosheen M, Iqbal J, Khan HU: Analyzing the linkage among CO2
+emissions, economic growth, tourism, and energy consumption in
+the Asian economies. Environ. Sci. Pollut. Res. 2021; 28(13): 16707–16719.
+PubMed Abstract |Publisher Full Text |Free Full Text
+Ozbay F, Duyar İ: Exploring the role of education on environmental
+quality and renewable energy: Do education levels really matter?
+Current Research in Environmental Sustainability. 2022; 4: 100185.
+Publisher Full Text
+Pan W, Kim M-K, Ning Z, et al.: Carbon leakage in energy/forest sectors
+and climate policyimplications using meta-analysis. Forest Policy and
+Economics. 2020; 115: 102161.
+Publisher Full Text
+Pao H-T, Tsai C-M: CO2 emissions, energy consumption and economic
+growth in BRIC countries. Energy Policy. 2010; 38(12): 7850–7860.
+Publisher Full Text
+Pedroni P: Panel cointegration: asymptotic and finite sample
+properties of pooled time series tests with an application to the PPP
+hypothesis. Economet. Theor. 2004; 20(3): 597–625.
+Publisher Full Text
+Pesaran MH: General diagonist tests for cross section dependence in
+panels. 2004.
+Pesaran MH: Estimation and inference in large heterogeneous panels
+with a multifactor error structure. Econometrica. 2006; 74(4): 967–1012.
+Publisher Full Text
+Pesaran MH: A Simple Panel Unit Root Test in the Presence of Cross-
+Section Dependence. J. Appl. Econ. 2007; 22(2): 265–312.
+Publisher Full Text
+Pesaran MH, Ullah A, Yamagata T: A bias-adjusted LM test of error
+cross-section independence. Econ. J. 2008; 11(1): 105–127.
+Publisher Full Text
+Piao X, Managi S: The international role of education in sustainable
+lifestyles and economic development. Scientific Reports. 2023; 13: 8733.
+PubMed Abstract |Publisher Full Text |Free Full Text
+Qamruzzaman M, Karim S, Kor S: Does environmental degradation
+matter for poverty? Clarifying the nexus between FDI, environmental
+degradation, renewable energy, education, and poverty in Morocco
+and Tunisia. Environmental Science and Pollution Research. 2023; 30:
+52872–52894.
+PubMed Abstract |Publisher Full Text
+Rahman MM, Saidi K, Mbarek MB: Economic growth in South Asia: the
+role of CO2 emissions, population density and trade openness.Heliyon.
+2020; 6(5): e03903.
+PubMed Abstract |Publisher Full Text |Free Full Text
+Ren S, Yuan B, Ma X, et al.: The impact of international trade on China0 s
+industrial carbon emissions since its entry into WTO. Energy Policy.
+2014; 69: 624–634.
+Publisher Full Text
+Saraclı S, Yılmaz V, Arslan T: The effects of mothers ’ educational levels
+on university students ’ environmental protection commitments and
+environmental behaviours. Eurasian. Journal of Educational Research.
+2014; 55: 177–200.
+Publisher Full Text
+Soeder DJ: Greenhouse gas sources and mitigation strategies from a
+geosciences perspective. Advances in Geo-Energy Research. 2021; 5(3):
+274–285.
+Publisher Full Text
+Suman A: Role of renewable energy technologies in climate change
+adaptation and mitigation: A brief review from Nepal. Renew. Sust.
+Energ. Rev. 2021; 151: 111524.
+Publisher Full Text
+Sun H, Attuquaye Clottey S, Geng Y, et al.: Trade Openness and Carbon
+Emissions: Evidence from Belt and Road Countries. Sustainability. 2019;
+11(9): 2682.
+Publisher Full Text
+Tiba S, Belaid F: The pollution concern in the era of globalization: Do
+the contribution of foreign direct investment and trade openness
+matter? Energy Economics. 2020; 92: 104966.
+Publisher Full Text
+Thi D, Tran VQ, Nguyen DT: The relationship between renewable
+energy consumption, international tourism, trade openness,
+innovation and carbon dioxide emissions: international evidence.
+International Journal of Sustainable Energy. 2023; 42(1): 397–416.
+Publisher Full Text
+Thierry MA, Bruno Emmanuel ON, Protus Biondeh N: Environmental
+sustainability in Sub-Saharan Africa: Does information and
+communication technology (ICT) matter? Cogent Economics & Finance.
+2022; 10(1): 2125657.
+Publisher Full Text
+Thor D, Karlsudd P: Teaching and fostering an active environmental
+awareness: Design, validation and planning for action-oriented
+environmental education. Sustainability. 2020; 12(8): 3209.
+Publisher Full Text
+To AH, Ha DT-T, Nguyen HM, et al.: The impact of foreign direct
+investment on environment degradation: evidence from emerging
+markets in Asia. Int. J. Environ. Res. Public Health. 2019; 16(9): 1636.
+PubMed Abstract |Publisher Full Text |Free Full Text
+Ullah I, Ali S, Shah MH, et al.: Linkages between Trade, CO(2) Emissions
+and Healthcare Spending in China. Int. J. Environ. Res. Public Health. 2019;
+16(21).
+PubMed Abstract |Publisher Full Text |Free Full Text
+Wang L, Liu G, Alkhatib S, et al.: The impact of foreign direct investment
+on environment: evidence from newly industrialized countries.
+Environ. Sci. Pollut. Res. 2022; 29(47): 70950–70961.
+PubMed Abstract |Publisher Full Text
+Wang Q, Yang T, Li R, et al.: Reexamining the impact of foreign direct
+investment on carbon emissions: does per capita GDP matter?.
+Humanities and Social Sciences Communications. 2023; 10(1): 1–18.
+Publisher Full Text
+Wang Q, Zhang F: The effects of trade openness on decoupling carbon
+emissions from economic growth –evidence from 182 countries.
+J. Clean. Prod. 2021; 279: 123838.
+PubMed Abstract |Publisher Full Text |Free Full Text
+Wang Y, Huang Y: Impact of foreign direct investment on the carbon
+dioxide emissions of East Asian Countries based on a panel ARDL
+method. Front. Environ. Sci. 2022; 10: 937837.
+Publisher Full Text
+Westerlund J: Testing for error correction in panel data. Oxf. Bull. Econ.
+Stat. 2007; 69(6): 709–748.
+Publisher Full Text
+Xu D, Lan Q: How does education affect urban carbon emission
+efficiency under the strategy of scientific and technological
+innovation? Front. Environ. Sci. 2023; 11: 1137570.
+Publisher Full Text
+Yin Z, Jiang X, Lin S, et al.: The impact of online education on carbon
+emissions in the context of the COVID-19 pandemic –Taking Chinese
+universities as examples. Appl. Energy. 2022; 314: 118875.
+PubMed Abstract |Publisher Full Text |Free Full Text
+Zafar MW, Saleem MM, Destek MA, et al.: The dynamic linkage between
+remittances, export diversification, education, renewable energy
+consumption, economic growth, and CO2 emissions in top
+remittance-receiving countries. Sustain. Dev. 2022; 30(1): 165–175.
+Publisher Full Text
+Zafar MW, Shahbaz M, Sinha A, et al.: How renewable energy
+consumption contribute to environmental quality? The role of
+education in OECD countries. J. Clean. Prod. 2020; 268: 122149.
+Publisher Full Text
+Zhang G, Wang H, Hua X, et al.: Study on the synergistic effect of foreign
+trade, technological progress, and carbon emissions. Front. Ecol. Evol.
+2022; 10.
+Publisher Full Text
+Page 23 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Open Peer Review
+Current Peer Review Status:  
+Version 1
+Reviewer Report 27 August 2026
+https://doi.org/10.5256/f1000research.207205.r512930
+© 2026 Afzal J. This is an open access peer review report distributed under the terms of the Creative Commons 
+Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the 
+original work is properly cited.
+Jamil Afzal 
+   
+Southwest University of Political Science and Law, Chongqing, Chongqing, China 
+The manuscript addresses an important and timely issue. The topic is relevant and potentially 
+publishable; however, the manuscript requires substantial revision before it can be considered 
+suitable for indexing. 
+There are numerous grammatical, typographical, and terminology problems that reduce 
+readability.
+○
+The manuscript states that it investigates Sub-Saharan African economies, while the 
+methods section refers to the “top 50 polluted nations”. The authors should clearly identify 
+the countries included in the final balanced/unbalanced panel, explain the selection criteria, 
+and report the number of countries and observations.
+○
+Education is described conceptually as educational attainment/human capital, but Table 2 
+measures EDU as education spending as a share of total government expenditure. These 
+are not equivalent measures. The authors should justify why government education 
+expenditure is an appropriate proxy for education and distinguish expenditure from actual 
+educational attainment, human capital, literacy, or years of schooling.
+○
+There are important inconsistencies between the reported coefficients and their 
+interpretations. For example, Table 6 reports positive coefficients for EDU and FDI, while the 
+accompanying text interprets these coefficients as reductions in emissions.
+○
+The authors should explain why positive and negative shocks are expected to have different 
+environmental consequences and clearly distinguish long-run asymmetry from short-run 
+asymmetry.
+○
+The symmetry tests should also be interpreted systematically rather than simply reported.○
+The authors should explain why the selected estimators adequately address reverse 
+causality and omitted-variable bias. If possible, additional robustness checks using 
+alternative specifications or lag structures should be reported.
+○
+The authors should provide a stronger theoretical and empirical justification for the final 
+control-variable specification. Otherwise, omitted-variable bias may affect the estimated 
+coefficients.
+○
+Using both production-based and consumption-based CO₂ emissions is a strength of the ○
+  Page 24 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+paper. However, the manuscript should more clearly explain what the differences between 
+these two dependent variables imply for the pollution-haven, pollution-halo, and carbonleakage arguments.
+The authors should discuss whether the estimated average effects may conceal substantial 
+country-level differences.
+○
+There are numerous grammatical, typographical, and terminology problems that reduce 
+readability.
+○
+The manuscript states that it investigates Sub-Saharan African economies, while the 
+methods section refers to the “top 50 polluted nations”. The authors should clearly identify 
+the countries included in the final balanced/unbalanced panel, explain the selection criteria, 
+and report the number of countries and observations.
+○
+Education is described conceptually as educational attainment/human capital, but Table 2 
+measures EDU as education spending as a share of total government expenditure. These 
+are not equivalent measures. The authors should justify why government education 
+expenditure is an appropriate proxy for education and distinguish expenditure from actual 
+educational attainment, human capital, literacy, or years of schooling.
+○
+There are important inconsistencies between the reported coefficients and their 
+interpretations. For example, Table 6 reports positive coefficients for EDU and FDI, while the 
+accompanying text interprets these coefficients as reductions in emissions.
+○
+The authors should explain why positive and negative shocks are expected to have different 
+environmental consequences and clearly distinguish long-run asymmetry from short-run 
+asymmetry.
+○
+The symmetry tests should also be interpreted systematically rather than simply reported.○
+The authors should explain why the selected estimators adequately address reverse 
+causality and omitted-variable bias. If possible, additional robustness checks using 
+alternative specifications or lag structures should be reported.
+○
+The authors should provide a stronger theoretical and empirical justification for the final 
+control-variable specification. Otherwise, omitted-variable bias may affect the estimated 
+coefficients.
+○
+Using both production-based and consumption-based CO₂ emissions is a strength of the 
+paper. However, the manuscript should more clearly explain what the differences between 
+these two dependent variables imply for the pollution-haven, pollution-halo, and carbonleakage arguments.
+○
+The authors should discuss whether the estimated average effects may conceal substantial 
+country-level differences.
+○
+ 
+Is the work clearly and accurately presented and does it cite the current literature?
+Yes
+Is the study design appropriate and is the work technically sound?
+Partly
+Are sufficient details of methods and analysis provided to allow replication by others?
+Partly
+If applicable, is the statistical analysis and its interpretation appropriate?
+Partly
+  Page 25 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Are all the source data underlying the results available to ensure full reproducibility?
+Partly
+Are the conclusions drawn adequately supported by the results?
+Yes
+Competing Interests: No competing interests were disclosed.
+Reviewer Expertise: FDI, digital trade, environmental science
+I confirm that I have read this submission and believe that I have an appropriate level of 
+expertise to confirm that it is of an acceptable scientific standard, however I have 
+significant reservations, as outlined above.
+Author Response 28 Aug 2026
+Md Qamruzzaman 
+Dear Editor and Reviewer, 
+We sincerely thank the reviewer for the constructive and detailed comments. We have 
+revised the manuscript carefully while preserving the original text as much as possible. All 
+changes in the revised manuscript are shown in red ink for convenience. Because the 
+reviewer file repeated the same set of comments, the duplicated comments have been 
+consolidated below and each unique point is answered separately. 
+Comment 1 
+Reviewer comment: There are numerous grammatical, typographical, and terminology 
+problems that reduce readability. 
+Response: We thank the reviewer for this observation. The manuscript has been carefully 
+edited for grammar, typographical accuracy, terminology consistency, and readability. We 
+also corrected corrupted wording and inconsistent terminology in the introduction, 
+literature review, methods, empirical-results discussion, conclusion, and limitations 
+sections. 
+Manuscript change made: Language and terminology were revised throughout the 
+manuscript. The revisions were made conservatively to preserve the original text as much 
+as possible, and all changes were marked in red ink in the revised manuscript. 
+Comment 2 
+Reviewer comment: The manuscript states that it investigates Sub-Saharan African economies, 
+while the methods section refers to the 'top 50 polluted nations'. The authors should clearly identify 
+the countries included in the final balanced/unbalanced panel, explain the selection criteria, and 
+report the number of countries and observations. 
+Response: We agree that the earlier wording was inconsistent and could mislead readers 
+about the geographical scope of the study. The manuscript now states clearly that the study 
+concerns Sub-Saharan African economies and that the reported estimation sample is a 
+balanced panel of 50 cross-sectional country units over 1990-2019, yielding 1,500 countryyear observations. 
+Manuscript change made: The inconsistent phrase 'top 50 polluted nations' was removed. 
+The data section now reports the 50-country balanced panel, the 1990-2019 period, the 
+1,500 observations, and the selection criterion based on the availability of the variables 
+  Page 26 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+required for the final specifications. An author-verification note remains in red requesting 
+insertion of the exact 50 country names and ISO codes from the deposited replication 
+dataset before resubmission. 
+Comment 3 
+Reviewer comment: Education is described conceptually as educational attainment/human 
+capital, but Table 2 measures EDU as education spending as a share of total government 
+expenditure. These are not equivalent measures. The authors should justify why government 
+education expenditure is an appropriate proxy for education and distinguish expenditure from 
+actual educational attainment, human capital, literacy, or years of schooling. 
+Response: We appreciate this important clarification. The revised manuscript no longer 
+treats government education expenditure as equivalent to educational attainment or 
+realized human capital. Instead, EDU is explicitly presented as a fiscal-input proxy that 
+reflects public commitment to education and the capacity to finance schools, teachers, 
+curricula, and environmental learning. 
+Manuscript change made: Table 2 and the model discussion now define EDU as 
+government education expenditure as a share of total government expenditure. The text 
+explicitly states that EDU is not a direct measure of literacy, years of schooling, education 
+quality, attainment, or realized human capital. The discussion and conclusion were revised 
+accordingly. 
+Comment 4 
+Reviewer comment: There are important inconsistencies between the reported coefficients and 
+their interpretations. For example, Table 6 reports positive coefficients for EDU and FDI, while the 
+accompanying text interprets these coefficients as reductions in emissions. 
+Response: We agree that the coefficient interpretations needed to be aligned precisely with 
+the reported signs. The empirical-results section has been revised so that each 
+interpretation follows the coefficient signs shown in the corresponding tables and no 
+positive coefficient is described as an emissions reduction. 
+Manuscript change made: The discussion of Tables 6 and 7 was rewritten. The revised text 
+states that EDU and FDI are negatively associated with production-based CO2 emissions in 
+the principal estimates, while trade openness and urbanisation are positively associated 
+with emissions. For consumption-based CO2 emissions, EDU remains negative, while FDI, 
+trade openness, and urbanisation are positive. The abstract and conclusion were also 
+adjusted to reflect these corrected interpretations. 
+Comment 5 
+Reviewer comment: The authors should explain why positive and negative shocks are expected 
+to have different environmental consequences and clearly distinguish long-run asymmetry from 
+short-run asymmetry. 
+Response: We thank the reviewer for this helpful suggestion. The revised manuscript now 
+provides a clearer theoretical explanation of asymmetry. It explains that increases and 
+decreases in education expenditure, trade openness, and FDI may have different 
+environmental effects because of adjustment costs, policy responses, sectoral composition, 
+capital-stock adjustment, and technology-transfer channels. 
+Manuscript change made: The asymmetric-model section now explains the decomposition 
+into cumulative positive and negative partial sums. The text distinguishes long-run 
+asymmetry, captured by lagged level terms, from short-run asymmetry, captured by firstdifference terms. The interpretation of Table 8 was revised to separate shock direction, time 
+horizon, and emissions-accounting basis. 
+  Page 27 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+Comment 6 
+Reviewer comment: The symmetry tests should also be interpreted systematically rather than 
+simply reported. 
+Response: We agree. The revised manuscript now interprets the Wald symmetry tests in a 
+systematic way rather than only listing the statistics. The interpretation identifies which 
+variables show long-run and short-run asymmetry and explains that asymmetry is variablespecific, horizon-specific, and emissions-measure-specific. 
+Manuscript change made: A new explanatory paragraph was added after Table 8. It 
+interprets the Wald tests for EDU, trade openness, and FDI separately for production-based 
+and consumption-based CO2 emissions in both the long run and short run. 
+Comment 7 
+Reviewer comment: The authors should explain why the selected estimators adequately address 
+reverse causality and omitted-variable bias. If possible, additional robustness checks using 
+alternative specifications or lag structures should be reported. 
+Response: We appreciate the reviewer’s concern. The revised manuscript now explains the 
+role and limits of each estimator more carefully. It clarifies that DSUR, CUP-FM, CUP-BC, CS-
+ARDL, CCEMG, and AMG address cross-sectional dependence, common factors, dynamic 
+adjustment, and slope heterogeneity, but they do not alone eliminate reverse causality. 
+System-GMM is presented as a complementary robustness check using lagged dependent 
+variables and internal lag instruments. 
+Manuscript change made: The robustness and endogeneity-assessment sections were 
+revised. The System-GMM discussion now reports the interpretation of the lagged 
+dependent variable, AR(1), AR(2), Hansen tests, and instrument counts. The wording was 
+also adjusted to avoid overstating causal identification from an observational panel design. 
+Comment 8 
+Reviewer comment: The authors should provide a stronger theoretical and empirical justification 
+for the final control-variable specification. Otherwise, omitted-variable bias may affect the estimated 
+coefficients. 
+Response: We agree that the control specification needed clearer justification. The revised 
+manuscript now explains why urbanisation and gross capital formation are included as 
+controls. Urbanisation captures urban scale, density, transport, construction, and energydemand channels, while gross capital formation captures domestic investment-driven 
+expansion that may affect emissions independently of FDI. 
+Manuscript change made: The methods section now identifies EDU, FDI, and trade 
+openness as focal regressors and urbanisation and gross capital formation as theoretically 
+motivated controls. The text also acknowledges that these controls reduce but cannot 
+eliminate omitted-variable bias because unobserved factors such as energy mix, industrial 
+structure, institutional quality, regulation, and environmental policy may still matter. 
+Comment 9 
+Reviewer comment: Using both production-based and consumption-based CO2 emissions is a 
+strength of the paper. However, the manuscript should more clearly explain what the differences 
+between these two dependent variables imply for the pollution-haven, pollution-halo, and carbonleakage arguments. 
+Response: We thank the reviewer for recognizing this strength. The revised manuscript 
+now explains that production-based emissions assign carbon to the territory where 
+production occurs, while consumption-based emissions reallocate embodied carbon to final 
+consumption. This distinction is important because territorial improvements may coexist 
+  Page 28 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
+
+with imported or consumption-embodied emissions. 
+Manuscript change made: A new discussion was added explaining how the different 
+results for production-based and consumption-based CO2 emissions affect the 
+interpretation of pollution-haven, pollution-halo, and carbon-leakage mechanisms. The 
+revised text avoids a simple pollution-halo conclusion and explains why FDI and trade 
+effects depend on where emissions are accounted for. 
+Comment 10 
+Reviewer comment: The authors should discuss whether the estimated average effects may 
+conceal substantial country-level differences. 
+Response: We agree. The revised manuscript now states that the reported coefficients are 
+panel-average effects and may conceal substantial country-level heterogeneity in energy 
+mix, institutional quality, sectoral structure, education systems, and environmental 
+regulation. 
+Manuscript change made: A paragraph was added to the empirical discussion explaining 
+the limits of panel-average interpretation. The limitations section was also expanded to 
+recommend future testing of country-level, income-group, sectoral, and embodied-carbon 
+heterogeneity.  
+Competing Interests: no
+The benefits of publishing with F1000Research:
+Your article is published within days, with no editorial bias•
+You can publish traditional articles, null/negative results, case reports, data notes and more•
+The peer review process is transparent and collaborative•
+Your article is indexed in PubMed after passing peer review•
+Dedicated customer support at every stage•
+For pre-submission enquiries, contact research@f1000.com
+  Page 29 of 29
+F1000Research 2026, 15:1392 Last updated: 02 OCT 2026
