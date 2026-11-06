@@ -41,7 +41,7 @@ public class AdminSnapshotService {
     public SnapshotResponse edit(UUID paperId, SnapshotEditRequest edit) {
         Boolean isRetracted = bool("is_retracted", edit.isRetracted());
         Boolean inDoaj = bool("in_doaj", edit.inDoaj());
-        Integer citedByCount = count(edit.citedByCount());
+        Integer citedByCount = citedByCount(edit.citedByCount());
         Set<String> removedTypes = types(edit.removedCrossrefUpdateTypes());
         if (isRetracted == null && inDoaj == null && citedByCount == null && removedTypes.isEmpty()) {
             throw badRequest("Give at least one of is_retracted, in_doaj, cited_by_count, removed_crossref_update_types");
@@ -104,7 +104,7 @@ public class AdminSnapshotService {
         return node.booleanValue();
     }
 
-    private static Integer count(JsonNode node) {
+    private static Integer citedByCount(JsonNode node) {
         if (absent(node)) {
             return null;
         }

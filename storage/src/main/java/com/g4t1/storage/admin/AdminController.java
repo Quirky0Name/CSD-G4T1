@@ -6,6 +6,7 @@ import com.g4t1.storage.report.ReportListResponse;
 import com.g4t1.storage.report.ReportService;
 import com.g4t1.storage.report.UserReportResponse;
 import com.g4t1.storage.snapshot.SnapshotResponse;
+import com.g4t1.storage.snapshot.SnapshotService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,11 +31,13 @@ public class AdminController {
     private final AdminService admin;
     private final AlertService alerts;
     private final ReportService reports;
+    private final SnapshotService snapshots;
 
-    public AdminController(AdminService admin, AlertService alerts, ReportService reports) {
+    public AdminController(AdminService admin, AlertService alerts, ReportService reports, SnapshotService snapshots) {
         this.admin = admin;
         this.alerts = alerts;
         this.reports = reports;
+        this.snapshots = snapshots;
     }
 
     @GetMapping("/users/{ownerId}/papers")
@@ -44,7 +47,7 @@ public class AdminController {
 
     @GetMapping("/papers/{paperId}/snapshots")
     public Map<String, List<SnapshotResponse>> snapshots(@PathVariable UUID paperId) {
-        return Map.of("snapshots", admin.snapshotsOf(paperId));
+        return Map.of("snapshots", snapshots.history(paperId, null, null, null));
     }
 
     @GetMapping("/papers/{paperId}/alerts")

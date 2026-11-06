@@ -8,7 +8,6 @@ import com.g4t1.storage.report.FakeDocument;
 import com.g4t1.storage.report.ReportService;
 import com.g4t1.storage.report.ReportStatus;
 import com.g4t1.storage.report.UserReportResponse;
-import com.g4t1.storage.snapshot.SnapshotResponse;
 import com.g4t1.storage.snapshot.SnapshotService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -45,10 +44,6 @@ public class AdminService {
                 .map(paper -> new AdminPaperResponse(paper, ownerId,
                         snapshots.history(paper.id(), null, 1, null).stream().findFirst().orElse(null)))
                 .toList();
-    }
-
-    public List<SnapshotResponse> snapshotsOf(UUID paperId) {
-        return snapshots.history(paperId, null, null, null);
     }
 
     // Research Evaluation never raises a change key twice, so raising the same change again needs its alert gone

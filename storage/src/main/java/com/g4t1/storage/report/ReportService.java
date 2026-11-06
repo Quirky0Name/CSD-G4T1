@@ -131,14 +131,14 @@ public class ReportService {
         if (!papers.findById(paperId).map(paper -> paper.getOwnerId().equals(userId)).orElse(false)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
         }
-        return listed(paperId);
+        return userReports(paperId);
     }
 
     // the same list for the dev mode admin, on any researcher's paper
     @Transactional(readOnly = true)
     public List<UserReportResponse> listForPaper(UUID paperId) {
         requirePaper(paperId);
-        return listed(paperId);
+        return userReports(paperId);
     }
 
     /**
@@ -162,12 +162,12 @@ public class ReportService {
         if (status == ReportStatus.ASSESSED) {
             recordEvaluation(reportId, evaluation);
         }
-        // last, so nothing after it can fail and leave its files behind
+        // last, so the steps above can't fail and leave its files behind
         documents.storeFake(reportId, newDocuments);
-        return listed(paperId).stream().filter(entry -> entry.id() == reportId).findFirst().orElseThrow();
+        return userReports(paperId).stream().filter(entry -> entry.id() == reportId).findFirst().orElseThrow();
     }
 
-    private List<UserReportResponse> listed(UUID paperId) {
+    private List<UserReportResponse> userReports(UUID paperId) {
         List<Report> found = reports.findByPaperIdOrderByCreatedAtDescIdDesc(paperId);
         if (found.isEmpty()) {
             return List.of();
