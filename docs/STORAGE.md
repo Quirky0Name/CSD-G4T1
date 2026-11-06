@@ -26,6 +26,7 @@ Spring Data repository, the entity, and response records.
 | `report/` | reports and documents: open, read, mark investigated, store the evaluation (`ReportService`), store a document and download its PDF (`ReportDocumentService`), the user's report list |
 | `draft/` | the researcher's draft per project (`DraftService`) |
 | `dev/` | demo tools (`DevController`, `DevService`) and Swagger config |
+| `admin/` | dev mode: the admin's snapshot edit (`SnapshotEditRequest`, `AdminSnapshotService`, `AdminSnapshotController`), reads and clear history (`AdminController`, `AdminService`, `AdminPaperResponse`), fake reports (`FakeReportExample`, `FakeReportPdfController`) |
 | `file/` | `LocalFileStore` (`save`, `read`, `delete` in `UPLOAD_DIR`), `Pdfs` (the `%PDF-` check) |
 | `metadata/` | `MetadataClient` (Crossref/OpenAlex metadata, DOI normalising), `OpenAccessPdfClient` |
 | `grobid/` | `GrobidClient` (DOI and title from an uploaded PDF) |
@@ -83,7 +84,9 @@ default project; project ids aren't checked.
 Insert-only, one row per `POST /internal/papers/{id}/snapshots`, the
 full snapshot history per paper. Scalar fields are columns; `crossref_updates`,
 `authors` and `source_status` are stored as the JSON text sent and never
-looked inside, so Updating can add fields without a storage change. The
+looked inside, so Updating can add fields without a storage change (one
+exception: the admin edit's `requireSourceOk` reads `source_status`, see
+"Dev mode"). The
 snapshot history read writes every field, nulls included (Updating's parser needs
 them all). An unknown paper is `404` `No paper <id>` exactly: Research
 Evaluation relies on that text.
@@ -178,6 +181,78 @@ clearing a deleted project use too, so switching the demo tools off can't
 break either.
 
 Swagger UI is at `/swagger-ui.html`, on and off with the demo tools.
+
+## Dev mode (`/admin/**`, `/public/fake-report/**`)
+
+Only with `DEV_MODE=true` (`storage.dev-mode: ${DEV_MODE:false}`), separate
+from `DEV_TOOLS`; with it off the endpoints answer `404`. `/admin/**` needs
+`ROLE_ADMIN`: an admin token gets `ROLE_ADMIN` only, so researcher
+endpoints and `/internal/**` answer it `403`. The admin works on any user's
+paper. Why and the admin account: ARCHITECTURE.md, "Auth". Endpoint shapes:
+CONTRACTS.md, "Admin endpoints (dev mode)". Code is in `admin/`.
+
+**Editing flags** (`POST /admin/papers/{id}/snapshots`). The admin demo is:
+1. the researcher polls the paper (`POST /run-poll?paper_id=`, from the app
+   or with their own token; the admin has no poll of their own);
+2. the admin changes the flag;
+3. the researcher polls again, finds the change and raises its alert.
+
+- The edit is a new snapshot row (snapshots are insert-only): a copy of
+  the latest, with the given fields changed. Updating and Research
+  Evaluation don't change; the next poll reads a row stored after its last
+  poll (`backend/src/updating/compare.py`, `poll.py`).
+- Only `is_retracted`, `in_doaj`, `cited_by_count` and removing Crossref
+  notices by type can be edited. Account details, paper metadata,
+  projects, drafts, alert statuses and report contents are not editable.
+- The next poll fetches the real values, so the edit raises a change only
+  by setting a value to what it was before a real change (use a really
+  retracted paper). A change the paper doesn't really have, such as a
+  retraction on a paper that isn't retracted, can't be raised this way.
+- `AdminSnapshotService` reuses `DevService.copyOf`, which now also takes
+  `in_doaj`. The request binds to raw JSON so its checks are explicit
+  (an exception to "request records with Bean Validation"; values aren't
+  coerced). `requireSourceOk` reads `source_status`, the one place
+  storage looks inside it (an exception to "never looked inside").
+
+**Re-raising a change.** Research Evaluation never raises a change key
+twice, so a retraction raised once needs its alert gone first.
+`DELETE /admin/papers/{id}/history` reuses `PaperDeletion.clearHistory`.
+The poll after a clear is a baseline, which never alerts, so: clear the
+history, poll, change the flag, poll.
+
+**Fake reports** (`POST /admin/papers/{id}/fake-report`). Copies one saved
+example onto the paper without a poll; the application never generates
+anything.
+- The example is `src/main/resources/dev/fake-report/` (`report.json`, two
+  served PDFs, and `paper.pdf` and `draft.pdf` kept as the record of what
+  the prompts read, never served or stored). `.gitattributes` there keeps
+  the PDFs byte for byte. It is read by `FakeReportExample`.
+- It was generated once from eval case 11
+  (`backend/evals/cases/11_concern_then_retraction_replacement.json`: paper,
+  notices, PDFs and draft all made up) by a subagent that ran impact's
+  three prompts through three subagents, not Gemini, with `claude-opus-5-5`.
+  `assessment` is `{"fake": true, ...}` and names that model in `model` and
+  `answered_by`. The writer's helper script was a throwaway, not in the repo.
+  Text names the example's paper whichever paper it goes on, and can't be
+  customised (no body).
+- Alerts get `change_key` `fake:<uuid>`, and snapshot ids `0`; timestamps
+  are the time of the call; `status` is `investigating`, `investigated` or
+  `assessed` (default) and the report stays in it. Only `assessed` fires the
+  "Report ready" toast (the alert toasts in `tracking.tsx` show for a fake
+  report's new alerts whatever its status).
+- `ReportDocumentService` stores the documents, `FakeDocument` carries each
+  with its PDF. Each call stores its own copy of each PDF through
+  `LocalFileStore.save`; a transaction synchronization deletes those copies
+  if the call's transaction doesn't commit. `POST /internal/documents` is
+  not used, because it downloads PDFs. `crossref_record` is `{}` on every
+  document.
+- The report takes only its own alerts, by id, not
+  `assignUnreportedToReport`, so a real alert waiting for its report stays
+  out. The draft is only a generation input; a fake report never touches
+  the project's draft.
+- `GET /public/fake-report/{file}` takes no token and serves only the two
+  named PDFs (`FakeReportPdfController`); the report UI links a PDF only
+  through `pdf_source_url`, so the frontend needs no change.
 
 ## Gotchas
 

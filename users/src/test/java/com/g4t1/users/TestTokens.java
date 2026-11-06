@@ -26,6 +26,11 @@ public final class TestTokens {
         return Jwts.builder().subject("svc:updating").claim("role", "service").signWith(key(base64Secret)).compact();
     }
 
+    // the admin's token, with a made-up id, for when the account itself isn't there to log in with
+    public static String adminToken(String base64Secret) {
+        return Jwts.builder().subject(UUID.randomUUID().toString()).claim("role", "admin").signWith(key(base64Secret)).compact();
+    }
+
     // garbage, expired, signed with another key, a sub that isn't a user id, and no sub at all
     public static List<String> badTokens(String base64Secret) {
         SecretKey key = key(base64Secret);

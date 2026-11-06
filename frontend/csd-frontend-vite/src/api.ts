@@ -127,9 +127,11 @@ const storage = axios.create({ baseURL: '/api' })
 const updating = axios.create({ baseURL: '/updating' })
 // User Management; its register and login take no token
 const authApi = axios.create({ baseURL: '/auth' })
+// User Management's admin routes, which do take a token
+const adminAuth = axios.create({ baseURL: '/auth/admin' })
 
 // every call to Storage and Updating carries the signed-in user's token
-for (const client of [storage, updating]) {
+for (const client of [storage, updating, adminAuth]) {
   client.interceptors.request.use((config) => {
     const token = getToken()
     if (token) config.headers.Authorization = `Bearer ${token}`
@@ -226,4 +228,82 @@ export function errorMessage(err: unknown): string {
 
 export async function deletePaper(paperId: string): Promise<void> {
   await storage.delete(`/papers/${paperId}`)
+}
+// Dev mode (docs/specs/2026-11-06-dev-mode.md, "Interfaces"). Admin token only.
+export type Account = { id: string; email: string; role: 'user' | 'admin'; created_at: string }
+
+export type SourceStatus = 'ok' | 'not_found' | 'error'
+
+export type CrossrefUpdate = {
+  notice_doi: string | null
+  type: string | null
+  label: string | null
+  source: string | null
+  date: string | null
+  record_id: string | null
+}
+
+export type Snapshot = {
+  snapshot_id: number
+  paper_id: string
+  fetched_at: string
+  is_retracted: boolean | null
+  in_doaj: boolean | null
+  cited_by_count: number | null
+  crossref_updates: CrossrefUpdate[] | null
+  source_status: { crossref: SourceStatus; openalex: SourceStatus }
+}
+
+export type AdminPaper = Paper & { owner_id: string; latest_snapshot: Snapshot | null }
+
+export type SnapshotEdit = {
+  is_retracted?: boolean
+  in_doaj?: boolean
+  cited_by_count?: number
+  removed_crossref_update_types?: string[]
+}
+
+export async function listAccounts(): Promise<Account[]> {
+  const res = await adminAuth.get<{ users: Account[] }>('/users')
+  return res.data.users
+}
+
+export async function listOwnerPapers(ownerId: string): Promise<AdminPaper[]> {
+  const res = await storage.get<{ papers: AdminPaper[] }>(`/admin/users/${ownerId}/papers`)
+  return res.data.papers
+}
+
+export async function editSnapshot(paperId: string, edit: SnapshotEdit): Promise<Snapshot> {
+  const res = await storage.post<Snapshot>(`/admin/papers/${paperId}/snapshots`, edit)
+  return res.data
+}
+
+export async function listPaperSnapshots(paperId: string): Promise<Snapshot[]> {
+  const res = await storage.get<{ snapshots: Snapshot[] }>(`/admin/papers/${paperId}/snapshots`)
+  return res.data.snapshots
+}
+
+export async function listPaperAlerts(paperId: string): Promise<Alert[]> {
+  const res = await storage.get<{ alerts: Alert[] }>(`/admin/papers/${paperId}/alerts`)
+  return res.data.alerts
+}
+
+export async function listPaperReports(paperId: string): Promise<UserReport[]> {
+  const res = await storage.get<{ reports: UserReport[] }>(`/admin/papers/${paperId}/reports`)
+  return res.data.reports
+}
+
+export async function clearPaperHistory(paperId: string): Promise<void> {
+  await storage.delete(`/admin/papers/${paperId}/history`)
+}
+
+export async function addFakeReport(paperId: string, status: ReportStatus): Promise<UserReport> {
+  const res = await storage.post<UserReport>(`/admin/papers/${paperId}/fake-report`, null, {
+    params: { status },
+  })
+  return res.data
+}
+
+export function isNotFound(err: unknown): boolean {
+  return axios.isAxiosError(err) && err.response?.status === 404
 }

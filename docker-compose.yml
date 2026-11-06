@@ -49,6 +49,8 @@ services:
       S2_API_KEY: ${S2_API_KEY:-}
       UPLOAD_DIR: /data/uploads
       DEV_TOOLS: ${DEV_TOOLS:-true}
+      # what the admin can do to any researcher's data; only storage and users read this
+      DEV_MODE: ${DEV_MODE:-false}
     # the PDFs and the database belong together: back up or reset both volumes at once
     volumes:
       - uploads:/data/uploads
@@ -72,6 +74,8 @@ services:
       SPRING_DATASOURCE_USERNAME: app
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      # the admin account; only storage and users read this
+      DEV_MODE: ${DEV_MODE:-false}
       # deleting a project clears its papers and draft there first
       SM_BASE_URL: http://storage:8081
     restart: unless-stopped

@@ -39,6 +39,10 @@ most needed first within each.
 - [x] `POST /run-poll` takes the user's JWT (CG-99).
 - [x] Notifications to the paper's owner instead of one hard-coded
   Telegram chat: done in the app (a toast on the frontend's 30 s refresh).
+- [ ] **A UI for dev mode.** Not built: the admin works through the API
+  only (SETUP.md, "Dev mode: triggering a change"). It gets its own spec.
+- [ ] **Rate limiting on login.** None, which matters most while dev mode's
+  known admin password exists (DEPLOY.md).
 - [ ] A notification history (the toast has none, and no read state).
 - [ ] Notify about reports assessed while the researcher was signed out
   (today only reports assessed while a tab is open notify).

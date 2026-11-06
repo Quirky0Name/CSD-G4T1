@@ -47,7 +47,8 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong email or password");
         }
         User user = found.get();
-        return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
+        String token = user.isAdmin() ? tokens.issueAdmin(user.getId()) : tokens.issue(user.getId());
+        return new AuthResponse(token, UserResponse.from(user));
     }
 
     public void deleteAccount(UUID userId, DeleteAccountRequest request) {

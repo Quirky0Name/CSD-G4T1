@@ -21,6 +21,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // register and login are how a researcher gets a token, so only these need one
                         .requestMatchers("/projects", "/projects/**", "/auth/me").hasRole("USER")
+                        .requestMatchers("/auth/admin/**").hasRole("ADMIN")
                         .anyRequest().permitAll())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(new JwtAuthFilter(jwtSecret), UsernamePasswordAuthenticationFilter.class)

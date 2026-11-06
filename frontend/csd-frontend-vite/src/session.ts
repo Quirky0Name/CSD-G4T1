@@ -1,6 +1,8 @@
 // The signed-in user's session, kept in localStorage so a refresh stays signed in.
 // The token is User Management's JWT (docs/CONTRACTS.md, "Auth"), valid 24 hours.
-export type SessionUser = { id: string; email: string; created_at: string }
+export type UserRole = 'user' | 'admin'
+// role is absent on a session saved before dev mode existed, which means a researcher
+export type SessionUser = { id: string; email: string; role?: UserRole; created_at: string }
 export type Session = { token: string; user: SessionUser }
 
 const STORAGE_KEY = 'session'

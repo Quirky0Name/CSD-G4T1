@@ -57,6 +57,7 @@ class RegisterTest {
                 .jsonPath("$.user.id").value(String.class,
                         id -> assertThatCode(() -> UUID.fromString(id)).doesNotThrowAnyException())
                 .jsonPath("$.user.email").isEqualTo(email)
+                .jsonPath("$.user.role").isEqualTo("user")
                 .jsonPath("$.user.created_at").isNotEmpty()
                 .jsonPath("$..password").doesNotExist();
     }
@@ -103,6 +104,14 @@ class RegisterTest {
     @Test
     void anEmailThatIsNotAnAddressIsABadRequest() {
         register("not-an-email", "correct horse battery")
+                .expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
+    }
+
+    // the admin account's address has no @, so nobody can register it
+    @Test
+    void theAdminAddressIsABadRequest() {
+        register("admin", "correct horse battery")
                 .expectStatus().isBadRequest()
                 .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON);
     }

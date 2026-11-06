@@ -37,6 +37,7 @@ comments into the value.
 |---|---|---|
 | `JWT_SECRET` | every service | base64 of 32+ random bytes (`openssl rand -base64 32`), the same everywhere. Storage Management's JWT library rejects shorter keys; the Python apps check at startup |
 | `DEV_TOOLS` | Storage Management | `true` (the default) serves the `/dev` demo tools and Swagger; `false` takes both away, for a public server |
+| `DEV_MODE` | Storage Management, User Management | `false` unless set. `true` (only that, in any letter case; `1`, `on` and `yes` don't count) creates the admin account `admin` / `12345679` in User Management and serves the `/admin/**` endpoints in Storage Management. Separate from `DEV_TOOLS`. Its password is known: never on a server (DEPLOY.md). Updating and Research Evaluation don't read it |
 | `SM_BASE_URL` | RE, Updating | `http://localhost:8081` (compose overrides it) |
 | `RE_BASE_URL` | Updating | `http://localhost:8000` |
 | `DATABASE_URL` | Updating | `postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` (the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres |
@@ -188,6 +189,26 @@ Then set `JWT_SECRET`, `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5434/u
 (`.\mvnw.cmd spring-boot:run` on Windows). It listens on 8080; Flyway
 creates the `users` schema and its tables. `docker compose down -v` wipes
 its database.
+
+## Dev mode: triggering a change
+
+With `DEV_MODE=true` for Storage Management and User Management (the root
+`.env` passes it to both; off unless set) and the whole stack running:
+
+1. Sign in as a researcher and track a really retracted paper. Poll it
+   (from the app, or `POST /run-poll?paper_id=` with their token).
+2. Sign in as the admin: `POST /auth/login` with `{"email": "admin",
+   "password": "12345679"}`; use the returned token.
+3. `POST /api/admin/papers/<id>/snapshots` with
+   `{"is_retracted": false, "removed_crossref_update_types": ["retraction"]}`.
+4. Poll the paper again as the researcher: a `retraction` alert appears. To
+   raise it again, `DELETE /api/admin/papers/<id>/history`, poll, change
+   the flag, poll.
+
+`GET /auth/admin/users` lists the accounts to pick from; the other admin
+calls are in CONTRACTS.md, "Admin endpoints (dev mode)".
+`POST /api/admin/papers/<id>/fake-report` (no body) puts a finished report
+on a paper without a poll.
 
 ## A demo user token
 
