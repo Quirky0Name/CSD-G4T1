@@ -21,6 +21,9 @@ import tools.jackson.databind.json.JsonMapper;
 import java.time.Instant;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -73,6 +76,29 @@ class AdminOffTest {
                         .header(HttpHeaders.AUTHORIZATION, admin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"is_retracted\": false}"))
+                .andExpect(status().isNotFound());
+
+        mvc.perform(get("/internal/papers/{id}/snapshots", paperId)
+                        .header(HttpHeaders.AUTHORIZATION, TestTokens.service()))
+                .andExpect(jsonPath("$.snapshots.length()").value(1));
+    }
+
+    @Test
+    void theReadsAreNotFound() throws Exception {
+        for (String path : new String[] {
+                "/admin/users/" + UUID.randomUUID() + "/papers",
+                "/admin/papers/" + paperId + "/snapshots",
+                "/admin/papers/" + paperId + "/alerts",
+                "/admin/papers/" + paperId + "/reports"}) {
+            mvc.perform(get(path).header(HttpHeaders.AUTHORIZATION, admin()))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.detail").value(not(startsWith("No paper"))));
+        }
+    }
+
+    @Test
+    void clearingHistoryIsNotFoundAndDeletesNothing() throws Exception {
+        mvc.perform(delete("/admin/papers/{id}/history", paperId).header(HttpHeaders.AUTHORIZATION, admin()))
                 .andExpect(status().isNotFound());
 
         mvc.perform(get("/internal/papers/{id}/snapshots", paperId)

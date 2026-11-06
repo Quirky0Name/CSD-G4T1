@@ -130,6 +130,17 @@ public class ReportService {
         if (!papers.findById(paperId).map(paper -> paper.getOwnerId().equals(userId)).orElse(false)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
         }
+        return listed(paperId);
+    }
+
+    // the same list for the dev mode admin, on any researcher's paper
+    @Transactional(readOnly = true)
+    public List<UserReportResponse> listForPaper(UUID paperId) {
+        requirePaper(paperId);
+        return listed(paperId);
+    }
+
+    private List<UserReportResponse> listed(UUID paperId) {
         List<Report> found = reports.findByPaperIdOrderByCreatedAtDescIdDesc(paperId);
         if (found.isEmpty()) {
             return List.of();
