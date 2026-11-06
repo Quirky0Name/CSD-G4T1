@@ -21,19 +21,23 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,6 +51,8 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -71,7 +77,7 @@ class FakeReportTest {
     @Autowired
     AlertService alertService;
 
-    @Autowired
+    @MockitoSpyBean
     LocalFileStore files;
 
     @Autowired
@@ -326,6 +332,26 @@ class FakeReportTest {
         admin(get("/admin/papers/{id}/alerts", paperId)).andExpect(jsonPath("$.alerts", hasSize(0)));
         assertThat(jdbc.queryForObject("select count(*) from report_documents", Integer.class)).isZero();
         assertThat(keys).allSatisfy(key -> assertThat(files.read(key)).isEmpty());
+    }
+
+    @Test
+    void aFailureStoresNothingAndLeavesNoFileBehind() throws Exception {
+        List<String> saved = new ArrayList<>();
+        doAnswer(call -> {
+            if (!saved.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "disk full");
+            }
+            String key = (String) call.callRealMethod();
+            saved.add(key);
+            return key;
+        }).when(files).save(any());
+
+        create().andExpect(status().isInternalServerError());
+
+        assertThat(saved).hasSize(1);
+        assertThat(files.read(saved.getFirst())).isEmpty();
+        admin(get("/admin/papers/{id}/reports", paperId)).andExpect(jsonPath("$.reports", hasSize(0)));
+        admin(get("/admin/papers/{id}/alerts", paperId)).andExpect(jsonPath("$.alerts", hasSize(0)));
     }
 
     private ResultActions create() throws Exception {

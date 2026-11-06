@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -74,26 +76,30 @@ public class ReportDocumentService {
 
     /**
      * Stores a fake report's documents, each with its own copy of its PDF, in the caller's transaction.
-     * Nothing is downloaded. If one fails, the files stored so far are deleted, since their rows roll back.
+     * Nothing is downloaded. If that transaction doesn't commit, whatever fails, the files are deleted,
+     * since no row is left pointing at them.
      */
     void storeFake(long reportId, List<FakeDocument> fakes) {
         List<String> keys = new ArrayList<>();
-        try {
-            for (FakeDocument fake : fakes) {
-                ReportDocument document = new ReportDocument(new NewReportDocumentRequest(reportId, fake.kind(),
-                        fake.doi(), fake.crossrefStatus(), fake.crossrefRecord(), fake.updateToIncludesPaper(),
-                        fake.textStatus(), fake.text(), fake.textTruncated(), fake.links()),
-                        toText(fake.crossrefRecord()), toText(fake.links()));
-                if (fake.pdf() != null) {
-                    String key = files.save(fake.pdf());
-                    keys.add(key);
-                    document.recordPdf(key, sha256(fake.pdf()), fake.pdfSourceUrl());
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) {
+                    keys.forEach(files::delete);
                 }
-                documents.saveAndFlush(document);
             }
-        } catch (RuntimeException e) {
-            keys.forEach(files::delete);
-            throw e;
+        });
+        for (FakeDocument fake : fakes) {
+            ReportDocument document = new ReportDocument(new NewReportDocumentRequest(reportId, fake.kind(),
+                    fake.doi(), fake.crossrefStatus(), fake.crossrefRecord(), fake.updateToIncludesPaper(),
+                    fake.textStatus(), fake.text(), fake.textTruncated(), fake.links()),
+                    toText(fake.crossrefRecord()), toText(fake.links()));
+            if (fake.pdf() != null) {
+                String key = files.save(fake.pdf());
+                keys.add(key);
+                document.recordPdf(key, sha256(fake.pdf()), fake.pdfSourceUrl());
+            }
+            documents.saveAndFlush(document);
         }
     }
 

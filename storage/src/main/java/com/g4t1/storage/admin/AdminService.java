@@ -18,7 +18,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
-// What the admin can see of any researcher's papers, and clearing a paper's history
+// What the admin can see of any researcher's papers, clearing a paper's history, and fake reports
 @Service
 public class AdminService {
 

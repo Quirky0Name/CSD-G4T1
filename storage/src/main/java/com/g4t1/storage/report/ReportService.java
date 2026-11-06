@@ -162,7 +162,6 @@ public class ReportService {
         if (status == ReportStatus.ASSESSED) {
             recordEvaluation(reportId, evaluation);
         }
-        // last, so the steps above can't fail and leave its files behind
         documents.storeFake(reportId, newDocuments);
         return userReports(paperId).stream().filter(entry -> entry.id() == reportId).findFirst().orElseThrow();
     }
