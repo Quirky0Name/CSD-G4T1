@@ -23,6 +23,7 @@ public class SecurityConfig {
                         // Swagger's own pages only; every endpoint it calls still needs a token
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/internal/**").hasRole("SERVICE")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().hasRole("USER"))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(new JwtAuthFilter(jwtSecret), UsernamePasswordAuthenticationFilter.class)

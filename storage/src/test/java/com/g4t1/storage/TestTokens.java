@@ -20,6 +20,10 @@ public final class TestTokens {
         return "Bearer " + Jwts.builder().subject(userId.toString()).signWith(KEY).compact();
     }
 
+    public static String admin(UUID userId) {
+        return "Bearer " + Jwts.builder().subject(userId.toString()).claim("role", "admin").signWith(KEY).compact();
+    }
+
     public static String service() {
         return "Bearer " + Jwts.builder().subject("svc:updating").claim("role", "service").signWith(KEY).compact();
     }

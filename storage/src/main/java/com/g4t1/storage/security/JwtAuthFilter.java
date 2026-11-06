@@ -60,14 +60,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
         Object principal;
         String role;
-        if ("service".equals(claims.get("role", String.class))) {
+        String claimedRole = claims.get("role", String.class);
+        if ("service".equals(claimedRole)) {
             // e.g. sub=svc:updating; never owner-scoped to a real user
             principal = claims.getSubject();
             role = "ROLE_SERVICE";
         } else {
             // throws IllegalArgumentException for a non-UUID sub, which rejects the token
             principal = UUID.fromString(claims.getSubject());
-            role = "ROLE_USER";
+            // the dev mode admin's sub is a user id too, but it isn't a researcher
+            role = "admin".equals(claimedRole) ? "ROLE_ADMIN" : "ROLE_USER";
         }
         var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of(new SimpleGrantedAuthority(role)));
         SecurityContextHolder.getContext().setAuthentication(auth);
