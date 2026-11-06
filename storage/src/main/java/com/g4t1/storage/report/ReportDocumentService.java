@@ -13,6 +13,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HexFormat;
 import java.util.List;
@@ -69,6 +70,31 @@ public class ReportDocumentService {
             saved = downloadPdf(saved);
         }
         return new StoredDocument(toResponse(saved), true);
+    }
+
+    /**
+     * Stores a fake report's documents, each with its own copy of its PDF, in the caller's transaction.
+     * Nothing is downloaded. If one fails, the files stored so far are deleted, since their rows roll back.
+     */
+    void storeFake(long reportId, List<FakeDocument> fakes) {
+        List<String> keys = new ArrayList<>();
+        try {
+            for (FakeDocument fake : fakes) {
+                ReportDocument document = new ReportDocument(new NewReportDocumentRequest(reportId, fake.kind(),
+                        fake.doi(), fake.crossrefStatus(), fake.crossrefRecord(), fake.updateToIncludesPaper(),
+                        fake.textStatus(), fake.text(), fake.textTruncated(), fake.links()),
+                        toText(fake.crossrefRecord()), toText(fake.links()));
+                if (fake.pdf() != null) {
+                    String key = files.save(fake.pdf());
+                    keys.add(key);
+                    document.recordPdf(key, sha256(fake.pdf()), fake.pdfSourceUrl());
+                }
+                documents.saveAndFlush(document);
+            }
+        } catch (RuntimeException e) {
+            keys.forEach(files::delete);
+            throw e;
+        }
     }
 
     /**

@@ -51,11 +51,12 @@ class AdminOffTest {
     @Autowired
     JsonMapper json;
 
+    private final UUID owner = UUID.randomUUID();
     private UUID paperId;
 
     @BeforeEach
     void setUp() {
-        Paper paper = new Paper(UUID.randomUUID());
+        Paper paper = new Paper(owner);
         paper.setDoi("10.1016/s0140-6736(20)31180-6");
         paperId = papers.save(paper).getId();
         snapshotService.store(paperId, new SnapshotRequest(
@@ -104,6 +105,21 @@ class AdminOffTest {
         mvc.perform(get("/internal/papers/{id}/snapshots", paperId)
                         .header(HttpHeaders.AUTHORIZATION, TestTokens.service()))
                 .andExpect(jsonPath("$.snapshots.length()").value(1));
+    }
+
+    @Test
+    void aFakeReportIsNotFoundAndStoresNothing() throws Exception {
+        mvc.perform(post("/admin/papers/{id}/fake-report", paperId).header(HttpHeaders.AUTHORIZATION, admin()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value(not(startsWith("No paper"))));
+
+        mvc.perform(get("/papers/{id}/reports", paperId).header(HttpHeaders.AUTHORIZATION, TestTokens.user(owner)))
+                .andExpect(jsonPath("$.reports.length()").value(0));
+    }
+
+    @Test
+    void aFakeReportPdfIsNotFoundWithNoToken() throws Exception {
+        mvc.perform(get("/public/fake-report/new-version.pdf")).andExpect(status().isNotFound());
     }
 
     private static String admin() {

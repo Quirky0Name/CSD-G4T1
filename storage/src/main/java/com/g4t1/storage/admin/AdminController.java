@@ -4,13 +4,16 @@ import com.g4t1.storage.alert.AlertListResponse;
 import com.g4t1.storage.alert.AlertService;
 import com.g4t1.storage.report.ReportListResponse;
 import com.g4t1.storage.report.ReportService;
+import com.g4t1.storage.report.UserReportResponse;
 import com.g4t1.storage.snapshot.SnapshotResponse;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -52,6 +55,13 @@ public class AdminController {
     @GetMapping("/papers/{paperId}/reports")
     public ReportListResponse reports(@PathVariable UUID paperId) {
         return new ReportListResponse(reports.listForPaper(paperId));
+    }
+
+    // status: investigating, investigated or assessed (the default)
+    @PostMapping("/papers/{paperId}/fake-report")
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserReportResponse fakeReport(@PathVariable UUID paperId, @RequestParam(required = false) String status) {
+        return admin.createFakeReport(paperId, status);
     }
 
     @DeleteMapping("/papers/{paperId}/history")
