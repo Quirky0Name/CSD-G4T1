@@ -21,6 +21,7 @@ import os
 import sys
 from pathlib import Path
 
+import case_text
 from google import genai
 from google.genai import errors, types
 from pydantic import BaseModel
@@ -64,13 +65,13 @@ def prompt(case: dict, ev: dict) -> str:
     lines = [f"{n}. {f}" for n, f in enumerate(statements(case), 1)]
     docs = ([case["notice"]] if case.get("notice") else []) + list(case.get("documents") or [])
     notice = "\n\n".join(
-        f"[{d.get('kind', 'notice')} {d['doi']}]\n" + (d.get("text") or d.get("pdf_text") or "(no text)")
+        f"[{d.get('kind', 'notice')} {d['doi']}]\n" + (d.get("text") or case_text.pdf_text(d) or "(no text)")
         for d in docs
     ) or "(no notice)"
     return (
         "CASE MATERIAL\n"
-        f"Tracked paper:\n{case['paper_text']}\n\nChange notice(s) and related documents:\n{notice}\n\n"
-        f"Researcher's draft:\n{case.get('draft_text') or '(no draft uploaded)'}\n\n"
+        f"Tracked paper:\n{case_text.paper_text(case)}\n\nChange notice(s) and related documents:\n{notice}\n\n"
+        f"Researcher's draft:\n{case_text.draft_text(case) or '(no draft uploaded)'}\n\n"
         f"ANSWER\n{answer(ev)}\n\n"
         "STATEMENTS (return one item per number)\n"
         + "\n".join(lines)

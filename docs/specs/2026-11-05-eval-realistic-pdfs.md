@@ -136,27 +136,42 @@ changes the same files as S1.
     `pdf_text(document)` return the `_text` field or `doc_text` of the
     `_doc` field. `transient` (code shows it).
 - **Acceptance criteria:**
-  - [ ] `run.py --dry` builds every case in `evals/cases/` (unchanged
+  - [x] `run.py --dry` builds every case in `evals/cases/` (unchanged
         output apart from the font).
-  - [ ] Throwaway script, `--with pypdf`: a rich document with
+  - [x] Throwaway script, `--with pypdf`: a rich document with
         `two_column`, a watermark, a table and enough sections for 3 pages
         builds through `run.build_inputs`; the PDF has at least 3 pages,
         and every page's extracted text contains the watermark.
-  - [ ] Same script: plain `paper_text` and a rich document containing
+  - [x] Same script: plain `paper_text` and a rich document containing
         `7·9% – ≥ α "curly"` both build without an error.
-  - [ ] Same script: `score.check_quotes` on a fake run quoting one table
+  - [x] Same script: `score.check_quotes` on a fake run quoting one table
         cell of a rich stored paper as `stored paper`, and the watermark of
         a rich `current_version` document as `current copy`, finds neither
         invented nor misattributed.
-  - [ ] Same script: `judge.prompt` for a case with a rich draft contains
+  - [x] Same script: `judge.prompt` for a case with a rich draft contains
         a sentence from the draft's last section.
-  - [ ] `uv run ruff check` passes.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals", "A case": the `_doc` form of `paper_text`,
     `draft_text` and `pdf_text`, its fields, that a case uses one form per
     field, and that the plain form stays valid; that built PDFs use the
     DejaVu font in `evals/fonts/`; that quotes and the judge read the full
     text the PDF shows.
+  - Decisions made in implementation (S1):
+    - `case_text.doc_text` also includes the "Abstract" and "References"
+      labels, because the rich PDF prints them and `doc_text` returns every
+      word the PDF shows. EVALUATION.md "A case".
+    - `case_text.form` raises `ValueError` when a field is given in two
+      forms, so "one form per field" is enforced, not only documented.
+      EVALUATION.md "A case".
+    - The DejaVu files are matplotlib's bundled copies; `fonts/LICENSE` is
+      their `LICENSE_DEJAVU`. No doc: the licence file is beside the fonts.
+    - Rich layout: A4; in two columns the title block spans the page and the
+      sections flow down the left column, then the right; the first table row
+      is the header (bold); a figure is an empty grey box above its caption.
+      EVALUATION.md "A case" (table's first row is the header).
+    - The judge still shows a document's `text`, or its PDF text when it has
+      none (as before, now including `pdf_doc`). No doc: code shows it.
 
 ### S2: Five cases become realistic, and four missing scenarios get cases
 

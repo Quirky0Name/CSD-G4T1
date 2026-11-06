@@ -19,6 +19,8 @@ from rich.table import Table
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT.parent / "src"))
 
+import case_text
+
 from research_evaluation.impact.prompts import alerts_block, paper_block
 from research_evaluation.storage import AlertInReport, PaperDetails
 
@@ -88,13 +90,14 @@ def quote_sources(case: dict) -> dict[str, str]:
     behind it, as the prompt showed it. "draft" is for impact's uses, which have no label."""
     texts: dict[str, list[str]] = defaultdict(list)
     paper = PaperDetails.model_validate(case["paper"])
-    texts["stored paper"] += [paper_block(paper), case["paper_text"]]
+    texts["stored paper"] += [paper_block(paper), case_text.paper_text(case)]
     if paper.doi:
         texts[paper.doi.lower()] += texts["stored paper"]
-    texts["draft"].append(case.get("draft_text") or "")
+    texts["draft"].append(case_text.draft_text(case) or "")
     docs = ([{"kind": "notice", **case["notice"]}] if case.get("notice") else []) + list(case.get("documents") or [])
     for d in docs:
-        text = " ".join(t for t in (d.get("text"), d.get("title"), d.get("pdf_text")) if t)
+        # a rich PDF's running head, banner and watermark belong to the document it is stored for
+        text = " ".join(t for t in (d.get("text"), d.get("title"), case_text.pdf_text(d)) if t)
         texts[d["doi"].lower()].append(text)
         if d["kind"] in KIND_LABELS:
             texts[KIND_LABELS[d["kind"]]].append(text)
