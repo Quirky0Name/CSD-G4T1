@@ -65,8 +65,7 @@ def prompt(case: dict, ev: dict) -> str:
     lines = [f"{n}. {f}" for n, f in enumerate(statements(case), 1)]
     docs = ([case["notice"]] if case.get("notice") else []) + list(case.get("documents") or [])
     notice = "\n\n".join(
-        f"[{d.get('kind', 'notice')} {d['doi']}]\n" + (d.get("text") or case_text.pdf_text(d) or "(no text)")
-        for d in docs
+        f"[{d.get('kind', 'notice')} {d['doi']}]\n" + document_text(d) for d in docs
     ) or "(no notice)"
     return (
         "CASE MATERIAL\n"
@@ -76,6 +75,15 @@ def prompt(case: dict, ev: dict) -> str:
         "STATEMENTS (return one item per number)\n"
         + "\n".join(lines)
     )
+
+
+def document_text(document: dict) -> str:
+    """A document's text and its stored PDF's text, as the quote check reads them: a watermark
+    or banner on the PDF is part of what the model saw."""
+    text, pdf = document.get("text"), case_text.pdf_text(document)
+    if text and pdf and text != pdf:
+        return f"{text}\n\nStored PDF:\n{pdf}"
+    return text or pdf or "(no text)"
 
 
 def answer(ev: dict) -> str:

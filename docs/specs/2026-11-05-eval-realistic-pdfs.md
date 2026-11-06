@@ -170,8 +170,11 @@ changes the same files as S1.
       sections flow down the left column, then the right; the first table row
       is the header (bold); a figure is an empty grey box above its caption.
       EVALUATION.md "A case" (table's first row is the header).
-    - The judge still shows a document's `text`, or its PDF text when it has
-      none (as before, now including `pdf_doc`). No doc: code shows it.
+    - The judge shows a document's `text` and, when it differs, its stored
+      PDF's text after "Stored PDF:" (a code-review fix: before, it showed
+      only `text` when both existed, so it missed a watermark or banner the
+      quote check counts). EVALUATION.md "A case" (the judge reads the full
+      text).
 
 ### S2: Five cases become realistic, and four missing scenarios get cases
 
