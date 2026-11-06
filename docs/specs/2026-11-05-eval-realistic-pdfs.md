@@ -285,21 +285,34 @@ changes the same files as S1.
     text (`ﬁ`) matches a quote that spells it out (`fi`). No effect on
     ASCII cases.
 - **Acceptance criteria:**
-  - [ ] Throwaway script with a small PDF built by fpdf2 and saved into a
+  - [x] Throwaway script with a small PDF built by fpdf2 and saved into a
         temp `real/` folder: a case with `paper_file` builds through
         `run.build_inputs`, and the stored paper's bytes equal the file's.
-  - [ ] Same script: `extract.py` on a PDF whose text has a word split
+  - [x] Same script: `extract.py` on a PDF whose text has a word split
         `pro-` / `liferation` across lines writes `proliferation` in the
         `.txt`.
-  - [ ] Same script: `score.check_quotes` on a fake run quoting a sentence
+  - [x] Same script: `score.check_quotes` on a fake run quoting a sentence
         of that `.txt` with `fi` where the text has `ﬁ`, as `stored paper`:
         not invented, not misattributed.
-  - [ ] `run.py --dry` builds every case in `evals/cases/` as before.
-  - [ ] `uv run ruff check` passes.
+  - [x] `run.py --dry` builds every case in `evals/cases/` as before.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - EVALUATION.md "Evals", "A case": `paper_file` / `pdf_file`,
     `evals/real/`, `extract.py`, and that the quote check and the judge
     read the committed `.txt`.
+  - Decisions made in implementation (S3):
+    - `extract.py` takes an optional folder (default `evals/real/`), so it
+      can be run on another folder (the acceptance script uses a temp one).
+      EVALUATION.md "A case" (the command).
+    - A hyphen at a line end is joined only when the next line starts with a
+      lowercase letter, so "COVID-" / "19" or a hyphen before a capitalised
+      name stays. Pages are joined with a blank line. No doc: `extract.py`'s
+      docstring and code show it.
+    - The `.txt` is written and read as UTF-8, so it works the same on
+      Windows (cp1252 default) as on macOS. No doc: code shows it.
+    - `case_text.REAL` is the one place the real folder is named;
+      `run.py` reads `_file` bytes through `case_text.real_pdf`. No doc:
+      code shows it.
 
 ### S4: Four cases use real published papers and their real notices
 

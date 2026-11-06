@@ -210,9 +210,11 @@ def make_doc_pdf(doc: dict) -> bytes:
 
 
 def built_pdf(holder: dict, field: str) -> bytes | None:
-    """The PDF a case (or document) gives for `field` (paper, draft or pdf), from its `_text` or
-    `_doc` form; None when it gives neither."""
+    """The PDF a case (or document) gives for `field` (paper, draft or pdf): built from its `_text`
+    or `_doc` form, or a `_file`'s bytes as they are; None when it gives none."""
     kind = case_text.form(holder, field)
+    if kind == "file":
+        return case_text.real_pdf(holder[f"{field}_file"]).read_bytes()
     if kind == "doc":
         return make_doc_pdf(holder[f"{field}_doc"])
     if kind == "text":
@@ -223,8 +225,9 @@ def built_pdf(holder: dict, field: str) -> bytes | None:
 ## fake change notice
 def build_inputs(meta: dict) -> tuple[ReportInputs, bytes | None]:
     """A case lists its documents as `documents`: each has kind (notice, related, new_version or
-    current_version), doi, and optionally title, text, update_to_includes_paper and pdf_text or
-    pdf_doc (a PDF stored for it). A single `notice` is still accepted; none means the alert has no notice."""
+    current_version), doi, and optionally title, text, update_to_includes_paper and pdf_text,
+    pdf_doc or pdf_file (a PDF stored for it). A single `notice` is still accepted; none means
+    the alert has no notice."""
     specs = list(meta.get("documents") or [])
     if meta.get("notice"):
         specs.insert(0, {"kind": "notice", **meta["notice"]})

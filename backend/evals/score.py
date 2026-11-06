@@ -9,6 +9,7 @@ alongside advanced actionable diagnostics for prompt engineering."""
 import json
 import re
 import sys
+import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -81,6 +82,8 @@ def hard_fails(ev: dict, rules: list[str]) -> list[str]:
 
 
 def norm(text: str) -> str:
+    # NFKC first: a real PDF's ligature ("ﬁ") matches a quote that spells it out ("fi")
+    text = unicodedata.normalize("NFKC", text)
     text = text.replace("\u2019", "'").replace("\u201c", '"').replace("\u201d", '"')
     return re.sub(r"\s+", " ", text).strip().lower()
 

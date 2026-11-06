@@ -1,9 +1,16 @@
 """The text of a case's paper, draft and documents, exactly as their built PDFs show it, so the
 quote check (score.py) and the judge (judge.py) read what the model saw.
 
-A case gives each of these as a plain `*_text` field or as a rich `*_doc` field (see
-docs/EVALUATION.md, "A case"); run.py builds the PDF from either. Standard library only: judge.py
+A case gives each of these as a plain `*_text` field, a rich `*_doc` field, or (paper and
+documents) a `*_file`: a real PDF in evals/real/ (see docs/EVALUATION.md, "A case"). run.py builds
+the PDF from the first two and attaches a real one as it is; a real PDF's text is the committed
+<same stem>.txt beside it, made by evals/real/extract.py. Standard library only: judge.py
 imports this and needs neither rich nor research_evaluation."""
+
+from pathlib import Path
+
+# where the real PDFs (`*_file`) and their extracted .txt texts are
+REAL = Path(__file__).parent / "real"
 
 # the labels the rich PDF prints before the abstract and the references
 ABSTRACT, REFERENCES = "Abstract", "References"
@@ -32,20 +39,28 @@ def doc_text(doc: dict) -> str:
 
 def form(holder: dict, field: str) -> str | None:
     """Which form a case (or document) gives `field` in: "text" for `<field>_text`, "doc" for
-    `<field>_doc`, None for neither. A field has one form, never two."""
-    forms = [f for f in ("text", "doc") if holder.get(f"{field}_{f}")]
+    `<field>_doc`, "file" for `<field>_file`, None for none. A field has one form, never two."""
+    forms = [f for f in ("text", "doc", "file") if holder.get(f"{field}_{f}")]
     if len(forms) > 1:
         raise ValueError(f"{field} is given as both " + " and ".join(f"{field}_{f}" for f in forms))
     return forms[0] if forms else None
 
 
+def real_pdf(name: str) -> Path:
+    """A real PDF named by a `*_file` field."""
+    return REAL / name
+
+
 def _text(holder: dict, field: str) -> str | None:
-    """`<field>_text` as it is, or the text of `<field>_doc`; None when the holder has neither."""
+    """`<field>_text` as it is, the text of `<field>_doc`, or the extracted .txt of
+    `<field>_file`; None when the holder has none of them."""
     kind = form(holder, field)
     if kind == "text":
         return holder[f"{field}_text"]
     if kind == "doc":
         return doc_text(holder[f"{field}_doc"])
+    if kind == "file":
+        return real_pdf(holder[f"{field}_file"]).with_suffix(".txt").read_text(encoding="utf-8")
     return None
 
 
@@ -53,7 +68,7 @@ def paper_text(case: dict) -> str:
     """The stored paper's text (every case has one)."""
     text = _text(case, "paper")
     if text is None:
-        raise KeyError("case has no paper_text or paper_doc")
+        raise KeyError("case has no paper_text, paper_doc or paper_file")
     return text
 
 
