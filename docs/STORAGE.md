@@ -220,12 +220,21 @@ twice, so a retraction raised once needs its alert gone first.
 The poll after a clear is a baseline, which never alerts, so: clear the
 history, poll, change the flag, poll.
 
+**Fake papers** (`POST /admin/users/{ownerId}/fake-paper`). Stores the
+example's `paper.pdf` as a new paper of the researcher in their default
+project, so a fake report has the paper its quotes come from and the
+researcher needn't upload anything. No DOI (Updating skips it), no GROBID
+or metadata lookup, and the researcher's draft is untouched. If saving the
+row fails, the file just saved is deleted. Code: `AdminService.createFakePaper`.
+
 **Fake reports** (`POST /admin/papers/{id}/fake-report`). Copies one saved
 example onto the paper without a poll; the application never generates
 anything.
-- The example is `src/main/resources/dev/fake-report/` (`report.json`, two
-  served PDFs, and `paper.pdf` and `draft.pdf` kept as the record of what
-  the prompts read, never served or stored). `.gitattributes` there keeps
+- The example is `src/main/resources/dev/fake-report/` (`report.json` and
+  four PDFs, all served on `/public/fake-report/{file}`: the two document
+  PDFs, `paper.pdf`, which a fake paper stores, and `draft.pdf`, which the
+  frontend shows as the draft the example's claims quote; it is never
+  stored as anyone's draft). `.gitattributes` there keeps
   the PDFs byte for byte. It is read by `FakeReportExample`.
 - It was generated once from eval case 11
   (`backend/evals/cases/11_concern_then_retraction_replacement.json`: paper,

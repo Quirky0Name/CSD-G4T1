@@ -3,6 +3,7 @@ import '@fontsource-variable/nunito'
 import './DevMode.css'
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import {
+  addFakePaper,
   addFakeReport,
   clearPaperHistory,
   editSnapshot,
@@ -24,6 +25,7 @@ import {
 import { useAuth } from '../auth'
 import { BellyDetail, GuyBehind, GuyInFront, HeadSmall } from '../components/dev/Guy'
 import { useBounce } from '../components/dev/useBounce'
+import { isFake } from '../mocks/fakeReport'
 
 type Tab = 'flags' | 'snapshots' | 'alerts' | 'reports'
 type Say = { tone: 'info' | 'ok' | 'error'; text: string }
@@ -48,11 +50,6 @@ function formatTime(iso: string | null): string {
 
 function plural(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? '' : 's'}`
-}
-
-// A fake report's PDFs are served from the public fake-report route, and nothing else's are
-function isFake(report: UserReport): boolean {
-  return report.documents.some((doc) => doc.pdf_source_url?.includes('/public/fake-report/'))
 }
 
 function yesNo(value: boolean | null): string {
@@ -412,6 +409,17 @@ export default function DevMode() {
         : `Fake report added, stuck at ${fakeStatus}. No toast for this one.`
     })
 
+  // the example's paper.pdf as a new paper of the researcher, so a fake report has the paper it quotes
+  const addPaper = () =>
+    run(async () => {
+      const added = await addFakePaper(ownerId)
+      setPapers(await listOwnerPapers(ownerId))
+      setPaperId(added.id)
+      setHistory(EMPTY_HISTORY)
+      setConfirmClear(false)
+      return 'Fake paper added. Now add a fake report on it.'
+    })
+
   const clearHistory = () =>
     run(async () => {
       await clearPaperHistory(paperId)
@@ -501,6 +509,9 @@ export default function DevMode() {
                       ))}
                     </select>
                   </div>
+                  <button type="button" className="dev-button dev-quiet-ink dev-add-paper" disabled={!ownerId || busy} onClick={() => void addPaper()}>
+                    Add fake paper
+                  </button>
                 </div>
 
                 <div className="dev-tabs" role="tablist" aria-label="Paper data">

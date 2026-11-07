@@ -45,6 +45,13 @@ public class AdminController {
         return Map.of("papers", admin.papersOf(ownerId));
     }
 
+    // the example's paper.pdf as a new paper of the researcher, in their default project
+    @PostMapping("/users/{ownerId}/fake-paper")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AdminPaperResponse fakePaper(@PathVariable UUID ownerId) {
+        return admin.createFakePaper(ownerId);
+    }
+
     @GetMapping("/papers/{paperId}/snapshots")
     public Map<String, List<SnapshotResponse>> snapshots(@PathVariable UUID paperId) {
         return Map.of("snapshots", snapshots.history(paperId, null, null, null));

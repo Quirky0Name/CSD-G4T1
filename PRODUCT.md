@@ -22,7 +22,7 @@ Dev mode is on only when `DEV_MODE=true`. With it off, the admin account does no
 
 ## Capabilities and Constraints
 
-Dev mode can: list researcher accounts, read any paper's snapshots, alerts and reports, change `is_retracted`, `in_doaj`, `cited_by_count`, remove Crossref notices by type, clear a paper's history, and add a fake report in one of three states. It cannot edit anything else (docs/specs/2026-11-06-dev-mode.md).
+Dev mode can: list researcher accounts, read any paper's snapshots, alerts and reports, change `is_retracted`, `in_doaj`, `cited_by_count`, remove Crossref notices by type, clear a paper's history, add a fake paper (the example's PDF) to a researcher, and add a fake report in one of three states. It cannot edit anything else (docs/specs/2026-11-06-dev-mode.md).
 
 Edits only surface a change the paper really has: a retraction cannot be raised on a paper that is not retracted.
 

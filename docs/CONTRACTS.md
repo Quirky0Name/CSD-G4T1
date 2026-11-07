@@ -597,6 +597,28 @@ token; `404` `No paper <id>` (paper routes), or dev mode off.
 | `GET /admin/papers/{id}/reports` | the `GET /papers/{id}/reports` body |
 | `DELETE /admin/papers/{id}/history` | `204`. Deletes snapshots, alerts and reports, as `DELETE /dev/papers/{id}/history` does |
 
+### `POST /admin/users/{ownerId}/fake-paper`
+
+No body, no query parameters. Stores the example's `paper.pdf` (below) as a
+new paper of `ownerId` in their **default project** (`project_id` null; the
+admin can't list a researcher's projects, which User Management owns). The
+file is saved as an upload's is, so deleting the paper deletes it. No
+GROBID or metadata lookup runs, and the researcher's draft isn't touched.
+Each call adds another paper.
+
+| Field | Value |
+|---|---|
+| `title` | `Dose-response of iron supplementation on fatigue` (printed on the PDF) |
+| `journal`, `publication_year` | `J. Fake Nutrition`, `2019` |
+| `doi`, `openalex_id`, `issn` | null. The PDF prints a made-up DOI; with none stored, Updating's poll skips the paper |
+
+**`201`:** the paper, in the `GET /admin/users/{ownerId}/papers` entry
+shape, with `latest_snapshot` null. The owner isn't checked against User
+Management, as for the other admin calls on a user's papers.
+
+Errors: `400` an id that isn't a UUID; `401`; `403` a user or service
+token; `404` dev mode off.
+
 ### `POST /admin/papers/{id}/fake-report?status=`
 
 No body. In one transaction, copies the one stored example
@@ -621,8 +643,9 @@ a user or service token; `404` `No paper <id>`, or dev mode off.
 ### `GET /public/fake-report/{file}`
 
 No token, because a link opened in a new tab can't send one. Serves only
-the example's made-up document PDFs, `new-version.pdf` and
-`current-version.pdf`, as `application/pdf`. **`200`** with the file. `404`
+the example's made-up PDFs, `new-version.pdf`, `current-version.pdf`,
+`paper.pdf` and `draft.pdf`, as `application/pdf`; the report page reads
+all four through it for a fake report's highlights. **`200`** with the file. `404`
 for any other name, or dev mode off. A `..` path under this route is turned
 away by Spring's firewall before any controller; a `RequestRejectedHandler`
 scoped to the route gives its `404`.
@@ -630,9 +653,11 @@ scoped to the route gives its `404`.
 ### Example files in `storage/src/main/resources/dev/fake-report/`
 
 `report.json`, `new-version.pdf`, `current-version.pdf`, `paper.pdf` and
-`draft.pdf`. All are made up. `paper.pdf` and `draft.pdf` are kept only as
-the record of what the prompts read, and are never served or stored on a
-paper.
+`draft.pdf`. All are made up. `paper.pdf` is what a fake paper stores;
+`draft.pdf` is the draft the example's claims quote, served but never
+stored as anyone's draft. The claims themselves aren't in `report.json`:
+this branch's Storage doesn't store claims, so the frontend supplies them
+for a fake report (`frontend/csd-frontend-vite/src/mocks/`).
 
 `report.json` (abridged: the real file has two alerts and four documents):
 

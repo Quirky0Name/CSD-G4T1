@@ -75,6 +75,22 @@ the poll fetches the real value, so the edit can only restore a real
 change. `POST /api/admin/papers/<id>/fake-report` puts a finished report
 on a paper without a poll.
 
+## Showing claim highlighting (dev mode)
+
+Use two windows that don't share a session (the session is in
+`localStorage`): a normal and a private window, or `localhost:8088` and
+`127.0.0.1:8088`.
+
+1. Researcher window: register. No paper or draft is needed.
+2. Admin window: sign in as `admin` / `12345679` (opens `/dev`), pick the
+   researcher, click **Add fake paper**, then **Add fake report** at
+   **Assessed**.
+3. Researcher window: within 30 s the "Report ready" toast appears. In
+   **Reports**, the report has **Open report**.
+4. Pick a claim: its sentence in the example draft and its passage in the
+   cited source are highlighted, one pane above the other. `?claim=<id>` keeps the
+   choice across a reload.
+
 ## Rehearsing the Updating half
 
 The seeded-scenario harness in [SETUP.md](SETUP.md) ("Mock harness") runs steps 3

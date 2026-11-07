@@ -1,8 +1,11 @@
 package com.g4t1.storage.admin;
 
 import com.g4t1.storage.alert.NewAlertRequest;
+import com.g4t1.storage.file.LocalFileStore;
+import com.g4t1.storage.paper.Paper;
 import com.g4t1.storage.paper.PaperDeletion;
 import com.g4t1.storage.paper.PaperRepository;
+import com.g4t1.storage.paper.PaperResponse;
 import com.g4t1.storage.paper.PaperService;
 import com.g4t1.storage.report.FakeDocument;
 import com.g4t1.storage.report.ReportService;
@@ -18,7 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
-// What the admin can see of any researcher's papers, clearing a paper's history, and fake reports
+// What the admin can see of any researcher's papers, clearing a paper's history, and fake papers and reports
 @Service
 public class AdminService {
 
@@ -28,15 +31,39 @@ public class AdminService {
     private final PaperDeletion deletion;
     private final ReportService reports;
     private final FakeReportExample example;
+    private final LocalFileStore files;
 
     public AdminService(PaperService paperService, PaperRepository papers, SnapshotService snapshots,
-                        PaperDeletion deletion, ReportService reports, FakeReportExample example) {
+                        PaperDeletion deletion, ReportService reports, FakeReportExample example,
+                        LocalFileStore files) {
         this.paperService = paperService;
         this.papers = papers;
         this.snapshots = snapshots;
         this.deletion = deletion;
         this.reports = reports;
         this.example = example;
+        this.files = files;
+    }
+
+    // The example's paper, as a made-up upload: no GROBID or metadata lookup, and no DOI, so Updating's poll
+    // skips it rather than looking up the made-up one its PDF prints. The researcher's draft is not touched.
+    public AdminPaperResponse createFakePaper(UUID ownerId) {
+        Paper paper = new Paper(ownerId);
+        paper.setTitle(FakeReportExample.PAPER_TITLE);
+        paper.setJournal(FakeReportExample.PAPER_JOURNAL);
+        paper.setPublicationYear(FakeReportExample.PAPER_YEAR);
+        String key = files.save(example.servedPdf("paper.pdf").orElseThrow());
+        paper.setFileKey(key);
+        Paper saved;
+        try {
+            saved = papers.save(paper);
+        } catch (RuntimeException e) {
+            files.delete(key); // no row points at the file, so nothing else would ever delete it
+            throw e;
+        }
+        return new AdminPaperResponse(new PaperResponse(saved.getId(), saved.getProjectId(), saved.getDoi(),
+                saved.getOpenalexId(), saved.getTitle(), saved.getJournal(), saved.getIssn(),
+                saved.getPublicationYear(), saved.hasFile(), saved.getCreatedAt()), ownerId, null);
     }
 
     public List<AdminPaperResponse> papersOf(UUID ownerId) {
