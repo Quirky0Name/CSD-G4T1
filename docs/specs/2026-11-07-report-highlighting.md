@@ -305,9 +305,9 @@ The draft pane always shows the example `draft.pdf`, not the researcher's own dr
 - **Route:** `/reports/:paperId/:reportId`, under `RequireResearcher` and `AppLayout`.
   - The report and the paper come from `useTracking()`, which already loads every report, so there's no new request.
   - While tracking is loading, show the existing `Spinner`.
-  - Once ready, if the report isn't there, show "This report doesn't exist or isn't yours" with a link to `/alerts`.
+  - Once ready, if the report isn't there, show "This report doesn't exist or isn't yours" with a link to `/reports`.
 - **Entry:** in `ReportList`, an `assessed` report with `claims` gets an "Open report" link to the route. "View details" stays.
-- **Layout.** At `lg` and up, claims on the left and two panes on the right. Below `lg`, claims first, then tabs for "Your draft" and "Cited source".
+- **Layout.** At `lg` and up, claims on the left and two panes stacked on the right, so each page is wide enough to read (this replaced side-by-side panes, and the sketch below still shows those). Below `lg`, claims first, then tabs for "Your draft" and "Cited source".
 
   ```text
   ┌──────────────────────────────────────────────────────────────────────────┐
@@ -328,11 +328,13 @@ The draft pane always shows the example `draft.pdf`, not the researcher's own dr
 
 - **Claims list:**
   - Grouped by `kind` in the order change, impact, action, under the headings "What changed", "How it affects your draft" and "What to do". Server order within a group.
-  - Each claim shows its `text` and a badge: "Backed by a quote" when `supported`, "No quote found" otherwise.
-  - Expanding a claim lists its passages. Each is labelled with its source's `label` and page (for example "Your draft, p. 2"). A passage that isn't `verbatim` also says why: "Not found in the source" or "Source had no readable text".
+  - One group shows at a time, under the tabs "Changes", "Impact" and "Recommendation" (this replaced three headed lists shown together, and the sketch below still shows those).
+  - Each claim shows its `text`, and "No quote found" when it isn't `supported`. A supported claim shows no label.
+  - A pane with more than one passage for the claim has a pager in its header. A passage that isn't `verbatim` says why in the pane: "Not found in the source" or "Source had no readable text".
+  - A pane the claim has no passage for isn't shown.
 - **Selecting:**
   - Selecting a claim puts its first `verbatim` `draft` passage in the draft pane, and its first `verbatim` passage with any other target in the cited source pane.
-  - Selecting a passage puts it in its own pane only.
+  - Paging to a passage puts it in its own pane only.
   - A passage that isn't `verbatim`, or has no source, isn't placed. The pane shows the quote in a muted box with the reason.
   - The selected claim is kept in the URL (`?claim=impact-0`), so a reload or a shared link opens the same claim.
 - **Panes:**
@@ -347,7 +349,7 @@ The draft pane always shows the example `draft.pdf`, not the researcher's own dr
 - **Safety:** every model or publisher string is rendered as text: `text`, `quote`, `change_summary`, `evaluation`, `recommendation` and a document's `text`.
 - **Acceptance.** Setup: the Human checks walkthrough, steps 1–3.
   - [ ] The report has an "Open report" link. The page opens, and reloading with `?claim=impact-0` opens the same claim.
-  - [ ] `impact-0` boxes the Discussion sentence on page 2 of the draft and the 0.45 slope on page 3 of the paper, side by side.
+  - [ ] `impact-0` boxes the Discussion sentence on page 2 of the draft and the 0.45 slope on page 3 of the paper, one pane above the other.
   - [ ] `change-1` shows the retraction notice's text with the quote marked. Its second passage opens the new version at page 1 with the quote boxed.
   - [ ] `change-3` opens the current copy at page 3 with the 0.45 slope boxed.
   - [ ] `change-5` shows the expression of concern alert's description with the quote marked.
@@ -375,7 +377,7 @@ Use two windows that don't share a session. The session lives in `localStorage`,
    - Pick the researcher.
    - Click **Add fake paper**; the new paper is selected.
    - Under **Fake report**, choose **assessed** and click **Add fake report**.
-3. **Window A:** within 30 s, the "Report ready" toast appears. Go to **Alerts**, then **Reports**, and click **Open report**.
+3. **Window A:** within 30 s, the "Report ready" toast appears. Go to **Reports** and click **Open report**.
 4. **Window A:** go through S3's acceptance list.
 5. **Window B:** add a second fake report on the same paper. In window A, its notice and alert passages show that report's own rows.
 6. **Window B:** add a fake report at **investigated**. In window A, it has no **Open report** link.

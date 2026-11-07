@@ -7,6 +7,7 @@ import Alerts from './pages/Alerts'
 import Project from './pages/Project'
 import Projects from './pages/Projects'
 import Register from './pages/Register'
+import Reports from './pages/Reports'
 import Signin from './pages/Signin'
 import { AuthProvider, GuestOnly, RequireAdmin, RequireAuth, RequireResearcher, useAuth } from './auth'
 
@@ -21,9 +22,9 @@ function AppLayout() {
   const { session } = useAuth()
   return (
     <TrackingProvider key={session?.user.id}>
-      <div className="min-h-screen flex">
+      <div className="flex min-h-screen flex-col sm:flex-row">
         <Sidebar />
-        <section className="min-h-screen flex-1 bg-grey-950 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section className="min-h-screen w-full min-w-0 flex-1 bg-gray-950">
           <Outlet />
         </section>
       </div>
@@ -46,7 +47,9 @@ function App() {
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<Projects />} />
                   <Route path="/project" element={<Project />} />
+                  <Route path="/project/:projectId" element={<Project />} />
                   <Route path="/alerts" element={<Alerts />} />
+                  <Route path="/reports" element={<Reports />} />
                   <Route
                     path="/reports/:paperId/:reportId"
                     element={

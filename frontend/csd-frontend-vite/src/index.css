@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* The app is always dark, whatever the OS asks for, so dark: styles always apply */
+@custom-variant dark (&:where(:root, :root *));
+
 :root {
   font-family: ui-sans-serif, system-ui, sans-serif;
   color: #e5e7eb;

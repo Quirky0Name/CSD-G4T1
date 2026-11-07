@@ -75,3 +75,10 @@ export function highestNewAlertSeverity(alerts: Alert[]): AlertSeverity | null {
   }
   return highest
 }
+
+export const LEVEL_LABEL: Record<AssessmentLevel, string> = {
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
+  none: 'None',
+}

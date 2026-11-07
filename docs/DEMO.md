@@ -86,9 +86,9 @@ Use two windows that don't share a session (the session is in
    researcher, click **Add fake paper**, then **Add fake report** at
    **Assessed**.
 3. Researcher window: within 30 s the "Report ready" toast appears. In
-   **Alerts**, the report has **Open report**.
+   **Reports**, the report has **Open report**.
 4. Pick a claim: its sentence in the example draft and its passage in the
-   cited source are highlighted side by side. `?claim=<id>` keeps the
+   cited source are highlighted, one pane above the other. `?claim=<id>` keeps the
    choice across a reload.
 
 ## Rehearsing the Updating half

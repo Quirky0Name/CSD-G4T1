@@ -1,11 +1,13 @@
 // One report with its claims, and each claim's passages highlighted: the sentence in the researcher's
 // draft beside the passage in the source it relies on. The report comes from the tracking state, which
 // already loads every report; the selected claim is kept in ?claim= so a reload opens it again.
-import { ArrowLeftIcon, CheckCircleIcon, MinusCircleIcon } from '@heroicons/react/20/solid'
-import { useEffect, useState, type ReactNode } from 'react'
+import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react'
+import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, MinusCircleIcon } from '@heroicons/react/20/solid'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Claim, ClaimKind, Passage, Paper, UserReport } from '../api'
-import { LEVEL_STYLES, REPORT_STATUS_LABEL, REPORT_STATUS_STYLES } from '../format'
+import { LEVEL_LABEL, LEVEL_STYLES, REPORT_STATUS_LABEL, REPORT_STATUS_STYLES } from '../format'
+import { scrollMotion } from '../highlight/motion'
 import { findQuote } from '../highlight/normalise'
 import PdfPane, { type PaneResult } from '../highlight/PdfPane'
 import { sourceFor } from '../highlight/sources'
@@ -13,10 +15,10 @@ import TextPane from '../highlight/TextPane'
 import { useTracking } from '../tracking'
 
 const KIND_ORDER: ClaimKind[] = ['change', 'impact', 'action']
-const KIND_HEADING: Record<ClaimKind, string> = {
-  change: 'What changed',
-  impact: 'How it affects your draft',
-  action: 'What to do',
+const KIND_TAB: Record<ClaimKind, string> = {
+  change: 'Changes',
+  impact: 'Impact',
+  action: 'Recommendation',
 }
 const NOT_PLACED: Record<Exclude<Passage['verified'], 'verbatim'>, string> = {
   not_found: 'Not found in the source',
@@ -51,7 +53,7 @@ export default function ReportView() {
     return (
       <Shell>
         <p className="text-sm/6 text-gray-300">This report doesn't exist or isn't yours.</p>
-        <BackLink to="/alerts" />
+        <BackLink to="/reports" />
       </Shell>
     )
   }
@@ -66,7 +68,7 @@ function BackLink({ to }: { to: string }) {
   return (
     <Link to={to} className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-400 hover:text-indigo-300">
       <ArrowLeftIcon aria-hidden="true" className="size-4" />
-      Alerts
+      Reports
     </Link>
   )
 }
@@ -76,7 +78,9 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
   const [picked, setPicked] = useState<Picked | null>(null)
   // bumped on every selection, so choosing the same passage again scrolls back to it
   const [seq, setSeq] = useState(0)
-  const [tab, setTab] = useState<PaneName>('draft')
+  // null: follow the selected claim
+  const [chosenTab, setTab] = useState<PaneName | null>(null)
+  const passages = useRef<HTMLElement>(null)
   const title = paper.title ?? 'Untitled paper'
 
   useEffect(() => {
@@ -91,77 +95,119 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
     setParams({ claim: claim.id }, { replace: true })
     setPicked(null)
     setSeq((n) => n + 1)
+    setTab(null)
   }
 
-  const pickPassage = (claim: Claim, passage: Passage) => {
-    const pane: PaneName = passage.target === 'draft' ? 'draft' : 'source'
-    if (claim.id !== selected?.id) setParams({ claim: claim.id }, { replace: true })
-    setPicked((current) => ({ ...(current?.claim === claim.id ? current : {}), claim: claim.id, [pane]: passage }))
+  // below lg the panes sit under the claim list, so choosing a claim moves down to its quotes
+  const openClaim = (claim: Claim) => {
+    pickClaim(claim)
+    if (!window.matchMedia('(min-width: 64rem)').matches) {
+      passages.current?.scrollIntoView({ behavior: scrollMotion(), block: 'start' })
+    }
+  }
+
+  const pickPassage = (pane: PaneName, passage: Passage) => {
+    if (!selected) return
+    setPicked((current) => ({ ...(current?.claim === selected.id ? current : {}), claim: selected.id, [pane]: passage }))
     setSeq((n) => n + 1)
-    setTab(pane)
   }
 
   const chosen = picked && picked.claim === selected?.id ? picked : null
-  const draftPassage = chosen?.draft ?? selected?.passages.find((p) => p.target === 'draft' && p.verified === 'verbatim')
-  const sourcePassage = chosen?.source ?? selected?.passages.find((p) => p.target !== 'draft' && p.verified === 'verbatim')
+  const draftPassage = chosen?.draft ?? panePassage(selected, 'draft')
+  const sourcePassage = chosen?.source ?? panePassage(selected, 'source')
+  const both = Boolean(draftPassage && sourcePassage)
+  const tab = chosenTab ?? (draftPassage ? 'draft' : 'source')
+  const showClaims = report.status === 'assessed' && report.claims !== null
 
   return (
-    <main className="px-4 pt-8 pb-6 text-gray-100 sm:px-6 lg:px-8">
-      <BackLink to={`/alerts?paper=${report.paper_id}`} />
-
-      <header className="mt-4">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <h1 className="text-2xl/8 font-bold text-balance text-white">{title}</h1>
-          <Badge className={REPORT_STATUS_STYLES[report.status]}>{REPORT_STATUS_LABEL[report.status]}</Badge>
-          {report.change_severity && (
-            <Badge className={LEVEL_STYLES[report.change_severity]}>{sentence(report.change_severity)} change</Badge>
-          )}
-          {report.impact_level && <Badge className={LEVEL_STYLES[report.impact_level]}>{sentence(report.impact_level)} impact</Badge>}
+    <main
+      className={`flex flex-col px-4 pt-6 pb-4 text-gray-100 sm:px-6 lg:px-6 ${showClaims ? 'lg:h-dvh lg:pt-3 lg:pb-3' : ''}`}
+    >
+      <header className="flex flex-col gap-x-4 gap-y-2 lg:flex-row lg:items-center">
+        <div className="shrink-0">
+          <BackLink to={`/reports?paper=${report.paper_id}`} />
         </div>
-        {report.change_summary && <p className="mt-3 max-w-3xl text-sm/6 text-gray-300">{report.change_summary}</p>}
-        {noImpact && <p className="mt-2 text-sm/6 font-medium text-gray-200">This change doesn't affect your work.</p>}
+        <h1 title={title} className="min-w-0 text-xl/7 font-bold text-balance text-white lg:truncate lg:text-lg/7">
+          {title}
+        </h1>
+        <div className="flex flex-wrap items-center gap-2 lg:shrink-0">
+          {report.status !== 'assessed' && (
+            <Badge className={REPORT_STATUS_STYLES[report.status]}>{REPORT_STATUS_LABEL[report.status]}</Badge>
+          )}
+          {noImpact && <Badge className={LEVEL_STYLES.none}>This change doesn't affect your work</Badge>}
+          {report.change_severity && !noImpact && (
+            <Badge className={LEVEL_STYLES[report.change_severity]}>{LEVEL_LABEL[report.change_severity]} severity</Badge>
+          )}
+          {report.impact_level && (
+            <Badge className={LEVEL_STYLES[report.impact_level]}>{LEVEL_LABEL[report.impact_level]} impact on your draft</Badge>
+          )}
+        </div>
       </header>
+      {!showClaims && report.change_summary && (
+        <div className="mt-2">
+          <Summary text={report.change_summary} />
+        </div>
+      )}
 
       {report.status !== 'assessed' ? (
         <p className="mt-8 text-sm/6 text-gray-400">This report is still being assessed.</p>
       ) : report.claims === null ? (
         <NoClaims report={report} />
       ) : (
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)] lg:items-start">
-          <ClaimList claims={claims} report={report} selected={selected} onClaim={pickClaim} onPassage={pickPassage} />
+        <div className="mt-4 grid gap-6 lg:mt-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)] lg:gap-4">
+          <div className="min-w-0 lg:overflow-y-auto">
+            <ClaimList claims={claims} summary={report.change_summary} selected={selected} onTab={pickClaim} onClaim={openClaim} />
+          </div>
 
-          <section aria-label="Passages" className="min-w-0 lg:sticky lg:top-4">
-            <div role="tablist" aria-label="Pane" className="mb-3 flex gap-2 xl:hidden">
-              {(['draft', 'source'] as const).map((name) => (
-                <button
-                  key={name}
-                  type="button"
-                  role="tab"
-                  aria-selected={tab === name}
-                  onClick={() => setTab(name)}
-                  className="rounded-md px-3 py-1.5 text-gray-300 aria-selected:bg-white/10 aria-selected:text-white hover:text-white"
-                >
-                  <span className="text-sm font-semibold">{name === 'draft' ? 'Your draft' : 'Cited source'}</span>
-                </button>
-              ))}
-            </div>
-            <div className="grid gap-4 xl:grid-cols-2">
-              <PassagePane
-                name="Your draft"
-                hidden={tab !== 'draft'}
-                report={report}
-                passage={draftPassage ?? null}
-                seq={seq}
-                empty={selected ? 'This claim quotes nothing from your draft.' : 'Pick a claim to see its passages.'}
-              />
-              <PassagePane
-                name="Cited source"
-                hidden={tab !== 'source'}
-                report={report}
-                passage={sourcePassage ?? null}
-                seq={seq}
-                empty={selected ? 'This claim quotes no source.' : 'Pick a claim to see its passages.'}
-              />
+          <section ref={passages} aria-label="Quotes" className="flex min-w-0 scroll-mt-16 flex-col lg:min-h-0">
+            {selected && (
+              <p aria-live="polite" title={selected.text} className="mb-3 line-clamp-2 text-sm/6 text-gray-200 lg:sr-only">
+                {selected.text}
+              </p>
+            )}
+            {both && (
+              <div role="group" aria-label="Document to show" className="mb-3 flex gap-2 lg:hidden">
+                {(['draft', 'source'] as const).map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    aria-pressed={tab === name}
+                    onClick={() => setTab(name)}
+                    className="rounded-md px-3 py-1.5 text-gray-300 hover:text-white aria-pressed:bg-white/10 aria-pressed:text-white focus-visible:outline-2 focus-visible:outline-indigo-500"
+                  >
+                    <span className="text-sm font-semibold">{name === 'draft' ? 'Your draft' : 'Cited source'}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:gap-3">
+              {draftPassage && (
+                <PassagePane
+                  name="Your draft"
+                  hidden={both && tab !== 'draft'}
+                  report={report}
+                  passage={draftPassage}
+                  options={paneOptions(selected, 'draft')}
+                  onPick={(passage) => pickPassage('draft', passage)}
+                  seq={seq}
+                />
+              )}
+              {sourcePassage && (
+                <PassagePane
+                  name="Cited source"
+                  hidden={both && tab !== 'source'}
+                  report={report}
+                  passage={sourcePassage}
+                  options={paneOptions(selected, 'source')}
+                  onPick={(passage) => pickPassage('source', passage)}
+                  seq={seq}
+                />
+              )}
+              {selected && !draftPassage && !sourcePassage && (
+                <div className="rounded-md bg-gray-900 outline -outline-offset-1 outline-white/10">
+                  <Muted>No quote to show for this point.</Muted>
+                </div>
+              )}
             </div>
           </section>
         </div>
@@ -170,9 +216,57 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
   )
 }
 
+function Summary({ text }: { text: string }) {
+  const [open, setOpen] = useState(false)
+  // roughly what two clamped lines hold, so a short summary gets no toggle
+  const long = text.length > 180
+  return (
+    <div className="max-w-[75ch] text-sm/6 text-gray-300">
+      <p className={long && !open ? 'line-clamp-2' : ''}>{text}</p>
+      {long && (
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen(!open)}
+          className="rounded text-indigo-400 hover:text-indigo-300 focus-visible:outline-2 focus-visible:outline-indigo-500"
+        >
+          <span className="text-sm/6 font-semibold">{open ? 'Show less' : 'Read more'}</span>
+        </button>
+      )}
+    </div>
+  )
+}
+
 // The researcher's question is how their draft is affected, so open on that when nothing is picked
 function defaultClaim(claims: Claim[]): Claim | undefined {
-  return claims.find((c) => c.kind === 'impact' && c.supported) ?? claims.find((c) => c.supported) ?? claims[0]
+  return claims.find((c) => c.kind === 'impact' && c.supported) ?? firstClaim(claims)
+}
+
+function firstClaim(claims: Claim[]): Claim | undefined {
+  return claims.find((c) => c.supported) ?? claims[0]
+}
+
+// A pane's passage for a claim: the first verbatim one, or else the first that failed, so the pane
+// can say why there's no highlight instead of implying the claim quoted nothing
+function panePassage(claim: Claim | undefined, pane: PaneName): Passage | undefined {
+  const mine = paneOptions(claim, pane)
+  return mine.find((p) => p.verified === 'verbatim') ?? mine[0]
+}
+
+function paneOptions(claim: Claim | undefined, pane: PaneName): Passage[] {
+  return claim?.passages.filter((p) => (p.target === 'draft') === (pane === 'draft')) ?? []
+}
+
+// by value: tracking reloads every 30 s, so a picked passage outlives the objects it was picked from
+function samePassage(a: Passage, b: Passage | undefined): boolean {
+  return (
+    b !== undefined &&
+    a.target === b.target &&
+    a.document_id === b.document_id &&
+    a.alert_id === b.alert_id &&
+    a.quote === b.quote &&
+    a.page === b.page
+  )
 }
 
 function Badge({ className, children }: { className: string; children: ReactNode }) {
@@ -181,13 +275,9 @@ function Badge({ className, children }: { className: string; children: ReactNode
   )
 }
 
-function sentence(word: string): string {
-  return word[0].toUpperCase() + word.slice(1)
-}
-
 function NoClaims({ report }: { report: UserReport }) {
   return (
-    <div className="mt-8 max-w-3xl space-y-4 text-sm/6">
+    <div className="mt-8 max-w-[75ch] space-y-4 text-sm/6">
       <p className="text-gray-400">There are no highlighted passages for this report.</p>
       {report.evaluation && (
         <div>
@@ -205,112 +295,86 @@ function NoClaims({ report }: { report: UserReport }) {
   )
 }
 
+// One group at a time, with the change summary heading Changes: the tabs follow the selected claim, so the URL stays the only record of what's open
 function ClaimList({
   claims,
-  report,
+  summary,
   selected,
+  onTab,
   onClaim,
-  onPassage,
 }: {
   claims: Claim[]
-  report: UserReport
+  summary: string | null
   selected: Claim | undefined
+  onTab: (claim: Claim) => void
   onClaim: (claim: Claim) => void
-  onPassage: (claim: Claim, passage: Passage) => void
 }) {
-  if (claims.length === 0) return <p className="text-sm/6 text-gray-400">No claims in this report.</p>
+  const lead = summary && <Summary text={summary} />
+  if (claims.length === 0) {
+    return lead ?? <p className="text-sm/6 text-gray-400">Nothing to show in this report.</p>
+  }
+  const kinds = KIND_ORDER.filter((kind) => claims.some((c) => c.kind === kind))
+  const groupOf = (kind: ClaimKind) => claims.filter((c) => c.kind === kind)
+  const selectTab = (index: number) => {
+    const claim = firstClaim(groupOf(kinds[index]))
+    if (claim) onTab(claim)
+  }
+
   return (
-    <nav aria-label="Claims" className="space-y-6">
-      {KIND_ORDER.map((kind) => {
-        const group = claims.filter((c) => c.kind === kind)
-        if (group.length === 0) return null
-        return (
-          <section key={kind}>
-            <h2 className="text-sm/6 font-semibold text-white">{KIND_HEADING[kind]}</h2>
-            <ul role="list" className="mt-2 space-y-2">
-              {group.map((claim) => (
+    <TabGroup selectedIndex={selected ? kinds.indexOf(selected.kind) : 0} onChange={selectTab}>
+      <TabList className="flex gap-1 rounded-lg bg-white/5 p-1">
+        {kinds.map((kind) => (
+          <Tab
+            key={kind}
+            className="flex-auto rounded-md px-2 py-1.5 whitespace-nowrap text-gray-400 hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-500 data-selected:bg-white/10 data-selected:text-white"
+          >
+            <span className="text-sm/5 font-semibold">{KIND_TAB[kind]}</span>{' '}
+            <span className="text-xs/5 tabular-nums opacity-70">{groupOf(kind).length}</span>
+          </Tab>
+        ))}
+      </TabList>
+      <TabPanels className="mt-3">
+        {kinds.map((kind) => (
+          <TabPanel key={kind} className="focus-visible:outline-none">
+            {kind === (kinds.includes('change') ? 'change' : kinds[0]) && lead && <div className="mb-3 px-3">{lead}</div>}
+            <ul role="list" className="space-y-1">
+              {groupOf(kind).map((claim) => (
                 <ClaimItem
                   key={claim.id}
                   claim={claim}
-                  report={report}
                   active={claim.id === selected?.id}
                   onClaim={() => onClaim(claim)}
-                  onPassage={(passage) => onPassage(claim, passage)}
                 />
               ))}
             </ul>
-          </section>
-        )
-      })}
-    </nav>
+          </TabPanel>
+        ))}
+      </TabPanels>
+    </TabGroup>
   )
 }
 
-function ClaimItem({
-  claim,
-  report,
-  active,
-  onClaim,
-  onPassage,
-}: {
-  claim: Claim
-  report: UserReport
-  active: boolean
-  onClaim: () => void
-  onPassage: (passage: Passage) => void
-}) {
+function ClaimItem({ claim, active, onClaim }: { claim: Claim; active: boolean; onClaim: () => void }) {
   return (
-    <li
-      className={`rounded-md outline -outline-offset-1 ${
-        active ? 'bg-white/10 outline-indigo-400/60' : 'bg-gray-800/50 outline-white/10 hover:bg-gray-800'
-      }`}
-    >
+    <li>
       <button
         type="button"
         aria-pressed={active}
         onClick={onClaim}
-        className="w-full rounded-md px-3 py-2.5 text-left focus-visible:outline-2 focus-visible:outline-indigo-500"
+        className={`w-full rounded-md px-3 py-2.5 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-500 ${
+          active ? 'bg-white/10 outline -outline-offset-1 outline-indigo-400/60' : 'hover:bg-white/5'
+        }`}
       >
-        <span className="block text-sm/6 text-gray-100">{claim.text}</span>
-        <span
-          className={`mt-1 inline-flex items-center gap-1 text-xs font-medium ${claim.supported ? 'text-emerald-400' : 'text-gray-400'}`}
-        >
-          {claim.supported ? (
-            <CheckCircleIcon aria-hidden="true" className="size-3.5" />
-          ) : (
+        <span className={`block text-sm/6 ${active ? 'text-white' : 'text-gray-300'}`}>{claim.text}</span>
+        {!claim.supported && (
+          <span className="mt-1 flex items-center gap-1 text-xs/5 font-medium text-yellow-500">
             <MinusCircleIcon aria-hidden="true" className="size-3.5" />
-          )}
-          {claim.supported ? 'Backed by a quote' : 'No quote found'}
-        </span>
+            No quote found
+          </span>
+        )}
       </button>
-
-      {active && claim.passages.length > 0 && (
-        <ul role="list" className="space-y-1 border-t border-white/10 px-2 py-2">
-          {claim.passages.map((passage, index) => (
-            <li key={index}>
-              <button
-                type="button"
-                onClick={() => onPassage(passage)}
-                className="flex w-full flex-col rounded px-2 py-1.5 text-left hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-indigo-500"
-              >
-                {/* sizes sit on the spans: index.css gives buttons font: inherit, which outranks utilities */}
-                <span className="text-xs/5 font-semibold text-indigo-300">{passageLabel(report, passage)}</span>
-                {passage.verified !== 'verbatim' && (
-                  <span className="text-xs/5 text-gray-400">{NOT_PLACED[passage.verified]}</span>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
     </li>
   )
-}
-
-function passageLabel(report: UserReport, passage: Passage): string {
-  const source = sourceFor(report, passage)
-  const where = passage.target === 'draft' && source.kind === 'pdf' ? 'Your draft' : source.label
-  return passage.page !== null ? `${where}, p. ${passage.page}` : where
 }
 
 function PassagePane({
@@ -318,37 +382,59 @@ function PassagePane({
   hidden,
   report,
   passage,
+  options,
+  onPick,
   seq,
-  empty,
 }: {
   name: string
   hidden: boolean
   report: UserReport
-  passage: Passage | null
+  passage: Passage
+  // every quote this claim has in this pane: more than one gets a pager in the header
+  options: Passage[]
+  onPick: (passage: Passage) => void
   seq: number
-  empty: string
 }) {
-  const source = passage ? sourceFor(report, passage) : null
-  const placed = passage && source && passage.verified === 'verbatim' && source.kind !== 'none'
+  const source = sourceFor(report, passage)
+  const placed = passage.verified === 'verbatim' && source.kind !== 'none'
   const page = placed && source.kind === 'pdf' ? passage.page : null
   const isDraft = name === 'Your draft'
-  const heading = isDraft || !source || source.kind === 'none' ? name : source.label
+  const heading = isDraft || source.kind === 'none' ? name : source.label
+  const position = Math.max(
+    options.findIndex((option) => samePassage(option, passage)),
+    0,
+  )
+  const step = (by: number) => onPick(options[(position + by + options.length) % options.length])
 
   return (
     <div
-      className={`${hidden ? 'hidden xl:flex' : 'flex'} h-[70dvh] min-h-[26rem] flex-col overflow-hidden rounded-md bg-gray-900 outline -outline-offset-1 outline-white/10 lg:h-[calc(100dvh-9rem)]`}
+      className={`${hidden ? 'hidden lg:flex' : 'flex'} h-[70dvh] min-h-[26rem] flex-col overflow-hidden rounded-md bg-gray-900 outline -outline-offset-1 outline-white/10 lg:h-auto lg:min-h-40 lg:flex-1 lg:basis-0`}
     >
-      <div className="flex items-baseline justify-between gap-3 border-b border-white/10 px-4 py-2.5">
-        <h2 className="truncate text-sm/6 font-semibold text-white">
+      <div className="flex min-h-9 items-center justify-between gap-3 border-b border-white/10 px-4 py-0.5">
+        <h2 title={heading} className="min-w-0 truncate text-sm/6 font-semibold text-white">
           {heading}
-          {isDraft && source?.kind === 'pdf' && <span className="font-normal text-gray-400"> (example)</span>}
+          {isDraft && source.kind === 'pdf' && <span className="font-normal text-gray-400"> (example)</span>}
         </h2>
-        {page !== null && <span className="shrink-0 text-xs text-gray-400 tabular-nums">p. {page}</span>}
+        <div className="flex shrink-0 items-center gap-3 text-xs text-gray-400 tabular-nums">
+          {page !== null && <span>p. {page}</span>}
+          {options.length > 1 && (
+            <div role="group" aria-label={`Quotes in ${name}`} className="flex items-center gap-1">
+              <PagerButton label="Previous quote" onClick={() => step(-1)}>
+                <ChevronLeftIcon aria-hidden="true" className="size-4" />
+              </PagerButton>
+              <span aria-live="polite">
+                {position + 1} of {options.length}
+              </span>
+              <PagerButton label="Next quote" onClick={() => step(1)}>
+                <ChevronRightIcon aria-hidden="true" className="size-4" />
+              </PagerButton>
+            </div>
+          )}
+        </div>
       </div>
       <div className="min-h-0 flex-1">
-        {!passage || !source ? (
-          <Muted>{empty}</Muted>
-        ) : !placed ? (
+        {placed && <p className="sr-only">Highlighted passage: {passage.quote}</p>}
+        {!placed ? (
           <Muted quote={passage.quote}>
             {passage.verified !== 'verbatim'
               ? NOT_PLACED[passage.verified]
@@ -367,6 +453,19 @@ function PassagePane({
         )}
       </div>
     </div>
+  )
+}
+
+function PagerButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className="flex size-7 items-center justify-center rounded text-gray-300 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-500"
+    >
+      {children}
+    </button>
   )
 }
 
@@ -413,7 +512,7 @@ function Muted({ children, quote }: { children: ReactNode; quote?: string }) {
     <div className="p-4">
       {children && <p className="text-sm/6 text-gray-400">{children}</p>}
       {quote && (
-        <blockquote className="mt-3 rounded-md bg-white/5 px-3 py-2 text-sm/6 text-gray-300 italic">“{quote}”</blockquote>
+        <blockquote className="mt-3 rounded-md bg-white/5 px-3 py-2 text-sm/6 text-gray-300">“{quote}”</blockquote>
       )}
     </div>
   )

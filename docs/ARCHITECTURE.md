@@ -98,7 +98,7 @@ One poll, end to end:
    researcher (see below).
 
 The **report-ready notification** is a toast (`Report ready on "<paper
-title>"`, with a `View` button to `/alerts?paper=<paper id>`), shown once
+title>"`, with a `View` button to `/reports?paper=<paper id>`), shown once
 per assessed report of the signed-in researcher's own papers. It has no
 history, badge, unread count or read state. The ids already notified are
 kept in memory per tab (`seenAssessedReportIds` in `tracking.tsx`); the

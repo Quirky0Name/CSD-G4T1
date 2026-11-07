@@ -181,8 +181,11 @@ const authApi = axios.create({ baseURL: '/auth' })
 // User Management's admin routes, which do take a token
 const adminAuth = axios.create({ baseURL: '/auth/admin' })
 
-// every call to Storage and Updating carries the signed-in user's token
-for (const client of [storage, updating, adminAuth]) {
+// User Management's projects
+const projectsApi = axios.create({ baseURL: '/projects' })
+
+// every call to Storage, Updating and the projects carries the signed-in user's token
+for (const client of [storage, updating, adminAuth, projectsApi]) {
   client.interceptors.request.use((config) => {
     const token = getToken()
     if (token) config.headers.Authorization = `Bearer ${token}`
@@ -209,15 +212,44 @@ export async function listPapers(): Promise<Paper[]> {
   return res.data.papers
 }
 
-export async function uploadPaperPdf(file: File): Promise<Paper> {
+// A project from User Management (docs/CONTRACTS.md, POST /projects). The default project isn't one of
+// these: it has no row, can't be renamed or deleted, and papers show it as project_id null.
+export type Project = {
+  id: string
+  name: string
+  created_at: string
+}
+
+export async function listProjects(): Promise<Project[]> {
+  const res = await projectsApi.get<{ projects: Project[] }>('')
+  return res.data.projects
+}
+
+export async function createProject(name: string): Promise<Project> {
+  const res = await projectsApi.post<Project>('', { name })
+  return res.data
+}
+
+export async function renameProject(id: string, name: string): Promise<Project> {
+  const res = await projectsApi.put<Project>(`/${id}`, { name })
+  return res.data
+}
+
+// also deletes the project's papers, with their alerts and reports, and its draft
+export async function deleteProject(id: string): Promise<void> {
+  await projectsApi.delete(`/${id}`)
+}
+
+export async function uploadPaperPdf(file: File, projectId?: string): Promise<Paper> {
   const body = new FormData()
   body.append('file', file)
+  if (projectId) body.append('project_id', projectId)
   const res = await storage.post<Paper>('/papers', body)
   return res.data
 }
 
-export async function trackPaperByDoi(doi: string): Promise<Paper> {
-  const res = await storage.post<Paper>('/papers', { doi })
+export async function trackPaperByDoi(doi: string, projectId?: string): Promise<Paper> {
+  const res = await storage.post<Paper>('/papers', projectId ? { doi, project_id: projectId } : { doi })
   return res.data
 }
 
@@ -243,9 +275,9 @@ export async function runPoll(paperId?: string): Promise<PollSummary> {
   return res.data
 }
 
-export async function getDraft(): Promise<Draft | null> {
+export async function getDraft(projectId?: string): Promise<Draft | null> {
   try {
-    const res = await storage.get<Draft>('/draft')
+    const res = await storage.get<Draft>('/draft', { params: projectId ? { project_id: projectId } : undefined })
     return res.data
   } catch (err) {
     if (axios.isAxiosError(err) && err.response?.status === 404) return null
@@ -253,15 +285,16 @@ export async function getDraft(): Promise<Draft | null> {
   }
 }
 
-export async function uploadDraft(file: File): Promise<Draft> {
+export async function uploadDraft(file: File, projectId?: string): Promise<Draft> {
   const body = new FormData()
   body.append('file', file)
+  if (projectId) body.append('project_id', projectId)
   const res = await storage.post<Draft>('/draft', body)
   return res.data
 }
 
-export async function deleteDraft(): Promise<void> {
-  await storage.delete('/draft')
+export async function deleteDraft(projectId?: string): Promise<void> {
+  await storage.delete('/draft', { params: projectId ? { project_id: projectId } : undefined })
 }
 
 // Spring's ProblemDetail and FastAPI's HTTPException both put the reason in

@@ -5,6 +5,7 @@ import { getDocument, GlobalWorkerOptions, TextLayer, type PDFDocumentProxy, typ
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { locate } from './locate'
+import { scrollMotion } from './motion'
 import { pageText, type ItemSlice, type PageText, type TextPiece } from './pageText'
 import './pdf.css'
 
@@ -111,14 +112,19 @@ export default function PdfPane({
     if (!box || !scrollKey || scrolled.current === scrollKey) return
     scrolled.current = scrollKey
     const top = mark.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop
-    box.scrollTo({ top: Math.max(0, top - box.clientHeight / 3), behavior: 'smooth' })
+    box.scrollTo({ top: Math.max(0, top - box.clientHeight / 3), behavior: scrollMotion() })
   }
 
   const slices = located && located.key === key ? located.slices : null
   const firstPage = highlight && slices?.size ? highlight.page : null
 
   return (
-    <div ref={scroller} className="pdf-pane h-full overflow-y-auto overscroll-contain bg-gray-950/60 px-3 py-3 sm:px-4">
+    <div
+      ref={scroller}
+      tabIndex={0}
+      aria-label="PDF pages"
+      className="pdf-pane relative h-full overflow-y-auto overscroll-contain bg-gray-950/60 px-3 py-3 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-500 sm:px-4"
+    >
       {!loaded || loaded.url !== url ? (
         <PaneNote>Loading the PDF…</PaneNote>
       ) : 'failed' in loaded ? (
@@ -146,7 +152,7 @@ export default function PdfPane({
 }
 
 function scrollToPage(box: HTMLElement | null, page: HTMLElement | undefined) {
-  if (page && box) box.scrollTo({ top: page.offsetTop - 12, behavior: 'smooth' })
+  if (page && box) box.scrollTo({ top: page.offsetTop - 12, behavior: scrollMotion() })
 }
 
 function PaneNote({ children }: { children: ReactNode }) {
