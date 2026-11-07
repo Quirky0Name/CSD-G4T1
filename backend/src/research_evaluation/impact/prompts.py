@@ -18,7 +18,7 @@ from research_evaluation.impact.llm import Part, Pdf
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 5
+PROMPT_VERSION = 6
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -45,7 +45,18 @@ Rules:
 - Back what you state: each step's claims list its factual statements,
   each with the quotes from the given material that show it. Quote only
   the material itself (notices, PDFs, alert lines, the draft), never an
-  earlier step's own wording.
+  earlier step's own wording or a field name this prompt adds (such as
+  update_to_includes_paper).
+- A claim states one fact, and each of its quotes must show that whole fact
+  to someone who reads only the claim and the quote. A reason, a consequence
+  or a second fact is another claim: "retracted because the data were
+  fabricated" needs the sentence that gives the reason, not only "has been
+  retracted".
+- A quote that is only on the same topic backs nothing, so never add one to
+  fill passages. When nothing can show a fact (for example, that a notice
+  or a banner is absent), leave its passages empty.
+- Check before you answer: read your free text sentence by sentence. A
+  factual statement with no claim gets one, or comes out of the text.
 - Write for a researcher who knows their field but not publishing
   metadata: plain words, and no DOIs in prose unless needed to tell two
   documents apart."""
@@ -75,7 +86,9 @@ For each alert:
    - "no" when the notice's DOI is the paper's own DOI and nothing else
      shows a change, or when the notice's Crossref title shows it is about
      another article (for example "RETRACTED: <a different title>"). Its
-     update-to may still list this paper; the title decides.
+     update-to may still list this paper; the title decides. A notice with
+     the paper's own DOI has no text of its own to fetch, so missing notice
+     text doesn't make it "unclear".
    - A retraction alert with no notice comes from OpenAlex's flag alone,
      which is weak evidence: "unclear", unless the current copy shows a
      retraction watermark or banner.
@@ -101,7 +114,9 @@ For each alert:
      changes results, numbers, figures or conclusions; a retraction and
      replacement where a corrected version exists; a retraction for
      duplicate publication or authorship reasons (the findings may still
-     stand in the original copy: say so).
+     stand in the original copy: say so); a retraction flag with no notice,
+     watermark or banner, since it is unconfirmed but may be a real
+     retraction.
    - low: something a careful reader should know, but the main findings
      stand: a correction to a secondary number, figure or method detail; a
      clarification; a new version with minor changes; a journal-level
@@ -129,7 +144,9 @@ Then, for the report as a whole:
   about this paper.
 - summary: a summary of the changes in two to four sentences, which a
   researcher can read on its own: what happened to the paper, which parts
-  it touches, and why it is or isn't serious.
+  it touches, and why it is or isn't serious. Give the facts, not a level
+  ("severity is medium"), and no advice on what anyone should do or check:
+  the actions step gives that.
 - claims: one claim per factual statement in your summary. text: the
   statement; passages: the quotes that back it, each with its source: a
   notice's DOI, "stored paper" (the STORED PAPER or the TRACKED PAPER's
@@ -161,11 +178,14 @@ uses, and how much the researcher is affected overall.
      - methods_or_data: the draft uses the paper's method, protocol,
        dataset, reagent, code or parameter values;
      - key_evidence: a claim the draft argues for, or its interpretation of
-       its own results, rests mainly on the paper's findings;
+       its own results, rests mainly on the paper's findings. This includes
+       a sentence in any section, the Introduction too, that draws an
+       expectation, hypothesis or rationale from a specific finding of the
+       paper ("found a large effect, so we expect...");
      - supporting: the paper is one of several sources for a claim;
      - comparison: the draft compares its own results with the paper's;
      - background: context or motivation; the argument doesn't depend on
-       it;
+       it. Go by what the sentence does, not by the section it is in;
      - critical: the draft disputes or criticises the paper, or discusses it
        as an example (for example of a controversy or of retracted work);
    - claim_relied_on: in your own words, what the researcher uses the paper
@@ -190,14 +210,18 @@ uses, and how much the researcher is affected overall.
    none when no use is affected or the draft doesn't cite the paper.
 5. explanation: two to five sentences for the researcher: how their draft
    uses the paper, which of those uses the change touches and why, and how
-   much it matters, naming the sections.
+   much it matters, naming the sections. Say how much it matters in plain
+   words, without working through the table ("supporting and medium, so
+   low"), and give no advice: the actions step gives that.
 6. claims: one claim per factual statement in your explanation. text: the
    statement; passages: the quotes that back it, each with its source:
    "draft" for the researcher's draft, "stored paper" for the attached
    STORED PAPER, or a quote CHANGE's claims give, copied with its source.
-   For each use, write a claim about it that quotes the draft's citing
-   sentence (source "draft") and, when the STORED PAPER is attached, the
-   passage of it that sentence relies on (source "stored paper").
+   For each use, write one claim on how the draft uses the paper, quoting
+   the draft's citing sentence (source "draft"), and, when the STORED PAPER
+   is attached, a separate claim on what the paper reports, quoting the
+   passage of it that sentence relies on (source "stored paper"). When you
+   copy from CHANGE's claims, copy only a quote that shows your claim's fact.
 
 If there is NO DRAFT: leave the uses empty and cited false, judge the
 impact for a typical researcher who cites the paper as key_evidence, and
@@ -230,11 +254,15 @@ pick from what fits:
 If there is no draft, add an action to upload the draft for this project,
 so the next change can be judged against it.
 
-recommendation: one or two sentences with the gist of the actions.
+recommendation: one or two sentences with the gist of the actions, naming
+the fact each one rests on.
 
-claims: one claim per factual statement in your recommendation. text: the
-statement; passages: the quotes that the CHANGE and IMPACT claims it rests
-on give, copied with their sources (an action to upload the draft too)."""
+claims: one claim per factual statement in your recommendation, including
+the facts its advice rests on. text: the statement; passages: the quotes
+from the CHANGE and IMPACT claims that show that statement, copied with
+their sources; leave out the ones that don't. Copy only those claims'
+passages, never IMPACT's explanation or a use's reason. The advice to upload
+a draft is not a factual statement and needs no claim."""
 
 NO_DRAFT = "NO DRAFT: the researcher hasn't uploaded their paper for this project."
 

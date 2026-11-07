@@ -316,8 +316,8 @@ Per report:
    own). A citation jump has no document: its alert line carries the rule's
    description (the counts), and step 1's task says to judge it as new
    attention, scope `citations_only`, severity `low`, so the gate lets it
-   through to steps 2 and 3. `PROMPT_VERSION` is 5 since claims and step 2's
-   stored paper were added.
+   through to steps 2 and 3. `PROMPT_VERSION` is 6 since each claim states one fact that each of its
+   quotes shows on its own (5 added claims and step 2's stored paper).
 4. `PUT /internal/reports/{id}/evaluation`, once; the report becomes
    `assessed`. Nothing is written between steps, so an `assessed` report is
    always complete.
@@ -344,8 +344,9 @@ nothing to quote has none.
   a notice's DOI, `new version`, `current copy`, `draft` or `alert <id>`.
   Quotes must be contiguous: no `...`.
 - The draft stands in for the research topic (no topic or question field
-  exists). With the stored paper attached, step 2 writes an `impact` claim per
-  use, quoting the draft's sentence and the tracked paper's passage behind it.
+  exists). With the stored paper attached, step 2 writes two `impact` claims per
+  use: one quoting the draft's sentence, one quoting the tracked paper's passage
+  behind it.
 - A citation jump's and a flag-only retraction's `change` claims quote the
   alert's line as `alert <id>`. `action` claims quote what the `change` and
   `impact` claims they rest on quote, including "upload your draft".
@@ -509,7 +510,7 @@ folder. On a failed step it stops and prints the command to continue: for
 `run.py`, `--folder <folder> --resume` (`--skip-run` would leave the
 remaining runs unmade); for `judge.py`, `--folder <folder> --skip-run`.
 With `claude-api` its "Do you want to execute" prompt says the run is
-billed to the key. `evals/results/` is gitignored.
+billed to the key. `evals/results/` is tracked in git.
 
 **Claude providers** (`evals/claude_llm.py`, dev only; no service imports it):
 
@@ -667,7 +668,9 @@ ones.
   `check_quotes` also covers each step's raw `claims[].passages` in
   `assessment`, against the source the model named. `source_label` knows
   `draft`, and `quote_sources` includes each document's Crossref record and
-  links, as the service does (`quotes.leaves`).
+  links, as the service does (`quotes.leaves`). It also includes a notice's
+  `update_to_includes_paper` line, which the prompt shows; the service doesn't
+  search that line, and step prompts tell the model not to quote it.
 
   A sentence that really is in two texts (a notice repeating the paper's
   title) passes under either label.
@@ -675,14 +678,23 @@ ones.
   grading of them (`check_passages(ev, grade=None)`):
   - **unlinked claim**: a claim with no passage. An `impact` claim on a run
     whose `assessment.draft` isn't `read` is exempt: a general judgment has
-    nothing to quote. `unlinked_claim` counts the evaluation's `claims`.
+    nothing to quote. So is a claim the judge lists in `absences`: it states
+    only that something is missing from the material (a notice, its text, a
+    banner), and nothing can be quoted for that. `unlinked_claim` counts the
+    evaluation's `claims`.
   - **unbacked passage**: the judge says the passage doesn't back its claim.
   - **uncovered statement**: the judge finds a factual statement in
     `change_summary`, `evaluation` or `recommendation` that no claim covers.
-    Code can't prove coverage, so it is measured this way.
+    Code can't prove coverage, so it is measured this way. A factual statement
+    is one the sources could show true or false: the judge doesn't list advice,
+    which no quote can prove.
+
+  The claims grading shows the judge each passage's source (its stored
+  `target`), so it can tell a quote of the draft from a quote of the paper.
 
   The judge reports, the code decides: a passage the judge skipped counts as
-  unbacked, and a `covered_by` number that isn't a claim covers nothing. Every
+  unbacked, a `covered_by` number that isn't a claim covers nothing, and an
+  `absences` number counts only for a claim that has no passage. Every
   passage is judged, including ones not found verbatim; an invented quote also
   counts as `invented_quote`. A run without `claims` (saved before
   `PROMPT_VERSION` 5) skips all three; a run with `claims` the judge hasn't
