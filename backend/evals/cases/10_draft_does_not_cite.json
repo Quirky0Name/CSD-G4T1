@@ -20,7 +20,7 @@
         "says no action is needed for the draft or the alert can be dismissed"
       ],
       "must_not_include": [
-        "invents a citation of the retracted paper in the draft",
+        "says the draft cites the retracted paper",
         "recommends removing a reference from the draft"
       ]
     },

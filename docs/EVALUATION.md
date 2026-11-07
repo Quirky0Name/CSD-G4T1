@@ -442,9 +442,10 @@ Research Evaluation sends no notification. The frontend notices assessed reports
 
 ## Evals
 
-`backend/evals/` measures how well impact (the three Gemini steps) answers,
+`backend/evals/` measures how well impact (the three steps) answers,
 so a prompt or model change can be compared against a score instead of a
-guess. It's a dev tool: no service imports it, it isn't in the Docker
+guess. Production runs them on Gemini; the evals can also run them on
+Claude (`--provider`, below), which measures Claude, not production. It's a dev tool: no service imports it, it isn't in the Docker
 images, and pytest doesn't run it. It calls the real `assess.assess` on
 hand-written cases, with a fake Storage Management that only serves the
 draft, and scores the saved answers afterwards, so re-scoring costs no
@@ -461,29 +462,120 @@ uv run --with fpdf2 --with rich python evals/all.py                  # asks, the
 uv run --with fpdf2 --with rich python evals/all.py 01_correction_effect_size --runs 1
 uv run --with fpdf2 --with rich python evals/all.py --skip-run       # re-judge and re-score the newest results, no generation
 uv run --with fpdf2 --with rich python evals/all.py --folder evals/results/<stamp> --skip-run
+uv run --with fpdf2 --with rich python evals/all.py --provider claude-code                       # Claude Code on your subscription: Sonnet tested, Haiku judging
+uv run --with fpdf2 --with rich python evals/all.py --provider claude-code --folder evals/results/<stamp> --resume   # continue a run stopped at the usage limit
 ```
+
+To run them you need `uv` (SETUP.md; on Windows `py -m uv`), and for
+`claude-code` Claude Code installed and logged in to your own Claude
+account (`claude auth login`); for `claude-api` your own key. Each person
+uses their own subscription or key. `.venv` isn't used directly.
 
 Or one step at a time (each defaults to the newest results folder):
 
-| Script | Does | Calls Gemini |
+| Script | Does | Calls a model |
 |---|---|---|
-| `run.py [case ...] [--runs N] [--into <folder>]` | Each case through `assess`; saves `<case>__run<N>.json` (the `Evaluation` as stored) in `evals/results/<UTC stamp>/`. `--into` adds to an existing folder; `--dry` only builds the inputs and prints what each case attaches | yes, `GEMINI_*` |
-| `judge.py [<folder>] [--redo] [--label <label>]` | A second model grades the three free-text fields against the case's facts, then, in a second call, whether each claim's passages back it and which claims cover each statement of the three texts (`passages`, `statements` in the same file; the fact grading's prompt is unchanged, so text scores stay comparable with `PROMPT_VERSION` 4 baselines). A run graded before claims were judged gets only the claims grading when it runs again, without `--redo`. Writes `<run>.judge.json`, or `<run>.judge-<label>.json` with `--label`. Skips placeholders and runs already judged. `--redo` with `--label` regrades only that label's files. `--label default` is a usage error: `judge_check.py` reads `default` as `<run>.judge.json`, so a `judge-default` file would never be read | yes, `JUDGE_*` |
+| `run.py [case ...] [--runs N] [--into <folder>] [--resume] [--provider P] [--model M] [--effort E]` | Each case through `assess`; saves `<case>__run<N>.json` (the `Evaluation` as stored) in `evals/results/<UTC stamp>/`. `--into` adds to an existing folder; `--resume` (needs `--into`) skips a run whose file exists and isn't a placeholder, so it re-runs placeholders and runs never made; `--dry` only builds the inputs and prints what each case attaches. Writes `meta.json` and `prompts.json` (below). Ends by listing each failed run with its cause and the `--into <folder> --resume` command that re-runs them | yes: `gemini` (default), `claude-code` or `claude-api` |
+| `judge.py [<folder>] [--redo] [--label <label>] [--provider P]` | A second model grades the three free-text fields against the case's statements, then, in a second call, whether each claim's passages back it and which claims cover each statement of the three texts (`passages`, `statements` in the same file). The fact grading reads only the answer and the statements (the contract under "A case"), never the paper, notices or draft. A run graded before claims were judged gets only the claims grading when it runs again, without `--redo`. Writes `<run>.judge.json`, or `<run>.judge-<label>.json` with `--label`. Skips placeholders and runs already judged. `--redo` with `--label` regrades only that label's files. `--label default` is a usage error: `judge_check.py` reads `default` as `<run>.judge.json`, so a `judge-default` file would never be read | yes, the same providers |
 | `score.py [<folder>]` | The grid (with a verdict per run), pass rates per case, category and overall, failure-type counts, the Metamorphic Groups table, a table per category with an OVERALL row, and the most missed tags and facts | no |
 | `compare.py <baseline> <new>` | Regression check of two results folders (below) | no |
 | `judge_check.py agree`, `sample` or `human` | Checks the judge (below) | no |
 
-`run.py` also writes `meta.json` into the folder (below). It reads `GEMINI_API_KEY`, `GEMINI_MODEL` and
-`GEMINI_FALLBACK_MODELS` from the environment or `backend/.env`, with the
-same 120 s timeout and fallback as the service. `judge.py` reads
-`JUDGE_API_KEY` (falling back to `GEMINI_API_KEY`) and `JUDGE_MODEL`
-(default `gemini-flash-lite-latest`). Use a separate key, so the judge
-doesn't use up the tested model's free-tier quota, and ideally a different
-model from the one tested. `all.py` writes `summary.txt` into the folder.
-On a failed step it stops; resume with `--folder <folder> --skip-run`.
-`evals/results/` is gitignored.
+With `--provider gemini` (the default), `run.py` reads `GEMINI_API_KEY`
+and `GEMINI_MODEL` from the environment or `backend/.env`, with the same
+120 s timeout as the service. **No eval falls back to another model**, on
+any provider: the Gemini run's `FallbackLlm` gets only `GEMINI_MODEL`
+(`--model` overrides it), so `GEMINI_FALLBACK_MODELS` isn't used, and a
+failed call makes the run a placeholder, listed at the end and re-run with
+`--resume`. Production's fallback is unchanged. With Gemini, `judge.py`
+reads `JUDGE_API_KEY` (falling back to `GEMINI_API_KEY`) and `JUDGE_MODEL`
+(default `gemini-flash-lite-latest`) and grades at temperature 0. Use a
+separate key, so the judge doesn't use up the tested model's free-tier
+quota.
 
-**A case** (`evals/cases/NN_name.json`, 23 of them, 11 marked
+`judge.py` exits with a usage error, before any call, when the judge model
+is the tested model of a run in the folder (`assessment.model`), so a
+model never grades its own answers. It checks every case's
+`expected.facts` against the rubric contract (`judge.Rubric`) before its
+first call and exits non-zero naming the case on a violation. A judge call
+that fails (a schema mismatch, a placeholder-type failure) leaves that run
+ungraded (`unjudged` in `score.py`) and moves on; at the end it lists those
+runs with their causes, and running it again grades only them. It exits 0,
+so `all.py` still writes its summary.
+
+`all.py` passes `--provider`, `--model`, `--effort` and `--resume` on to
+`run.py`, and `--provider` to `judge.py`; it writes `summary.txt` into the
+folder. On a failed step it stops and prints the command to continue: for
+`run.py`, `--folder <folder> --resume` (`--skip-run` would leave the
+remaining runs unmade); for `judge.py`, `--folder <folder> --skip-run`.
+With `claude-api` its "Do you want to execute" prompt says the run is
+billed to the key. `evals/results/` is gitignored.
+
+**Claude providers** (`evals/claude_llm.py`, dev only; no service imports it):
+
+- `--provider claude-code` (`ClaudeLlm`) runs each call through `claude -p`
+  on the Claude Code login, a claude.ai subscription, and makes no API
+  calls and never uses an API key: `ANTHROPIC_API_KEY` and
+  `ANTHROPIC_AUTH_TOKEN` are removed from its environment, `backend/.env`
+  isn't read, and an `init` event whose `apiKeySource` isn't `none` stops
+  the run (`NotOnSubscription`). Before the first call `claude auth status`
+  must report `"authMethod": "claude.ai"`, or it exits before any call; if
+  `claude` isn't on `PATH` (`shutil.which`, so an npm `claude.cmd` works
+  too) it exits and says to install Claude Code and log in. Defaults:
+  `--model sonnet --effort medium` tested, `haiku` at effort medium judging
+  (`JUDGE_MODEL` overrides it). The command is
+  `claude -p --verbose --input-format stream-json --output-format stream-json --model <m> --effort <e> --system-prompt <system> --tools "" --strict-mcp-config --disable-slash-commands --no-session-persistence --setting-sources= --json-schema <schema>`,
+  run in a new empty temp folder that is removed afterwards. So the model
+  has no tools (only `StructuredOutput`), no MCP servers, skills, user or
+  project settings or hooks, and no files: it gets only what
+  `change_prompt`, `impact_prompt` and `actions_prompt` built, never a case
+  file (which holds its expected answer). The prompt goes on stdin as one
+  user message: text parts as text blocks, each PDF as a base64
+  `application/pdf` `document` block, in order. `--bare` isn't used: it
+  never reads the OAuth login. The answer is the `result` event's
+  `structured_output`, validated against the step's schema;
+  `model_version` is the `init` event's model. After each call it prints
+  the call's tokens and the 5-hour and 7-day utilization. The judge shares
+  the subscription's limits with the tested model.
+- **The usage limit** (a `rejected` `rate_limit_event`, or an error
+  `result` mentioning a limit) raises `ClaudeLimitReached`: no file is saved
+  for the run in progress, and `run.py` prints the reset time and the
+  `--into <folder> --resume` command, then exits non-zero; `judge.py` keeps
+  the runs already graded and grades the rest when run again. Any other
+  failure (non-zero exit, no `result`, an error result, no
+  `structured_output`, a schema mismatch, the 300 s timeout) makes the run a
+  placeholder whose cause holds no response text; a limit missed and saved
+  as a placeholder is recovered by `--resume` too.
+- `--provider claude-api` (`ClaudeApiLlm`) calls the Claude API with the
+  official SDK, billed to `ANTHROPIC_API_KEY` (environment, or
+  `backend/.env` for this provider only). `anthropic` isn't a project
+  dependency: add `--with anthropic` to the command; the other providers
+  never import it. Defaults: `claude-sonnet-5-5` at effort `medium` tested
+  (`--model`, `--effort`), `claude-haiku-5-5` at effort `medium` judging
+  (`JUDGE_MODEL`). Each call is `messages.parse` with the step's schema as
+  `output_format`, `system`, `max_tokens` 16000, one user message (parts in
+  order, PDFs as base64 `document` blocks after their label),
+  `output_config={"effort": ...}` (always sent: Sonnet 5.5 defaults to
+  `high`), top-level `cache_control` ephemeral (through `extra_body`, as
+  `parse` has no such argument) so runs 2 and 3 of a case can read run 1's
+  step 1 prefix, a 300 s timeout, and no `temperature`, `thinking` or
+  `fallbacks` (both models think adaptively when `thinking` is omitted). A
+  `RateLimitError` after the SDK's 2 retries is `ClaudeLimitReached` (no
+  file, `--resume`); a 4xx (`AuthenticationError`, `PermissionDeniedError`,
+  `NotFoundError`, `BadRequestError`, …) stops the run, since it would
+  repeat; a 5xx, `APIConnectionError` (timeouts included), a `refusal` or
+  `max_tokens` stop, no `parsed_output` or a schema mismatch makes a
+  placeholder. After each call it prints `response.usage` (input, cache
+  write, cache read, output) and, for a failed call, the request id. The
+  Message Batches API isn't used: step 2 depends on step 1's answer.
+- Claude has no temperature or seed setting here (the CLI has no flag for
+  them); `meta.json` records them as null, and the Claude judge has no
+  temperature 0, so check its agreement with itself (`judge_check.py
+  agree`).
+- **Claude results measure Claude, not production's Gemini.** `compare.py`
+  across providers shows the model change; it isn't a regression check.
+
+**A case** (`evals/cases/NN_name.json`, 24 of them, 13 marked
 `"tier": "hard"`) is one report: `paper` (details) and `paper_text`,
 `alerts`, a `notice` or a `documents` list (kind, DOI, text, optional
 `pdf_text` for a stored PDF), an optional `draft_text`, and `expected`:
@@ -494,15 +586,56 @@ On a failed step it stops; resume with `--folder <folder> --skip-run`.
 - `hard_fail_if`: answers that are wrong whatever else is right (e.g.
   `change.severity == none` for a real correction).
 - `facts`: `must_include` and `must_not_include` statements for the free
-  text.
+  text. The **rubric contract** (`judge.Rubric`):
+
+  ```json
+  {"must_include": ["<one fact, checkable from the answer alone>"],
+   "must_not_include": ["<one fact, checkable from the answer alone>"]}
+  ```
+
+  Both keys are required and no other key is allowed; each item is a
+  non-empty string stating one fact that can be checked from the answer
+  alone (the judge never sees the case material); the two lists together
+  hold at least one statement.
 - `why`: the reasoning behind the expected answer.
 - `variant_of` (optional): the stem of another case this one is a
   **metamorphic variant** of: the same facts in other words (or sections in
   another order), so the same `expected` answer applies. A variant is its
-  original's file with only the texts changed (cases 21, 22, 23 vary 01,
-  02, 14) and `variant_of` added; every fact and tag must stay true of the
+  original's file with only the texts changed (case 21 varies 01) and
+  `variant_of` added; every fact and tag must stay true of the
   new texts. Variant file names contain no `__`, which splits case from run
   in result file names. A `variant_of` naming no case file is skipped.
+
+The real cases are 28 (a retraction) and 29 (an expression of concern),
+the two smallest real papers (`evals/real/SOURCES.md`). No case has a
+`new_version` alert or compares two real PDFs; case 11 still has a
+`new_version` document.
+
+**The judge's fact-grading contract.** The fact grading's prompt is two
+JSON documents and nothing else, on every provider. First the answer:
+
+```json
+{"change_summary": "...", "evaluation": "... or null", "recommendation": "... or null"}
+```
+
+then the rubric's two lists, `must_include` first, numbered from 1,
+without saying which list each came from:
+
+```json
+{"statements": [{"n": 1, "text": "..."}]}
+```
+
+It returns `Verdicts`:
+
+```json
+{"items": [{"n": 1, "evidence": "<words of the answer, or empty>", "present": true}]}
+```
+
+The judge reports `present`; the code decides pass or fail. Whether an
+answer is true of the sources is checked by the statements, the tags and
+the quote check, not by the judge. Text scores from before this contract
+(when the judge also read the case material) aren't comparable with later
+ones.
 
 **The scores**, per run:
 
@@ -626,7 +759,9 @@ inconsistent.
 
 ```json
 {"runs": {"<case>__run<N>": {"started_at": "<ISO UTC>",
-          "prompt_version": 5, "models": ["gemini-flash-latest", "..."],
+          "prompt_version": 5, "prompt_sha256": "<hex>",
+          "provider": "gemini" | "claude-code" | "claude-api",
+          "models": ["gemini-flash-latest"],
           "generation": {"temperature": null, "seed": null},
           "case_sha256": "<hex of the case file bytes>"}}}
 ```
@@ -635,19 +770,43 @@ inconsistent.
   written right after the run's file, one run at a time, so a run stopped
   part-way (quota) still has entries for the runs it saved. `started_at` is
   taken before the run starts.
-- `models` is the list the run's `FallbackLlm` was given (`GEMINI_MODEL`
-  then `GEMINI_FALLBACK_MODELS`), not the model that answered; that one is
-  in the run's own `assessment.answered_by`.
+- `models` is the model the run was given (one: no eval falls back), not
+  the version that answered; that one is in the run's own
+  `assessment.model_version`.
+- `provider` is `run.py`'s `--provider`.
+- `prompt_sha256` keys the run's prompt texts in the folder's
+  `prompts.json` (below).
 - `generation` is recorded, not set: temperature and seed are the model's
-  defaults, in production and in the evals (`impact/llm.py` sets neither).
+  defaults, in production and in the evals (`impact/llm.py` sets neither,
+  and the Claude CLI has no flag for them).
 - `case_sha256` hashes the case file's bytes as read from disk, so a
   reformat with no content change also counts as a changed case.
 - The git commit of a run is not recorded.
 
+**`prompts.json`.** `run.py` also records the prompt templates the folder's
+runs used, for every provider:
+
+```json
+{"<sha256>": {"prompt_version": 5, "system": "...", "change_task": "...",
+              "impact_task": "...", "actions_task": "...",
+              "judge_system": "...", "judge_passage_system": "..."}}
+```
+
+- The texts are `prompts.py`'s `SYSTEM`, `CHANGE_TASK`, `IMPACT_TASK` and
+  `ACTIONS_TASK` and `judge.py`'s `SYSTEM` and `PASSAGE_SYSTEM`, read when
+  the run starts. The key, `prompt_sha256`, is the sha256 of those six
+  texts as canonical JSON (sorted keys, no spaces), without
+  `prompt_version`, so a wording change without a `PROMPT_VERSION` bump
+  shows up.
+- A new hash adds an entry and existing ones are kept, so a folder filled
+  with `--into` after a prompt change holds both.
+- Rendered prompts aren't logged: they hold case text and PDFs, and the
+  run's case file (`case_sha256`) and these templates rebuild them.
+
 `score.py`, `all.py` and `judge.py` take the same runs: `*__run*.json` in
 the folder (any run number). Every name containing `.judge`
 (`<run>.judge.json`, `<run>.judge-<label>.json`) is a grade, not a run, and
-`meta.json` is not a run; `score.run_paths` lists the runs. `score.py`
+`meta.json` and `prompts.json` are not runs; `score.run_paths` lists the runs. `score.py`
 reads only `<run>.judge.json`. `judge.py` repeats the glob rather than import
 `score.py`, so keep the two in step.
 
@@ -677,7 +836,10 @@ calls):
   is not flagged (no hash to compare is not a change). A folder without
   `meta.json` (made before it) is compared without the hash check, and the
   output says so.
-- A different `prompt_version` or model list is a header line, not an error.
+- A different `prompt_version`, model list, `prompt_sha256` or `provider` is
+  a header line, not an error. A folder made before `prompt_sha256` and
+  `provider` were recorded is compared without them. Across providers the
+  comparison shows the model change, not a regression.
 - Limit: a case that regresses in only some of its runs widens the new
   folder's spread too, so a regression in a single case can come out
   "within noise". Read the per-case lines as well as the totals.
@@ -727,11 +889,11 @@ run `run.py --dry <case>` to check that it builds.
 | Storage Management client | `storage.py`: snapshots, change keys, alerts, reports, documents, PDFs, evaluation; `PaperGone`, `ReportGone` |
 | Detection, rules, per-paper evaluation | `changes.py`, `rules.py`, `evaluate.py` |
 | Investigation | `investigation/`: `http.py` (one GET, `FetchStatus`), `crossref.py`, `europepmc.py`, `investigate.py` (plan, fetch), `run.py` |
-| Impact | `impact/`: `llm.py` (Gemini client, `FallbackLlm`), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `assess.py`, `claims.py` (`build_claims`), `quotes.py` (`norm`, `quoted_in`, `join_hyphens`, `pdf_pages`, `PdfUnreadable`, `leaves`, `DOI`, `ALERT`, `ELLIPSIS`: shared with the evals; `pypdf` is a project dependency), `run.py` (`ImpactContext`) |
+| Impact | `impact/`: `llm.py` (Gemini client, `FallbackLlm`, the `Llm` protocol), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `assess.py`, `claims.py` (`build_claims`), `quotes.py` (`norm`, `quoted_in`, `join_hyphens`, `pdf_pages`, `PdfUnreadable`, `leaves`, `DOI`, `ALERT`, `ELLIPSIS`: shared with the evals; `pypdf` is a project dependency), `run.py` (`ImpactContext`) |
 | Shared with Updating | `backend/src/common/`: `doi.py` (`normalize_doi`), `service_token.py` (`ServiceTokenAuth`), `config.py` |
 | Dev stub of Storage Management | `backend/dev/stub_storage.py` (every internal endpoint in memory, plus `/dev/*` helpers) |
 | Tests | `backend/tests/research_evaluation/` (with `investigation/` and `impact/`); fixtures in `backend/tests/fixtures/` |
-| Evals of impact (dev only) | `backend/evals/`: `cases/`, `thresholds.json`, `run.py`, `judge.py`, `judge_check.py`, `check_passage_scoring.py`, `real/extract.py` (imports `research_evaluation.impact.quotes` from `src/`; run as `uv run python evals/real/extract.py`, no `--with pypdf`), `score.py` (also the shared helpers `verdict`, `pass_rate`, `group_by`, `noise_floor`, `overall_mean`, `failure_line`), `compare.py`, `all.py` |
+| Evals of impact (dev only) | `backend/evals/`: `cases/`, `thresholds.json`, `run.py`, `claude_llm.py` (`ClaudeLlm` through Claude Code, `ClaudeApiLlm` through the Claude API, `preflight`, `ClaudeLimitReached`, `NotOnSubscription`), `judge.py` (`Rubric`), `judge_check.py`, `check_passage_scoring.py`, `real/extract.py` (imports `research_evaluation.impact.quotes` from `src/`; run as `uv run python evals/real/extract.py`, no `--with pypdf`), `score.py` (also the shared helpers `verdict`, `pass_rate`, `group_by`, `noise_floor`, `overall_mean`, `failure_line`), `compare.py`, `all.py` |
 
 The lifespan makes three HTTP clients: Storage Management's (base URL,
 service token, 10 s), one for Crossref and Europe PMC (no base URL and no
@@ -781,7 +943,12 @@ auth), and the Gemini client.
   `conftest.ExternalApis` fakes Crossref and Europe PMC; impact uses a
   `FakeLlm`. Only `-m live` tests reach real APIs (Crossref, Europe PMC,
   Gemini).
-- **Evals spend the free-tier quota:** a full run is 23 cases × 3 runs ×
+- **Evals spend the free-tier quota:** a full run is 24 cases × 3 runs ×
   up to 3 calls, far over about 20 requests per model per day. Run one or
   a few cases (`--runs 1`) while iterating, and give the judge its own key.
-  A `PLACEHOLDER` row usually means the quota ran out, not a bad prompt.
+  A `PLACEHOLDER` row usually means the quota ran out, not a bad prompt;
+  `--resume` re-runs it.
+- **Evals on Claude Code spend the subscription's limits:** up to 216
+  generation and 144 judge calls for 24 cases × 3 runs, judge included.
+  Try one case first and read the printed utilization; at the limit the
+  run stops and `--resume` continues it in the next window.
