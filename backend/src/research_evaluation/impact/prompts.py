@@ -18,7 +18,7 @@ from research_evaluation.impact.llm import Part, Pdf
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 7
+PROMPT_VERSION = 9
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -59,7 +59,8 @@ Rules:
   to stating it: for "the main findings stand", a notice's "all other results
   are unchanged". When no quote comes close, narrow the statement until one
   does, or cut it.
-- Words that widen a fact (only, once, twice, every, nothing else) and places
+- Words that widen a fact (only, once, twice, both, every, the whole,
+  nothing else) and places
   in a paper (the abstract, Table 2) are part of the fact: keep them only if
   the quote shows them. Don't write "the draft cites it once": say where it
   cites it.
@@ -73,11 +74,21 @@ Rules:
   missing.
 - A comparison between two documents (a notice's DOI and the paper's) is one
   claim per side, each with its quote.
+- Write the claims first, then build the free text from them: each
+  sentence joins claim texts, changing only pronouns and joining words
+  ("and", "but", "while"). A sentence that isn't made of claim texts comes
+  out, including verdicts such as "the draft is not affected", "the impact
+  is low", "both depend on it" or "the headline result rests on that data"
+  that no claim states with a quote. Never drop a fact the task asks for to
+  satisfy this: back it with the quote that comes closest to stating it.
+- Link a change to the draft by naming the shared fact, not by a verdict:
+  "your Introduction quotes the d = 1.8 that the correction changes to
+  0.8", which is two claims (the draft's sentence, the notice's), not "the
+  correction affects your Introduction", which no single quote shows.
 - Check before you answer: read your free text clause by clause, including
   what this prompt tells you to say (what is missing, that a judgment is
   general, that findings may still stand). A factual statement with no claim
-  gets one, or comes out of the text. Free text uses the claims' words and
-  adds no fact they don't state.
+  gets one, or comes out of the text.
 - Write for a researcher who knows their field but not publishing
   metadata: plain words, and no DOIs in prose unless needed to tell two
   documents apart."""
@@ -101,8 +112,8 @@ works citing the paper, and its line gives the counts. It has no notice and
 no document, and it means new attention, not a change to the paper's
 content: about_this_paper "yes", what_changed the rise, scope
 citations_only, severity low, evidence empty. Word its claim from the line
-("the alert reports a rise in citing works, with no notice"), so the quote
-shows it.
+("the alert reports a rise in citing works, from 4 to 61"), so the quote
+shows it; that there is no notice is a separate claim with no passages.
 
 For each alert:
 1. about_this_paper: is it really about the tracked paper?
@@ -147,7 +158,11 @@ For each alert:
    - none (not meaningful): typos, author names or affiliations, funding or
      conflict-of-interest statements, formatting; a notice about another
      article; a notice whose DOI is the paper's own with no other sign of a
-     change; a concern lifted by a later notice in this report.
+     change (compare the alert's dates with the paper's own publication
+     date in its Crossref record, and say when they match); a concern lifted
+     by a later notice in this report; a retraction reversed by a later
+     notice that reinstates the paper (say that its findings can be relied
+     on again, quoting the notice that reinstates it).
    When the evidence is only metadata, pick the level the notice type
    usually has and say so in reason.
    reason: why, in one or two sentences.
@@ -243,11 +258,18 @@ uses, and how much the researcher is affected overall.
    For each use, write one claim on how the draft uses the paper, quoting
    the draft's citing sentence (source "draft"), and, when the STORED PAPER
    is attached, a separate claim on what the paper reports, quoting the
-   passage of it that sentence relies on (source "stored paper"). Also write
-   one claim on whether the change touches that use, copying the CHANGE quote
-   that shows what changed. When you copy from CHANGE's claims, copy only a
-   quote that shows your claim's fact. A paper the draft doesn't cite is a
-   missing-entry claim, with empty passages.
+   passage of it that sentence relies on (source "stored paper"). Word the
+   use claim with the citation as the draft writes it ("cites [12]", "cites
+   Lee, 2019") and only what the citing sentence shows; don't claim that a
+   reference entry is the tracked paper, which no quote can show. Then,
+   instead of a claim that the change touches or doesn't
+   touch the use, write one claim on what changed in the part that use
+   relies on, worded as CHANGE's quote words it and copying that quote ("the
+   notice says the conclusions cannot be relied on"). When you copy from
+   CHANGE's claims, copy only a quote that shows your claim's fact. A paper
+   the draft doesn't cite is a missing-entry claim, with empty passages, and
+   the explanation then says only that the draft doesn't cite it: no
+   "so the draft is not affected", and nothing about who wrote the paper.
 
 If there is NO DRAFT: leave the uses empty and cited false, judge the
 impact for a typical researcher who cites the paper as key_evidence, and
@@ -276,6 +298,8 @@ pick from what fits:
   retraction would raise a new alert;
 - a retraction and replacement, or a new version: cite the corrected or new
   version, after checking the finding still holds there;
+- a retraction known only from a flag, with no notice: check the journal's
+  or publisher's page for the paper to confirm it before changing the draft;
 - critical or historical discussion, or a retraction for duplication or
   authorship reasons: keep the citation and cite the notice too (for
   duplication, cite the original copy);
