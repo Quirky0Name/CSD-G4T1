@@ -88,10 +88,13 @@ One poll, end to end:
 4. After the reply, in the background: **investigation** opens a report
    grouping the paper's new alerts and stores what it fetched as the
    report's documents (Storage Management downloads their PDFs); then
-   **impact** asks Gemini about the report and stores its evaluation (the
-   report becomes `assessed`). Research Evaluation sends no notification.
+   **impact** asks Gemini about the report, checks each quote of the
+   answer's claims against the text it came from (`impact/claims.py`) and
+   stores its evaluation with those claims (the report becomes `assessed`). Research Evaluation sends no notification.
 5. The **frontend** reads alerts and reports from Storage Management; the
-   researcher acknowledges or dismisses them. The shared refresh of
+   researcher acknowledges or dismisses them. It reads the PDFs a report's
+   claims point at (paper, draft, document) from Storage Management with the
+   user's token. The shared refresh of
    papers, alerts and reports runs every 30 s only while a user is signed
    in, and starts fresh for each user. When a refresh finds a report that
    has become `assessed` since the first load, the frontend notifies the
@@ -171,7 +174,7 @@ diagram, up to V9: [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html); V
 | `alerts` | detected change on a paper (type, `change_key`, rule-based alert severity and text, the researcher's status, `report_id`) | V3, V7, V9 |
 | `snapshots` | snapshot Updating sent (insert-only, the full snapshot history per paper) | V4, V9 |
 | `drafts` | project's draft PDF | V6, V9 |
-| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation) | V7, V8 |
+| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation, `claims`) | V7, V8, V12 |
 | `report_documents` | DOI fetched for a report (notice, new version, related document, current copy) | V7 |
 
 Everything referring to a paper is deleted with it. PDFs are files in

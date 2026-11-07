@@ -61,9 +61,7 @@ most needed first within each.
   one query joining `alerts` to `papers` on the owner, no migration.
 - [ ] A paper's alert severity state as a field, instead of the frontend
   working it out from the alerts.
-- [ ] Download a report document's stored PDF (a user endpoint next to
-  `GET /internal/documents/{id}/pdf`, ownership through report and paper),
-  if `pdf_source_url` isn't enough.
+- [x] Download a report document's stored PDF (`GET /documents/{id}/pdf`).
 
 ## Pipeline robustness
 
@@ -109,10 +107,11 @@ most needed first within each.
 - [ ] Judge whether a downloaded current copy is really a new version (an
   LLM comparing text; delete the copy if it's the same), and whether a
   re-fetched document that differs from its stored row matters.
+- [x] Impact: verify quotes against PDF text (`impact/claims.py`; the evals
+  check them offline too).
 - [ ] Impact: read the paper's earlier reports as context (E5: a
   correction, EoC and retraction in three reports; E4: an EoC lifted);
-  verify quotes against PDF text (the evals already check them, offline,
-  against each case's text); compute the impact level in code from
+  compute the impact level in code from
   the change severity table; cache how a draft uses a paper.
 - [ ] Evals (EVALUATION.md, "Evals"): agree `evals/thresholds.json`, record
   a baseline (`all.py --runs 3`) for the current `PROMPT_VERSION`, check the
@@ -139,6 +138,9 @@ Gemini, so pick the provider again when they're started.
   `/evaluate/citation-neighbourhood` are under review, like stance.
 - [ ] Semantic Scholar abstract / TL;DR, and snippets cached per (claim,
   candidate) for stance.
+- [ ] **A research topic or question field.** The draft stands in for the
+  research topic when claims are made: step 2 quotes the draft's sentence and
+  the tracked paper's passage behind each use. A topic field isn't built.
 - [ ] **Newly appearing related papers** (Updating), topic-based
   discovery, and highlighting the most relevant passages in a paper.
 - [ ] Alert on a slow, steady rise in citations too, against the count at

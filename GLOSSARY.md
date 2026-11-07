@@ -52,3 +52,11 @@ _Avoid_: Severity (on its own)
 **Change severity**:
 How serious one particular change really is for anyone relying on the paper.
 _Avoid_: Severity (on its own)
+
+### Claims
+
+**Claim**:
+A factual statement in an evaluation's summary, explanation or recommendation, listed with the passages that back it.
+
+**Passage**:
+A quote a claim rests on, with the text it was found in (the tracked paper, the draft, a report document or an alert) and its page, and whether the quote was found there word for word.
