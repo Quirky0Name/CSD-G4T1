@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 @Service
 public class DraftService {
@@ -86,14 +87,8 @@ public class DraftService {
      * Only the current upload is kept, so a draft replaced after an assessment is served as it is now.
      */
     public byte[] ownedPdf(UUID ownerId, UUID projectId) {
-        Draft draft = drafts.findByOwnerIdAndProjectId(ownerId, projectId).orElseThrow(() -> noDraft(projectId));
-        Optional<byte[]> pdf = files.read(draft.getFileKey());
-        if (pdf.isEmpty()) {
-            // a re-upload can delete the file between reading the row and reading the file; the row now has the new one
-            draft = drafts.findByOwnerIdAndProjectId(ownerId, projectId).orElseThrow(() -> noDraft(projectId));
-            pdf = files.read(draft.getFileKey());
-        }
-        return pdf.orElseThrow(() -> {
+        return currentPdf(() -> drafts.findByOwnerIdAndProjectId(ownerId, projectId)
+                .orElseThrow(() -> noDraft(projectId))).orElseThrow(() -> {
             log.warn("A draft points at a file that isn't on disk");
             return new ResponseStatusException(HttpStatus.NOT_FOUND, "The draft is missing from disk");
         });
@@ -141,23 +136,20 @@ public class DraftService {
     public byte[] pdfForPaper(UUID paperId) {
         Paper paper = papers.findById(paperId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId));
-        Optional<byte[]> pdf = currentPdf(paperId, paper);
-        if (pdf.isEmpty()) {
-            // a re-upload can delete the file between reading the row and reading the file; the row now has the new one
-            pdf = currentPdf(paperId, paper);
-        }
-        return pdf.orElseThrow(() -> {
+        return currentPdf(() -> drafts.findByOwnerIdAndProjectId(paper.getOwnerId(), paper.getProjectId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "No draft in the project of paper " + paperId))).orElseThrow(() -> {
             log.warn("The draft for paper {} points at a file that isn't on disk", paperId);
             return new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "The draft for paper " + paperId + " is missing from disk");
         });
     }
 
-    private Optional<byte[]> currentPdf(UUID paperId, Paper paper) {
-        Draft draft = drafts.findByOwnerIdAndProjectId(paper.getOwnerId(), paper.getProjectId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No draft in the project of paper " + paperId));
-        return files.read(draft.getFileKey());
+    // the file of the draft the row points at; `row` throws its 404 when there is no draft. A re-upload
+    // can delete the file between reading the row and reading the file, so the row is read once more
+    private Optional<byte[]> currentPdf(Supplier<Draft> row) {
+        Optional<byte[]> pdf = files.read(row.get().getFileKey());
+        return pdf.isPresent() ? pdf : files.read(row.get().getFileKey());
     }
 
     private static ResponseStatusException noDraft(UUID projectId) {

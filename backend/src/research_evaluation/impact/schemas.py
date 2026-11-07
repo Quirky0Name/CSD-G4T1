@@ -104,20 +104,25 @@ class RecommendedActions(_Answer):
 # the `Claim` of docs/CONTRACTS.md). Model output and fetched text: shown as text, never as HTML.
 
 
+Target = Literal["paper", "draft", "document", "alert"]
+Verified = Literal["verbatim", "not_found", "no_text"]
+ClaimKind = Literal["change", "impact", "action"]
+
+
 class Passage(BaseModel):
     # where the quote was found (or the source it names); None when found nowhere and naming none
-    target: Literal["paper", "draft", "document", "alert"] | None
+    target: Target | None
     document_id: int | None
     alert_id: int | None
     quote: str
     # 1-based page the quote starts on, when found in a PDF
     page: int | None
-    verified: Literal["verbatim", "not_found", "no_text"]
+    verified: Verified
 
 
 class StoredClaim(BaseModel):
     id: str  # "<kind>-<index in that step's claims>"
-    kind: Literal["change", "impact", "action"]
+    kind: ClaimKind
     text: str
     supported: bool  # at least one passage is verbatim
     passages: list[Passage]

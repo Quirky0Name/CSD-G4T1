@@ -10,15 +10,17 @@ to where it was found. Claims quote only source material, never the model's earl
 Quotes and PDF text are never logged."""
 
 import asyncio
-import re
 from dataclasses import dataclass, field
-from typing import Any
 
 from research_evaluation.impact.inputs import ReportInputs
 from research_evaluation.impact.prompts import alerts_block, paper_block
 from research_evaluation.impact.quotes import (
+    ALERT,
+    DOI,
+    ELLIPSIS,
     PdfUnreadable,
     join_hyphens,
+    leaves,
     norm,
     pdf_pages,
     quoted_in,
@@ -26,38 +28,27 @@ from research_evaluation.impact.quotes import (
 from research_evaluation.impact.schemas import (
     ChangeAssessment,
     Claim,
+    ClaimKind,
     Evidence,
     ImpactAssessment,
     Passage,
     RecommendedActions,
     StoredClaim,
+    Target,
+    Verified,
 )
 from research_evaluation.storage import DocumentInReport
-
-# the same source labels the evals read (evals/score.py, source_label)
-_DOI = re.compile(r"10\.\d{4,9}/\S+")
-_ALERT = re.compile(r"alert\s*#?\s*(\d+)")
-_ELLIPSIS = re.compile(r"\.\.\.|…")
 
 
 def _normal(text: str) -> str:
     return norm(join_hyphens(text))
 
 
-def _leaves(value: Any) -> list[str]:
-    """Every scalar inside a Crossref record or a links list, as text."""
-    if isinstance(value, dict):
-        return [leaf for item in value.values() for leaf in _leaves(item)]
-    if isinstance(value, list):
-        return [leaf for item in value for leaf in _leaves(item)]
-    return [] if value is None else [str(value)]
-
-
 @dataclass
 class _Source:
     """One text of the report a quote can be found in."""
 
-    target: str
+    target: Target
     document_id: int | None = None
     alert_id: int | None = None
     pdf: bytes | None = None
@@ -100,7 +91,7 @@ async def _page_of(quote: str, pages: list[str]) -> int | None:
             joined += text
     if not starts or not quoted_in(quote, joined):
         return None
-    first = next(piece.strip() for piece in _ELLIPSIS.split(quote) if piece.strip())
+    first = next(piece.strip() for piece in ELLIPSIS.split(quote) if piece.strip())
     at = joined.find(first)
     return next(number for start, number in reversed(starts) if start <= at)
 
@@ -131,7 +122,7 @@ class _Sources:
     @staticmethod
     def _document(document: DocumentInReport, pdf: bytes | None) -> _Source:
         texts = [document.text or ""]
-        texts += _leaves(document.crossref_record) + _leaves(document.links)
+        texts += leaves(document.crossref_record) + leaves(document.links)
         return _Source(
             "document",
             document_id=document.id,
@@ -145,7 +136,7 @@ class _Sources:
     def named(self, label: str) -> _Source | None:
         """The text a passage's source names, or None when it names none of them."""
         label = norm(label)
-        doi = _DOI.search(label)
+        doi = DOI.search(label)
         if doi:
             doi_text = doi.group().rstrip(".,;)")
             match = next((s for d, s in self.documents if d.doi.lower() == doi_text), None)
@@ -153,7 +144,7 @@ class _Sources:
                 return match
             if doi_text == self.paper_doi:
                 return self.paper
-        alert = _ALERT.search(label)
+        alert = ALERT.search(label)
         if alert and int(alert.group(1)) in self.alerts:
             return self.alerts[int(alert.group(1))]
         if "stored paper" in label:
@@ -169,7 +160,7 @@ class _Sources:
 async def _passage(sources: _Sources, evidence: Evidence) -> Passage:
     quote = norm(evidence.quote)
     named = sources.named(evidence.source)
-    if _ELLIPSIS.sub("", quote).strip():  # an empty quote is found nowhere
+    if ELLIPSIS.sub("", quote).strip():  # an empty quote is found nowhere
         for source in [named] * (named is not None) + sources.all():
             found, page = await source.find(quote)
             if found:
@@ -187,14 +178,14 @@ async def _passage(sources: _Sources, evidence: Evidence) -> Passage:
     return _made(named, evidence.quote, None, verified)
 
 
-def _made(source: _Source, quote: str, page: int | None, verified: str) -> Passage:
+def _made(source: _Source, quote: str, page: int | None, verified: Verified) -> Passage:
     return Passage(
-        target=source.target,  # type: ignore[arg-type]
+        target=source.target,
         document_id=source.document_id,
         alert_id=source.alert_id,
         quote=quote,
         page=page,
-        verified=verified,  # type: ignore[arg-type]
+        verified=verified,
     )
 
 
@@ -208,7 +199,7 @@ async def build_claims(
     """Every step's claims in order (`<kind>-<index>`), from the steps that ran. A claim is never
     dropped: `supported` is false when none of its passages was found verbatim."""
     sources = _Sources(inputs, draft)
-    steps: list[tuple[str, list[Claim]]] = [
+    steps: list[tuple[ClaimKind, list[Claim]]] = [
         ("change", change.claims if change is not None else []),
         ("impact", impact.claims if impact is not None else []),
         ("action", actions.claims if actions is not None else []),
@@ -220,7 +211,7 @@ async def build_claims(
             out.append(
                 StoredClaim(
                     id=f"{kind}-{index}",
-                    kind=kind,  # type: ignore[arg-type]
+                    kind=kind,
                     text=claim.text,
                     supported=any(p.verified == "verbatim" for p in passages),
                     passages=passages,

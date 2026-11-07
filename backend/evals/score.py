@@ -7,7 +7,6 @@ Per run it scores tags, flags hard failures, checks quotes, and displays a rich 
 alongside advanced actionable diagnostics for prompt engineering."""
 
 import json
-import re
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -22,14 +21,12 @@ sys.path.insert(0, str(ROOT.parent / "src"))
 import case_text
 
 from research_evaluation.impact.prompts import alerts_block, paper_block
-from research_evaluation.impact.quotes import norm, quoted_in
+from research_evaluation.impact.quotes import ALERT, DOI, leaves, norm, quoted_in
 from research_evaluation.storage import AlertInReport, PaperDetails
 
 LEVELS = ["none", "low", "medium", "high"]
 # the fixed source names the step 1 prompt allows besides a notice's DOI, by document kind
 KIND_LABELS = {"current_version": "current copy", "new_version": "new version"}
-DOI = re.compile(r"10\.\d{4,9}/\S+")
-ALERT = re.compile(r"alert\s*#?\s*(\d+)")
 console = Console()
 
 
@@ -105,15 +102,6 @@ def quote_sources(case: dict) -> dict[str, str]:
         line = alerts_block([AlertInReport.model_validate(alert)]).split("\n", 1)[1]
         texts[f"alert {alert['id']}"].append(line)
     return {label: norm(" ".join(parts)) for label, parts in texts.items()}
-
-
-def leaves(value) -> list[str]:
-    """Every scalar inside a Crossref record or a links list, as text."""
-    if isinstance(value, dict):
-        return [leaf for item in value.values() for leaf in leaves(item)]
-    if isinstance(value, list):
-        return [leaf for item in value for leaf in leaves(item)]
-    return [] if value is None else [str(value)]
 
 
 def source_label(source: str, sources: dict[str, str]) -> str | None:

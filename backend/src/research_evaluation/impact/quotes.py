@@ -7,12 +7,16 @@ per page; `join_hyphens` joins a word hyphenated across a line break before matc
 import io
 import re
 import unicodedata
+from typing import Any
 
 from pypdf import PdfReader
 
 # a line ending in "<letter>-", then a line starting with a letter (joined if it is lowercase)
 _HYPHEN_BREAK = re.compile(r"([^\W\d_])-[ \t]*\n[ \t]*([^\W\d_])")
-_ELLIPSIS = re.compile(r"\.\.\.|…")
+ELLIPSIS = re.compile(r"\.\.\.|…")
+# how a model's source label names a DOI or an alert ("alert 7", "alert #7")
+DOI = re.compile(r"10\.\d{4,9}/\S+")
+ALERT = re.compile(r"alert\s*#?\s*(\d+)")
 
 
 class PdfUnreadable(Exception):
@@ -31,12 +35,22 @@ def quoted_in(quote: str, text: str) -> bool:
     """A normalised quote is in a normalised text; "..." or "…" in the quote skips words, so each
     piece must be there, in order."""
     start = 0
-    for piece in filter(None, (p.strip() for p in _ELLIPSIS.split(quote))):
+    for piece in filter(None, (p.strip() for p in ELLIPSIS.split(quote))):
         found = text.find(piece, start)
         if found < 0:
             return False
         start = found + len(piece)
     return True
+
+
+def leaves(value: Any) -> list[str]:
+    """Every scalar inside a Crossref record or a links list, as text: a document can be quoted
+    from these, one value at a time."""
+    if isinstance(value, dict):
+        return [leaf for item in value.values() for leaf in leaves(item)]
+    if isinstance(value, list):
+        return [leaf for item in value for leaf in leaves(item)]
+    return [] if value is None else [str(value)]
 
 
 def _join(match: re.Match) -> str:

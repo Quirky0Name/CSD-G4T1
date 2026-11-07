@@ -376,6 +376,10 @@ User JWT, `application/pdf`, only the owner. Another user's item gets the same
       shows it.
     - A source naming no text, with the quote found nowhere, gives `target: null`
       and `not_found`. Already in the interface; no doc.
+    - Code review: `quotes.py` also holds `leaves` (a record's or links' values),
+      `DOI`, `ALERT` and `ELLIPSIS`, used by both `claims.py` and `evals/score.py`,
+      so the service and the evals read source labels and records alike.
+      EVALUATION.md, code layout table: `impact/quotes.py`.
 
 ### S5: Score passages in the evals
 
