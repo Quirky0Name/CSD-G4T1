@@ -18,7 +18,7 @@ from research_evaluation.impact.llm import Part, Pdf
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 6
+PROMPT_VERSION = 7
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -52,11 +52,32 @@ Rules:
   or a second fact is another claim: "retracted because the data were
   fabricated" needs the sentence that gives the reason, not only "has been
   retracted".
+- Your own conclusions are facts to back too ("the whole paper is affected",
+  "the main findings stand", "this use is touched", "the method rests on
+  it"), and so is every "so" or "because" clause. Give each its own claim,
+  worded no wider than its quote, and quote the sentence that comes closest
+  to stating it: for "the main findings stand", a notice's "all other results
+  are unchanged". When no quote comes close, narrow the statement until one
+  does, or cut it.
+- Words that widen a fact (only, once, twice, every, nothing else) and places
+  in a paper (the abstract, Table 2) are part of the fact: keep them only if
+  the quote shows them. Don't write "the draft cites it once": say where it
+  cites it.
 - A quote that is only on the same topic backs nothing, so never add one to
-  fill passages. When nothing can show a fact (for example, that a notice
-  or a banner is absent), leave its passages empty.
-- Check before you answer: read your free text sentence by sentence. A
-  factual statement with no claim gets one, or comes out of the text.
+  fill passages.
+- A statement that something is missing (no notice, no banner, no reason
+  given, no current copy, no draft, no other citation in the draft, no entry
+  in the reference list) is a claim of its own with empty passages, saying
+  only that. A consequence of it is another claim. Never quote what is there
+  to show what isn't: a reference list's entries don't show another is
+  missing.
+- A comparison between two documents (a notice's DOI and the paper's) is one
+  claim per side, each with its quote.
+- Check before you answer: read your free text clause by clause, including
+  what this prompt tells you to say (what is missing, that a judgment is
+  general, that findings may still stand). A factual statement with no claim
+  gets one, or comes out of the text. Free text uses the claims' words and
+  adds no fact they don't state.
 - Write for a researcher who knows their field but not publishing
   metadata: plain words, and no DOIs in prose unless needed to tell two
   documents apart."""
@@ -79,7 +100,9 @@ A citation_jump alert is different: OpenAlex counted a sudden rise in the
 works citing the paper, and its line gives the counts. It has no notice and
 no document, and it means new attention, not a change to the paper's
 content: about_this_paper "yes", what_changed the rise, scope
-citations_only, severity low, evidence empty.
+citations_only, severity low, evidence empty. Word its claim from the line
+("the alert reports a rise in citing works, with no notice"), so the quote
+shows it.
 
 For each alert:
 1. about_this_paper: is it really about the tracked paper?
@@ -220,13 +243,17 @@ uses, and how much the researcher is affected overall.
    For each use, write one claim on how the draft uses the paper, quoting
    the draft's citing sentence (source "draft"), and, when the STORED PAPER
    is attached, a separate claim on what the paper reports, quoting the
-   passage of it that sentence relies on (source "stored paper"). When you
-   copy from CHANGE's claims, copy only a quote that shows your claim's fact.
+   passage of it that sentence relies on (source "stored paper"). Also write
+   one claim on whether the change touches that use, copying the CHANGE quote
+   that shows what changed. When you copy from CHANGE's claims, copy only a
+   quote that shows your claim's fact. A paper the draft doesn't cite is a
+   missing-entry claim, with empty passages.
 
 If there is NO DRAFT: leave the uses empty and cited false, judge the
 impact for a typical researcher who cites the paper as key_evidence, and
 say in the explanation that the judgment is general; its claims quote what
-CHANGE's claims quote, or have no passages."""
+CHANGE's claims quote, or have no passages. "No draft was uploaded" is a
+claim too, with no passages."""
 
 ACTIONS_TASK = """\
 TASK: recommend what the researcher should do about this change.
@@ -239,6 +266,9 @@ pick from what fits:
   and re-check the claim it supported;
 - the draft's own methods, data or code depend on the paper: stop and raise
   it with co-authors or the supervisor; editing the text won't fix it;
+- a correction takes away a finding the draft states (no longer significant,
+  reversed), whatever the notice calls the correction: remove or hedge that
+  claim, update the numbers and cite the correction;
 - a correction or erratum changed numbers or figures the draft quotes:
   update them and cite the correction;
 - an expression of concern about something the draft relies on: hedge the
@@ -252,17 +282,20 @@ pick from what fits:
 - a use the change doesn't touch, or a paper the draft doesn't cite: no
   action; the alert can be dismissed.
 If there is no draft, add an action to upload the draft for this project,
-so the next change can be judged against it.
+so the next change can be judged against it, and give that reason in the
+recommendation too.
 
 recommendation: one or two sentences with the gist of the actions, naming
-the fact each one rests on.
+the fact each one rests on in the words of a CHANGE or IMPACT claim. It adds
+no fact those claims don't state.
 
 claims: one claim per factual statement in your recommendation, including
 the facts its advice rests on. text: the statement; passages: the quotes
 from the CHANGE and IMPACT claims that show that statement, copied with
 their sources; leave out the ones that don't. Copy only those claims'
-passages, never IMPACT's explanation or a use's reason. The advice to upload
-a draft is not a factual statement and needs no claim."""
+passages, never IMPACT's explanation or a use's reason. A claim of theirs
+with no passages (something missing) is copied with none. The advice to
+upload a draft is not a factual statement and needs no claim."""
 
 NO_DRAFT = "NO DRAFT: the researcher hasn't uploaded their paper for this project."
 
