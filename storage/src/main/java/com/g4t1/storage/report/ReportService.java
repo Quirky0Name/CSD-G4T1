@@ -86,10 +86,9 @@ public class ReportService {
     @Transactional
     public ReportResponse recordEvaluation(long reportId, ReportEvaluationRequest request) {
         checkShape(request);
-        JsonNode assessment = request.assessment();
         int updated = reports.recordEvaluation(reportId, request.changeSummary(), request.changeSeverity(),
                 request.impactLevel(), request.evaluation(), request.recommendation(),
-                assessment == null || assessment.isNull() ? null : json.writeValueAsString(assessment),
+                jsonText(request.assessment()), jsonText(request.claims()),
                 Instant.now().truncatedTo(ChronoUnit.MICROS), ReportStatus.ASSESSED, ReportStatus.INVESTIGATED);
         Report report = reports.findById(reportId).orElseThrow(() -> noReport(reportId));
         if (updated == 0) {
@@ -112,6 +111,15 @@ public class ReportService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "impact_level, evaluation and recommendation are required unless change_severity is none");
         }
+    }
+
+    // a JSON value as text to store, or null when it was left out or sent as null
+    private String jsonText(JsonNode value) {
+        return value == null || value.isNull() ? null : json.writeValueAsString(value);
+    }
+
+    private JsonNode jsonValue(String text) {
+        return text == null ? null : json.readTree(text);
     }
 
     private static boolean isBlank(String text) {
@@ -142,7 +150,7 @@ public class ReportService {
                         Collectors.mapping(AlertResponse::from, Collectors.toList())));
         Map<Long, List<UserDocumentResponse>> documentsByReport = documents.forOwnerByReport(reportIds);
         return found.stream()
-                .map(report -> UserReportResponse.from(report,
+                .map(report -> UserReportResponse.from(report, jsonValue(report.getClaims()),
                         alertsByReport.getOrDefault(report.getId(), List.of()),
                         documentsByReport.getOrDefault(report.getId(), List.of())))
                 .toList();
@@ -190,7 +198,7 @@ public class ReportService {
         return new ReportResponse(report.getId(), report.getPaperId(), report.getStatus(), report.getCreatedAt(),
                 report.getInvestigatedAt(), report.getEvaluation(), report.getRecommendation(),
                 report.getEvaluatedAt(), report.getChangeSummary(), report.getChangeSeverity(),
-                report.getImpactLevel(), report.getAssessment() == null ? null : json.readTree(report.getAssessment()),
+                report.getImpactLevel(), jsonValue(report.getAssessment()), jsonValue(report.getClaims()),
                 alerts.findByReportIdOrderByIdAsc(report.getId()).stream().map(ReportAlertResponse::from).toList(),
                 documents.forReport(report.getId()));
     }

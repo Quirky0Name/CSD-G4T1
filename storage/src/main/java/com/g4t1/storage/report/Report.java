@@ -45,6 +45,8 @@ public class Report {
     private AssessmentLevel impactLevel;
     // JSON text, as Research Evaluation sent it
     private String assessment;
+    // JSON text, as Research Evaluation sent it; null on reports assessed before claims existed
+    private String claims;
 
     protected Report() {
     }
@@ -106,5 +108,9 @@ public class Report {
 
     public String getAssessment() {
         return assessment;
+    }
+
+    public String getClaims() {
+        return claims;
     }
 }

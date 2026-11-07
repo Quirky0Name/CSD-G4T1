@@ -177,8 +177,8 @@ User JWT, `application/pdf`, only the owner. Another user's item gets the same
   returns it, and the researcher's report API returns the fields of the
   evaluation it left out.
 - **Blocked by:** none
-- **Files:** `storage/src/main/resources/db/migration/V10__add_report_claims.sql`
-  (new), `storage/.../report/Report.java`, `ReportEvaluationRequest.java`,
+- **Files:** `storage/src/main/resources/db/migration/V12__add_report_claims.sql`
+  (new; spec said V10, changed in implementation), `storage/.../report/Report.java`, `ReportEvaluationRequest.java`,
   `ReportResponse.java`, `UserReportResponse.java`, `ReportService.java`,
   `ReportRepository.java`, `storage/src/test/.../report/InternalReportEvaluationTest.java`,
   `ReportListTest.java`, `backend/dev/stub_storage.py`,
@@ -193,18 +193,31 @@ User JWT, `application/pdf`, only the owner. Another user's item gets the same
   - user: `GET /papers/{id}/reports` returns `change_summary`,
     `change_severity` and `impact_level` (doc delta).
 - **Acceptance criteria:**
-  - [ ] `./mvnw test -Dtest=InternalReportEvaluationTest` passes: `claims` is
+  - [x] `./mvnw test -Dtest=InternalReportEvaluationTest` passes: `claims` is
     returned exactly as sent; a `PUT` without it stores null.
-  - [ ] `./mvnw test -Dtest=ReportListTest` passes: `GET /papers/{id}/reports`
+  - [x] `./mvnw test -Dtest=ReportListTest` passes: `GET /papers/{id}/reports`
     returns `claims`, `change_summary`, `change_severity` and `impact_level`, and
     never `assessment`.
-  - [ ] `./mvnw test` passes (Flyway applies V10 under `ddl-auto: validate`).
-  - [ ] `uv run pytest tests/research_evaluation/test_stub_reports.py` passes with
+  - [x] `./mvnw test` passes (Flyway applies V12 under `ddl-auto: validate`).
+  - [x] `uv run pytest tests/research_evaluation/test_stub_reports.py` passes with
     the stub keeping `claims`.
 - **Doc deltas:** `docs/CONTRACTS.md`: the `claims` field and `Claim` shape on all
   three endpoints, the three added fields, no backfill. `docs/STORAGE.md`: the
-  column. `docs/diagrams/erd-flyway-V9.html`: not regenerated; note V10 in
+  column. `docs/diagrams/erd-flyway-V9.html`: not regenerated; note V12 in
   `docs/STORAGE.md`.
+  - Decisions made in implementation (S2):
+    - Spec change: the migration is `V12__add_report_claims.sql`, not V10:
+      `main` already has `V10__add_document_links.sql` and
+      `V11__drop_alert_notes.sql` (the spec predates them). `docs/STORAGE.md`,
+      the migration list.
+    - `claims` is a `text` column holding the JSON as sent, like `assessment`;
+      the request takes any JSON value and stores null when it is left out or
+      sent as null. `docs/STORAGE.md`, the column.
+    - The researcher's report (`UserReportResponse`) adds `change_summary`,
+      `change_severity`, `impact_level` and `claims` after `evaluated_at`, and
+      never carries `assessment`. `docs/CONTRACTS.md`, `GET /papers/{id}/reports`.
+    - The stub Storage Management keeps `claims` on its internal endpoints only;
+      it has no researcher-facing report list. No doc: code shows it.
 
 ### S3: Ask the model for passages
 

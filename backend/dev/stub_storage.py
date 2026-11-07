@@ -85,6 +85,8 @@ class ReportEvaluation(BaseModel):
     evaluation: str | None = None
     recommendation: str | None = None
     assessment: Any = None
+    # the claims with their passages (docs/CONTRACTS.md, "Claim"), stored as sent; null when left out
+    claims: Any = None
 
     @model_validator(mode="after")
     def _shape(self) -> "ReportEvaluation":
@@ -343,6 +345,7 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
             "change_severity": None,
             "impact_level": None,
             "assessment": None,
+            "claims": None,
         }
         store.reports[report["id"]] = report
         for alert in unreported:

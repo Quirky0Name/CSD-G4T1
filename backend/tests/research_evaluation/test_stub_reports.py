@@ -432,6 +432,49 @@ async def test_a_full_evaluation_is_stored_and_the_report_assessed(client):
     assert nested["assessment"] == body["assessment"]
 
 
+CLAIMS = [
+    {
+        "id": "impact-0",
+        "kind": "impact",
+        "text": "The draft's dose rests on the finding.",
+        "supported": True,
+        "passages": [
+            {
+                "target": "paper",
+                "document_id": None,
+                "alert_id": None,
+                "quote": "200 mg caffeine improved n-back accuracy",
+                "page": 3,
+                "verified": "verbatim",
+            }
+        ],
+    }
+]
+
+
+async def test_claims_come_back_exactly_as_sent(client):
+    paper, report_id = await investigated_report(client)
+
+    response = await client.put(
+        f"/internal/reports/{report_id}/evaluation", json=full_evaluation(claims=CLAIMS)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["claims"] == CLAIMS
+    assert (await client.get(f"/internal/reports/{report_id}")).json()["claims"] == CLAIMS
+    nested = (await client.get(f"/internal/papers/{paper}/reports/{report_id}")).json()
+    assert nested["claims"] == CLAIMS
+
+
+async def test_an_evaluation_without_claims_stores_null(client):
+    _, report_id = await investigated_report(client)
+
+    response = await client.put(f"/internal/reports/{report_id}/evaluation", json=full_evaluation())
+
+    assert response.status_code == 200
+    assert response.json()["claims"] is None
+
+
 async def test_a_change_that_isnt_meaningful_stores_only_the_summary_and_change_severity(client):
     _, report_id = await investigated_report(client)
 
