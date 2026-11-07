@@ -408,15 +408,37 @@ User JWT, `application/pdf`, only the owner. Another user's item gets the same
   - Runs without `claims` (saved before `PROMPT_VERSION` 5) skip all three thresholds, so
     older folders still score (doc delta).
 - **Acceptance criteria:**
-  - [ ] `uv run --with fpdf2 --with rich python evals/check_passage_scoring.py`
+  - [x] `uv run --with fpdf2 --with rich python evals/check_passage_scoring.py`
     exits 0. The script uses inline fixtures and asserts: a `change` claim with empty
     `passages` gives `unlinked_claim`; an `impact` claim with empty `passages` on a run
     with `draft: "none"` doesn't; a judged `no` gives `unbacked_passage`; a judged
     uncovered statement gives `uncovered_statement`; an invented claim quote counts as
     invented; a run with no `claims` key has none of the three failures.
-  - [ ] `uv run ruff check` passes.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:** `docs/EVALUATION.md`, "Evals": the new checks, thresholds and
   failure types.
+  - Decisions made in implementation (S5):
+    - The judge grades passages and coverage in a second call, written into the
+      same `<run>.judge.json` as `passages` and `statements`. The fact grading's
+      prompt is unchanged, so text scores stay comparable with `PROMPT_VERSION` 4
+      baselines. EVALUATION.md, "Evals".
+    - A run graded before claims were judged gets only the claims grading when
+      `judge.py` runs again, without `--redo`. EVALUATION.md, "Evals".
+    - The code decides: a passage the judge skipped counts as unbacked, and a
+      `covered_by` number that isn't a claim covers nothing. EVALUATION.md, "Evals".
+    - Every passage is judged, including ones not found verbatim; an invented
+      quote also counts as `invented_quote`. EVALUATION.md, "Evals".
+    - A run with `claims` the judge hasn't graded for them yet scores
+      `unlinked_claim` only; `unbacked_passage` and `uncovered_statement` skip.
+      EVALUATION.md, "Evals".
+    - `unlinked_claim` counts the evaluation's `claims`; `check_quotes` reads each
+      step's raw claims in `assessment`, with the source the model named.
+      EVALUATION.md, "Evals".
+    - `check_passages(ev, grade=None)` takes the run's `.judge.json` as an optional
+      second argument. No doc: code shows it.
+    - The results grid flags a run's unlinked, unbacked and uncovered counts.
+      No doc: code shows it.
+    - `compare.py` is unchanged: it lists no failure types. No doc.
 
 ### S6: User-facing PDF endpoints
 
