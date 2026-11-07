@@ -1,0 +1,120 @@
+{
+  "change_summary": "A retraction alert was raised, but its notice has the same DOI as the tracked paper. The Crossref title is the paper's own title with no \"RETRACTED\" label. The downloaded current copy has the same content as the stored paper and shows no retraction watermark or banner. Nothing given confirms a retraction or any change to the findings.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 6,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "pdfs": {
+      "attached": [
+        "stored paper",
+        "current copy"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 241,
+          "about_this_paper": "no",
+          "what_changed": "Only metadata was recorded: a retraction notice that carries the paper's own DOI. The Crossref title is the paper's unchanged title, with no \"RETRACTED\" prefix. The current copy matches the stored paper and shows no retraction watermark or banner.",
+          "scope": "unclear",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "The notice has the paper's own DOI, and nothing else shows a change: the title is unchanged and the current copy is identical to the stored paper with no banner. The alert alone does not confirm a retraction.",
+          "evidence": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024"
+            },
+            {
+              "source": "10.9999/fake.2020.024",
+              "quote": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "none",
+      "summary": "A retraction alert was raised, but its notice has the same DOI as the tracked paper. The Crossref title is the paper's own title with no \"RETRACTED\" label. The downloaded current copy has the same content as the stored paper and shows no retraction watermark or banner. Nothing given confirms a retraction or any change to the findings.",
+      "claims": [
+        {
+          "text": "The alert records a retraction notice whose DOI is the tracked paper's own DOI.",
+          "passages": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024"
+            }
+          ]
+        },
+        {
+          "text": "The Crossref title for that DOI is the paper's ordinary title, with no retraction label.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.024",
+              "quote": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial"
+            }
+          ]
+        },
+        {
+          "text": "The current copy shows no retraction watermark or banner and has the same content as the stored paper.",
+          "passages": []
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The alert records a retraction notice whose DOI is the tracked paper's own DOI.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 241,
+          "quote": "retraction, notice 10.9999/fake.2020.024",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The Crossref title for that DOI is the paper's ordinary title, with no retraction label.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The current copy shows no retraction watermark or banner and has the same content as the stored paper.",
+      "supported": false,
+      "passages": []
+    }
+  ]
+}

@@ -1,0 +1,382 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the expression of concern states that Fig. 7 does not show LSD1 siRNA data, so the H460 knockdown migration result is not supported",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The Expression of Concern says Fig. 7 has no LSD1 siRNA data, that the transfection controls are poorly described, and that the provenance of the results is in doubt.\" Also: \"That hits the Section 3 rationale hardest.\""
+    },
+    {
+      "fact": "says the draft's Aim 2 rationale rests on that H460 siRNA migration result",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"In Section 3 it treats the H460 siRNA scratch-assay result (Figure 7) as the main evidence for its central hypothesis.\" The answer does not name \"Aim 2\" explicitly, so this is a paraphrase against the Section 3 rationale."
+    },
+    {
+      "fact": "advises not resting Aim 2 on this result alone, for example by hedging the wording, adding independent evidence, or presenting the effect as what the planned experiments will test",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"hedge the Section 3 'clearest indication' sentence and add independent support for it.\""
+    },
+    {
+      "fact": "notes that the concern is unresolved (the authors did not respond) and the paper may later be corrected or retracted",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The authors did not respond.\" \"the concern is unresolved but the paper is not retracted.\" The answer does not explicitly say the paper may later be corrected or retracted; this is only loosely implied."
+    },
+    {
+      "fact": "says the paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"The paper has not been retracted\" and \"The paper is not retracted, so the citation can stay.\""
+    },
+    {
+      "fact": "says the draft's use of the migration result is not affected by the concern",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"Overall the impact is medium: the draft's own experiments are planned independently, but its motivating evidence is weakened.\" The answer says the concern weakens the migration-result evidence, the opposite of this statement."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Expression of Concern: Over-Expression of LSD1 Promotes Proliferation, Migration and Invasion in Non-Small Cell Lung Cancer",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted title names the document as an Expression of Concern on the LSD1 paper."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "there appears to be a vertical discontinuity in the LSD1 panel between the 293T and A549 lanes.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states an apparent vertical discontinuity in the LSD1 panel between the 293T and A549 lanes, matching the claim."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "the figure does not report data for an LSD1 siRNA experiment",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the figure does not report data for an LSD1 siRNA experiment, matching the claim."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The article does not report sufficient detail about the controls used in the Flag-LSD1 and LSD1 siRNA transfection experiments to replicate these experiments.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the article lacks sufficient control detail in the transfection experiments to replicate them, matching the claim."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "call into question the validity and provenance of the reported results.",
+      "backs": false,
+      "pass": false,
+      "reason": "The quote says the notice calls validity and provenance into question, but it does not mention similarities to other groups' work as the cause the claim names."
+    },
+    {
+      "claim_id": "change-5",
+      "quote": "The authors did not respond or could not be reached to discuss these issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the authors did not respond or could not be reached, matching the claim."
+    },
+    {
+      "claim_id": "change-6",
+      "quote": "The PLOS ONE Editors issue this Expression of Concern to inform readers of the unresolved issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote describes the concern as relating to unresolved issues, which supports the 'unresolved' part. It does not address retraction, and nothing contradicts the claim that the notice does not say the paper is retracted."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Lv et al. found LSD1 expression higher in lung cancer tissue than in normal lung tissue, and over-expression of LSD1 protein was associated with shorter overall survival [12].",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's own text says Lv et al. found higher LSD1 in lung cancer tissue and shorter survival with high LSD1, matching the claim's content. The quote does not show the Section 2 location."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Our results showed that overexpression of LSD1 protein were associated with shorter overall survival of NSCLC patients.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper says LSD1 overexpression was associated with shorter overall survival in NSCLC patients, matching the claim."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the validity and provenance of the reported results are questioned. Since it covers all reported results, it includes the prognostic findings."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "We take this knockdown result as the clearest indication that LSD1 is a driver, and not only a marker, of migration in lung cancer cells",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft calls the knockdown result the clearest indication that LSD1 drives migration, matching the claim."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "the number and rate of migrated cells was gradually reduced after transfection with LSD1 siRNA plasmid in the H460 cell lines.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper says migration of H460 cells was reduced after transfection with LSD1 siRNA, matching the claim."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "the figure does not report data for an LSD1 siRNA experiment",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the figure does not report an LSD1 siRNA experiment, matching the claim."
+    },
+    {
+      "claim_id": "impact-6",
+      "quote": "The article does not report sufficient detail about the controls used in the Flag-LSD1 and LSD1 siRNA transfection experiments to replicate these experiments.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the transfection controls are not described in enough detail to replicate them, matching the claim."
+    },
+    {
+      "claim_id": "impact-7",
+      "quote": "The PLOS ONE Editors issue this Expression of Concern to inform readers of the unresolved issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the Editors issue the concern to inform readers of unresolved issues, which supports 'unresolved'. Nothing contradicts the claim that the notice does not say the paper is retracted."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "the figure does not report data for an LSD1 siRNA experiment",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the figure does not report an LSD1 siRNA experiment, matching the claim."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The article does not report sufficient detail about the controls used in the Flag-LSD1 and LSD1 siRNA transfection experiments to replicate these experiments.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the transfection controls are not described in enough detail to replicate them, matching the claim."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "We take this knockdown result as the clearest indication that LSD1 is a driver, and not only a marker, of migration in lung cancer cells",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft calls the knockdown result the clearest indication that LSD1 drives migration, matching the claim."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the validity and provenance of the reported results are questioned, which covers the prognostic findings as the claim states."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "Lv et al. found LSD1 expression higher in lung cancer tissue than in normal lung tissue, and over-expression of LSD1 protein was associated with shorter overall survival [12].",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's own text cites Lv et al. for higher LSD1 in tissue and shorter survival, matching the claim."
+    },
+    {
+      "claim_id": "action-5",
+      "quote": "The PLOS ONE Editors issue this Expression of Concern to inform readers of the unresolved issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the concern is about unresolved issues, which supports 'unresolved'. Nothing contradicts the claim that the notice does not say the paper is retracted."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "PLOS ONE has issued an Expression of Concern on this LSD1 lung cancer paper.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice flags an apparent discontinuity in the Fig. 4 blot.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice flags a Fig. 7 that lacks the LSD1 siRNA data its text describes.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice flags missing control details for the transfection experiments.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice flags similarities to other groups' work that question the validity and provenance of the results.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The authors did not respond.",
+      "covered_by": [
+        "change-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper has not been retracted.",
+      "covered_by": [
+        "change-6",
+        "impact-7",
+        "action-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The concern covers the figures and the provenance of the findings.",
+      "covered_by": [
+        "change-1",
+        "change-2",
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The concern is unresolved.",
+      "covered_by": [
+        "change-6",
+        "impact-7",
+        "action-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's own experiments are planned independently of the cited work.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "In Section 2 the draft uses the tissue and survival findings of Lv et al. as background.",
+      "covered_by": [
+        "impact-0",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "In Section 3 the draft treats the H460 siRNA scratch-assay result (Figure 7) as the main evidence for its central hypothesis.",
+      "covered_by": [
+        "impact-3",
+        "impact-4",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The Expression of Concern says Fig. 7 has no LSD1 siRNA data.",
+      "covered_by": [
+        "change-2",
+        "impact-5",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The Expression of Concern says the transfection controls are poorly described.",
+      "covered_by": [
+        "change-3",
+        "impact-6",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The Expression of Concern says the provenance of the results is in doubt.",
+      "covered_by": [
+        "change-4",
+        "impact-2",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The concern is unresolved and the paper is not retracted.",
+      "covered_by": [
+        "change-6",
+        "impact-7",
+        "action-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "PLOS ONE's Expression of Concern says Fig. 7 has no LSD1 siRNA data.",
+      "covered_by": [
+        "change-2",
+        "impact-5",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "PLOS ONE's Expression of Concern says the transfection controls are poorly described.",
+      "covered_by": [
+        "change-3",
+        "impact-6",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice questions the validity and provenance of all the results.",
+      "covered_by": [
+        "change-4",
+        "impact-2",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper is not retracted.",
+      "covered_by": [
+        "change-6",
+        "impact-7",
+        "action-5"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

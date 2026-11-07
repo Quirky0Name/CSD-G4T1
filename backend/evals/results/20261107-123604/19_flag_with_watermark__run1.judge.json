@@ -1,0 +1,251 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the current copy of the paper carries a retraction or withdrawal banner",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The paper's current copy, downloaded on 2026-10-02, is marked RETRACTED on every page and in its title.\""
+    },
+    {
+      "fact": "says the reason for the retraction is not stated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The text we have gives no reason for the retraction\" and \"No reason for the retraction is given, so it is unknown whether the protocol itself is at fault.\""
+    },
+    {
+      "fact": "tells the researcher to stop and raise it with co-authors or supervisor because the draft's methods depend on the paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Raise this with your co-authors or supervisor before submitting, because your Methods 2.2 follows the protocol of a paper whose current copy is now marked RETRACTED.\" The answer does not use the word \"stop\", but it advises raising the issue before submitting because the methods depend on the paper."
+    },
+    {
+      "fact": "states a specific reason for the retraction such as fabrication or error",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "claims a retraction notice was found or quotes one",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"This confirms the OpenAlex retraction flag, which had no notice behind it.\" The answer says no notice exists and never claims one was found or quotes one."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "RETRACTED: Soil carbon gains after winter cover cropping",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched document's title line carries the RETRACTED marker, which is what claim 1 states."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line reports a retraction flag with no notice behind it, matching claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Winter cover crops raised topsoil carbon by 6% over three years.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched current copy contains the 6% topsoil carbon sentence, so it shows the current copy still states the finding. It does not by itself show the text is unchanged from the stored paper; passage 4 covers that."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Winter cover crops raised topsoil carbon by 6% over three years.",
+      "backs": true,
+      "pass": true,
+      "reason": "The stored tracked paper contains the identical 6% sentence. Together with passage 3, this shows the finding is unchanged from the stored version."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says it follows the Haugen and Rao protocol exactly for 0-15 cm sampling and dry combustion, which matches claim 4."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Using an established protocol rather than designing our own lets our numbers be compared directly with that study",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says using an established protocol lets its numbers be compared directly with that study, matching claim 5."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Soil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2.",
+      "backs": true,
+      "pass": true,
+      "reason": "The stored paper says soil carbon was measured by dry combustion on 0-15 cm cores using its sampling protocol, matching the first part of claim 6."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "We describe the sampling and analysis protocol in detail so that it can be reused by other field groups",
+      "backs": true,
+      "pass": true,
+      "reason": "The stored paper says its protocol is described so that other field groups can reuse it, matching the reuse offer in claim 6."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "RETRACTED: Soil carbon gains after winter cover cropping",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched document's title carries the RETRACTED marker, matching claim 7."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "RETRACTED: Soil carbon gains after winter cover cropping",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched document's title carries the RETRACTED marker, matching claim 8."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says it follows the tracked paper's protocol exactly in Methods 2.2, matching claim 9."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "Using an established protocol rather than designing our own lets our numbers be compared directly with that study",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says the established protocol lets its numbers be compared directly with that study, matching claim 10."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper's current copy, downloaded on 2026-10-02, is marked RETRACTED in its title.",
+      "covered_by": [
+        "change-0",
+        "impact-3",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's current copy, downloaded on 2026-10-02, is marked RETRACTED on every page.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "change_summary",
+      "statement": "The OpenAlex retraction flag is confirmed by the current copy, and the flag had no notice behind it.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The text we have gives no reason for the retraction.",
+      "covered_by": [
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The body of the current copy appears identical to the stored version, including the 6% topsoil carbon gain claim.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The whole paper is affected by the retraction.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft cites the tracked paper once, in Methods section 2.2.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "In Methods section 2.2, the draft follows the tracked paper's sampling and carbon measurement protocol exactly.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft says this protocol lets its numbers be compared directly with the tracked study.",
+      "covered_by": [
+        "impact-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The current copy of the paper is now marked RETRACTED.",
+      "covered_by": [
+        "change-0",
+        "impact-3",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The retraction change affects the whole paper, so the draft's use of it is touched.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "No reason for the retraction is given, so the material does not show whether the protocol itself is at fault.",
+      "covered_by": [
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's whole measurement approach is built on this protocol.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft's Methods 2.2 follows the protocol of a paper whose current copy is now marked RETRACTED.",
+      "covered_by": [
+        "change-0",
+        "impact-0",
+        "impact-3",
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No reason for the retraction is given.",
+      "covered_by": [
+        "action-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "action-3"
+  ]
+}

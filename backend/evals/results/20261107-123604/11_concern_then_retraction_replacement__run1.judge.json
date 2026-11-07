@@ -1,0 +1,271 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the paper was retracted and replaced by a corrected version",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The paper was first flagged with an expression of concern about its dose-response calculation. It was then retracted and replaced by a corrected version\""
+    },
+    {
+      "fact": "says the slope changed from 0.45 to 0.28 points per 10 mg",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"the Table 3 slope was miscalculated (0.45 reported, 0.28 correct per 10 mg).\""
+    },
+    {
+      "fact": "tells the researcher to update the comparison in the Discussion or cite the corrected version",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"the Discussion sentence needs revisiting\" and \"rewrite the comparison and the validity claim. Cite the corrected version, which the notice says leaves the finding that iron reduces fatigue unchanged.\""
+    },
+    {
+      "fact": "says the finding that iron reduces fatigue is invalid",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"the notice says the finding that iron reduces fatigue stands\" and \"the notice says the finding that iron reduces fatigue is unchanged.\" The answer says the opposite of invalid."
+    },
+    {
+      "fact": "says the paper was retracted for misconduct or fabrication",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The answer gives the reason as a miscalculated slope; it never mentions misconduct or fabrication."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The editors have received concerns about the calculation of the dose-response analysis in this article and are investigating.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says the editors received concerns about the dose-response calculation and are investigating, which matches the claim of an expression of concern under investigation."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "this article is retracted and replaced by a corrected version (doi 10.9999/fake.2019.011v2)",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice states the article is retracted and replaced by a corrected version."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "it was reported as 0.45 points per 10 mg and the correct value is 0.28 points per 10 mg",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says 0.45 points per 10 mg was reported and the correct value is 0.28 points per 10 mg."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "slope: 0.28 points per 10 mg (95% CI 0.15 to 0.41)",
+      "backs": true,
+      "pass": true,
+      "reason": "The corrected version's slope is given as 0.28 points per 10 mg (95% CI 0.15 to 0.41), matching the corrected half of the claim."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "slope: 0.45 points per 10 mg (95% CI 0.30 to 0.60)",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper gives the original slope as 0.45 points per 10 mg (95% CI 0.30 to 0.60), matching the original half of the claim."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "The finding that iron supplementation reduces fatigue is unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says the finding that iron supplementation reduces fatigue is unchanged."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Our estimated slope of 0.41 fatigue points per 10 mg of iron is close to that of Park and Singh [7] (0.45 per 10 mg), which supports the validity of our design.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says its slope of 0.41 is close to Park and Singh [7] (0.45 per 10 mg) and supports the validity of its design. The quote does not show the section, but the comparison and validity claim match the claim's content."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "slope: 0.45 points per 10 mg (95% CI 0.30 to 0.60)",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper gives the original slope as 0.45 points per 10 mg (95% CI 0.30 to 0.60)."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "it was reported as 0.45 points per 10 mg and the correct value is 0.28 points per 10 mg",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says 0.45 was reported and the correct value is 0.28 points per 10 mg, i.e. the slope was miscalculated."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "slope: 0.28 points per 10 mg (95% CI 0.15 to 0.41)",
+      "backs": true,
+      "pass": true,
+      "reason": "The corrected version gives a slope of 0.28 points per 10 mg with a 95% CI of 0.15 to 0.41."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "The finding that iron supplementation reduces fatigue is unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says the finding that iron supplementation reduces fatigue is unchanged."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Our estimated slope of 0.41 fatigue points per 10 mg of iron is close to that of Park and Singh [7] (0.45 per 10 mg), which supports the validity of our design.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft compares its slope of 0.41 with Park and Singh's 0.45 per 10 mg and says this supports the validity of its design."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "this article is retracted and replaced by a corrected version (doi 10.9999/fake.2019.011v2)",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice states the article is retracted and replaced by a corrected version."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "it was reported as 0.45 points per 10 mg and the correct value is 0.28 points per 10 mg",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says 0.45 per 10 mg was reported and the correct value is 0.28, i.e. the slope was miscalculated."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "slope: 0.28 points per 10 mg (95% CI 0.15 to 0.41)",
+      "backs": true,
+      "pass": true,
+      "reason": "The corrected version gives a slope of 0.28 points per 10 mg with a 95% CI of 0.15 to 0.41."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "The finding that iron supplementation reduces fatigue is unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says the finding that iron supplementation reduces fatigue is unchanged."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper was first flagged with an expression of concern about its dose-response calculation.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "It was then retracted and replaced by a corrected version, because the Table 3 slope was miscalculated (0.45 reported, 0.28 correct per 10 mg).",
+      "covered_by": [
+        "change-1",
+        "change-2",
+        "impact-2",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The corrected version changes the slope and its confidence interval, which is now 0.15 to 0.41.",
+      "covered_by": [
+        "change-3",
+        "impact-3",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The rest of the text appears unchanged.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the finding that iron reduces fatigue stands.",
+      "covered_by": [
+        "change-4",
+        "impact-4",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft cites Park and Singh [7] once, in the Discussion, to compare its own slope (0.41) with their reported 0.45 per 10 mg and to claim this supports its design's validity.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The change touches exactly that number: the paper was retracted and replaced because the slope was miscalculated, and the correct value is 0.28.",
+      "covered_by": [
+        "change-1",
+        "change-2",
+        "impact-2",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's claim of close agreement therefore no longer holds, and its slope is now well above the corrected one.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice says the finding that iron reduces fatigue is unchanged.",
+      "covered_by": [
+        "change-4",
+        "impact-4",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft's Discussion compares its slope with the original 0.45 per 10 mg.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper was retracted because that slope was miscalculated and the correct value is 0.28.",
+      "covered_by": [
+        "change-1",
+        "change-2",
+        "impact-2",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice says the corrected version leaves the finding that iron reduces fatigue unchanged.",
+      "covered_by": [
+        "change-4",
+        "impact-4",
+        "action-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}
