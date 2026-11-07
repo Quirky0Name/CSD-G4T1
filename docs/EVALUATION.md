@@ -316,8 +316,9 @@ Per report:
    own). A citation jump has no document: its alert line carries the rule's
    description (the counts), and step 1's task says to judge it as new
    attention, scope `citations_only`, severity `low`, so the gate lets it
-   through to steps 2 and 3. `PROMPT_VERSION` is 6 since each claim states one fact that each of its
-   quotes shows on its own (5 added claims and step 2's stored paper).
+   through to steps 2 and 3. `PROMPT_VERSION` is 7 since conclusions, widening words and absences
+   get their own claims, and step 3 adds no fact of its own (6: each claim states one fact that each
+   of its quotes shows on its own; 5 added claims and step 2's stored paper).
 4. `PUT /internal/reports/{id}/evaluation`, once; the report becomes
    `assessed`. Nothing is written between steps, so an `assessed` report is
    always complete.
@@ -343,6 +344,9 @@ nothing to quote has none.
 - A passage's source can be any material the step was given: `stored paper`,
   a notice's DOI, `new version`, `current copy`, `draft` or `alert <id>`.
   Quotes must be contiguous: no `...`.
+- A conclusion is a claim too, worded no wider than the quote closest to it.
+  A statement that something is missing is a claim of its own with no passages,
+  saying only that; a comparison of two documents is one claim per side.
 - The draft stands in for the research topic (no topic or question field
   exists). With the stored paper attached, step 2 writes two `impact` claims per
   use: one quoting the draft's sentence, one quoting the tracked paper's passage
