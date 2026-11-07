@@ -1,8 +1,10 @@
 """impact/assess.py and impact/prompts.py: the three steps, the gate, and what each step is given,
 with a fake model and the stub Storage Management (for the draft). One `live` test asks Gemini."""
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 from uuid import UUID
 
 import httpx
@@ -17,6 +19,7 @@ from research_evaluation.impact.inputs import MissingPdf, ReportInputs
 from research_evaluation.impact.llm import (
     AllModelsFailed,
     Answer,
+    FallbackLlm,
     GeminiLlm,
     ModelFailure,
     Pdf,
@@ -67,6 +70,12 @@ def change_answer(severity: str = "high", alert_severity: str | None = None) -> 
             "relations": None,
             "severity": severity,
             "summary": "The paper was retracted because its results can't be relied on.",
+            "claims": [
+                {
+                    "text": "The paper was retracted.",
+                    "passages": [{"source": NOTICE, "quote": "This article has been retracted"}],
+                }
+            ],
         }
     )
 
@@ -87,12 +96,26 @@ IMPACT = ImpactAssessment.model_validate(
         ],
         "impact_level": "high",
         "explanation": "Your Discussion rests on a retracted result.",
+        "claims": [
+            {
+                "text": "Your Discussion rests on the retracted result.",
+                "passages": [
+                    {"source": "draft", "quote": "Our finding agrees with Gautret et al. [1]."}
+                ],
+            }
+        ],
     }
 )
 ACTIONS = RecommendedActions.model_validate(
     {
         "actions": [{"action": "Remove the citation and re-check the claim.", "where": "Discussion"}],
         "recommendation": "Replace the citation in the Discussion.",
+        "claims": [
+            {
+                "text": "The citation in the Discussion should be replaced.",
+                "passages": [{"source": NOTICE, "quote": "This article has been retracted"}],
+            }
+        ],
     }
 )
 
@@ -320,10 +343,10 @@ async def test_a_meaningful_change_reads_the_draft_once_then_runs_steps_two_and_
     assert sm.calls("GET", "/draft") == 1
 
 
-async def test_step_two_gets_the_change_the_table_and_the_draft_and_only_it_gets_the_draft(sm):
+async def test_step_two_gets_the_change_the_table_the_draft_then_the_stored_paper(sm):
     llm = fake(sm, severity="medium")
 
-    await assess(llm, sm.client, await inputs_for(sm))
+    evaluation = await assess(llm, sm.client, await inputs_for(sm))
 
     step1, step2, step3 = llm.calls
     parts = step2["parts"]
@@ -331,10 +354,15 @@ async def test_step_two_gets_the_change_the_table_and_the_draft_and_only_it_gets
     assert "| methods_or_data                 | high          | high   | medium |" in IMPACT_TASK
     assert "CHANGE" in texts(parts) and '"severity": "medium"' in texts(parts)
     assert "TRACKED PAPER" in texts(parts)
-    assert pdfs(parts) == [DRAFT]
+    assert pdfs(parts) == [DRAFT, PAPER_PDF]
     assert "ATTACHED PDF: THE RESEARCHER'S DRAFT" in texts(parts)
+    assert "ATTACHED PDF: STORED PAPER" in texts(parts)
     assert DRAFT not in pdfs(step1["parts"])
     assert pdfs(step3["parts"]) == []
+    assert evaluation.assessment["impact_pdfs"] == {
+        "attached": ["draft", "stored paper"],
+        "left_out": [],
+    }
 
 
 async def test_step_three_gets_steps_one_and_two_and_no_pdfs(sm):
@@ -525,6 +553,67 @@ async def test_an_answer_that_doesnt_fit_raises_and_returns_nothing(sm):
     with pytest.raises(ValueError):
         await assess(llm, sm.client, await inputs_for(sm))
     assert len(llm.calls) == 2
+
+
+# claims (docs/EVALUATION.md, "Impact")
+
+
+class ScriptedGemini:
+    """A Gemini client whose answer depends on the model asked: the JSON text to return."""
+
+    def __init__(self, script: dict[str, str]):
+        self.script = script
+        self.asked: list[str] = []
+        self.aio = SimpleNamespace(models=self)
+
+    async def generate_content(self, **kwargs):
+        self.asked.append(kwargs["model"])
+        return SimpleNamespace(text=self.script[kwargs["model"]], model_version=None)
+
+
+def change_json(claims: list) -> str:
+    return change_answer().model_dump_json(exclude={"claims"})[:-1] + f', "claims": {json.dumps(claims)}}}'
+
+
+async def test_an_answer_with_no_claims_fails_and_the_next_model_is_asked():
+    client = ScriptedGemini(
+        {
+            "first": change_json([]),
+            "second": change_json([{"text": "The paper was retracted.", "passages": []}]),
+        }
+    )
+
+    answer = await FallbackLlm(client, ("first", "second")).generate(
+        system=SYSTEM, parts=["x"], schema=ChangeAssessment
+    )
+
+    assert client.asked == ["first", "second"]
+    assert answer.model == "second"
+
+
+def test_a_claim_with_no_passages_is_accepted():
+    answer = ChangeAssessment.model_validate_json(
+        change_json([{"text": "Nothing given shows this.", "passages": []}])
+    )
+    assert answer.claims[0].passages == []
+
+
+def test_a_citation_jumps_empty_evidence_is_still_accepted():
+    jump = change_answer().model_dump(mode="json")
+    jump["alerts"][0] |= {"scope": "citations_only", "severity": "low", "evidence": []}
+    jump["claims"] = [
+        {"text": "Citations rose.", "passages": [{"source": "alert 7", "quote": "rose from 3 to 40"}]}
+    ]
+    assert ChangeAssessment.model_validate(jump).alerts[0].evidence == []
+
+
+async def test_the_result_records_prompt_version_5_and_reads_the_draft_only_after_the_gate(sm):
+    llm = fake(sm)
+
+    evaluation = await assess(llm, sm.client, await inputs_for(sm))
+
+    assert evaluation.assessment["prompt_version"] == 5
+    assert [call["drafts_read_before"] for call in llm.calls] == [0, 1, 1]
 
 
 # every model failing a step: the placeholder (docs/EVALUATION.md, "Impact")

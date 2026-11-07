@@ -48,6 +48,8 @@ async def assess(llm: Llm, sm: httpx.AsyncClient, inputs: ReportInputs) -> Evalu
         "placeholder": False,
         "draft": "not_needed",
         "pdfs": pdfs_record(prompt),
+        # step 2's PDFs (the draft, then the stored paper), shaped like pdfs; null until step 2
+        "impact_pdfs": None,
         "change": None,
         "impact": None,
         "actions": None,
@@ -67,11 +69,9 @@ async def assess(llm: Llm, sm: httpx.AsyncClient, inputs: ReportInputs) -> Evalu
         draft = await draft_pdf(sm, inputs.report.paper_id)
         assessment["draft"] = "read" if draft is not None else "none"
         step = "impact"
-        impact = await llm.generate(
-            system=SYSTEM,
-            parts=impact_prompt(inputs.paper, change.value, draft),
-            schema=ImpactAssessment,
-        )
+        step_two = impact_prompt(inputs.paper, change.value, draft, inputs.paper_pdf)
+        assessment["impact_pdfs"] = pdfs_record(step_two)
+        impact = await llm.generate(system=SYSTEM, parts=step_two.parts, schema=ImpactAssessment)
         assessment["answered_by"]["impact"] = impact.model
         assessment["impact"] = impact.value.model_dump(mode="json")
         step = "actions"

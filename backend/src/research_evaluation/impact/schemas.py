@@ -1,9 +1,9 @@
 """The shapes of impact's three answers (Gemini's structured output) and of what it sends to
 Storage Management. The field names are the ones the prompts ask for (impact/prompts.py)."""
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 Level = Literal["none", "low", "medium", "high"]
 Role = Literal[
@@ -33,6 +33,19 @@ class Evidence(_Answer):
     quote: str
 
 
+class Claim(_Answer):
+    """One factual statement of a step's answer and the quotes behind it (docs/EVALUATION.md,
+    "Impact"). A claim is about anything the step says, not tied to an alert, use or action;
+    a statement with nothing to quote has no passages."""
+
+    text: str
+    passages: list[Evidence]
+
+
+# every step states at least one thing, so an empty list is an answer that doesn't fit
+Claims = Annotated[list[Claim], Field(min_length=1)]
+
+
 class AlertJudgment(_Answer):
     alert_id: int
     about_this_paper: Literal["yes", "no", "unclear"]
@@ -49,6 +62,7 @@ class ChangeAssessment(_Answer):
     relations: str | None
     severity: Level
     summary: str
+    claims: Claims
 
 
 # Step 2: how does it impact the researcher?
@@ -69,6 +83,7 @@ class ImpactAssessment(_Answer):
     uses: list[Use]
     impact_level: Level
     explanation: str
+    claims: Claims
 
 
 # Step 3: what should the researcher do?
@@ -82,6 +97,7 @@ class Action(_Answer):
 class RecommendedActions(_Answer):
     actions: list[Action]
     recommendation: str
+    claims: Claims
 
 
 class Evaluation(BaseModel):

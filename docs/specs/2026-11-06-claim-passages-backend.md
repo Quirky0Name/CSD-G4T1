@@ -257,23 +257,38 @@ User JWT, `application/pdf`, only the owner. Another user's item gets the same
     `assessment.pdfs` (doc delta).
   - `PROMPT_VERSION` becomes 5 (doc delta).
 - **Acceptance criteria:**
-  - [ ] `uv run pytest tests/research_evaluation/impact/test_prompts.py` passes:
+  - [x] `uv run pytest tests/research_evaluation/impact/test_prompts.py` passes:
     step 2 with a draft has both PDFs in order; with no draft, none; when both
     exceed the budget, only the draft, and the left-out is recorded.
-  - [ ] Same file: each of the three tasks asks for one claim per factual statement,
+  - [x] Same file: each of the three tasks asks for one claim per factual statement,
     and step 1's names `alert <id>`.
-  - [ ] `uv run pytest tests/research_evaluation/impact/test_assess.py` passes: an
+  - [x] `uv run pytest tests/research_evaluation/impact/test_assess.py` passes: an
     answer with empty `claims` fails on the first model and the next model is used; a
     claim with empty `passages` is accepted; a citation jump's empty `evidence` is
     still accepted.
-  - [ ] `test_assess.py`: `assessment.prompt_version` is 5; the draft is still read
+  - [x] `test_assess.py`: `assessment.prompt_version` is 5; the draft is still read
     only after the gate.
-  - [ ] `uv run --with fpdf2 --with rich python evals/run.py --dry 01_correction_effect_size` succeeds.
-  - [ ] `uv run pytest` and `uv run ruff check` pass.
+  - [x] `uv run --with fpdf2 --with rich python evals/run.py --dry 01_correction_effect_size` succeeds.
+  - [x] `uv run pytest` and `uv run ruff check` pass.
 - **Doc deltas:** `docs/EVALUATION.md`, "Impact": the table's step 2 reads, each
   step's `claims`, `impact_pdfs`, `PROMPT_VERSION` 5, the `alert <id>` label.
   `docs/ROADMAP.md`: the draft stands in for a research topic; a topic field isn't
   built.
+  - Decisions made in implementation (S3):
+    - `assessment.impact_pdfs` is null until step 2 runs (change severity `none`,
+      or a placeholder before step 2). EVALUATION.md, `impact_pdfs`.
+    - With no draft, `impact_pdfs` is `{"attached": [], "left_out": []}`: the stored
+      paper isn't recorded as left out, since step 2 never offers it without a draft.
+      EVALUATION.md, `impact_pdfs`.
+    - A stored paper Storage Management doesn't have is left out with `why`
+      `not stored`; one over the budget with `over the size budget`, as in step 1.
+      EVALUATION.md, `impact_pdfs`.
+    - When the draft is attached but the stored paper isn't, the prompt says
+      `STORED PAPER: not available (<why>)`, so the model doesn't quote it.
+      No doc: code shows it.
+    - `prompts.ChangePrompt` is renamed `Prompt` and used by steps 1 and 2;
+      `impact_prompt` returns a `Prompt` and takes the stored paper's bytes.
+      No doc: code shows it.
 
 ### S4: Verify quotes and build claims
 
