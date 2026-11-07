@@ -9,6 +9,8 @@ import com.g4t1.storage.snapshot.SnapshotService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -118,8 +120,19 @@ class AdminOffTest {
     }
 
     @Test
-    void aFakeReportPdfIsNotFoundWithNoToken() throws Exception {
-        mvc.perform(get("/public/fake-report/new-version.pdf")).andExpect(status().isNotFound());
+    void aFakePaperIsNotFoundAndStoresNothing() throws Exception {
+        long before = papers.count();
+
+        mvc.perform(post("/admin/users/{ownerId}/fake-paper", owner).header(HttpHeaders.AUTHORIZATION, admin()))
+                .andExpect(status().isNotFound());
+
+        org.assertj.core.api.Assertions.assertThat(papers.count()).isEqualTo(before);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"new-version.pdf", "current-version.pdf", "paper.pdf", "draft.pdf"})
+    void aFakeReportPdfIsNotFoundWithNoToken(String file) throws Exception {
+        mvc.perform(get("/public/fake-report/{file}", file)).andExpect(status().isNotFound());
     }
 
     private static String admin() {

@@ -144,8 +144,14 @@
 .dev-pickers {
   width: calc(var(--u) * 690);
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
   gap: calc(var(--u) * 16);
+}
+
+/* sits on the selects' baseline, so the row keeps the belly's curve */
+.dev-add-paper {
+  padding: 0 calc(var(--u) * 14);
 }
 
 .dev-field {

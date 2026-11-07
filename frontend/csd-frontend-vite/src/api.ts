@@ -3,6 +3,7 @@
 // the Vite dev proxy (vite.config.ts), which is also where their base URLs
 // live for real deployments.
 import axios from 'axios'
+import { withMockClaims } from './mocks/fakeReport'
 import { getToken, notifyUnauthorized, type Session } from './session'
 
 export type AlertSeverity = 'high' | 'medium' | 'low'
@@ -53,27 +54,77 @@ export type UserDocument = {
   links: DocumentLink[] | null
 }
 
-// a report comes with its alerts and documents, so this one call loads everything the details show
+// a report comes with its alerts and documents, so this one call loads everything the details show.
+// Each is normalised to the contract, and a dev mode fake report gets the example's claims
+// (src/mocks/fakeReport.ts), since this branch's Storage doesn't send claims yet.
 export async function listReports(paperId: string): Promise<UserReport[]> {
-  const res = await storage.get<{ reports: UserReport[] }>(`/papers/${paperId}/reports`)
-  return res.data.reports
+  const res = await storage.get<{ reports: RawReport[] }>(`/papers/${paperId}/reports`)
+  return res.data.reports.map((raw) => withMockClaims(toUserReport(raw)))
 }
 
+// The report as docs/CONTRACTS.md on feat/claim-passages-backend gives it ("GET /papers/{id}/reports")
 export type UserReport = {
   id: number
   paper_id: string
   status: ReportStatus
   created_at: string
   investigated_at: string | null
-  // not in GET /papers/{id}/reports today (only the internal report API has them), so often absent
-  change_summary?: string | null
-  change_severity?: AssessmentLevel | null
-  impact_level?: AssessmentLevel | null
   evaluation: string | null
   recommendation: string | null
   evaluated_at: string | null
+  change_summary: string | null
+  change_severity: AssessmentLevel | null
+  // null when change_severity is 'none'
+  impact_level: AssessmentLevel | null
+  // null until assessed, and on reports assessed before claims existed
+  claims: Claim[] | null
   alerts: Alert[]
   documents: UserDocument[]
+}
+
+// What this branch's Storage sends: the same, without the fields the claims work added
+export type RawReport = Omit<UserReport, 'change_summary' | 'change_severity' | 'impact_level' | 'claims'> &
+  Partial<Pick<UserReport, 'change_summary' | 'change_severity' | 'impact_level' | 'claims'>>
+
+// Fields the server leaves out become null, so nothing downstream checks for undefined
+export function toUserReport(raw: RawReport): UserReport {
+  return {
+    ...raw,
+    change_summary: raw.change_summary ?? null,
+    change_severity: raw.change_severity ?? null,
+    impact_level: raw.impact_level ?? null,
+    claims: raw.claims ?? null,
+  }
+}
+
+export type ClaimKind = 'change' | 'impact' | 'action'
+
+// One factual statement of the evaluation and the quotes behind it (docs/CONTRACTS.md, "Claim").
+// text and every quote are model output: render them as text, never as HTML.
+export type Claim = {
+  // `<kind>-<index in that kind>`, unique in the report
+  id: string
+  kind: ClaimKind
+  text: string
+  // true exactly when a passage is 'verbatim'
+  supported: boolean
+  passages: Passage[]
+}
+
+export type PassageTarget = 'paper' | 'draft' | 'document' | 'alert'
+export type PassageVerified = 'verbatim' | 'not_found' | 'no_text'
+
+export type Passage = {
+  // null: found nowhere, and its source named no text
+  target: PassageTarget | null
+  // set only when target is 'document'
+  document_id: number | null
+  // set only when target is 'alert'
+  alert_id: number | null
+  quote: string
+  // 1-based page the quote starts on, when found in a PDF
+  page: number | null
+  verified: PassageVerified
 }
 
 export type Paper = {
@@ -289,8 +340,14 @@ export async function listPaperAlerts(paperId: string): Promise<Alert[]> {
 }
 
 export async function listPaperReports(paperId: string): Promise<UserReport[]> {
-  const res = await storage.get<{ reports: UserReport[] }>(`/admin/papers/${paperId}/reports`)
-  return res.data.reports
+  const res = await storage.get<{ reports: RawReport[] }>(`/admin/papers/${paperId}/reports`)
+  return res.data.reports.map(toUserReport)
+}
+
+// dev mode: the example's paper.pdf as a new paper of the researcher, in their default project
+export async function addFakePaper(ownerId: string): Promise<AdminPaper> {
+  const res = await storage.post<AdminPaper>(`/admin/users/${ownerId}/fake-paper`)
+  return res.data
 }
 
 export async function clearPaperHistory(paperId: string): Promise<void> {
@@ -298,10 +355,10 @@ export async function clearPaperHistory(paperId: string): Promise<void> {
 }
 
 export async function addFakeReport(paperId: string, status: ReportStatus): Promise<UserReport> {
-  const res = await storage.post<UserReport>(`/admin/papers/${paperId}/fake-report`, null, {
+  const res = await storage.post<RawReport>(`/admin/papers/${paperId}/fake-report`, null, {
     params: { status },
   })
-  return res.data
+  return toUserReport(res.data)
 }
 
 export function isNotFound(err: unknown): boolean {

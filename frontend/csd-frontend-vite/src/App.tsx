@@ -12,6 +12,8 @@ import { AuthProvider, GuestOnly, RequireAdmin, RequireAuth, RequireResearcher, 
 
 // Loaded only by the admin, so researchers never download it or its fonts.
 const DevMode = lazy(() => import('./pages/DevMode'))
+// Carries pdf.js, so it loads only when a report is opened.
+const ReportView = lazy(() => import('./pages/ReportView'))
 
 // Only rendered under RequireAuth, so tracking never fetches without a session.
 // Keyed by user so a different user gets a fresh provider with no leftover state.
@@ -45,6 +47,14 @@ function App() {
                   <Route path="/" element={<Projects />} />
                   <Route path="/project" element={<Project />} />
                   <Route path="/alerts" element={<Alerts />} />
+                  <Route
+                    path="/reports/:paperId/:reportId"
+                    element={
+                      <Suspense fallback={null}>
+                        <ReportView />
+                      </Suspense>
+                    }
+                  />
                 </Route>
               </Route>
               <Route element={<RequireAdmin />}>

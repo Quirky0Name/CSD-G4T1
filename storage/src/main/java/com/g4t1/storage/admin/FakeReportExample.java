@@ -18,15 +18,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-// The one saved example every fake report copies (docs/STORAGE.md, "Dev mode"). It only reads the files:
-// nothing here generates anything. paper.pdf and draft.pdf sit beside them as the record of what the
-// prompts read, and are never served or stored on a paper.
+// The one saved example every fake report and fake paper copies (docs/STORAGE.md, "Dev mode"). It only reads
+// the files: nothing here generates anything. paper.pdf is what a fake paper stores, and draft.pdf the draft
+// the example's claims quote; the frontend reads all four PDFs through the public route.
 @Component
 public class FakeReportExample {
 
     private static final String FOLDER = "dev/fake-report/";
     // made up, and all a link opened in a new tab can get, since it can't send a token
-    private static final Set<String> SERVED_PDFS = Set.of("new-version.pdf", "current-version.pdf");
+    private static final Set<String> SERVED_PDFS =
+            Set.of("new-version.pdf", "current-version.pdf", "paper.pdf", "draft.pdf");
+
+    // the details printed on paper.pdf's first page, which a fake paper is stored with
+    public static final String PAPER_TITLE = "Dose-response of iron supplementation on fatigue";
+    public static final String PAPER_JOURNAL = "J. Fake Nutrition";
+    public static final int PAPER_YEAR = 2019;
 
     private final JsonMapper json;
 
@@ -42,7 +48,7 @@ public class FakeReportExample {
         }
     }
 
-    // empty for any name but the two served ones, so no other resource can be read through this
+    // empty for any name but the served ones, so no other resource can be read through this
     public Optional<byte[]> servedPdf(String file) {
         if (!SERVED_PDFS.contains(file)) {
             return Optional.empty();

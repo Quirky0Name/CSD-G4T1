@@ -5,31 +5,18 @@ import {
   type Alert,
   type DocumentKind,
   type Paper,
-  type ReportStatus,
   type UserDocument,
   type UserReport,
 } from '../api'
-import { CHANGE_TYPE_LABEL, ALERT_SEVERITY_LABEL, formatDateTime } from '../format'
+import {
+  CHANGE_TYPE_LABEL,
+  ALERT_SEVERITY_LABEL,
+  LEVEL_STYLES,
+  REPORT_STATUS_LABEL,
+  REPORT_STATUS_STYLES,
+  formatDateTime,
+} from '../format'
 import { useTracking } from '../tracking'
-
-const REPORT_STATUS_LABEL: Record<ReportStatus, string> = {
-  investigating: 'Investigating',
-  investigated: 'Investigated',
-  assessed: 'Assessed',
-}
-
-const REPORT_STATUS_STYLES: Record<ReportStatus, string> = {
-  investigating: 'bg-yellow-400/10 text-yellow-500 inset-ring-yellow-400/20',
-  investigated: 'bg-indigo-400/10 text-indigo-400 inset-ring-indigo-400/20',
-  assessed: 'bg-emerald-400/10 text-emerald-400 inset-ring-emerald-400/20',
-}
-
-const LEVEL_STYLES: Record<string, string> = {
-  high: 'bg-red-400/10 text-red-400 inset-ring-red-400/20',
-  medium: 'bg-yellow-400/10 text-yellow-500 inset-ring-yellow-400/20',
-  low: 'bg-gray-400/10 text-gray-400 inset-ring-gray-400/20',
-  none: 'bg-gray-400/10 text-gray-400 inset-ring-gray-400/20',
-}
 
 const DOCUMENT_KIND_LABEL: Record<DocumentKind, string> = {
   notice: 'Notice',
@@ -159,13 +146,23 @@ function ReportRows({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => onToggle(report.id)}
-              className="flex-none rounded-md bg-white/10 px-2.5 py-1.5 text-sm font-semibold text-white shadow-none inset-ring inset-ring-white/10 hover:bg-white/20"
-            >
-              {expandedId === report.id ? 'Hide details' : 'View details'}
-            </button>
+            <div className="flex flex-none flex-col items-end gap-2 sm:flex-row sm:items-center">
+              {report.status === 'assessed' && report.claims && (
+                <Link
+                  to={`/reports/${report.paper_id}/${report.id}`}
+                  className="rounded-md bg-indigo-500 px-2.5 py-1.5 text-sm font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                >
+                  Open report
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={() => onToggle(report.id)}
+                className="rounded-md bg-white/10 px-2.5 py-1.5 text-sm font-semibold text-white shadow-none inset-ring inset-ring-white/10 hover:bg-white/20"
+              >
+                {expandedId === report.id ? 'Hide details' : 'View details'}
+              </button>
+            </div>
           </div>
 
           {expandedId === report.id && <ReportDetails report={report} />}

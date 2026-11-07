@@ -228,8 +228,8 @@ class FakeReportTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"new-version.pdf", "current-version.pdf"})
-    void theDocumentPdfsAreServedWithNoToken(String file) throws Exception {
+    @ValueSource(strings = {"new-version.pdf", "current-version.pdf", "paper.pdf", "draft.pdf"})
+    void theExamplePdfsAreServedWithNoToken(String file) throws Exception {
         mvc.perform(get("/public/fake-report/{file}", file))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PDF))
@@ -237,7 +237,7 @@ class FakeReportTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"paper.pdf", "draft.pdf", "report.json", "unknown.pdf", "..", "..%2Fpaper.pdf", "..\\paper.pdf"})
+    @ValueSource(strings = {"report.json", "unknown.pdf", "..", "..%2Fpaper.pdf", "..\\paper.pdf"})
     void nothingElseIsServed(String file) throws Exception {
         mvc.perform(get("/public/fake-report/{file}", file)).andExpect(status().isNotFound());
     }
