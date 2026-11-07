@@ -9,7 +9,6 @@ alongside advanced actionable diagnostics for prompt engineering."""
 import json
 import re
 import sys
-import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -23,6 +22,7 @@ sys.path.insert(0, str(ROOT.parent / "src"))
 import case_text
 
 from research_evaluation.impact.prompts import alerts_block, paper_block
+from research_evaluation.impact.quotes import norm, quoted_in
 from research_evaluation.storage import AlertInReport, PaperDetails
 
 LEVELS = ["none", "low", "medium", "high"]
@@ -81,13 +81,6 @@ def hard_fails(ev: dict, rules: list[str]) -> list[str]:
     return hit
 
 
-def norm(text: str) -> str:
-    # NFKC first: a real PDF's ligature ("ﬁ") matches a quote that spells it out ("fi")
-    text = unicodedata.normalize("NFKC", text)
-    text = text.replace("\u2019", "'").replace("\u201c", '"').replace("\u201d", '"')
-    return re.sub(r"\s+", " ", text).strip().lower()
-
-
 def quote_sources(case: dict) -> dict[str, str]:
     """Each label the model may give as an evidence quote's source, and the (normalised) text
     behind it, as the prompt showed it. "draft" is for impact's uses, which have no label."""
@@ -121,18 +114,6 @@ def source_label(source: str, sources: dict[str, str]) -> str | None:
     if alert and f"alert {alert.group(1)}" in sources:
         return f"alert {alert.group(1)}"
     return next((name for name in ("stored paper", "current copy", "new version") if name in source and name in sources), None)
-
-
-def quoted_in(quote: str, text: str) -> bool:
-    """A normalised quote is in a normalised text; "..." or "…" in the quote skips words, so each
-    piece must be there, in order."""
-    start = 0
-    for piece in filter(None, (p.strip() for p in re.split(r"\.\.\.|…", quote))):
-        found = text.find(piece, start)
-        if found < 0:
-            return False
-        start = found + len(piece)
-    return True
 
 
 def check_quotes(ev: dict, case: dict) -> dict[str, int]:

@@ -147,15 +147,29 @@ User JWT, `application/pdf`, only the owner. Another user's item gets the same
   - `pypdf` becomes a project dependency: `backend/evals/real/extract.py` already
     uses it, and it is BSD-licensed (doc delta).
 - **Acceptance criteria:**
-  - [ ] `uv run pytest tests/research_evaluation/impact/test_quotes.py` passes:
+  - [x] `uv run pytest tests/research_evaluation/impact/test_quotes.py` passes:
     NFKC ligatures, curly quotes, whitespace, `...` skipping, a hyphen joined
     across a line break.
-  - [ ] `pdf_pages` returns one string per page for a fixture PDF, and raises
+  - [x] `pdf_pages` returns one string per page for a fixture PDF, and raises
     `quotes.PdfUnreadable` for corrupt bytes (same test file).
-  - [ ] `uv run --with fpdf2 --with rich python evals/run.py --dry 01_correction_effect_size` succeeds.
-  - [ ] `uv run --with fpdf2 --with rich python -c "import sys; sys.path.insert(0, 'evals'); import score; assert score.quoted_in is not None"` succeeds.
-  - [ ] `uv run pytest` and `uv run ruff check` pass.
+  - [x] `uv run --with fpdf2 --with rich python evals/run.py --dry 01_correction_effect_size` succeeds.
+  - [x] `uv run --with fpdf2 --with rich python -c "import sys; sys.path.insert(0, 'evals'); import score; assert score.quoted_in is not None"` succeeds.
+  - [x] `uv run pytest` and `uv run ruff check` pass.
 - **Doc deltas:** `docs/EVALUATION.md`, code layout table: `impact/quotes.py`.
+  - Decisions made in implementation (S1):
+    - `pdf_pages` returns each page's raw text; callers join hyphens
+      (`extract.py` joins the pages with a blank line, then `join_hyphens`), so
+      the committed `.txt` files come out byte-identical. No doc: code shows it.
+    - `pdf_pages` turns any exception pypdf raises into `PdfUnreadable`, since
+      pypdf raises many types for a broken file. No doc: code shows it.
+    - The two-page fixture `tests/fixtures/pdfs/two_pages.pdf` is made here
+      (once, with fpdf2) and reused by S4. No doc: the test shows it.
+    - `evals/real/extract.py` imports `research_evaluation.impact.quotes` from
+      `src/`, so it no longer needs `--with pypdf`: run it as
+      `uv run python evals/real/extract.py`. EVALUATION.md, the `extract.py`
+      command.
+    - `pyproject.toml` and `uv.lock` keep their CRLF line endings after
+      `uv add pypdf`. No doc.
 
 ### S2: Store and return claims
 
