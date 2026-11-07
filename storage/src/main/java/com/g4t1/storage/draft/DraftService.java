@@ -82,6 +82,24 @@ public class DraftService {
     }
 
     /**
+     * The PDF of the owner's current draft for a project (projectId null = the default project).
+     * Only the current upload is kept, so a draft replaced after an assessment is served as it is now.
+     */
+    public byte[] ownedPdf(UUID ownerId, UUID projectId) {
+        Draft draft = drafts.findByOwnerIdAndProjectId(ownerId, projectId).orElseThrow(() -> noDraft(projectId));
+        Optional<byte[]> pdf = files.read(draft.getFileKey());
+        if (pdf.isEmpty()) {
+            // a re-upload can delete the file between reading the row and reading the file; the row now has the new one
+            draft = drafts.findByOwnerIdAndProjectId(ownerId, projectId).orElseThrow(() -> noDraft(projectId));
+            pdf = files.read(draft.getFileKey());
+        }
+        return pdf.orElseThrow(() -> {
+            log.warn("A draft points at a file that isn't on disk");
+            return new ResponseStatusException(HttpStatus.NOT_FOUND, "The draft is missing from disk");
+        });
+    }
+
+    /**
      * Deletes the owner's draft for a project, and its PDF once the row is gone.
      */
     public void delete(UUID ownerId, UUID projectId) {

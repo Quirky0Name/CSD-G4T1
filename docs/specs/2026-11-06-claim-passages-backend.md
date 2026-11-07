@@ -457,16 +457,28 @@ User JWT, `application/pdf`, only the owner. Another user's item gets the same
   - A draft replaced after an assessment means a draft quote may not be found in the
     current upload. Only the current upload is served (doc delta).
 - **Acceptance criteria:**
-  - [ ] `./mvnw test -Dtest=<paper PDF test class>`: `200`, `application/pdf` and the
+  - [x] `./mvnw test -Dtest=PaperPdfTest`: `200`, `application/pdf` and the
     stored bytes for the owner; `404` for another user and a missing paper; `403` for
     a service token; `401` with no token.
-  - [ ] Same for `GET /documents/{id}/pdf`, plus `404` for a notice.
-  - [ ] Same for `GET /draft/pdf`, with and without `project_id`, plus `404` for a
-    project with no draft.
-  - [ ] `./mvnw test` passes.
+  - [x] Same for `GET /documents/{id}/pdf`, plus `404` for a notice (`DocumentPdfTest`).
+  - [x] Same for `GET /draft/pdf`, with and without `project_id`, plus `404` for a
+    project with no draft (`DraftPdfTest`).
+  - [x] `./mvnw test` passes.
 - **Doc deltas:** `docs/CONTRACTS.md`: the three endpoints; remove "The frontend has
   no endpoint to download a document's stored PDF". The feature table. `docs/STORAGE.md`:
   a draft highlight applies to the current upload.
+  - Decisions made in implementation (S6):
+    - `GET /documents/{id}/pdf` is in a new `DocumentController`, not
+      `ReportController`, since its path isn't under `/papers`. No doc: code shows it.
+    - A document's owner is checked with one query joining its report and paper
+      (`ReportDocumentRepository.findOwned`, a file the spec didn't list), so
+      `ReportDocumentService`'s constructor is unchanged. No doc: code shows it.
+    - As on the internal endpoints, a paper with no stored PDF, a document with
+      none (a notice, pending, not found) and a file missing from disk are `404`s
+      too, each with its own detail. CONTRACTS.md, the three endpoints.
+    - `GET /draft/pdf` reads the draft's row again once when its file is gone, as
+      `pdfForPaper` does, since a re-upload can delete the file between the two
+      reads. No doc: code shows it.
 
 ## Human checks
 
