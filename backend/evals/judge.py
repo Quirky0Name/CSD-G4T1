@@ -223,6 +223,9 @@ def passage_grade(ev: dict, verdicts: PassageVerdicts) -> dict:
         )
     statements = []
     for s in verdicts.statements:
+        # the judge sometimes lists an empty field's "(none)" as a statement; it has none
+        if not ev.get(s.field) or s.statement.strip() == "(none)":
+            continue
         covered = [claims[k - 1]["id"] for k in s.covered_by if 1 <= k <= len(claims)]
         statements.append(
             {"field": s.field, "statement": s.statement, "covered_by": covered, "pass": bool(covered)}
