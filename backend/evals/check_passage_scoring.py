@@ -86,6 +86,7 @@ def all_pass_grade(ev: dict) -> dict:
         judge.PassageVerdicts(
             passages=[judge.PassageVerdict(n=n, reason="", backs=True) for n in range(1, len(numbered) + 1)],
             statements=[judge.StatementVerdict(field="evaluation", statement="The draft relies on the dose.", covered_by=[2])],
+            absences=[],
         ),
     )
 
@@ -148,6 +149,7 @@ def a_passage_judged_not_to_back_its_claim_is_an_unbacked_passage():
                 judge.PassageVerdict(n=3, reason="", backs=True),
             ],
             statements=[],
+            absences=[],
         ),
     )
     assert [p["pass"] for p in grade["passages"]] == [True, False, True], grade
@@ -164,6 +166,7 @@ def a_passage_the_judge_skipped_counts_as_unbacked():
         judge.PassageVerdicts(
             passages=[judge.PassageVerdict(n=1, reason="", backs=True), judge.PassageVerdict(n=3, reason="", backs=True)],
             statements=[],
+            absences=[],
         ),
     )
     assert scored(ev, grade)["unbacked"] == 1
@@ -182,6 +185,7 @@ def a_statement_no_claim_covers_is_an_uncovered_statement():
                 # a claim number that doesn't exist covers nothing
                 judge.StatementVerdict(field="evaluation", statement="The dose is high.", covered_by=[9]),
             ],
+            absences=[],
         ),
     )
     assert [s["pass"] for s in grade["statements"]] == [True, False, False], grade
@@ -231,6 +235,55 @@ def a_run_with_no_claims_key_has_none_of_the_three_failures():
 def a_run_with_claims_not_yet_judged_has_only_the_unlinked_count():
     r = scored(without_passages(run(), "change", 0), {})
     assert (r["unlinked"], r["unbacked"], r["uncovered"]) == (1, None, None), r
+
+
+@check
+def the_claims_grading_shows_no_statement_for_a_step_that_never_ran():
+    ev = {**run(), "evaluation": None, "recommendation": None}
+    shown = judge.passage_prompt(ev)
+    assert "evaluation: (none)" in shown, shown
+    assert "not meaningful" not in shown, shown
+
+
+@check
+def the_claims_grading_says_where_each_passage_comes_from():
+    ev = run()
+    ev["claims"][0]["passages"][0]["target"] = "document"
+    ev["claims"][1]["passages"][0]["target"] = "draft"
+    ev["claims"][2]["passages"][0]["target"] = None
+    shown = judge.passage_prompt(ev)
+    assert 'for claim 1, from a fetched document: "The effect size' in shown, shown
+    assert 'for claim 2, from the researcher\'s draft: "We chose' in shown, shown
+    assert 'for claim 3, from an unknown source: "200 mg' in shown, shown
+
+
+@check
+def a_claim_the_judge_says_only_states_an_absence_is_not_unlinked():
+    ev = without_passages(run(), "change", 0)
+    grade = all_pass_grade(ev)
+    assert scored(ev, grade)["unlinked"] == 1
+    grade = judge.passage_grade(
+        ev,
+        judge.PassageVerdicts(passages=[], statements=[], absences=[1]),
+    )
+    assert grade["absent_claims"] == ["change-0"], grade
+    assert scored(ev, grade)["unlinked"] == 0
+
+
+@check
+def an_absence_on_a_claim_with_passages_or_no_such_claim_counts_for_nothing():
+    grade = judge.passage_grade(run(), judge.PassageVerdicts(passages=[], statements=[], absences=[1, 9]))
+    assert grade["absent_claims"] == [], grade
+
+
+@check
+def a_quote_of_a_notices_update_to_line_is_not_invented():
+    case = copy.deepcopy(CASE)
+    case["notice"]["update_to_includes_paper"] = True
+    ev = run()
+    ev["assessment"]["change"]["claims"][0]["passages"] = [passage("10.1000/notice", "update_to_includes_paper: true")]
+    found = score.check_quotes(ev, case)
+    assert (found["invented"], found["misattributed"]) == (0, 0), found
 
 
 def main() -> None:

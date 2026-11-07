@@ -101,11 +101,25 @@ class Verdicts(BaseModel):
 
 PASSAGE_SYSTEM = """You check an AI assistant's claims and the passages it quoted for them. \
 Use only what is given; do not use outside knowledge. For each numbered PASSAGE, give a short \
-reason, then `backs`: true if the quoted words, read on their own, show what the claim states, \
-false if they don't (they are about something else, say less, or contradict it). Then list each \
-factual statement in the ANSWER's change_summary, evaluation and recommendation, with its field, \
-and `covered_by`: the numbers of the CLAIMS that state it (empty if no claim does). You are only \
-reporting, not judging whether the answer is right. Do not reward length or style."""
+reason, then `backs`: true if the quoted words, read on their own and knowing where they come \
+from, show what the claim states, false if they don't (they are about something else, say less, \
+or contradict it). A quote from the researcher's draft can show what the draft says. Then list \
+each factual statement in the ANSWER's change_summary, evaluation and recommendation, with its \
+field, and `covered_by`: the numbers of the CLAIMS that state it (empty if no claim does). A \
+factual statement is one the source documents could show true or false. Advice, instructions and \
+opinions on what to do are not factual statements: do not list them. A field shown as (none) \
+has no statements. Then give `absences`: the numbers of the CLAIMS marked (no passages) that \
+state only that something is missing from the material (a notice, its text, a banner); a claim \
+stating anything else is not one. You are only reporting, not judging whether the answer is right. Do not \
+reward length or style."""
+
+# how the claims grading names a passage's source (a stored passage's `target`)
+PASSAGE_SOURCES: dict[str | None, str] = {
+    "document": "a fetched document",
+    "paper": "the tracked paper",
+    "draft": "the researcher's draft",
+    "alert": "an alert line",
+}
 
 
 class PassageVerdict(BaseModel):
@@ -123,6 +137,7 @@ class StatementVerdict(BaseModel):
 class PassageVerdicts(BaseModel):
     passages: list[PassageVerdict]
     statements: list[StatementVerdict]
+    absences: list[int]
 
 
 def load_env(keys: tuple[str, ...]) -> None:
@@ -161,7 +176,7 @@ def answer(ev: dict) -> str:
     """The run's three free-text fields, as the judge sees them."""
     return (
         f"change_summary: {ev['change_summary']}\n"
-        f"evaluation: {ev['evaluation'] or '(none: the change was not meaningful, so impact was not assessed)'}\n"
+        f"evaluation: {ev['evaluation'] or '(none)'}\n"
         f"recommendation: {ev['recommendation'] or '(none)'}"
     )
 
@@ -173,9 +188,12 @@ def numbered_passages(ev: dict) -> list[tuple[int, dict]]:
 
 
 def passage_prompt(ev: dict) -> str:
-    claims = [f"{i}. {c['text']}" for i, c in enumerate(ev["claims"], 1)]
+    claims = [
+        f"{i}. {c['text']}" + ("" if c["passages"] else " (no passages)")
+        for i, c in enumerate(ev["claims"], 1)
+    ]
     passages = [
-        f"{n}. for claim {i + 1}: \"{p['quote']}\""
+        f"{n}. for claim {i + 1}, from {PASSAGE_SOURCES.get(p.get('target'), 'an unknown source')}: \"{p['quote']}\""
         for n, (i, p) in enumerate(numbered_passages(ev), 1)
     ]
     return (
@@ -188,7 +206,7 @@ def passage_prompt(ev: dict) -> str:
 def passage_grade(ev: dict, verdicts: PassageVerdicts) -> dict:
     """The code's decision on the judge's report: a passage passes when the judge says it backs
     its claim (one the judge skipped fails); a statement passes when at least one claim that
-    exists covers it."""
+    exists covers it. An absence counts only for a claim that exists and has no passage."""
     said = {v.n: v for v in verdicts.passages}
     claims = ev["claims"]
     passages = []
@@ -209,7 +227,12 @@ def passage_grade(ev: dict, verdicts: PassageVerdicts) -> dict:
         statements.append(
             {"field": s.field, "statement": s.statement, "covered_by": covered, "pass": bool(covered)}
         )
-    return {"passages": passages, "statements": statements}
+    absent = [
+        claims[k - 1]["id"]
+        for k in verdicts.absences
+        if 1 <= k <= len(claims) and not claims[k - 1]["passages"]
+    ]
+    return {"passages": passages, "statements": statements, "absent_claims": absent}
 
 
 async def ask(client, model: str, system: str, contents: str, schema: type[BaseModel]) -> str:

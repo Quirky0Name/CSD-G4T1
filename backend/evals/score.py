@@ -94,6 +94,9 @@ def quote_sources(case: dict) -> dict[str, str]:
         # a notice with no open-access text can be quoted from its record and links (as
         # impact/claims.py checks them)
         text = " ".join([text, *leaves(d.get("crossref_record")), *leaves(d.get("links"))])
+        # the prompt shows this line for a notice (prompts.document_block), so it isn't invented
+        if d.get("update_to_includes_paper") is not None:
+            text += f" update_to_includes_paper: {str(d['update_to_includes_paper']).lower()}"
         texts[d["doi"].lower()].append(text)
         if d["kind"] in KIND_LABELS:
             texts[KIND_LABELS[d["kind"]]].append(text)
@@ -152,8 +155,8 @@ def check_quotes(ev: dict, case: dict) -> dict[str, int]:
 
 def check_passages(ev: dict, grade: dict | None = None) -> dict[str, int | None]:
     """A run's claims: unlinked (a claim with no passage; an impact claim on a run whose draft
-    wasn't read is exempt, since a general judgment has nothing to quote), and, from the judge's
-    grading (`grade`, the .judge.json), unbacked (a passage the judge says doesn't back its claim)
+    wasn't read is exempt, since a general judgment has nothing to quote, and so is a claim the
+    judge says states only an absence), and, from the judge's grading (`grade`, the .judge.json), unbacked (a passage the judge says doesn't back its claim)
     and uncovered (a statement of the three free-text fields no claim covers). A count is None
     when it can't be scored: every count for a run with no `claims` (saved before
     PROMPT_VERSION 5), unbacked and uncovered for a run the judge hasn't graded for claims."""
@@ -161,8 +164,11 @@ def check_passages(ev: dict, grade: dict | None = None) -> dict[str, int | None]
     if claims is None:
         return {"unlinked": None, "unbacked": None, "uncovered": None}
     draft_read = ev["assessment"].get("draft") == "read"
+    absent = (grade or {}).get("absent_claims", [])
     unlinked = sum(
-        1 for c in claims if not c["passages"] and (c["kind"] != "impact" or draft_read)
+        1
+        for c in claims
+        if not c["passages"] and (c["kind"] != "impact" or draft_read) and c["id"] not in absent
     )
     if not grade or "passages" not in grade:
         return {"unlinked": unlinked, "unbacked": None, "uncovered": None}
