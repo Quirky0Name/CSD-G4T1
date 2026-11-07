@@ -100,6 +100,29 @@ class RecommendedActions(_Answer):
     claims: Claims
 
 
+# What the evaluation carries: each step's claims, each quote checked in code (impact/claims.py;
+# the `Claim` of docs/CONTRACTS.md). Model output and fetched text: shown as text, never as HTML.
+
+
+class Passage(BaseModel):
+    # where the quote was found (or the source it names); None when found nowhere and naming none
+    target: Literal["paper", "draft", "document", "alert"] | None
+    document_id: int | None
+    alert_id: int | None
+    quote: str
+    # 1-based page the quote starts on, when found in a PDF
+    page: int | None
+    verified: Literal["verbatim", "not_found", "no_text"]
+
+
+class StoredClaim(BaseModel):
+    id: str  # "<kind>-<index in that step's claims>"
+    kind: Literal["change", "impact", "action"]
+    text: str
+    supported: bool  # at least one passage is verbatim
+    passages: list[Passage]
+
+
 class Evaluation(BaseModel):
     """The body of `PUT /internal/reports/{id}/evaluation`. With change_severity none only the
     summary and change severity are set (and assessment); the rest stays null."""
@@ -110,3 +133,6 @@ class Evaluation(BaseModel):
     evaluation: str | None = None
     recommendation: str | None = None
     assessment: dict[str, Any]
+    # every finished step's claims, quotes checked (impact/claims.py); null on reports assessed
+    # before claims existed
+    claims: list[StoredClaim] | None = None

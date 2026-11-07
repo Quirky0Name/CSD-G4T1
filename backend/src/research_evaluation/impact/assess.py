@@ -18,6 +18,7 @@ from typing import Any
 
 import httpx
 
+from research_evaluation.impact.claims import build_claims
 from research_evaluation.impact.inputs import ReportInputs
 from research_evaluation.impact.llm import AllModelsFailed, Llm
 from research_evaluation.impact.prompts import (
@@ -55,14 +56,21 @@ async def assess(llm: Llm, sm: httpx.AsyncClient, inputs: ReportInputs) -> Evalu
         "actions": None,
     }
     step = "change"
+    # each step's answer once it finishes, and the draft once read: the claims are built from them
+    done: dict[str, Any] = {"change": None, "impact": None, "actions": None}
+    draft: bytes | None = None
     try:
         change = await llm.generate(system=SYSTEM, parts=prompt.parts, schema=ChangeAssessment)
         assessment["model_version"] = change.model_version
         assessment["answered_by"]["change"] = change.model
         assessment["change"] = change.value.model_dump(mode="json")
+        done["change"] = change.value
         if change.value.severity == "none":
             return Evaluation(
-                change_summary=change.value.summary, change_severity="none", assessment=assessment
+                change_summary=change.value.summary,
+                change_severity="none",
+                assessment=assessment,
+                claims=await build_claims(inputs, None, **done),
             )
 
         # only now: a change that isn't meaningful never touches the researcher's draft
@@ -74,6 +82,7 @@ async def assess(llm: Llm, sm: httpx.AsyncClient, inputs: ReportInputs) -> Evalu
         impact = await llm.generate(system=SYSTEM, parts=step_two.parts, schema=ImpactAssessment)
         assessment["answered_by"]["impact"] = impact.model
         assessment["impact"] = impact.value.model_dump(mode="json")
+        done["impact"] = impact.value
         step = "actions"
         actions = await llm.generate(
             system=SYSTEM,
@@ -82,8 +91,11 @@ async def assess(llm: Llm, sm: httpx.AsyncClient, inputs: ReportInputs) -> Evalu
         )
         assessment["answered_by"]["actions"] = actions.model
         assessment["actions"] = actions.value.model_dump(mode="json")
+        done["actions"] = actions.value
     except AllModelsFailed as exc:
-        return _placeholder(assessment, step, exc)
+        evaluation = _placeholder(assessment, step, exc)
+        evaluation.claims = await build_claims(inputs, draft, **done)
+        return evaluation
     return Evaluation(
         change_summary=change.value.summary,
         change_severity=change.value.severity,
@@ -91,6 +103,7 @@ async def assess(llm: Llm, sm: httpx.AsyncClient, inputs: ReportInputs) -> Evalu
         evaluation=impact.value.explanation,
         recommendation=actions.value.recommendation,
         assessment=assessment,
+        claims=await build_claims(inputs, draft, **done),
     )
 
 

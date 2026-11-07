@@ -759,3 +759,42 @@ def test_a_document_tag_in_any_case_or_spacing_is_defused(tag):
     inner = block.split("\n", 1)[1].rsplit("\n", 1)[0]  # without the block's own tags
     assert "&lt;" in inner
     assert not prompts._TAG.search(inner)
+
+
+# the evaluation's claims (docs/EVALUATION.md, "Impact"; impact/claims.py checks the quotes)
+
+
+async def test_a_full_run_carries_every_steps_claims(sm):
+    evaluation = await assess(fake(sm), sm.client, await inputs_for(sm))
+
+    assert [(c.id, c.text) for c in evaluation.claims] == [
+        ("change-0", "The paper was retracted."),
+        ("impact-0", "Your Discussion rests on the retracted result."),
+        ("action-0", "The citation in the Discussion should be replaced."),
+    ]
+    retracted = evaluation.claims[0].passages[0]
+    assert (retracted.target, retracted.document_id, retracted.verified) == ("document", 1, "verbatim")
+    assert evaluation.model_dump(mode="json")["claims"][0]["supported"] is True
+
+
+async def test_change_severity_none_carries_only_the_change_claims(sm):
+    evaluation = await assess(fake(sm, severity="none"), sm.client, await inputs_for(sm))
+
+    assert [c.kind for c in evaluation.claims] == ["change"]
+
+
+@pytest.mark.parametrize(
+    ("failing", "kinds"),
+    [
+        (ChangeAssessment, []),
+        (ImpactAssessment, ["change"]),
+        (RecommendedActions, ["change", "impact"]),
+    ],
+)
+async def test_a_placeholder_carries_the_claims_of_the_steps_that_finished(sm, failing, kinds):
+    llm = fake(sm, overrides={failing: AllModelsFailed(FAILURES)})
+
+    evaluation = await assess(llm, sm.client, await inputs_for(sm))
+
+    assert evaluation.assessment["placeholder"] is True
+    assert [c.kind for c in evaluation.claims] == kinds

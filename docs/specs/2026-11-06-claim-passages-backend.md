@@ -325,7 +325,7 @@ User JWT, `application/pdf`, only the owner. Another user's item gets the same
     change severity `none` report carries its `change` claims (doc delta).
   - Quotes and PDF text are never logged (`docs/EVALUATION.md`, "Gotchas").
 - **Acceptance criteria:**
-  - [ ] `uv run pytest tests/research_evaluation/impact/test_claims.py` passes:
+  - [x] `uv run pytest tests/research_evaluation/impact/test_claims.py` passes:
     - every step's claims in order, with the `id`s and `kind`s of the interface;
     - a claim with no passages gives `supported: false`;
     - a quote on page 2 of the fixture PDF gives `page: 2`, `verified: "verbatim"`;
@@ -338,16 +338,44 @@ User JWT, `application/pdf`, only the owner. Another user's item gets the same
     - a quote naming the wrong source is re-targeted;
     - a citation jump's alert-line quote gives `target: "alert"`, its `alert_id`;
     - nothing from the quote or the PDF appears in `caplog`.
-  - [ ] `uv run pytest tests/research_evaluation/impact/test_assess.py` passes: the
+  - [x] `uv run pytest tests/research_evaluation/impact/test_assess.py` passes: the
     `Evaluation` has `claims` on a full run, on change severity `none` (only
     `change` claims) and on a placeholder (the finished steps' claims).
-  - [ ] `uv run pytest` and `uv run ruff check` pass.
+  - [x] `uv run pytest` and `uv run ruff check` pass.
 - **Doc deltas:** `docs/EVALUATION.md`: how quotes are verified, source resolution,
   re-targeting, what `supported` means, no OCR, no character ranges into the summary
   texts.
   `docs/CONTRACTS.md`: no bounding boxes or offsets. `GLOSSARY.md`: **Claim** and
   **Passage**. `docs/ROADMAP.md`: tick "verify quotes against PDF text".
   `docs/DECISIONS.md`: dated entry: claims never dropped, and quotes verified in code.
+  - Decisions made in implementation (S4):
+    - The stored shapes are `schemas.StoredClaim` and `schemas.Passage` (the
+      interface's `Claim`), because S3's `schemas.Claim` is the model's answer.
+      `Evaluation.claims` is `list[StoredClaim] | None`. No doc: code shows it.
+    - `build_claims` is async, so it can read PDFs in `asyncio.to_thread`. Each PDF
+      is read lazily, the first time a quote is searched in it, and at most once
+      per report. EVALUATION.md, how quotes are verified.
+    - A PDF's pages are searched as one text, so a quote across a page break is
+      found; `page` is where it starts. EVALUATION.md, how quotes are verified.
+    - A document's text to check is its PDF, its `text`, and each scalar value of
+      its `crossref_record` and `links`, searched one value at a time.
+      EVALUATION.md, source resolution.
+    - The paper's details are searched but don't count as text to check: a
+      `stored paper` quote with no readable PDF and not in the details gives
+      `no_text`. EVALUATION.md, what `verified` means.
+    - A DOI is matched against the report's documents before the paper's own DOI,
+      in the spec's order, so the paper's DOI names a `current_version` document
+      when the report has one. When two documents fit a label, the first in the
+      report's order is used. EVALUATION.md, source resolution.
+    - A quote is searched first in the source it names, then, for re-targeting,
+      in the paper, the draft, the documents in the report's order, then the
+      alerts. EVALUATION.md, re-targeting.
+    - `draft` always resolves, so a draft quote on a run with no draft gives
+      `target: "draft"`, `no_text`. EVALUATION.md, what `verified` means.
+    - An empty quote (or one that is only `...`) is found nowhere. No doc: code
+      shows it.
+    - A source naming no text, with the quote found nowhere, gives `target: null`
+      and `not_found`. Already in the interface; no doc.
 
 ### S5: Score passages in the evals
 
