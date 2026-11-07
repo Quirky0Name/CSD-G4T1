@@ -1,4 +1,4 @@
-import type { Alert, AlertStatus, ChangeType, AlertSeverity } from './api'
+import type { Alert, AlertStatus, AssessmentLevel, ChangeType, AlertSeverity, ReportStatus } from './api'
 
 // Records keyed by the full union so a new API value is a compile error
 // here, not a silent blank label.
@@ -6,6 +6,12 @@ export const ALERT_SEVERITY_LABEL: Record<AlertSeverity, string> = {
   high: 'High',
   medium: 'Medium',
   low: 'Low',
+}
+
+export const ALERT_SEVERITY_DOT_CLASS: Record<AlertSeverity, string> = {
+  high: 'fill-red-400',
+  medium: 'fill-yellow-400',
+  low: 'fill-blue-400',
 }
 
 export const CHANGE_TYPE_LABEL: Record<ChangeType, string> = {
@@ -22,6 +28,25 @@ export const ALERT_STATUS_LABEL: Record<AlertStatus, string> = {
   new: 'New',
   acknowledged: 'Acknowledged',
   dismissed: 'Dismissed',
+}
+
+export const REPORT_STATUS_LABEL: Record<ReportStatus, string> = {
+  investigating: 'Investigating',
+  investigated: 'Investigated',
+  assessed: 'Assessed',
+}
+
+export const REPORT_STATUS_STYLES: Record<ReportStatus, string> = {
+  investigating: 'bg-yellow-400/10 text-yellow-500 inset-ring-yellow-400/20',
+  investigated: 'bg-indigo-400/10 text-indigo-400 inset-ring-indigo-400/20',
+  assessed: 'bg-emerald-400/10 text-emerald-400 inset-ring-emerald-400/20',
+}
+
+export const LEVEL_STYLES: Record<AssessmentLevel, string> = {
+  high: 'bg-red-400/10 text-red-400 inset-ring-red-400/20',
+  medium: 'bg-yellow-400/10 text-yellow-500 inset-ring-yellow-400/20',
+  low: 'bg-gray-400/10 text-gray-400 inset-ring-gray-400/20',
+  none: 'bg-gray-400/10 text-gray-400 inset-ring-gray-400/20',
 }
 
 // high, then medium, then low (docs/CONTRACTS.md, GET /papers/{id}/alerts).
@@ -55,4 +80,11 @@ export function highestNewAlertSeverity(alerts: Alert[]): AlertSeverity | null {
     }
   }
   return highest
+}
+
+export const LEVEL_LABEL: Record<AssessmentLevel, string> = {
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
+  none: 'None',
 }

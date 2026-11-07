@@ -4,6 +4,7 @@ import com.g4t1.storage.alert.Alert;
 import com.g4t1.storage.alert.AlertRepository;
 import com.g4t1.storage.alert.AlertResponse;
 import com.g4t1.storage.alert.AlertService;
+import com.g4t1.storage.alert.NewAlertRequest;
 import com.g4t1.storage.paper.PaperRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -130,6 +131,42 @@ public class ReportService {
         if (!papers.findById(paperId).map(paper -> paper.getOwnerId().equals(userId)).orElse(false)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
         }
+        return userReports(paperId);
+    }
+
+    // the same list for the dev mode admin, on any researcher's paper
+    @Transactional(readOnly = true)
+    public List<UserReportResponse> listForPaper(UUID paperId) {
+        requirePaper(paperId);
+        return userReports(paperId);
+    }
+
+    /**
+     * The dev mode admin's fake report, in one transaction: new alerts, a report grouping exactly those,
+     * and its documents, left in the given status. Its alerts have change keys of their own, so repeat
+     * calls never collide and a real change is still stored under its own key.
+     */
+    @Transactional
+    public UserReportResponse storeFake(UUID paperId, List<NewAlertRequest> newAlerts, List<FakeDocument> newDocuments,
+                                        ReportStatus status, ReportEvaluationRequest evaluation) {
+        requirePaper(paperId);
+        Report report = new Report(paperId);
+        if (status != ReportStatus.INVESTIGATING) {
+            report.markInvestigated();
+        }
+        long reportId = reports.saveAndFlush(report).getId();
+        List<Long> alertIds = newAlerts.stream()
+                .map(request -> alerts.saveAndFlush(new Alert(paperId, request)).getId())
+                .toList();
+        alerts.assignToReport(alertIds, reportId);
+        if (status == ReportStatus.ASSESSED) {
+            recordEvaluation(reportId, evaluation);
+        }
+        documents.storeFake(reportId, newDocuments);
+        return userReports(paperId).stream().filter(entry -> entry.id() == reportId).findFirst().orElseThrow();
+    }
+
+    private List<UserReportResponse> userReports(UUID paperId) {
         List<Report> found = reports.findByPaperIdOrderByCreatedAtDescIdDesc(paperId);
         if (found.isEmpty()) {
             return List.of();

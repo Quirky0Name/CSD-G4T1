@@ -8,6 +8,43 @@ owned that story made.
 
 ---
 
+## 2026-11-06 — Dev mode: an admin who edits stored paper data, off unless `DEV_MODE=true`
+
+- **Why**: to demo a change on demand. The demo is poll, change the flag,
+  poll again: the second poll finds a flagged change and raises its alert.
+  The admin's edit sets a paper's stored value back to what it was before
+  its real change (a snapshot with `is_retracted` false, say), so the next
+  poll fetches the real value and finds the change. Updating and Research
+  Evaluation don't change. A change the paper doesn't really have (a
+  retraction on a paper that isn't retracted) can't be raised this way.
+- **One switch, `DEV_MODE`, separate from `DEV_TOOLS`.** `DEV_TOOLS`
+  defaults to true; dev mode must be off unless set to `true`. Only
+  Storage Management and User Management read it.
+- **The admin account is created at startup, not by a migration, and is
+  identified by its email `admin`.** With dev mode on it is created if
+  missing, with only its BCrypt hash stored; with it off its row is deleted,
+  so a restart without dev mode never answers the known password. A
+  migration would put the account (or a way to it) in every database,
+  switch or no switch. Register can't make the email (`@Email` refuses an
+  address with no `@`), so the email alone tells the admin; no role column
+  or migration is needed.
+- **The admin is not a researcher.** Its token has `role=admin`, which
+  gets `ROLE_ADMIN` and not `ROLE_USER`, so researcher endpoints and
+  `/internal/**` answer it `403`.
+- **The edit is a new snapshot**, because snapshots are insert-only.
+- **A fake report is a copy of one saved output**, generated once through
+  impact's three prompts by subagents, not by Gemini, rather than an empty
+  or templated report. The application never generates anything. Its
+  alerts' change keys are `fake:<uuid>` so they can't stop a real change
+  being stored.
+- **`AdminAccountTest` reads `password_hash` directly**, a second exception
+  (with the one for register) to testing at the HTTP seam, for the same
+  reason: no response shows it.
+- Rejected: a UI for dev mode (its own spec later); rate limiting login
+  (ROADMAP.md).
+
+---
+
 ## 2026-11-05 — Evals decide pass or fail by thresholds fixed in a file; a change is judged against the noise floor
 
 - **Pass or fail is decided by `evals/thresholds.json`, written before a

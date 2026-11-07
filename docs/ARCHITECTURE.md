@@ -98,7 +98,7 @@ One poll, end to end:
    researcher (see below).
 
 The **report-ready notification** is a toast (`Report ready on "<paper
-title>"`, with a `View` button to `/alerts?paper=<paper id>`), shown once
+title>"`, with a `View` button to `/reports?paper=<paper id>`), shown once
 per assessed report of the signed-in researcher's own papers. It has no
 history, badge, unread count or read state. The ids already notified are
 kept in memory per tab (`seenAssessedReportIds` in `tracking.tsx`); the
@@ -141,6 +141,24 @@ Rules that hold across the flow:
   `POST /evaluate/changes` and `/evaluate/reports` take any service token.
 - Updating's `POST /run-poll` takes the user's token and polls only that
   user's papers.
+- **Dev mode** (`DEV_MODE=true`, read only by Storage Management and User
+  Management; off unless set): User Management has an admin account, and
+  both services serve admin endpoints (`/auth/admin/**`, `/admin/**`,
+  `/public/fake-report/**`); with it off they answer `404`. The admin signs
+  in through `POST /auth/login` with email `admin` and gets a token with
+  `role=admin`. In both services' `JwtAuthFilter` that token gets
+  `ROLE_ADMIN` and not `ROLE_USER`, so researcher endpoints (and
+  Storage Management's `/internal/**`) answer it `403`; the admin has no
+  papers or projects. Updating doesn't read the claim, so on `POST
+  /run-poll` the admin is a user with no papers; Research Evaluation
+  already answers it `403`.
+- **The admin account** (`AdminAccount` in User Management) is the row
+  whose email is `admin` (Register can't create it: `@Email` refuses an
+  address with no `@`), so no migration or role column. A
+  `SmartInitializingSingleton` creates it if missing (only the BCrypt hash
+  stored) with dev mode on, or deletes it with dev mode off. That runs
+  before the server takes requests, so a restart with dev mode off never
+  answers the known password. Why: DECISIONS.md, 2026-11-06.
 - **Deleting an account** (`DELETE /auth/me`, with the password) has
   Storage Management delete everything the user owns first
   (`DELETE /internal/users/{id}`), then deletes the user and, through the
@@ -182,7 +200,8 @@ Updating's own schema (`updating`, Alembic): `tracked_papers` (`paper_id`,
 
 User Management's own schema (`users`, Flyway, `users/src/main/resources/db/migration/`):
 `users` (`id`, the JWT's `sub`; lowercase `email`, unique; BCrypt
-`password_hash`; `created_at`) and `projects` (`id`; `owner_id`, the user's
+`password_hash`; `created_at`; the dev mode admin is the row with email
+`admin`, see Auth) and `projects` (`id`; `owner_id`, the user's
 id, deleted with the user; `name`, one of each per owner; `created_at`).
 
 ## Deployment

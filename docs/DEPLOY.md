@@ -141,6 +141,13 @@ for it to be healthy, then restarts Updating so its startup poll runs with Stora
 It's cheapest to keep the instance stopped except in the weeks it's needed: about US$0.85 a day
 running. New accounts' sign-up credits (Billing, Credits) may cover all of it.
 
+## Dev mode
+
+Leave `DEV_MODE` off (the default) on a server. With it on, anyone who
+knows the admin password (`12345679`, written in the docs) can sign in as
+the admin and read and change every user's paper data and spend Gemini
+calls. There is no rate limit on login (ROADMAP.md).
+
 ## Limits worth knowing
 
 - CloudFront waits at most 60 seconds for an answer. A "poll now" over many papers can take

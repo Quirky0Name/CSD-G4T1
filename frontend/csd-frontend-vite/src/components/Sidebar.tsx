@@ -1,156 +1,73 @@
-import { useState } from 'react'
-import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react'
-import {
-  Bars3Icon,
-  BellAlertIcon,
-  FolderIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline'
-import { NavLink } from 'react-router-dom'
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
+import { BellAlertIcon, DocumentTextIcon, FolderIcon } from '@heroicons/react/24/outline'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth'
 
 const navigationItems = [
   { label: 'Projects', to: '/', icon: FolderIcon },
   { label: 'Alerts', to: '/alerts', icon: BellAlertIcon },
+  { label: 'Reports', to: '/reports', icon: DocumentTextIcon },
 ]
 
-function classNames(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ')
-}
-
-type SidebarContentProps = {
-  onClose: () => void
-  onNavigate?: () => void
-}
-
-function SidebarContent({ onClose, onNavigate }: SidebarContentProps) {
-  const { session, logout } = useAuth()
-  return (
-    <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-white/10 bg-gray-900 px-6 pb-4 text-gray-100">
-      <div className="flex h-16 shrink-0 items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
-            Research desk
-          </p>
-          <p className="mt-1 text-lg font-semibold text-white">Library</p>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="-m-2.5 p-2.5 text-gray-400 hover:text-white"
-        >
-          <span className="sr-only">Close sidebar</span>
-          <XMarkIcon aria-hidden="true" className="size-6" />
-        </button>
-      </div>
-
-      <nav aria-label="Main navigation" className="flex flex-1 flex-col">
-        <ul role="list" className="-mx-2 space-y-1">
-          {navigationItems.map((item) => (
-            <li key={item.to}>
-              <NavLink
-                to={item.to}
-                end={item.to === '/'}
-                onClick={onNavigate}
-                className={({ isActive }) =>
-                  classNames(
-                    isActive
-                      ? 'bg-white/5 text-white'
-                      : 'text-gray-400 hover:bg-white/5 hover:text-white',
-                    'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold',
-                  )
-                }
-              >
-                {({ isActive }) => {
-                  const Icon = item.icon
-
-                  return (
-                    <>
-                      <Icon
-                        aria-hidden="true"
-                        className={classNames(
-                          isActive
-                            ? 'text-white'
-                            : 'text-gray-500 group-hover:text-white',
-                          'size-6 shrink-0',
-                        )}
-                      />
-                      {item.label}
-                    </>
-                  )
-                }}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-
-        <div className="mt-auto border-t border-white/10 pt-4">
-          <div className="flex items-center gap-x-3 px-2 py-2 text-sm font-semibold text-white">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/5 text-sm text-gray-300">
-              {(session?.user.email[0] ?? 'U').toUpperCase()}
-            </span>
-            <span className="min-w-0 flex-1 truncate">{session?.user.email ?? 'Your account'}</span>
-          </div>
-          <button
-            type="button"
-            onClick={logout}
-            className="mt-1 w-full rounded-md px-2 py-2 text-left text-sm/6 font-semibold text-gray-400 hover:bg-white/5 hover:text-white"
-          >
-            Sign out
-          </button>
-        </div>
-      </nav>
-    </div>
-  )
-}
-
+// A rail beside the page from sm up, and a bar above it on a phone
 function Sidebar() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  // desktop keeps the sidebar docked until it's closed
-  const [docked, setDocked] = useState(true)
-
-  const openSidebar = () => {
-    if (window.matchMedia('(min-width: 1024px)').matches) setDocked(true)
-    else setSidebarOpen(true)
-  }
+  const { session, logout } = useAuth()
+  const email = session?.user.email
+  const { pathname } = useLocation()
+  // /projects is User Management's, so a project's page lives under /project
+  const inProject = pathname === '/project' || pathname.startsWith('/project/') || pathname.startsWith('/papers/')
 
   return (
-    <>
-      <div
-        className={classNames(
-          'sticky top-0 z-40 flex items-center gap-x-6 self-start bg-gray-900 px-4 py-4 shadow-sm',
-          docked && 'lg:hidden',
-        )}
-      >
-        <button
-          type="button"
-          onClick={openSidebar}
-          className="-m-2.5 p-2.5 text-gray-400 hover:text-white"
+    <nav
+      aria-label="Main navigation"
+      className="sticky top-0 z-40 flex shrink-0 items-center gap-2 border-b border-white/10 bg-gray-900 px-2 py-1.5 sm:h-screen sm:w-18 sm:flex-col sm:border-r sm:border-b-0 sm:px-1.5 sm:py-3"
+    >
+      <ul role="list" className="flex flex-1 gap-1 sm:w-full sm:flex-col">
+        {navigationItems.map(({ label, to, icon: Icon }) => (
+          <li key={to} className="flex-1 sm:flex-none">
+            <NavLink
+              to={to}
+              end={to === '/'}
+              className={({ isActive }) =>
+                `flex flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px]/4 font-medium focus-visible:outline-2 focus-visible:outline-indigo-500 ${
+                  isActive || (to === '/' && inProject) ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                }`
+              }
+            >
+              <Icon aria-hidden="true" className="size-5" />
+              {label}
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+
+      <Menu>
+        <MenuButton
+          title={email}
+          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-gray-200 hover:bg-white/20 hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-500"
         >
-          <span className="sr-only">Open sidebar</span>
-          <Bars3Icon aria-hidden="true" className="size-6" />
-        </button>
-        <div className="flex-1 text-sm/6 font-semibold text-white">Library</div>
-      </div>
-
-      <Dialog open={sidebarOpen} onClose={setSidebarOpen} className="relative z-50 lg:hidden">
-        <DialogBackdrop className="fixed inset-0 bg-gray-900/80 transition-opacity" />
-        <div className="fixed inset-0 flex">
-          <DialogPanel className="relative mr-16 flex w-full max-w-xs flex-1">
-            <SidebarContent
-              onClose={() => setSidebarOpen(false)}
-              onNavigate={() => setSidebarOpen(false)}
-            />
-          </DialogPanel>
-        </div>
-      </Dialog>
-
-      {docked && (
-        <div className="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-72 lg:shrink-0 lg:flex-col">
-          <SidebarContent onClose={() => setDocked(false)} />
-        </div>
-      )}
-    </>
+          <span className="sr-only">Account</span>
+          <span aria-hidden="true" className="text-sm/5 font-semibold">
+            {(email?.[0] ?? 'U').toUpperCase()}
+          </span>
+        </MenuButton>
+        <MenuItems
+          anchor={{ to: 'right end', gap: 8, padding: 8 }}
+          className="z-50 w-60 rounded-md bg-gray-800 py-1 shadow-lg outline outline-white/10 focus:outline-none"
+        >
+          <p className="truncate border-b border-white/10 px-3 py-2 text-xs/5 text-gray-400">{email ?? 'Your account'}</p>
+          <MenuItem>
+            <button
+              type="button"
+              onClick={logout}
+              className="block w-full px-3 py-2 text-left text-white data-focus:bg-white/5"
+            >
+              <span className="text-sm/5">Sign out</span>
+            </button>
+          </MenuItem>
+        </MenuItems>
+      </Menu>
+    </nav>
   )
 }
 

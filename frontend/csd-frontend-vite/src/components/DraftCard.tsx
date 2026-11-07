@@ -7,7 +7,7 @@ import { useToast } from './Toasts'
 
 type LoadState = { status: 'loading' } | { status: 'ready'; draft: Draft | null }
 
-const DraftCard = () => {
+const DraftCard = ({ projectId }: { projectId?: string }) => {
   const showToast = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [state, setState] = useState<LoadState>({ status: 'loading' })
@@ -16,7 +16,7 @@ const DraftCard = () => {
 
   useEffect(() => {
     let active = true
-    getDraft()
+    getDraft(projectId)
       .then((draft) => {
         if (active) setState({ status: 'ready', draft })
       })
@@ -28,7 +28,7 @@ const DraftCard = () => {
     return () => {
       active = false
     }
-  }, [showToast])
+  }, [projectId, showToast])
 
   const handleUploadClick = () => {
     fileInputRef.current?.click()
@@ -43,7 +43,7 @@ const DraftCard = () => {
     setBusy(true)
     setError(null)
     try {
-      const draft = await uploadDraft(file)
+      const draft = await uploadDraft(file, projectId)
       setState({ status: 'ready', draft })
       showToast({ tone: 'success', message: `Saved "${draft.filename}".` })
     } catch (err) {
@@ -57,7 +57,7 @@ const DraftCard = () => {
     setBusy(true)
     setError(null)
     try {
-      await deleteDraft()
+      await deleteDraft(projectId)
       setState({ status: 'ready', draft: null })
     } catch (err) {
       setError(errorMessage(err))

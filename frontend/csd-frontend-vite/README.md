@@ -38,3 +38,30 @@ npm run dev
 - `npm run dev` — Vite dev server with the proxy above.
 - `npm run build` — typecheck (`tsc -b`) then build.
 - `npm run lint` — ESLint.
+- `npm test` — Vitest unit tests (`src/**/*.test.ts`, type-checked by `tsconfig.test.json`).
+
+## Projects
+
+`/` lists the default project and the researcher's own, which can be created,
+renamed and deleted there (User Management's `/projects`). A project opens at
+`/project/:projectId`, and the default project at `/project`, because the dev
+proxy and Caddy send `/projects` to User Management. Each has its own papers and
+draft. Poll now still polls all of the researcher's papers.
+
+## Report page and claims
+
+`/alerts` and `/reports` are separate pages. `/reports/:paperId/:reportId`
+shows one group of a report's claims at a time, under tabs, and highlights each
+passage: the draft sentence above the cited source (pdf.js,
+`src/highlight/`). The selected claim is kept in `?claim=`. The page is
+lazy-loaded, so pdf.js downloads only when a report is opened.
+
+Storage on this branch doesn't send `claims` yet. `listReports` normalises
+every report to the contract (`toUserReport` in `src/api.ts`), and a dev
+mode fake report at `assessed` gets the example's claims from
+`src/mocks/fakeReportClaims.ts`. Claims the server sends always replace the
+mock. `src/mocks/fakeReportClaims.test.ts` checks every quote against the
+example PDFs in `storage/src/main/resources/dev/fake-report/`, so change
+the fixture and those files together. Where each passage is shown is
+decided in one place, `src/highlight/sources.ts`: when Storage gains the
+researcher PDF endpoints, only it changes.

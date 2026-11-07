@@ -47,6 +47,7 @@ class LoginTest {
 
         // login reads the account back from the database, and it should look exactly as register showed it
         assertThat(JsonPath.<Object>read(body, "$.user")).isEqualTo(JsonPath.read(registration, "$.user"));
+        assertThat(JsonPath.<String>read(body, "$.user.role")).isEqualTo("user");
         TokenAssertions.assertIsTokenFor(
                 JsonPath.read(body, "$.token"), JsonPath.read(registration, "$.user.id"), jwtSecret);
     }
