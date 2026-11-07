@@ -1,0 +1,343 @@
+{
+  "change_summary": "The journal has retracted \"Green roofs and urban cooling\". The notice gives two reasons: image manipulation in the supplementary figures, and temperature data that could not be verified. The paper's one stated finding, a 4 C drop in surface temperature, rests on that data. It should not be relied on.",
+  "change_severity": "high",
+  "impact_level": "none",
+  "evaluation": "Your draft does not cite \"Green roofs and urban cooling\" (Haddad and Berg, 2018), so the retraction does not touch it. The reference list has only Okoye (2021) and Fischer (2016), and neither is the retracted paper. The Introduction cites Okoye (2021) for the cooling effect of street trees, which is a different paper.",
+  "recommendation": "The draft does not cite the retracted green roofs paper (Haddad and Berg, 2018), so no change is needed and the alert can be dismissed.",
+  "assessment": {
+    "prompt_version": 5,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 101,
+          "about_this_paper": "yes",
+          "what_changed": "The paper was retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "Retraction for image manipulation and unverifiable temperature data means the findings, including the 4 C cooling result, can't be relied on.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "This article has been retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified."
+            },
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "Retraction: Green roofs and urban cooling"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "summary": "The journal has retracted \"Green roofs and urban cooling\". The notice gives two reasons: image manipulation in the supplementary figures, and temperature data that could not be verified. The paper's one stated finding, a 4 C drop in surface temperature, rests on that data. It should not be relied on.",
+      "claims": [
+        {
+          "text": "The paper was retracted.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "Retraction: Green roofs and urban cooling"
+            },
+            {
+              "source": "alert 101",
+              "quote": "retraction, notice 10.9999/fake.2018.010r"
+            }
+          ]
+        },
+        {
+          "text": "The reasons given are image manipulation in the supplementary figures and unverifiable temperature data.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "image manipulation in the supplementary figures and because the temperature data could not be verified"
+            }
+          ]
+        },
+        {
+          "text": "The paper's main finding is a 4 C reduction in surface temperature, which depends on the temperature data.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Green roofs lowered surface temperature by 4 C in three cities."
+            }
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": false,
+      "reference_entry": null,
+      "uses": [],
+      "impact_level": "none",
+      "explanation": "Your draft does not cite \"Green roofs and urban cooling\" (Haddad and Berg, 2018), so the retraction does not touch it. The reference list has only Okoye (2021) and Fischer (2016), and neither is the retracted paper. The Introduction cites Okoye (2021) for the cooling effect of street trees, which is a different paper.",
+      "claims": [
+        {
+          "text": "The tracked paper, Haddad and Berg 2018 on green roofs, is not in the draft's reference list, which holds only Okoye (2021) and Fischer (2016).",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Okoye, B. (2021). Shade and urban heat. J. Fake Urban Studies."
+            },
+            {
+              "source": "draft",
+              "quote": "Fischer, L. (2016). Trees in cities. J. Fake Ecology."
+            }
+          ]
+        },
+        {
+          "text": "The only in-text citation is to Okoye (2021), a different paper, about street trees.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Street trees cool neighbourhoods through shade and evapotranspiration (Okoye, 2021)."
+            }
+          ]
+        },
+        {
+          "text": "The tracked paper was retracted, but the draft does not cite it.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "Retraction: Green roofs and urban cooling"
+            }
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "No action needed: the draft does not cite the retracted paper, so the alert can be dismissed.",
+          "where": null
+        }
+      ],
+      "recommendation": "The draft does not cite the retracted green roofs paper (Haddad and Berg, 2018), so no change is needed and the alert can be dismissed.",
+      "claims": [
+        {
+          "text": "The green roofs paper was retracted.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "Retraction: Green roofs and urban cooling"
+            }
+          ]
+        },
+        {
+          "text": "The draft does not cite the retracted paper; its reference list has only Okoye (2021) and Fischer (2016).",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Okoye, B. (2021). Shade and urban heat. J. Fake Urban Studies."
+            },
+            {
+              "source": "draft",
+              "quote": "Fischer, L. (2016). Trees in cities. J. Fake Ecology."
+            }
+          ]
+        },
+        {
+          "text": "The only in-text citation is to Okoye (2021), a different paper about street trees.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Street trees cool neighbourhoods through shade and evapotranspiration (Okoye, 2021)."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The paper was retracted.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: Green roofs and urban cooling",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 101,
+          "quote": "retraction, notice 10.9999/fake.2018.010r",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The reasons given are image manipulation in the supplementary figures and unverifiable temperature data.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "image manipulation in the supplementary figures and because the temperature data could not be verified",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The paper's main finding is a 4 C reduction in surface temperature, which depends on the temperature data.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Green roofs lowered surface temperature by 4 C in three cities.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The tracked paper, Haddad and Berg 2018 on green roofs, is not in the draft's reference list, which holds only Okoye (2021) and Fischer (2016).",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Okoye, B. (2021). Shade and urban heat. J. Fake Urban Studies.",
+          "page": 1,
+          "verified": "verbatim"
+        },
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Fischer, L. (2016). Trees in cities. J. Fake Ecology.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The only in-text citation is to Okoye (2021), a different paper, about street trees.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Street trees cool neighbourhoods through shade and evapotranspiration (Okoye, 2021).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The tracked paper was retracted, but the draft does not cite it.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: Green roofs and urban cooling",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The green roofs paper was retracted.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: Green roofs and urban cooling",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The draft does not cite the retracted paper; its reference list has only Okoye (2021) and Fischer (2016).",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Okoye, B. (2021). Shade and urban heat. J. Fake Urban Studies.",
+          "page": 1,
+          "verified": "verbatim"
+        },
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Fischer, L. (2016). Trees in cities. J. Fake Ecology.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The only in-text citation is to Okoye (2021), a different paper about street trees.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Street trees cool neighbourhoods through shade and evapotranspiration (Okoye, 2021).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}
