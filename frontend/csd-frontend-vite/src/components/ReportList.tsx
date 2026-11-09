@@ -173,7 +173,7 @@ function ReportRows({
   )
 }
 
-function ReportDetails({ report }: { report: UserReport }) {
+export function ReportDetails({ report }: { report: UserReport }) {
   return (
     <div className="mt-4 space-y-4 border-t border-white/10 pt-4 text-sm/6">
       {report.status === 'investigating' && <Spinner label="Research Evaluation is still fetching documents…" />}
@@ -192,13 +192,13 @@ function ReportDetails({ report }: { report: UserReport }) {
           {report.evaluation && (
             <div>
               <p className="font-semibold text-white">Evaluation</p>
-              <p className="mt-1 text-gray-400">{report.evaluation}</p>
+              <p className="mt-1 max-w-3xl text-gray-400">{report.evaluation}</p>
             </div>
           )}
           {report.recommendation && (
             <div>
               <p className="font-semibold text-white">Recommendation</p>
-              <p className="mt-1 text-gray-400">{report.recommendation}</p>
+              <p className="mt-1 max-w-3xl text-gray-400">{report.recommendation}</p>
             </div>
           )}
         </>
@@ -279,7 +279,7 @@ function DocumentSummary({ doc }: { doc: UserDocument }) {
   )
 }
 
-function AlertSummary({ alert }: { alert: Alert }) {
+export function AlertSummary({ alert }: { alert: Alert }) {
   return (
     <li className="rounded-md bg-gray-900/60 px-3 py-2 text-gray-300">
       <p className="font-medium text-white">
