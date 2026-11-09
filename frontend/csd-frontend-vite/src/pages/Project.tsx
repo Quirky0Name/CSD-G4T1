@@ -53,7 +53,7 @@ function Project() {
   const current = found?.id === projectId ? found : null
   const name = projectId ? current?.name : DEFAULT_PROJECT_NAME
 
-  const poll = async () => {
+  const poll = async (paperId?: string) => {
     if (polling) return
     if (state.status === 'ready' && state.papers.length === 0) {
       showToast({ tone: 'info', message: 'Nothing to poll. Track a paper first.' })
@@ -61,7 +61,7 @@ function Project() {
     }
     setPolling(true)
     try {
-      const summary = await runPoll()
+      const summary = await runPoll(paperId)
       setLastPoll(summary)
       await refresh()
       showToast(pollSummaryToast(summary))
@@ -163,6 +163,7 @@ function Project() {
         <TrackedPaperList
           papers={state.papers.filter((paper) => paper.project_id === (projectId ?? null))}
           alerts={state.alerts}
+          onPoll={(paperId) => void poll(paperId)}
           onDelete={(paperId) => void handleDelete(paperId)}
         />
       )}

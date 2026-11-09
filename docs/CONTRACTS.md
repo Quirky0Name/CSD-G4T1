@@ -223,8 +223,7 @@ SETUP.md), with the user's token.
 | List tracked papers | `GET /papers` |
 | Track a paper | `POST /papers`, multipart PDF or JSON `{"doi"}` |
 | Delete a paper | `DELETE /papers/{id}` |
-| Poll now | Updating's `POST /run-poll` (`/updating/...`), every paper the user tracks |
-| A paper's page (`/papers/{id}`) | no call of its own: the paper from `GET /papers`, its most recent report (and alerts in no report) from the two calls below. A paper not in `GET /papers` shows as not found |
+| Poll a paper now | Updating's `POST /run-poll?paper_id=` (`/updating/...`) |
 | A paper's alerts | `GET /papers/{id}/alerts` (one call per paper; no cross-paper list yet) |
 | Acknowledge / dismiss | `PATCH /alerts/{id}` |
 | A paper's reports (alerts, documents, evaluation) | `GET /papers/{id}/reports` |

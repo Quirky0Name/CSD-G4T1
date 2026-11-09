@@ -268,8 +268,10 @@ export async function setAlertStatus(
   return res.data
 }
 
-export async function runPoll(): Promise<PollSummary> {
-  const res = await updating.post<PollSummary>('/run-poll')
+export async function runPoll(paperId?: string): Promise<PollSummary> {
+  const res = await updating.post<PollSummary>('/run-poll', null, {
+    params: paperId ? { paper_id: paperId } : undefined,
+  })
   return res.data
 }
 
