@@ -15,7 +15,7 @@ function Sidebar() {
   const email = session?.user.email
   const { pathname } = useLocation()
   // /projects is User Management's, so a project's page lives under /project
-  const inProject = pathname === '/project' || pathname.startsWith('/project/') || pathname.startsWith('/papers/')
+  const inProject = pathname === '/project' || pathname.startsWith('/project/')
 
   return (
     <nav

@@ -8,12 +8,6 @@ export const ALERT_SEVERITY_LABEL: Record<AlertSeverity, string> = {
   low: 'Low',
 }
 
-export const ALERT_SEVERITY_DOT_CLASS: Record<AlertSeverity, string> = {
-  high: 'fill-red-400',
-  medium: 'fill-yellow-400',
-  low: 'fill-blue-400',
-}
-
 export const CHANGE_TYPE_LABEL: Record<ChangeType, string> = {
   retraction: 'Retraction',
   correction: 'Correction',

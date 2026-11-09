@@ -1,12 +1,11 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
-import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/20/solid'
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
+import { EllipsisVerticalIcon, PlusIcon } from '@heroicons/react/20/solid'
 import { FolderIcon } from '@heroicons/react/24/outline'
-import { createProject, deleteProject, errorMessage, listProjects, renameProject, type Alert, type Project } from '../api'
+import { createProject, deleteProject, errorMessage, listProjects, renameProject, type Project } from '../api'
 import { ActionButton } from '../components/ActionButton'
 import { useToast } from '../components/Toasts'
-import { ALERT_SEVERITY_DOT_CLASS, highestNewAlertSeverity } from '../format'
 import { useTracking } from '../tracking'
 
 const CARD = 'rounded-md bg-gray-800/50 outline -outline-offset-1 outline-white/10'
@@ -42,12 +41,6 @@ function Projects() {
 
   const countIn = (projectId: string | null) =>
     tracking.status === 'ready' ? tracking.papers.filter((paper) => paper.project_id === projectId).length : null
-
-  const newAlertsIn = (projectId: string | null) => {
-    if (tracking.status !== 'ready') return []
-    const paperIds = new Set(tracking.papers.filter((paper) => paper.project_id === projectId).map((paper) => paper.id))
-    return tracking.alerts.filter((alert) => paperIds.has(alert.paper_id) && alert.status === 'new')
-  }
 
   const update = (change: (projects: Project[]) => Project[]) =>
     setLoad((current) => (current.status === 'ready' ? { status: 'ready', projects: change(current.projects) } : current))
@@ -93,7 +86,7 @@ function Projects() {
         </p>
       )}
 
-      <ul role="list" className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-4">
+      <ul role="list" className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-3">
         {creating && (
           <li>
             <NameForm label="New project name" submit="Create" onSubmit={create} onCancel={() => setCreating(false)} />
@@ -111,30 +104,43 @@ function Projects() {
                   onCancel={() => setRenamingId(null)}
                 />
               ) : (
-                <ProjectCard
-                  to={`/project/${project.id}`}
-                  name={project.name}
-                  count={countIn(project.id)}
-                  newAlerts={newAlertsIn(project.id)}
-                >
-                  <CardAction label={`Rename ${project.name}`} title="Rename" onClick={() => setRenamingId(project.id)}>
-                    <PencilIcon aria-hidden="true" className="size-4" />
-                  </CardAction>
-                  <CardAction
-                    label={`Delete ${project.name}`}
-                    title="Delete"
-                    danger
-                    onClick={() => setDeleting(project)}
-                  >
-                    <TrashIcon aria-hidden="true" className="size-4" />
-                  </CardAction>
+                <ProjectCard to={`/project/${project.id}`} name={project.name} count={countIn(project.id)}>
+                  <Menu>
+                    <MenuButton className="relative z-10 flex size-10 items-center justify-center rounded-md text-gray-400 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-500 sm:size-8">
+                      <span className="sr-only">Options for {project.name}</span>
+                      <EllipsisVerticalIcon aria-hidden="true" className="size-5" />
+                    </MenuButton>
+                    <MenuItems
+                      anchor={{ to: 'bottom end', gap: 4, padding: 8 }}
+                      className="z-50 w-36 rounded-md bg-gray-800 py-1 shadow-lg outline outline-white/10 focus:outline-none"
+                    >
+                      <MenuItem>
+                        <button
+                          type="button"
+                          onClick={() => setRenamingId(project.id)}
+                          className="block w-full px-3 py-2 text-left text-white data-focus:bg-white/5"
+                        >
+                          <span className="text-sm/5">Rename</span>
+                        </button>
+                      </MenuItem>
+                      <MenuItem>
+                        <button
+                          type="button"
+                          onClick={() => setDeleting(project)}
+                          className="block w-full px-3 py-2 text-left text-red-400 data-focus:bg-white/5"
+                        >
+                          <span className="text-sm/5">Delete</span>
+                        </button>
+                      </MenuItem>
+                    </MenuItems>
+                  </Menu>
                 </ProjectCard>
               )}
             </li>
           ))}
         {/* the default project has no row: it can't be renamed or deleted (docs/CONTRACTS.md, "Projects") */}
         <li>
-          <ProjectCard to="/project" name="Default project" count={countIn(null)} newAlerts={newAlertsIn(null)} />
+          <ProjectCard to="/project" name="Default project" count={countIn(null)} />
         </li>
       </ul>
 
@@ -152,69 +158,24 @@ function ProjectCard({
   to,
   name,
   count,
-  newAlerts,
   children,
 }: {
   to: string
   name: string
   count: number | null
-  newAlerts: Alert[]
   children?: ReactNode
 }) {
-  const severity = highestNewAlertSeverity(newAlerts)
-
   return (
-    <div className={`${CARD} relative flex h-full min-h-44 flex-col p-5 hover:bg-gray-800 focus-within:outline-indigo-500`}>
-      <div className="flex min-h-8 items-start justify-between gap-3">
-        <FolderIcon aria-hidden="true" className="size-8 shrink-0 text-gray-400" />
-        {children && <div className="-mt-1 -mr-1 flex shrink-0 gap-1">{children}</div>}
+    <div className={`${CARD} relative flex items-center gap-3 py-2 pr-2 pl-4 hover:bg-gray-800 focus-within:outline-indigo-500`}>
+      <FolderIcon aria-hidden="true" className="size-6 shrink-0 text-gray-400" />
+      <div className="min-w-0 flex-1 py-1">
+        <Link to={to} title={name} className="block truncate text-sm/6 font-semibold text-white after:absolute after:inset-0 focus:outline-none">
+          {name}
+        </Link>
+        <p className="h-5 text-xs/5 text-gray-400">{paperCount(count)}</p>
       </div>
-      <Link
-        to={to}
-        title={name}
-        className="mt-4 line-clamp-2 text-base/6 font-semibold break-words text-white after:absolute after:inset-0 focus:outline-none"
-      >
-        {name}
-      </Link>
-      <div className="mt-auto flex min-h-5 flex-wrap items-center gap-x-4 pt-3 text-sm/5 text-gray-400">
-        <p>{paperCount(count)}</p>
-        {severity && (
-          <p className="flex items-center gap-x-1.5 text-gray-200">
-            <svg viewBox="0 0 6 6" aria-hidden="true" className={`size-1.5 ${ALERT_SEVERITY_DOT_CLASS[severity]}`}>
-              <circle r={3} cx={3} cy={3} />
-            </svg>
-            {newAlerts.length} new alert{newAlerts.length === 1 ? '' : 's'}
-          </p>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// above the card's stretched link, so it doesn't open the project
-function CardAction({
-  label,
-  title,
-  danger = false,
-  onClick,
-  children,
-}: {
-  label: string
-  title: string
-  danger?: boolean
-  onClick: () => void
-  children: ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={title}
-      onClick={onClick}
-      className={`relative z-10 flex size-10 items-center justify-center rounded-md text-gray-400 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-indigo-500 sm:size-8 ${danger ? 'hover:text-red-400' : 'hover:text-white'}`}
-    >
       {children}
-    </button>
+    </div>
   )
 }
 
@@ -253,7 +214,7 @@ function NameForm({
       onKeyDown={(event) => {
         if (event.key === 'Escape') onCancel()
       }}
-      className={`${CARD} flex h-full min-h-44 flex-col justify-center p-5`}
+      className={`${CARD} p-2`}
     >
       <input
         autoFocus
