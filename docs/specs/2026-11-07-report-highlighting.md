@@ -246,7 +246,7 @@ The draft pane always shows the example `draft.pdf`, not the researcher's own dr
 - Next to the **Paper** picker, an "Add fake paper" button. It's enabled once a researcher is picked, so it also works for a researcher with no papers. On success:
   - the papers list reloads and the new paper is selected;
   - the message says `Fake paper added. Now add a fake report on it.`
-- Use the existing `dev-button` styles.
+- Follow the dev mode surface brief (`.impeccable/surfaces/frontend-csd-frontend-vite-src-pages-devmode-tsx.md`): use the existing `dev-button` styles.
 - **Acceptance:**
   - [ ] For a researcher with no papers: Add fake paper, then Add fake report at `assessed`. The researcher sees the paper in their default project, and the report toast within 30 s.
   - [ ] `npm run build` and `npm run lint` pass.
