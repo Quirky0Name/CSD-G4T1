@@ -27,6 +27,7 @@ Learner Lab won't do: it limits IAM roles and stops instances after a few hours.
    |---|---|
    | `/research-assistant/JWT_SECRET` | `openssl rand -base64 32` |
    | `/research-assistant/POSTGRES_PASSWORD` | letters and digits only |
+   | `/research-assistant/REFRESH_COOKIE_SECURE` | `true`, so the refresh token's cookie is sent only over HTTPS |
    | `/research-assistant/ADMIN_PASSWORD_HASH` | `docker run --rm caddy:2.11-alpine caddy hash-password` (for `/adminer`) |
 
    Then any of the API keys and settings in `.env.example` the app should use (`GEMINI_API_KEY`,

@@ -24,3 +24,5 @@ users:
   storage-url: ${SM_BASE_URL:http://localhost:8081}
   # the admin account and what only it can do; off unless DEV_MODE=true
   dev-mode: ${DEV_MODE:false}
+  # the refresh token's cookie is Secure (HTTPS only) when true: true on the deployed server
+  refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:false}

@@ -94,6 +94,8 @@ class ReportListTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.reports[*].id").value(contains((int) second, (int) first)))
                 .andExpect(jsonPath("$.reports[*].paper_id").value(contains(paperId.toString(), paperId.toString())))
+                .andExpect(jsonPath("$.reports[0].owner_id").doesNotExist())
+                .andExpect(jsonPath("$.reports[1].owner_id").doesNotExist())
                 .andExpect(jsonPath("$.reports[0].alerts[*].id").value(contains((int) correction)))
                 .andExpect(jsonPath("$.reports[0].documents[*].doi").value(contains("10.1/c", PAPER_DOI)))
                 .andExpect(jsonPath("$.reports[1].alerts[*].id").value(contains((int) retraction)))

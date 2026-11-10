@@ -5,8 +5,18 @@ This is the single source of truth for every interface between services.
 
 ## Auth
 
-- JWT: HS256, `sub` = user id, plus `exp`. Issued by User Management at
-  register and login (below), valid 24 hours.
+- JWT (the access token): HS256, `sub` = user id, plus `exp`. Issued by User
+  Management at register, login and refresh (below), valid 1 hour.
+- **Refresh token:** 32 random bytes as unpadded base64url (43 characters),
+  sent only as a cookie: name `refresh_token`, `HttpOnly`,
+  `SameSite=Strict`, `Path=/auth`, `Max-Age=604800`, and `Secure` when
+  `REFRESH_COOKIE_SECURE` is `true`. Valid 7 days from issue, sliding, and
+  it works once: refreshing marks it used and issues a new one. Only its
+  SHA-256 hash (lowercase hex) is stored, in `refresh_tokens`, never the
+  token. Register and login set it; `POST /auth/refresh` and `POST
+  /auth/logout` read it. The admin gets refresh tokens like a researcher.
+  Services other than User Management never see it, and service tokens have
+  no refresh token.
 - `JWT_SECRET` is shared as base64 of 32+ random bytes (`openssl rand -base64 32`;
   Storage Management's JWT library rejects shorter keys, and Updating checks at
   startup). **Every service
@@ -15,7 +25,9 @@ This is the single source of truth for every interface between services.
   across a language boundary.
 - Every downstream service (Storage Management, Research Evaluation,
   Updating) validates the JWT signature itself. No service calls back to
-  User Management per request.
+  User Management to validate a token. The one call to User Management is
+  Research Evaluation reading a researcher's profile with its service token
+  (see "Research Evaluation ↔ User Management").
 - **Service tokens:** Updating and Research Evaluation each mint their own
   short-lived JWTs to call Storage Management, with `sub=svc:updating` /
   `sub=svc:research-evaluation` and `role=service`. Storage Management must
@@ -27,7 +39,7 @@ This is the single source of truth for every interface between services.
   (`sub=svc:users`, five minutes) to clear a deleted project or account in
   Storage Management.
 - **Admin token** (dev mode only, `DEV_MODE=true`): the usual JWT plus a
-  claim: HS256, `sub` = the admin's user id, `role` = `admin`, 24 hours.
+  claim: HS256, `sub` = the admin's user id, `role` = `admin`, 1 hour.
   Storage Management and User Management read it as an admin
   (`ROLE_ADMIN`, not `ROLE_USER`): researcher endpoints and `/internal/**`
   answer it `403`. Updating doesn't look at the claim, so on `POST
@@ -36,7 +48,9 @@ This is the single source of truth for every interface between services.
 - **For now** everything runs locally with a shared throwaway `JWT_SECRET`
   (base64 of 32+ bytes like the real one, the same in every service's local
   config). The frontend signs in through User Management, keeps the token
-  in `localStorage` and sends it to Storage Management and Updating.
+  in `localStorage` and sends it to Storage Management and Updating; when
+  one answers `401` it refreshes the token once (`POST /auth/refresh`) and
+  retries the request.
   Updating's `POST /run-poll` checks the user's JWT and polls only that
   user's papers.
 
@@ -44,10 +58,11 @@ This is the single source of truth for every interface between services.
 
 Owned by: User Management (`users/`). Consumed by: the frontend, at `/auth`
 and `/projects` on its own address, since User Management sends no CORS
-headers: the Vite proxy in development, Caddy in the root stack. Register
-and login need no token; the project calls and deleting the account need
-the user's token, as Storage Management's do. Register and login answer
-with the same shape, so the frontend handles them alike:
+headers: the Vite proxy in development, Caddy in the root stack. Register,
+login, refresh and logout need no `Authorization` header; the project
+calls, deleting the account and `GET`/`PUT /auth/me/profile` need the
+user's token, as Storage Management's do. Register, login and refresh
+answer with the same shape, so the frontend handles them alike:
 
 ```json
 {"token": "eyJ...", "user": {"id": "uuid", "email": "someone@example.com", "role": "user", "created_at": "2026-10-24T08:00:00Z"}}
@@ -55,26 +70,38 @@ with the same shape, so the frontend handles them alike:
 
 `user.role` is `user` or `admin`. A researcher's is always `user`.
 
-`token` is the user JWT above; send it as `Authorization: Bearer <token>`
+`token` is the access token above; send it as `Authorization: Bearer <token>`
 to Storage Management. `user.id` is its `sub`. Emails are stored and
 returned in lowercase, and are one account whatever their letter case.
 
 ### `POST /auth/register`
 
 Creates an account and logs it straight in. **Request:**
-`{"email": "...", "password": "..."}`.
+`{"email": "...", "password": "...", "profile": {...}}`. `profile` is
+optional: the profile body (see `GET /auth/me/profile`), validated by the
+rules there and saved with the account in one transaction. Absent or
+`null` means the account has no profile; `{}` is present, so it saves a
+profile with every answer empty. The sign-up page always sends it.
 
-**Response `201`:** the shape above.
+```json
+{"email": "a@b.c", "password": "correct horse", "profile": {"occupation": "PhD student", "research_fields": ["Medicine"]}}
+```
+
+**Response `201`:** the shape above, which doesn't echo the profile, plus
+a `Set-Cookie` with a new refresh token.
 
 Errors, as problem details: `400` an email that isn't an address, a
-password under 8 characters or over 72 bytes (BCrypt's limit), or a
-missing or blank field; `409` an account with this email already exists
-(any letter case).
+password under 8 characters or over 72 bytes (BCrypt's limit), a
+missing or blank field, or a `profile` that breaks the profile rules; `409`
+an account with this email already exists (any letter case). A `400` is
+decided before the email is checked, so an invalid profile is a `400` even
+on a taken email. A `409` writes nothing, and the existing account's
+profile is untouched. A failed profile save leaves no account.
 
 ### `POST /auth/login`
 
 **Request:** `{"email": "...", "password": "..."}`. **Response `200`:** the
-shape above.
+shape above, plus a `Set-Cookie` with a new refresh token.
 
 Errors, as problem details: `400` a missing or blank field; `401` with
 `detail` `Wrong email or password` for an unknown email and a wrong
@@ -88,12 +115,99 @@ With dev mode on, the admin signs in here with `{"email": "admin",
 not exist, so that login gets the usual `401`. Register with the email
 `admin` answers `400`.
 
+### `POST /auth/refresh`
+
+No body and no `Authorization`: the `refresh_token` cookie is the
+credential. **Response `200`:** the shape above, with a new access token
+(the admin's has `role=admin`) and a `Set-Cookie` with a new refresh token;
+the old one is marked used. Marking used is one conditional update (`used_at
+is null`), so of two refreshes with the same token, exactly one gets `200`.
+
+Errors, as problem details: `401` with `detail` `Please sign in again` for a
+missing, unknown, expired or already used token, or an account that no
+longer exists (its tokens went with it by cascade, so it is an unknown
+token). The `401` carries a `Set-Cookie` that clears the cookie:
+`refresh_token=` with `Max-Age=0` and the same `Path`, `HttpOnly`,
+`SameSite` and `Secure` as the real one, so the browser replaces it.
+
+### `POST /auth/logout`
+
+No `Authorization`; reads the cookie. **Response `204`**, always: marks the
+token used if it exists, and clears the cookie as above. With no cookie it
+is still `204`.
+
+### `GET /auth/me/profile`
+
+User token only. **Response `200`:** the profile body, all JSON snake_case:
+
+```json
+{
+  "occupation": "PhD student",
+  "occupation_other": null,
+  "research_fields": ["Medicine", "Psychology"],
+  "research_interests": ["vaccine safety"],
+  "work_types": ["Clinical"],
+  "response_preferences": "Keep it brief and tell me what to do first."
+}
+```
+
+`research_fields`, `research_interests` and `work_types` are always arrays;
+`occupation`, `occupation_other` and `response_preferences` are each a
+string or `null`.
+
+Errors, as problem details: `401` missing or bad token, or `Your account no
+longer exists` (the account was deleted); `403` an admin or service token;
+`404` with `detail` `No profile <user id>`, which the profile page treats as
+an empty form. An account has a profile only if it registered with one or
+has saved one with `PUT`: accounts made before the migration, and the dev
+mode admin, have none.
+
+### `PUT /auth/me/profile`
+
+User token only. **Request:** the full profile, in the same shape. A
+left-out or `null` field is cleared, including `occupation` and
+`research_fields`; `{}` clears every answer and keeps the profile. It
+creates the profile when there is none. **Response `200`:** the saved
+profile, normalised as stored. Two first saves at once both succeed and
+leave one profile. Errors: `400` as under the rules below; `401` and `403`
+as for `GET`.
+
+**Profile rules**, applied on register and on `PUT`, and mirrored by the
+frontend for immediate feedback. Every answer is optional. A `400` is a
+problem detail whose `detail` starts with the field's snake_case name (for
+example `research_interests must have at most 5 interests`); the first
+broken rule in field order is the one reported. A `null` element in any
+list is `400`.
+
+| Field | Rule |
+|---|---|
+| `occupation` | Absent or `null` means no occupation, and on `PUT` clears it. A value must be exactly one listed occupation |
+| `occupation_other` | Trimmed; blank becomes `null`. Non-null is allowed only when `occupation` is `Other`, otherwise `400`; 1 to 60 characters with no control characters. `Other` with no `occupation_other` is fine |
+| `research_fields` | Absent or `null` means `[]`. Each value exactly one listed field (letter case counts). No duplicates |
+| `research_interests` | Absent or `null` means `[]`. At most 5. Each is trimmed, then 1 to 60 characters with no control characters. No duplicates, ignoring letter case. Any text is accepted: the suggestions are frontend only |
+| `work_types` | Absent or `null` means `[]`. Each exactly one listed work type. No duplicates |
+| `response_preferences` | Trimmed, then at most 500 characters, counted in UTF-16 code units (Java `String.length()`, a browser's `maxLength`; an emoji is 2). Newlines and tabs are allowed; other control characters, including U+0000, are `400`. Blank becomes `null` |
+
+A control character is anything Java's `Character.isISOControl` accepts
+(U+0000-U+001F, U+007F-U+009F); `response_preferences` allows `\n`, `\r` and
+`\t`. Listed values: occupations `Undergraduate student`, `Master's
+student`, `PhD student`, `Postdoctoral researcher`, `Faculty or principal
+investigator`, `Research staff`, `Clinician`, `Industry researcher`,
+`Other`; work types `Experimental or laboratory`, `Clinical`,
+`Computational or modelling`, `Theoretical`, `Survey or qualitative`,
+`Systematic review or meta-analysis`, `Data or software`, `Other`;
+research fields are the 26 OpenAlex field `display_name` values. The stored
+value is the displayed text. The lists live in
+`users/src/main/resources/profile/options.json` and are duplicated in the
+frontend (frontend `README.md`).
+
 ### `DELETE /auth/me`
 
 User JWT required. Deletes the caller's account. **Request:**
 `{"password": "..."}`, the account's password. First asks Storage
 Management to clear everything the user owns (`DELETE /internal/users/{id}`,
-below), then deletes the account and its projects. **Response `204`.**
+below), then deletes the account, its projects, its profile and its refresh
+tokens (database cascade). **Response `204`.**
 
 Errors, as problem details: `400` a missing or blank password; `401`
 missing or bad token, or `Your account no longer exists` for an account
@@ -102,8 +216,9 @@ the token is fine and the frontend signs out on any `401`), or a service
 token; `502` with `detail` `Storage Management couldn't clear your account,
 so it wasn't deleted`. Nothing was deleted, so it can simply be tried again.
 
-Tokens aren't revoked: a deleted account's token stays valid for up to 24
-hours. User Management then lists no projects for it, answers `PUT` and
+Access tokens aren't revoked, in any service: a deleted account's token
+stays valid for up to 1 hour. Its refresh tokens go with it, so it can't be
+renewed. User Management then lists no projects for it, answers `PUT` and
 `DELETE /projects/{id}` with `404`, and `POST /projects` with `401` `Your
 account no longer exists`.
 
@@ -211,6 +326,28 @@ goes through.
 
 Errors, as problem details: `400` an id that isn't a UUID; `401` missing or
 bad token, `403` a user token.
+
+## Research Evaluation ↔ User Management
+
+Owned by: User Management. Consumed by: Research Evaluation, with its
+service token (`sub=svc:research-evaluation`), for impact's steps 2 and 3
+(EVALUATION.md). Reachable only on the compose network: Caddy and the Vite
+proxy forward `/auth/*` and `/projects*`, never `/internal`.
+
+### `GET /internal/users/{id}/profile`
+
+Service token only. **Response `200`:** the profile body (see `GET
+/auth/me/profile`).
+
+Errors, as problem details: `400` an id that isn't a UUID (Spring's own
+`400`, with no custom `detail`); `401` missing or bad token; `403` a user
+or admin token; `404` with `detail` `No profile <id>`, also for an unknown
+user. Research Evaluation matches that `detail` exactly, so a `404` with any
+other `detail` is a failed read, not "no profile".
+
+Research Evaluation learns whose profile to read from `owner_id` on the
+report (see `GET /internal/papers/{id}/reports/{reportId}`), since it only
+has a `paper_id`.
 
 ## Frontend ↔ Storage Management
 
@@ -945,7 +1082,7 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
 
 ```json
 {
-  "id": 3, "paper_id": "uuid", "status": "investigating",
+  "id": 3, "paper_id": "uuid", "owner_id": "uuid", "status": "investigating",
   "created_at": "2026-09-27T08:00:00Z", "investigated_at": null,
   "evaluation": null, "recommendation": null, "evaluated_at": null,
   "change_summary": null, "change_severity": null, "impact_level": null, "assessment": null,
@@ -976,6 +1113,12 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
 
   Unlike the alerts' `alert_severity`, which is fixed by change type, these are
   impact's judgment.
+- `owner_id`: the id of the user who owns the report's paper. It is on
+  every endpoint that returns this record (this one,
+  `GET /internal/reports/{reportId}`, and the `PATCH` and evaluation `PUT`
+  responses). A paper deleted between reading the report and its owner is
+  the usual `No report <id>` `404`. The researchers' and admin report lists
+  (`GET /papers/{id}/reports`) don't have it.
 - `alerts`, oldest first, carry their `change_key` (unlike the frontend's
   alert API): Research Evaluation matches them to its detected changes by
   it.
@@ -1431,6 +1574,8 @@ logged by Updating, not returned.
 | `JWT_SECRET` | all | base64-encoded, 32+ bytes (`openssl rand -base64 32`); every service decodes before use. For now: a shared throwaway value in that format |
 | `SM_BASE_URL` | Research Evaluation, Updating, User Management | Storage Management's base URL (`http://localhost:8081` locally) |
 | `RE_BASE_URL` | Updating | Research Evaluation's base URL (Updating's nudge goes here). Storage Management never calls Research Evaluation |
+| `UM_BASE_URL` | Research Evaluation | User Management's base URL (`http://localhost:8080` locally, `http://users:8080` in the root compose stack) |
+| `REFRESH_COOKIE_SECURE` | User Management | `true` adds `Secure` to the refresh cookie; `false` by default, so it works over plain HTTP locally. Set `true` on the deployed server |
 
 See [SETUP.md](SETUP.md) for the full env var list including the
 third-party API keys.

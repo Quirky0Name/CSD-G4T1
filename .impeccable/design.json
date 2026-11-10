@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T00:00:00Z",
+  "title": "Design System: Research desk",
+  "extensions": {
+    "colorMeta": {
+      "ink-ground": { "role": "neutral", "displayName": "Ink Ground", "canonical": "#030712", "tonalRamp": ["#030712", "#111827", "#1f2937", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#d1d5db"] },
+      "slate-card": { "role": "neutral", "displayName": "Slate Card", "canonical": "#111827", "tonalRamp": ["#030712", "#111827", "#1f2937", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#d1d5db"] },
+      "slate-panel": { "role": "neutral", "displayName": "Slate Panel", "canonical": "#1f2937", "tonalRamp": ["#030712", "#111827", "#1f2937", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#d1d5db"] },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "rgb(255 255 255 / 0.1)", "tonalRamp": ["rgb(255 255 255 / 0.02)", "rgb(255 255 255 / 0.05)", "rgb(255 255 255 / 0.1)", "rgb(255 255 255 / 0.15)", "rgb(255 255 255 / 0.2)", "rgb(255 255 255 / 0.3)", "rgb(255 255 255 / 0.5)", "rgb(255 255 255 / 0.7)"] },
+      "text-primary": { "role": "neutral", "displayName": "Text Primary", "canonical": "#ffffff", "tonalRamp": ["#4b5563", "#6b7280", "#9ca3af", "#d1d5db", "#e5e7eb", "#f3f4f6", "#f9fafb", "#ffffff"] },
+      "text-body": { "role": "neutral", "displayName": "Text Body", "canonical": "#e5e7eb", "tonalRamp": ["#374151", "#4b5563", "#6b7280", "#9ca3af", "#d1d5db", "#e5e7eb", "#f3f4f6", "#f9fafb"] },
+      "text-muted": { "role": "neutral", "displayName": "Text Muted", "canonical": "#9ca3af", "tonalRamp": ["#1f2937", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#d1d5db", "#e5e7eb", "#f3f4f6"] },
+      "signal-indigo": { "role": "primary", "displayName": "Signal Indigo", "canonical": "#6366f1", "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4338ca", "#4f46e5", "#6366f1", "#818cf8", "#c7d2fe"] },
+      "signal-indigo-light": { "role": "primary", "displayName": "Signal Indigo Light", "canonical": "#818cf8", "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4338ca", "#6366f1", "#818cf8", "#a5b4fc", "#e0e7ff"] },
+      "signal-indigo-pale": { "role": "primary", "displayName": "Signal Indigo Pale", "canonical": "#a5b4fc", "tonalRamp": ["#1e1b4b", "#3730a3", "#4f46e5", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe", "#e0e7ff"] },
+      "status-red": { "role": "tertiary", "displayName": "Status Red", "canonical": "#f87171", "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5"] },
+      "status-amber": { "role": "tertiary", "displayName": "Status Amber", "canonical": "#facc15", "tonalRamp": ["#422006", "#713f12", "#854d0e", "#a16207", "#ca8a04", "#eab308", "#facc15", "#fde047"] },
+      "status-emerald": { "role": "tertiary", "displayName": "Status Emerald", "canonical": "#34d399", "tonalRamp": ["#022c22", "#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7"] }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "Page titles in the signed-in app; 1.5rem rising to 1.875rem from 640px." },
+      "title": { "displayName": "Title", "purpose": "Sign-up headings and each question; 1.5rem rising to 1.875rem on the card." },
+      "counter": { "displayName": "Counter", "purpose": "The indigo '2 / 5' step counter on sign-up, tabular figures." },
+      "body": { "displayName": "Body", "purpose": "All running copy; muted grey for supporting lines." },
+      "label": { "displayName": "Label", "purpose": "Sign-up field labels and review-list terms, sentence case." }
+    },
+    "shadows": [
+      { "name": "card-lift", "value": "0 30px 80px -30px rgba(0,0,0,0.8)", "purpose": "The sign-up card only, lifting it off the ground." },
+      { "name": "indigo-glow", "value": "0 8px 20px -8px rgba(99,102,241,0.8)", "purpose": "Under the primary pill." },
+      { "name": "indigo-glow-badge", "value": "0 10px 24px -8px rgba(99,102,241,0.7)", "purpose": "Under the illustration's step badge." },
+      { "name": "float", "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)", "purpose": "Menus and listboxes that overlay content (Tailwind shadow-lg)." }
+    ],
+    "motion": [
+      { "name": "ease-settle", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Every entrance animation." },
+      { "name": "step-in", "value": "420ms ease-settle; translateX(±28px) and blur(6px) to rest", "purpose": "A sign-up screen entering from the direction of travel." },
+      { "name": "badge-pop", "value": "520ms ease-settle; scale(0.5) rotate(-14deg) to rest", "purpose": "The illustration's badge on each step." },
+      { "name": "count-rise", "value": "360ms ease-settle; translateY(40%) to rest", "purpose": "The counter's number on each step." },
+      { "name": "reveal", "value": "220ms ease-settle; translateY(-4px) to rest", "purpose": "A field revealed inside a step." },
+      { "name": "state-change", "value": "150ms", "purpose": "Colour, outline and press-scale transitions on buttons and tiles." },
+      { "name": "reduced-fade", "value": "160ms ease-out opacity", "purpose": "Replaces every entrance under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Pill",
+      "kind": "button",
+      "refersTo": "button-pill-primary",
+      "description": "The one forward action on a sign-up screen.",
+      "html": "<button class=\"ds-pill-primary\">Continue <svg viewBox=\"0 0 20 20\" fill=\"currentColor\" width=\"16\" height=\"16\" aria-hidden=\"true\"><path fill-rule=\"evenodd\" d=\"M3 10a.75.75 0 0 1 .75-.75h10.64l-4.22-3.97a.75.75 0 0 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.22-3.97H3.75A.75.75 0 0 1 3 10Z\" clip-rule=\"evenodd\"/></svg></button>",
+      "css": ".ds-pill-primary { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 9999px; background: #6366f1; color: #fff; padding: 10px 24px; font: 600 14px/20px ui-sans-serif, system-ui, sans-serif; box-shadow: 0 8px 20px -8px rgba(99,102,241,0.8); transition: background-color 150ms, transform 150ms; cursor: pointer; } .ds-pill-primary:hover { background: #818cf8; } .ds-pill-primary:active { transform: scale(0.97); } .ds-pill-primary:focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Pill",
+      "kind": "button",
+      "refersTo": "button-pill-ghost",
+      "description": "Back and Sign in on the sign-up card.",
+      "html": "<button class=\"ds-pill-ghost\">Back</button>",
+      "css": ".ds-pill-ghost { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 9999px; background: transparent; color: #d1d5db; padding: 10px 16px; font: 600 14px/20px ui-sans-serif, system-ui, sans-serif; outline: 1px solid rgb(255 255 255 / 0.15); outline-offset: -1px; transition: background-color 150ms, color 150ms; cursor: pointer; } .ds-pill-ghost:hover { background: rgb(255 255 255 / 0.05); color: #fff; } .ds-pill-ghost:focus-visible { outline: 2px solid #818cf8; }"
+    },
+    {
+      "name": "Action Button",
+      "kind": "button",
+      "refersTo": "button-action-primary",
+      "description": "Compact actions inside the signed-in app (primary tone shown).",
+      "html": "<button class=\"ds-action\">Track paper</button> <button class=\"ds-action ds-action-secondary\">Edit</button>",
+      "css": ".ds-action { display: inline-flex; align-items: center; gap: 4px; border: 0; border-radius: 6px; background: #6366f1; color: #fff; padding: 6px 10px; font: 600 14px/20px ui-sans-serif, system-ui, sans-serif; cursor: pointer; } .ds-action:hover { background: #818cf8; } .ds-action:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; } .ds-action-secondary { background: rgb(255 255 255 / 0.1); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); } .ds-action-secondary:hover { background: rgb(255 255 255 / 0.2); }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Every text input and textarea on the dark ground.",
+      "html": "<label class=\"ds-label\" for=\"ds-email\">Email address</label><input id=\"ds-email\" class=\"ds-input\" placeholder=\"you@university.edu\">",
+      "css": ".ds-label { display: block; margin-bottom: 6px; color: #9ca3af; font: 500 12px/20px ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.025em; } .ds-input { display: block; width: 100%; border: 0; border-radius: 6px; background: rgb(255 255 255 / 0.05); color: #fff; padding: 6px 12px; font: 400 14px/24px ui-sans-serif, system-ui, sans-serif; outline: 1px solid rgb(255 255 255 / 0.1); outline-offset: -1px; } .ds-input::placeholder { color: #9ca3af; } .ds-input:focus { outline: 2px solid #6366f1; outline-offset: -2px; } .ds-input[aria-invalid=true] { outline-color: #f87171; }"
+    },
+    {
+      "name": "Answer Tile",
+      "kind": "custom",
+      "refersTo": "answer-tile",
+      "description": "An outlined choice that fills indigo when chosen; the real input stays in the tab order.",
+      "html": "<label class=\"ds-tile\"><input type=\"radio\" name=\"ds-occ\" checked><span class=\"ds-tile-dot\"></span>Academic researcher</label><label class=\"ds-tile\"><input type=\"radio\" name=\"ds-occ\"><span class=\"ds-tile-dot\"></span>Student</label>",
+      "css": ".ds-tile { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; border-radius: 12px; background: rgb(255 255 255 / 0.02); color: #e5e7eb; padding: 12px 16px; font: 400 14px/20px ui-sans-serif, system-ui, sans-serif; outline: 1px solid rgb(255 255 255 / 0.15); outline-offset: -1px; cursor: pointer; transition: background-color 150ms, outline-color 150ms; } .ds-tile input { position: absolute; opacity: 0; width: 1px; height: 1px; } .ds-tile-dot { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 9999px; outline: 1px solid rgb(255 255 255 / 0.3); } .ds-tile-dot::after { content: ''; width: 8px; height: 8px; border-radius: 9999px; background: #818cf8; transform: scale(0); transition: transform 150ms; } .ds-tile:hover { background: rgb(255 255 255 / 0.05); outline-color: rgb(255 255 255 / 0.3); } .ds-tile:has(:checked) { background: rgb(99 102 241 / 0.12); color: #fff; outline-color: #818cf8; } .ds-tile:has(:checked) .ds-tile-dot { outline-color: #818cf8; } .ds-tile:has(:checked) .ds-tile-dot::after { transform: scale(1); } .ds-tile:has(:focus-visible) { outline: 2px solid #818cf8; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-red",
+      "description": "Alert severity and status, tinted in its own hue.",
+      "html": "<span class=\"ds-badge ds-badge-high\">High</span> <span class=\"ds-badge ds-badge-medium\">Medium</span> <span class=\"ds-badge ds-badge-ok\">Acknowledged</span>",
+      "css": ".ds-badge { display: inline-flex; border-radius: 6px; padding: 2px 6px; font: 500 12px/16px ui-sans-serif, system-ui, sans-serif; } .ds-badge-high { background: rgb(248 113 113 / 0.1); color: #f87171; box-shadow: inset 0 0 0 1px rgb(248 113 113 / 0.2); } .ds-badge-medium { background: rgb(250 204 21 / 0.1); color: #eab308; box-shadow: inset 0 0 0 1px rgb(250 204 21 / 0.2); } .ds-badge-ok { background: rgb(52 211 153 / 0.1); color: #34d399; box-shadow: inset 0 0 0 1px rgb(52 211 153 / 0.2); }"
+    },
+    {
+      "name": "Tag",
+      "kind": "chip",
+      "refersTo": "signal-indigo",
+      "description": "A chosen research field or interest, removable.",
+      "html": "<span class=\"ds-tag\">Epidemiology <button aria-label=\"Remove Epidemiology\"><svg viewBox=\"0 0 20 20\" fill=\"currentColor\" width=\"16\" height=\"16\" aria-hidden=\"true\"><path d=\"M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z\"/></svg></button></span>",
+      "css": ".ds-tag { display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; background: rgb(99 102 241 / 0.1); color: #a5b4fc; padding: 4px 4px 4px 8px; font: 400 14px/20px ui-sans-serif, system-ui, sans-serif; } .ds-tag button { display: inline-flex; border: 0; border-radius: 4px; background: transparent; color: inherit; padding: 2px; cursor: pointer; } .ds-tag button:hover { background: rgb(99 102 241 / 0.2); } .ds-tag button:focus-visible { outline: 2px solid #6366f1; }"
+    },
+    {
+      "name": "Nav Rail Item",
+      "kind": "nav",
+      "refersTo": "nav-rail",
+      "description": "Icon over label in the 72px rail; active gets a white wash.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-rail-item ds-rail-active\" href=\"#\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" width=\"20\" height=\"20\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.06-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.38a1.5 1.5 0 0 1-1.06-.44Z\"/></svg>Projects</a><a class=\"ds-rail-item\" href=\"#\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" width=\"20\" height=\"20\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M14.86 17.08a23.85 23.85 0 0 0 5.45-1.31A8.97 8.97 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.97 8.97 0 0 1-2.31 6.02c1.73.64 3.56 1.09 5.45 1.31m5.72 0a24.26 24.26 0 0 1-5.72 0m5.72 0a3 3 0 1 1-5.72 0\"/></svg>Alerts</a></nav>",
+      "css": ".ds-rail { display: flex; flex-direction: column; gap: 4px; width: 72px; padding: 12px 6px; background: #111827; border-right: 1px solid rgb(255 255 255 / 0.1); } .ds-rail-item { display: flex; flex-direction: column; align-items: center; gap: 2px; border-radius: 6px; padding: 6px 0; color: #9ca3af; text-decoration: none; font: 500 11px/16px ui-sans-serif, system-ui, sans-serif; } .ds-rail-item:hover { background: rgb(255 255 255 / 0.05); color: #fff; } .ds-rail-active { background: rgb(255 255 255 / 0.1); color: #fff; } .ds-rail-item:focus-visible { outline: 2px solid #6366f1; }"
+    },
+    {
+      "name": "Sign-up Card",
+      "kind": "card",
+      "refersTo": "card-signup",
+      "description": "Two-panel onboarding card: illustration panel and form pane.",
+      "html": "<div class=\"ds-card\"><aside class=\"ds-card-panel\"><span class=\"ds-dots\"><i class=\"on\"></i><i></i><i></i></span></aside><section class=\"ds-card-pane\"><h2>Create your account</h2><p>Then five optional questions, about two minutes.</p></section></div>",
+      "css": ".ds-card { display: grid; grid-template-columns: 9fr 11fr; min-height: 240px; border-radius: 24px; background: #111827; outline: 1px solid rgb(255 255 255 / 0.1); outline-offset: -1px; box-shadow: 0 30px 80px -30px rgba(0,0,0,0.8); font-family: ui-sans-serif, system-ui, sans-serif; } .ds-card-panel { display: flex; align-items: flex-end; justify-content: center; padding: 24px; border-radius: 24px 0 0 24px; background: rgb(31 41 55 / 0.4); } .ds-dots { display: flex; gap: 6px; } .ds-dots i { width: 6px; height: 6px; border-radius: 9999px; background: rgb(255 255 255 / 0.15); } .ds-dots i.on { width: 20px; background: #818cf8; } .ds-card-pane { padding: 32px 40px; } .ds-card-pane h2 { margin: 0; color: #fff; font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.025em; } .ds-card-pane p { margin: 8px 0 0; color: #9ca3af; font-size: 14px; line-height: 24px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Night Desk",
+    "overview": "The researcher app is a quiet desk lit for late work: an always-dark ground, slate surfaces stacked one tone apart, white hairlines for every edge, and a single indigo signal that marks where to act, how far along you are, and what you chose. Nothing competes with that signal; status colours (red, amber, emerald) appear only as small tinted badges that report a paper's or alert's state.\n\nThe palette is fixed. The sign-up flow restyled components inside it rather than changing it: a two-panel card, fully rounded pill buttons, one question per screen with a counter, outlined answer tiles that fill indigo when chosen, and a flat authored illustration whose badge changes per step. Inside the signed-in app, controls stay compact and gently rounded; the pill and tile language belongs to onboarding screens.\n\nDev mode is a deliberate exception, bound by a PRODUCT.md brand commitment (the belly-as-UI screen in `DevMode.tsx` / `DevMode.css`). It is its own world and nothing here governs it, nor does it feed this system.",
+    "keyCharacteristics": [
+      "Always dark, whatever the OS asks for (`dark:` styles always apply).",
+      "Tonal layering (ground, card, panel) with inset white hairlines instead of borders or heavy shadow.",
+      "One accent, indigo, for action, progress, selection and focus.",
+      "Status hues only as tinted, inset-ringed badges.",
+      "Motion on entrances only, short and decelerating, with a gentler fade under reduced motion."
+    ],
+    "rules": [
+      { "name": "The One Signal Rule", "body": "Indigo is the only accent. It marks action, progress, selection and focus, and nothing else. Status hues never stand in for it.", "section": "colors" },
+      { "name": "The Always-Dark Rule", "body": "There is no light theme. New components are written dark-first; a light branch is dead code.", "section": "colors" },
+      { "name": "The Sentence Case Rule", "body": "Labels are sentence case and quiet; nothing is set in uppercase tracking.", "section": "typography" },
+      { "name": "The Hairline Rule", "body": "Edges are inset white outlines at 10%, not borders in a contrasting colour and not shadows. Hover and selection change an outline's opacity or hue; they never add a stroke.", "section": "elevation" }
+    ],
+    "dos": [
+      "**Do** keep indigo as the only accent: primary action, progress, selection, focus.",
+      "**Do** edge surfaces with inset white hairlines at 10%, stepping to 15-30% only for tiles and their hover.",
+      "**Do** separate surfaces tonally (ground, card, panel) before reaching for a shadow.",
+      "**Do** show status as a 10% tinted badge with a 20% inset ring in its own hue.",
+      "**Do** animate entrances only, on `cubic-bezier(0.16, 1, 0.3, 1)`, and give every animation a reduced-motion fade.",
+      "**Do** keep the real input in the tab order when a control is custom-drawn, as the answer tiles do."
+    ],
+    "donts": [
+      "**Don't** add a light theme or write light-mode classes; the app is always dark.",
+      "**Don't** introduce a second accent hue, or use red, amber or emerald for anything but status.",
+      "**Don't** animate exits; the next screen is never held back.",
+      "**Don't** carry dev mode's belly world into the researcher app, or this system into dev mode."
+    ]
+  }
+}

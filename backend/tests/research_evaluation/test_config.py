@@ -19,6 +19,16 @@ def test_defaults_and_decoded_secret():
     assert settings.evaluation_snapshot_window == 5
 
 
+def test_the_user_management_url_defaults_to_localhost_and_comes_from_the_environment(monkeypatch):
+    default = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+    assert default.um_base_url == "http://localhost:8080"
+
+    monkeypatch.setenv("UM_BASE_URL", "http://users:8080")
+
+    settings = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+    assert settings.um_base_url == "http://users:8080"
+
+
 def test_crossref_mailto_defaults_to_empty_and_comes_from_the_environment(monkeypatch):
     assert ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET).crossref_mailto == ""
 

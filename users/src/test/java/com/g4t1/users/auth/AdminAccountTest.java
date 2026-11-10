@@ -19,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -76,6 +77,31 @@ class AdminAccountTest {
         }
     }
 
+    @Test
+    void theAdminLoggingInCreatesNoProfile() {
+        try (var app = start(true)) {
+            String adminId = JsonPath.read(loginBody(app), "$.user.id");
+
+            assertThat(profileRows(app, adminId)).isZero();
+        }
+    }
+
+    // deleteByEmail is a bulk delete, so only the database cascade can take the admin's profile with it
+    @Test
+    void removingTheAdminLeavesNoProfileBehind() {
+        String adminId;
+        try (var app = start(true)) {
+            adminId = JsonPath.read(loginBody(app), "$.user.id");
+            app.getBean(JdbcTemplate.class).update("insert into users.user_profiles (user_id, occupation) values (?, ?)",
+                    UUID.fromString(adminId), "Other");
+        }
+        try (var app = start(false)) {
+            assertThat(profileRows(app, adminId)).isZero();
+            assertThat(app.getBean(JdbcTemplate.class)
+                    .queryForObject("select count(*) from users.users where email = 'admin'", Integer.class)).isZero();
+        }
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"1", "on", "yes", ""})
     void onlyTrueSwitchesDevModeOn(String value) {
@@ -103,6 +129,12 @@ class AdminAccountTest {
                     .exchange()
                     .expectStatus().isForbidden();
         }
+    }
+
+    // read directly: the admin can't use the profile endpoints, so no reply shows whether a row exists
+    private static int profileRows(ConfigurableApplicationContext app, String userId) {
+        return app.getBean(JdbcTemplate.class).queryForObject(
+                "select count(*) from users.user_profiles where user_id = ?", Integer.class, UUID.fromString(userId));
     }
 
     // command line arguments, because they beat application.yml's own users.dev-mode

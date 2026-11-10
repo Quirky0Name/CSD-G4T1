@@ -1,5 +1,7 @@
-// The signed-in user's session, kept in localStorage so a refresh stays signed in.
-// The token is User Management's JWT (docs/CONTRACTS.md, "Auth"), valid 24 hours.
+// The signed-in user's session, kept in localStorage so reloading the page stays signed in.
+// The token is User Management's access JWT (docs/CONTRACTS.md, "Auth"), valid 1 hour. A session
+// whose token has expired is kept: the first request answered 401 renews it with the refresh
+// token, an HttpOnly cookie this code never sees (api.ts, refresh.ts).
 export type UserRole = 'user' | 'admin'
 // role is absent on a session saved before dev mode existed, which means a researcher
 export type SessionUser = { id: string; email: string; role?: UserRole; created_at: string }
@@ -7,23 +9,18 @@ export type Session = { token: string; user: SessionUser }
 
 const STORAGE_KEY = 'session'
 
-function expiresAtMs(token: string): number | null {
-  try {
-    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-    const { exp } = JSON.parse(atob(payload)) as { exp?: number }
-    return typeof exp === 'number' ? exp * 1000 : null
-  } catch {
-    return null
-  }
+function isSession(value: unknown): value is Session {
+  if (typeof value !== 'object' || value === null) return false
+  const { token, user } = value as Partial<Session>
+  return typeof token === 'string' && typeof user === 'object' && user !== null
 }
 
 export function loadSession(): Session | null {
   const raw = localStorage.getItem(STORAGE_KEY)
   if (!raw) return null
   try {
-    const session = JSON.parse(raw) as Session
-    const expiresAt = expiresAtMs(session.token)
-    if (expiresAt !== null && expiresAt > Date.now()) return session
+    const session: unknown = JSON.parse(raw)
+    if (isSession(session)) return session
   } catch {
     // a corrupt entry is treated like no session
   }
@@ -43,7 +40,7 @@ export function getToken(): string | null {
   return loadSession()?.token ?? null
 }
 
-// api.ts calls this on a 401 from Storage or Updating; AuthProvider registers what happens then
+// api.ts calls this when a 401 can't be fixed by a refresh; AuthProvider registers what happens then
 let unauthorizedHandler: (() => void) | null = null
 
 export function setUnauthorizedHandler(handler: (() => void) | null): void {

@@ -4,7 +4,9 @@
 // live for real deployments.
 import axios from 'axios'
 import { withMockClaims } from './mocks/fakeReport'
-import { getToken, notifyUnauthorized, type Session } from './session'
+import { withAuth } from './authRetry'
+import { browserLock, createRefresher } from './refresh'
+import { getToken, notifyUnauthorized, saveSession, type Session } from './session'
 
 export type AlertSeverity = 'high' | 'medium' | 'low'
 export type AlertStatus = 'new' | 'acknowledged' | 'dismissed'
@@ -160,6 +162,17 @@ export type Draft = {
   uploaded_at: string
 }
 
+// a researcher's answers to the questionnaire (docs/CONTRACTS.md, the profile body); the lists are
+// always arrays, the rest a string or null
+export type Profile = {
+  occupation: string | null
+  occupation_other: string | null
+  research_fields: string[]
+  research_interests: string[]
+  work_types: string[]
+  response_preferences: string | null
+}
+
 export type PollSummary = {
   poll_id: number
   trigger: string
@@ -183,18 +196,26 @@ const adminAuth = axios.create({ baseURL: '/auth/admin' })
 
 // User Management's projects
 const projectsApi = axios.create({ baseURL: '/projects' })
+// User Management's routes for the signed-in researcher's own account, which take a token
+const meApi = axios.create({ baseURL: '/auth/me' })
 
-// every call to Storage, Updating and the projects carries the signed-in user's token
-for (const client of [storage, updating, adminAuth, projectsApi]) {
-  client.interceptors.request.use((config) => {
-    const token = getToken()
-    if (token) config.headers.Authorization = `Bearer ${token}`
-    return config
-  })
-  client.interceptors.response.use(undefined, (err: unknown) => {
-    if (axios.isAxiosError(err) && err.response?.status === 401) notifyUnauthorized()
-    return Promise.reject(err)
-  })
+// A new access token from the refresh token's cookie (POST /auth/refresh), saved as the session.
+// One at a time across tabs, and callers during one share it (refresh.ts).
+export const refreshSession = createRefresher(async (): Promise<Session> => {
+  const res = await authApi.post<Session>('/refresh')
+  saveSession(res.data)
+  return res.data
+}, browserLock)
+
+// Every call to Storage, Updating, the projects and the account carries the signed-in user's token.
+// A 401 renews it with one refresh and retries the request once; a failed refresh signs out.
+for (const client of [storage, updating, adminAuth, projectsApi, meApi]) {
+  withAuth(client, { getToken, refresh: refreshSession, onUnauthorized: notifyUnauthorized })
+}
+
+// sign out: the refresh token stops working and its cookie is cleared (always 204)
+export async function logout(): Promise<void> {
+  await authApi.post('/logout')
 }
 
 export async function login(email: string, password: string): Promise<Session> {
@@ -202,8 +223,26 @@ export async function login(email: string, password: string): Promise<Session> {
   return res.data
 }
 
-export async function register(email: string, password: string): Promise<Session> {
-  const res = await authApi.post<Session>('/register', { email, password })
+// one request makes the account and saves its questionnaire (docs/CONTRACTS.md, POST /auth/register)
+export async function register(email: string, password: string, profile: Profile): Promise<Session> {
+  const res = await authApi.post<Session>('/register', { email, password, profile })
+  return res.data
+}
+
+// the researcher's profile; null when they have none yet (404), as getDraft does for a draft
+export async function getProfile(): Promise<Profile | null> {
+  try {
+    const res = await meApi.get<Profile>('/profile')
+    return res.data
+  } catch (err) {
+    if (isNotFound(err)) return null
+    throw err
+  }
+}
+
+// replaces every answer, creating the profile when there is none; returns it as stored
+export async function saveProfile(profile: Profile): Promise<Profile> {
+  const res = await meApi.put<Profile>('/profile', profile)
   return res.data
 }
 
@@ -394,4 +433,9 @@ export async function addFakeReport(paperId: string, status: ReportStatus): Prom
 
 export function isNotFound(err: unknown): boolean {
   return axios.isAxiosError(err) && err.response?.status === 404
+}
+
+// a 409: on register, an account with this email already exists
+export function isConflict(err: unknown): boolean {
+  return axios.isAxiosError(err) && err.response?.status === 409
 }

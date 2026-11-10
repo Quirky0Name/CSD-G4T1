@@ -17,7 +17,9 @@ import java.util.UUID;
 @Service
 public class TokenService {
 
-    private static final Duration LIFETIME = Duration.ofHours(24);
+    // an hour: a deleted account's token, which nothing revokes, stops working within it; the
+    // frontend keeps the researcher signed in with the refresh token (RefreshTokenService)
+    private static final Duration LIFETIME = Duration.ofHours(1);
     // as long as the Python services' own service tokens last (backend/src/common/service_token.py)
     private static final Duration SERVICE_LIFETIME = Duration.ofMinutes(5);
 

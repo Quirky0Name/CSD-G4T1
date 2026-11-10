@@ -298,8 +298,10 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
         return {"change_keys": sorted(store.alerts.get(paper_id, {}))}
 
     def report_view(report: dict[str, Any]) -> dict[str, Any]:
-        """A report with its alerts and documents, oldest first, as Storage Management returns it."""
-        paper_alerts = store.alerts.get(UUID(report["paper_id"]), {}).values()
+        """A report with its alerts and documents, oldest first, and the paper owner's id, as
+        Storage Management returns it."""
+        paper_id = UUID(report["paper_id"])
+        paper_alerts = store.alerts.get(paper_id, {}).values()
         grouped = sorted(
             (a for a in paper_alerts if a["report_id"] == report["id"]), key=lambda a: a["id"]
         )
@@ -309,6 +311,7 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
         )
         return {
             **report,
+            "owner_id": str(store.papers[paper_id].owner_id),
             "alerts": [{key: a[key] for key in REPORT_ALERT_FIELDS} for a in grouped],
             "documents": documents,
         }
