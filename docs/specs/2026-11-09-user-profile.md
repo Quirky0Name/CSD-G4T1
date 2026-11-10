@@ -514,15 +514,17 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - `GET` and `PUT` check the account exists, so a valid token whose account was deleted is `401`, not `404`. (carried from draft; code: `AccountGoneException`)
   - An existing account gets a profile only by `PUT`. (user)
 - **Acceptance criteria**, all by `cd users && ./mvnw test -Dtest=ProfileTest`:
-  - [ ] View: `200` with the shape in I4. No profile: `404` `No profile <id>`.
-  - [ ] Edit: `PUT` replaces every field, clears left-out and `null` fields, and `GET` returns the same.
-  - [ ] Clearing: `PUT` with `"occupation": null` and `"research_fields": []` is `200`. `PUT` with `{}` is `200`, and `GET` then returns `200` with `null` and empty arrays, not `404`.
-  - [ ] `PUT` on an account with no profile creates one. Two at once both return `200` and leave one row.
-  - [ ] One researcher's token never reads or changes another's profile.
-  - [ ] `401` with no token and for each of `TestTokens.badTokens`; `403` for `adminToken` and `serviceToken`; `401` for a valid token whose account was deleted.
-  - [ ] The `400` rules of I2 apply to `PUT`, including 501 characters of `response_preferences`.
+  - [x] View: `200` with the shape in I4. No profile: `404` `No profile <id>`.
+  - [x] Edit: `PUT` replaces every field, clears left-out and `null` fields, and `GET` returns the same.
+  - [x] Clearing: `PUT` with `"occupation": null` and `"research_fields": []` is `200`. `PUT` with `{}` is `200`, and `GET` then returns `200` with `null` and empty arrays, not `404`.
+  - [x] `PUT` on an account with no profile creates one. Two at once both return `200` and leave one row.
+  - [x] One researcher's token never reads or changes another's profile.
+  - [x] `401` with no token and for each of `TestTokens.badTokens`; `403` for `adminToken` and `serviceToken`; `401` for a valid token whose account was deleted.
+  - [x] The `400` rules of I2 apply to `PUT`, including 501 characters of `response_preferences`.
 - **Doc deltas:**
   - `docs/CONTRACTS.md`, "Frontend ↔ User Management": `GET` and `PUT /auth/me/profile`, and an intro that names them among the calls needing a token.
+  - Decision made: the account check is `UserRepository.existsById` in `ProfileController`, before the read or save. A deletion between that check and a `PUT`'s save still ends in `AccountGoneException`, through `ProfileService.save`'s retry. Doc: none, as I4 describes.
+  - Decision made: `PUT`'s body takes no `@Valid`, since `ProfileRequest` carries no Bean Validation rules. Doc: none.
 
 ### S5: Internal profile read and account deletion (User Management)
 
