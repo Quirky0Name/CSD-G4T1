@@ -223,8 +223,10 @@ public class ReportService {
         }
     }
 
+    // a paper deleted since the report was read took the report with it, so it's the same "No report" 404
     private ReportResponse toResponse(Report report) {
-        return new ReportResponse(report.getId(), report.getPaperId(), report.getStatus(), report.getCreatedAt(),
+        UUID ownerId = papers.findById(report.getPaperId()).orElseThrow(() -> noReport(report.getId())).getOwnerId();
+        return new ReportResponse(report.getId(), report.getPaperId(), ownerId, report.getStatus(), report.getCreatedAt(),
                 report.getInvestigatedAt(), report.getEvaluation(), report.getRecommendation(),
                 report.getEvaluatedAt(), report.getChangeSummary(), report.getChangeSeverity(),
                 report.getImpactLevel(), report.getAssessment() == null ? null : json.readTree(report.getAssessment()),

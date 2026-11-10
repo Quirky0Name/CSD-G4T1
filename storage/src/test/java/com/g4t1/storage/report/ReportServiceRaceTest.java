@@ -1,6 +1,7 @@
 package com.g4t1.storage.report;
 
 import com.g4t1.storage.alert.AlertRepository;
+import com.g4t1.storage.paper.Paper;
 import com.g4t1.storage.paper.PaperRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -57,6 +58,7 @@ class ReportServiceRaceTest {
         when(alerts.assignUnreportedToReport(paperId, 7L)).thenReturn(2);
         when(alerts.findByReportIdOrderByIdAsc(7L)).thenReturn(List.of());
         when(documents.forReport(anyLong())).thenReturn(List.of());
+        when(papers.findById(paperId)).thenReturn(Optional.of(new Paper(UUID.randomUUID())));
 
         assertThat(service.open(paperId)).isPresent();
         verify(reports, never()).delete(any());

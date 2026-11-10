@@ -431,12 +431,15 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - `UserReportResponse` is not changed. (carried from draft)
   - The owner comes from `PaperRepository`, already injected into `ReportService`. (code: `ReportService.java`)
 - **Acceptance criteria:**
-  - [ ] `cd storage && ./mvnw test -Dtest=InternalReportTest`: `GET /internal/reports/{id}`, `GET /internal/papers/{id}/reports/{reportId}`, opening a report and storing an evaluation each return the paper owner's id as `owner_id`.
-  - [ ] `cd storage && ./mvnw test -Dtest=ReportListTest`: `GET /papers/{id}/reports` has no `owner_id`.
-  - [ ] `cd backend && uv run pytest tests/research_evaluation/test_stub_reports.py`: the stub's report body has the paper's `owner_id`.
-  - [ ] `cd storage && ./mvnw test` passes.
+  - [x] `cd storage && ./mvnw test -Dtest=InternalReportTest`: `GET /internal/reports/{id}`, `GET /internal/papers/{id}/reports/{reportId}`, opening a report and storing an evaluation each return the paper owner's id as `owner_id`.
+  - [x] `cd storage && ./mvnw test -Dtest=ReportListTest`: `GET /papers/{id}/reports` has no `owner_id`.
+  - [x] `cd backend && uv run pytest tests/research_evaluation/test_stub_reports.py`: the stub's report body has the paper's `owner_id`.
+  - [x] `cd storage && ./mvnw test` passes.
 - **Doc deltas:**
   - `docs/CONTRACTS.md`: `owner_id` in `GET /internal/papers/{id}/reports/{reportId}`, and the fact that researchers' and admin report lists don't have it.
+  - Decision made: `toResponse` reads the owner with `papers.findById` for every full report, not a join on the report query, since every caller already reads one report at a time. No doc: an implementation detail, explained in the code comment.
+  - Decision made: the stub adds `owner_id` in `report_view`, which every stub report endpoint returns. No doc: the stub mirrors Storage, which `CONTRACTS.md` covers.
+  - Spec change: `storage/src/test/java/com/g4t1/storage/report/ReportServiceRaceTest.java` is also edited, because its scripted `PaperRepository` mock must now answer `findById`. No doc.
 
 ### S2: Table, options and validation (User Management)
 

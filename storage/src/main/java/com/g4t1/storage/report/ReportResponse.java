@@ -8,11 +8,13 @@ import java.util.List;
 import java.util.UUID;
 
 // A report with everything in it, for Research Evaluation: its alerts, its documents, and the
-// evaluation fields impact fills (null until the report is assessed)
+// evaluation fields impact fills (null until the report is assessed). owner_id is the paper owner's,
+// so impact can read the researcher's profile from User Management
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record ReportResponse(
         Long id,
         UUID paperId,
+        UUID ownerId,
         ReportStatus status,
         Instant createdAt,
         Instant investigatedAt,
