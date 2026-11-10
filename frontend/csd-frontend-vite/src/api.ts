@@ -4,7 +4,9 @@
 // live for real deployments.
 import axios from 'axios'
 import { withMockClaims } from './mocks/fakeReport'
-import { getToken, notifyUnauthorized, type Session } from './session'
+import { withAuth } from './authRetry'
+import { browserLock, createRefresher } from './refresh'
+import { getToken, notifyUnauthorized, saveSession, type Session } from './session'
 
 export type AlertSeverity = 'high' | 'medium' | 'low'
 export type AlertStatus = 'new' | 'acknowledged' | 'dismissed'
@@ -197,17 +199,23 @@ const projectsApi = axios.create({ baseURL: '/projects' })
 // User Management's routes for the signed-in researcher's own account, which take a token
 const meApi = axios.create({ baseURL: '/auth/me' })
 
-// every call to Storage, Updating, the projects and the account carries the signed-in user's token
+// A new access token from the refresh token's cookie (POST /auth/refresh), saved as the session.
+// One at a time across tabs, and callers during one share it (refresh.ts).
+export const refreshSession = createRefresher(async (): Promise<Session> => {
+  const res = await authApi.post<Session>('/refresh')
+  saveSession(res.data)
+  return res.data
+}, browserLock)
+
+// Every call to Storage, Updating, the projects and the account carries the signed-in user's token.
+// A 401 renews it with one refresh and retries the request once; a failed refresh signs out.
 for (const client of [storage, updating, adminAuth, projectsApi, meApi]) {
-  client.interceptors.request.use((config) => {
-    const token = getToken()
-    if (token) config.headers.Authorization = `Bearer ${token}`
-    return config
-  })
-  client.interceptors.response.use(undefined, (err: unknown) => {
-    if (axios.isAxiosError(err) && err.response?.status === 401) notifyUnauthorized()
-    return Promise.reject(err)
-  })
+  withAuth(client, { getToken, refresh: refreshSession, onUnauthorized: notifyUnauthorized })
+}
+
+// sign out: the refresh token stops working and its cookie is cleared (always 204)
+export async function logout(): Promise<void> {
+  await authApi.post('/logout')
 }
 
 export async function login(email: string, password: string): Promise<Session> {

@@ -822,13 +822,19 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
 - **Seams:** `createRefresher` in `src/refresh.ts` (pure: takes the refresh call and a lock function); `loadSession`; DOM behaviour is in Human checks H9.
 - **Decisions:** as in I10, "Frontend". (user)
 - **Acceptance criteria:**
-  - [ ] `cd frontend/csd-frontend-vite && npm test`: `refresh.test.ts` shows two calls during one refresh share one request and one result; a failed refresh rejects every waiting caller; the next call after a finished refresh starts a new one; the lock function is used for every refresh.
-  - [ ] `session.test.ts`: `loadSession` keeps a session whose access token has expired, and still drops a corrupt entry.
-  - [ ] `cd frontend/csd-frontend-vite && grep -c "refreshSession" src/api.ts` prints at least 1, and `grep -q "/logout" src/api.ts` exits 0.
-  - [ ] `cd frontend/csd-frontend-vite && npm run build` and `npm run lint` pass.
+  - [x] `cd frontend/csd-frontend-vite && npm test`: `refresh.test.ts` shows two calls during one refresh share one request and one result; a failed refresh rejects every waiting caller; the next call after a finished refresh starts a new one; the lock function is used for every refresh.
+  - [x] `session.test.ts`: `loadSession` keeps a session whose access token has expired, and still drops a corrupt entry.
+  - [x] `cd frontend/csd-frontend-vite && grep -c "refreshSession" src/api.ts` prints at least 1, and `grep -q "/logout" src/api.ts` exits 0.
+  - [x] `cd frontend/csd-frontend-vite && npm run build` and `npm run lint` pass.
 - **Doc deltas:**
   - Frontend `README.md`: the access token lasts 1 hour, a `401` triggers one refresh and one retry, and the refresh token is a cookie the page can't read.
-  - `session.ts` header comment: 1 hour, not 24.
+  - `session.ts` header comment: 1 hour, not 24. (Done in code with this subtask, since it's a code comment.)
+  - Spec change: the token and `401` handling moved from `api.ts` into new `src/authRetry.ts` (`withAuth`), tested by new `src/authRetry.test.ts` against a real axios instance with a stub adapter. That way one refresh, one retry and then sign-out are proven, not just `createRefresher`. Doc: none.
+  - Decision made: a retried request carries a `retriedAfterRefresh` flag on its config, not an entry in a set of config objects, because axios merges the config into a new object when the request is sent again. A second `401` for it signs out instead of refreshing again, and so does a `401` with no session stored. Doc: none, explained in code.
+  - Decision made: `browserLock` uses `navigator.locks` when the browser has it. Where it doesn't (an insecure context, such as the app opened over plain HTTP on a LAN address), the refresh runs at once, so tabs keep one refresh each but don't wait for each other. Doc: frontend `README.md`, with the refresh note.
+  - Decision made: a tab that waited on the lock refreshes again with the cookie the first tab left, instead of reusing the first tab's result. That costs one more refresh and needs no state shared between tabs. Doc: none, explained in `refresh.ts`.
+  - Decision made: **Sign out** clears the session whether or not `POST /auth/logout` answers, so a network failure never keeps someone signed in. Doc: none.
+  - Decision made: `loadSession` treats an entry as corrupt unless it's JSON with a string `token` and an object `user`; it no longer reads the token's `exp`. `AuthProvider`'s state isn't changed by a refresh, because the user doesn't change and every request reads the token from `localStorage`. Doc: none.
 
 ## Human checks
 

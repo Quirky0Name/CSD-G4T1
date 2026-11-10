@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
-import { login as apiLogin, register as apiRegister, type Profile } from './api'
+import { login as apiLogin, logout as apiLogout, register as apiRegister, type Profile } from './api'
 import { clearSession, loadSession, saveSession, setUnauthorizedHandler, type Session } from './session'
 
 type AuthValue = {
@@ -30,9 +30,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       login: async (email, password) => start(await apiLogin(email, password)),
       register: async (email, password, profile) => start(await apiRegister(email, password, profile)),
+      // the server forgets the refresh token first; signing out here happens whether or not it answers
       logout: () => {
-        clearSession()
-        setSession(null)
+        void apiLogout()
+          .catch(() => undefined)
+          .finally(() => {
+            clearSession()
+            setSession(null)
+          })
       },
     }),
     [session, start],
