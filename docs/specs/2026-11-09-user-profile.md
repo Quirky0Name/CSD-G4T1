@@ -536,15 +536,18 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - Behaviour and errors as in I4. (carried from draft)
   - Deletion relies on the database cascade in I3. (carried from draft; code: `UserRepository.java`)
 - **Acceptance criteria:**
-  - [ ] `cd users && ./mvnw test -Dtest=InternalProfileTest`: service token gets `200` with the profile body. Unknown user or no profile: `404` `No profile <id>`. Bad UUID: `400`.
-  - [ ] `InternalProfileTest`: `401` with no token and for each bad token; `403` for a user token and for an admin token.
-  - [ ] `cd users && ./mvnw test -Dtest=DeleteAccountTest`: after `DELETE /auth/me`, no `user_profiles` row remains. With Storage failing (`502`), the account and profile are both kept.
-  - [ ] `cd users && ./mvnw test -Dtest=AdminAccountTest`: the admin logging in creates no profile row, and `AdminAccount` removing the admin leaves nothing behind.
-  - [ ] `cd users && ./mvnw test` passes.
+  - [x] `cd users && ./mvnw test -Dtest=InternalProfileTest`: service token gets `200` with the profile body. Unknown user or no profile: `404` `No profile <id>`. Bad UUID: `400`.
+  - [x] `InternalProfileTest`: `401` with no token and for each bad token; `403` for a user token and for an admin token.
+  - [x] `cd users && ./mvnw test -Dtest=DeleteAccountTest`: after `DELETE /auth/me`, no `user_profiles` row remains. With Storage failing (`502`), the account and profile are both kept.
+  - [x] `cd users && ./mvnw test -Dtest=AdminAccountTest`: the admin logging in creates no profile row, and `AdminAccount` removing the admin leaves nothing behind.
+  - [x] `cd users && ./mvnw test` passes.
 - **Doc deltas:**
   - `docs/CONTRACTS.md`: a new section "Research Evaluation ↔ User Management" with `GET /internal/users/{id}/profile`. In "Auth", narrow "No service calls back to User Management per request" to token validation, and add that Research Evaluation reads a profile with its service token.
   - `docs/ARCHITECTURE.md`, "Auth": narrow "none calls back to User Management" the same way.
   - `docs/ARCHITECTURE.md`, "Data model": deleting an account deletes its profile by database cascade.
+  - Decision made: the deletion tests check the `user_profiles` rows through `JdbcTemplate`. No reply can show that a deleted account's row is gone, and the admin can't use the profile endpoints. Doc: none, a test detail.
+  - Decision made: `AdminAccountTest` inserts a profile row for the admin directly to show `deleteByEmail` leaves none, because no endpoint can give the admin a profile. Doc: none.
+  - Decision made: a bad UUID is Spring's own `400` from `@PathVariable UUID`, a problem detail with no custom `detail`. Doc: `docs/CONTRACTS.md`, with the endpoint's errors.
 
 ### S6: User Management client and wiring (Research Evaluation)
 
