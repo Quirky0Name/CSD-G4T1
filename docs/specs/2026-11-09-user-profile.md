@@ -710,10 +710,14 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
     | Tab | Close the list and move on normally, adding nothing |
 
 - **Acceptance criteria:**
-  - [ ] `cd frontend/csd-frontend-vite && npm test`, `npm run build` and `npm run lint` pass.
-  - [ ] `cd frontend/csd-frontend-vite && ! grep -E "axios|fetch\(|from '../api'" src/components/TagInput.tsx`: the component makes no request.
-  - [ ] `cd frontend/csd-frontend-vite && grep -c -E 'role="combobox"|aria-activedescendant|aria-autocomplete="list"|role="listbox"|role="option"|aria-live="polite"' src/components/TagInput.tsx` prints at least 6.
+  - [x] `cd frontend/csd-frontend-vite && npm test`, `npm run build` and `npm run lint` pass.
+  - [x] `cd frontend/csd-frontend-vite && ! grep -E "axios|fetch\(|from '../api'" src/components/TagInput.tsx`: the component makes no request.
+  - [x] `cd frontend/csd-frontend-vite && grep -c -E 'role="combobox"|aria-activedescendant|aria-autocomplete="list"|role="listbox"|role="option"|aria-live="polite"' src/components/TagInput.tsx` prints at least 6.
 - **Doc deltas:** none
+  - Decision made: the list opens on focus and closes on blur, and an option is added on `mousedown` (with `preventDefault`), so the input keeps focus when an option is clicked. Doc: none, explained in code.
+  - Decision made: the polite live region announces what just happened (`Added <tag>.`, `<tag> is already added.`, the limit message, the length message), the number of options, and the active option. The live region isn't in `aria-describedby`, so it isn't read twice. Doc: none, H1 checks it.
+  - Decision made: the limit message names "interests", because interests are the only use with `maxTags`. Too long is `Each tag can be at most <n> characters.` Doc: none.
+  - Decision made: the selected tags are a list labelled `<label>: selected`, with a heroicons `XMarkIcon` in each remove button, as the app's other icons are. Doc: none.
 
 ### S11: Two-screen sign-up (frontend)
 
