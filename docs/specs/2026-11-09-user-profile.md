@@ -548,6 +548,7 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - Decision made: the deletion tests check the `user_profiles` rows through `JdbcTemplate`. No reply can show that a deleted account's row is gone, and the admin can't use the profile endpoints. Doc: none, a test detail.
   - Decision made: `AdminAccountTest` inserts a profile row for the admin directly to show `deleteByEmail` leaves none, because no endpoint can give the admin a profile. Doc: none.
   - Decision made: a bad UUID is Spring's own `400` from `@PathVariable UUID`, a problem detail with no custom `detail`. Doc: `docs/CONTRACTS.md`, with the endpoint's errors.
+  - Decision made: both controllers build the `No profile <id>` `404` with `ProfileService.noProfile`, since Research Evaluation matches that `detail` exactly. (Code review fix: it was written out in each controller.) Doc: none, explained in code.
 
 ### S6: User Management client and wiring (Research Evaluation)
 
@@ -833,7 +834,7 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - Decision made: a retried request carries a `retriedAfterRefresh` flag on its config, not an entry in a set of config objects, because axios merges the config into a new object when the request is sent again. A second `401` for it signs out instead of refreshing again, and so does a `401` with no session stored. Doc: none, explained in code.
   - Decision made: `browserLock` uses `navigator.locks` when the browser has it. Where it doesn't (an insecure context, such as the app opened over plain HTTP on a LAN address), the refresh runs at once, so tabs keep one refresh each but don't wait for each other. Doc: frontend `README.md`, with the refresh note.
   - Decision made: a tab that waited on the lock refreshes again with the cookie the first tab left, instead of reusing the first tab's result. That costs one more refresh and needs no state shared between tabs. Doc: none, explained in `refresh.ts`.
-  - Decision made: **Sign out** clears the session whether or not `POST /auth/logout` answers, so a network failure never keeps someone signed in. Doc: none.
+  - Decision made: **Sign out** sends `POST /auth/logout`, then clears the session at once, without waiting for the answer, so a slow, hung or failed request never keeps someone signed in. (Code review fix: it first waited for the answer.) Doc: none.
   - Decision made: `loadSession` treats an entry as corrupt unless it's JSON with a string `token` and an object `user`; it no longer reads the token's `exp`. `AuthProvider`'s state isn't changed by a refresh, because the user doesn't change and every request reads the token from `localStorage`. Doc: none.
 
 ## Human checks

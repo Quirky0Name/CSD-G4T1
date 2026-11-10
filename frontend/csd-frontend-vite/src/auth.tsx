@@ -30,14 +30,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       login: async (email, password) => start(await apiLogin(email, password)),
       register: async (email, password, profile) => start(await apiRegister(email, password, profile)),
-      // the server forgets the refresh token first; signing out here happens whether or not it answers
+      // the request goes first, so the server forgets the refresh token; the session is cleared at
+      // once, without waiting for its answer, so a slow or failed request never keeps anyone signed in
       logout: () => {
-        void apiLogout()
-          .catch(() => undefined)
-          .finally(() => {
-            clearSession()
-            setSession(null)
-          })
+        void apiLogout().catch(() => undefined)
+        clearSession()
+        setSession(null)
       },
     }),
     [session, start],
