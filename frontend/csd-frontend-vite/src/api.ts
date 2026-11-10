@@ -160,6 +160,17 @@ export type Draft = {
   uploaded_at: string
 }
 
+// a researcher's answers to the questionnaire (docs/CONTRACTS.md, the profile body); the lists are
+// always arrays, the rest a string or null
+export type Profile = {
+  occupation: string | null
+  occupation_other: string | null
+  research_fields: string[]
+  research_interests: string[]
+  work_types: string[]
+  response_preferences: string | null
+}
+
 export type PollSummary = {
   poll_id: number
   trigger: string

@@ -347,7 +347,7 @@ The profile is read after the gate, next to the draft, so a change at change sev
 | `src/profile/options.ts` | `OCCUPATIONS`, `RESEARCH_FIELDS`, `WORK_TYPES`, `MAX_INTERESTS` (5), `MAX_INTEREST_LENGTH` (60), `MAX_OCCUPATION_OTHER_LENGTH` (60), `MAX_PREFERENCES_LENGTH` (500), `PREFERENCES_PLACEHOLDER`, `GEMINI_NOTICE` | S9 |
 | `src/profile/interestSuggestions.ts` | `INTEREST_SUGGESTIONS` | S9 |
 | `src/profile/tagInput.ts` | pure: `matchOptions`, `addTag`, `removeTag`, `moveActive`, `customTagAllowed`, `keyAction` | S9 |
-| `src/profile/profileForm.ts` | pure: `emptyAnswers`, `validateAnswers`, `toProfile` | S9 |
+| `src/profile/profileForm.ts` | pure: `emptyAnswers`, `validateAnswers`, `toProfile`, `fromProfile` | S9 |
 | `src/profile/registerFlow.ts` | pure: the two-screen reducer | S9 |
 | `src/components/TagInput.tsx` | the shared tag input | S10 |
 | `src/components/ProfileQuestions.tsx` | the questions and the Gemini notice, used on both pages | S11 |
@@ -655,22 +655,29 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - Limits as in I2. (user)
   - Tag and key behaviour as in S10's tables. (carried from draft)
 - **Acceptance criteria**, all by `cd frontend/csd-frontend-vite && npm test`:
-  - [ ] `options.test.ts` reads `users/src/main/resources/profile/options.json` (read only, as the highlighting tests read Storage's example folder) and asserts all three lists equal `options.ts`. `RESEARCH_FIELDS` has 26 entries. `PREFERENCES_PLACEHOLDER` and `GEMINI_NOTICE` equal the text in I1.
-  - [ ] `interestSuggestions.test.ts`: every suggestion is unique and within `MAX_INTEREST_LENGTH`.
-  - [ ] `matchOptions` is case-insensitive, partial, trims, keeps list order and leaves out selected options.
-  - [ ] An unlisted value can't be added with `allowCustom` false.
-  - [ ] Custom interests are allowed only by the rule above, and over 60 characters is refused.
-  - [ ] A sixth tag leaves the list unchanged.
-  - [ ] An existing tag in another letter case is ignored.
-  - [ ] `removeTag` removes only that tag.
-  - [ ] `keyAction` and `moveActive` for each key in S10's table, including wrap-around, Enter with nothing active, and Backspace on a non-empty query doing nothing.
-  - [ ] `registerFlow` keeps account fields and answers through next, back and next; a `409` returns to screen 1 with an email error and all answers kept; no transition reaches screen 2 with an invalid account.
-  - [ ] `validateAnswers` enforces only the limits, and `toProfile` trims, sends `null` for blank preferences, and sends `occupation_other` only with `Other`.
-  - [ ] `cd frontend/csd-frontend-vite && npm run build` and `npm run lint` pass.
+  - [x] `options.test.ts` reads `users/src/main/resources/profile/options.json` (read only, as the highlighting tests read Storage's example folder) and asserts all three lists equal `options.ts`. `RESEARCH_FIELDS` has 26 entries. `PREFERENCES_PLACEHOLDER` and `GEMINI_NOTICE` equal the text in I1.
+  - [x] `interestSuggestions.test.ts`: every suggestion is unique and within `MAX_INTEREST_LENGTH`.
+  - [x] `matchOptions` is case-insensitive, partial, trims, keeps list order and leaves out selected options.
+  - [x] An unlisted value can't be added with `allowCustom` false.
+  - [x] Custom interests are allowed only by the rule above, and over 60 characters is refused.
+  - [x] A sixth tag leaves the list unchanged.
+  - [x] An existing tag in another letter case is ignored.
+  - [x] `removeTag` removes only that tag.
+  - [x] `keyAction` and `moveActive` for each key in S10's table, including wrap-around, Enter with nothing active, and Backspace on a non-empty query doing nothing.
+  - [x] `registerFlow` keeps account fields and answers through next, back and next; a `409` returns to screen 1 with an email error and all answers kept; no transition reaches screen 2 with an invalid account.
+  - [x] `validateAnswers` enforces only the limits, and `toProfile` trims, sends `null` for blank preferences, and sends `occupation_other` only with `Other`.
+  - [x] `cd frontend/csd-frontend-vite && npm run build` and `npm run lint` pass.
 - **Doc deltas:**
   - Frontend `README.md`: where the lists live, and the test that keeps `options.ts` equal to `options.json`.
   - `docs/DECISIONS.md`, part of S8's entry: why the lists are duplicated.
   - Frontend `README.md`: the lists are bundled, with no runtime fetch and no server-side search.
+  - Spec change: `profileForm.ts` also exports `fromProfile`, which turns a saved profile into form answers. The profile page (S12) needs it to show saved answers, including a saved `Other`'s text. I9 is updated to match. Doc: none, visible in code.
+  - Decision made: `options.ts` also exports `OTHER` (`'Other'`), so the occupation box and `toProfile` don't each repeat the string. Doc: none.
+  - Decision made: `addTag` reports what happened (`added`, `empty`, `duplicate`, `limit`, `not_listed`, `too_long`), so `TagInput` can show the right message. A listed option typed in another letter case is stored in the list's spelling. Doc: none, visible in code.
+  - Decision made: `keyAction` returns whether to `preventDefault`. Arrows, Enter and Escape do; Backspace and Tab don't, so the input and focus behave normally. Doc: none, the table in S10 is the record.
+  - Decision made: `registerFlow`'s local account check is a non-blank email, a password of at least 8 characters and a matching retype, as `Register.tsx` checks today; the browser checks the email's format. Continue clears the taken-email message, so the researcher can look at their answers again before changing the email. `submit` only works on the questions screen and not twice at once. Doc: none, visible in code.
+  - Decision made: `validateAnswers` checks the other occupation's length only when `Other` is chosen, because `toProfile` sends it only then. Doc: none.
+  - Decision made: the interest suggestions were fetched with the User-Agent `csd-g4t1-build`, with no email in it. Doc: none (transient).
 
 ### S10: Shared tag input (frontend)
 
