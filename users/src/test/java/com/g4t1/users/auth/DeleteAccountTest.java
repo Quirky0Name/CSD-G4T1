@@ -129,6 +129,16 @@ class DeleteAccountTest {
                 .expectBody().jsonPath("$.occupation").isEqualTo("Clinician");
     }
 
+    @Test
+    void deletingYourAccountDeletesYourRefreshTokens() {
+        Account account = registered();
+        assertThat(refreshTokenRows(account.id())).isEqualTo(1);
+
+        deleteAccount(account.token(), PASSWORD).expectStatus().isNoContent();
+
+        assertThat(refreshTokenRows(account.id())).isZero();
+    }
+
     // not a 401: the token is fine, and the frontend signs out on any 401
     @Test
     void aWrongPasswordIsForbiddenAndDeletesNothing() {
@@ -245,6 +255,11 @@ class DeleteAccountTest {
 
     private int profileRows(String userId) {
         return jdbc.queryForObject("select count(*) from users.user_profiles where user_id = ?", Integer.class,
+                UUID.fromString(userId));
+    }
+
+    private int refreshTokenRows(String userId) {
+        return jdbc.queryForObject("select count(*) from users.refresh_tokens where user_id = ?", Integer.class,
                 UUID.fromString(userId));
     }
 

@@ -789,23 +789,29 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - Only the SHA-256 hash of a refresh token is stored. (planning)
   - The admin gets refresh tokens like a researcher; `AdminAccount` removing the admin deletes them by cascade. (planning)
 - **Acceptance criteria:**
-  - [ ] `cd users && ./mvnw test -Dtest=LoginTest`: the access token expires 1 hour after issue (`TokenAssertions`), and the response sets a `refresh_token` cookie with `HttpOnly`, `SameSite=Strict`, `Path=/auth` and `Max-Age=604800`.
-  - [ ] `cd users && ./mvnw test -Dtest=RegisterTest`: the same for register.
-  - [ ] `cd users && ./mvnw test -Dtest=RefreshTest`: a valid cookie gives `200` with a new access token for the same user, and a new cookie different from the old one.
-  - [ ] `RefreshTest`: a missing, unknown, expired, already used cookie, and the cookie of a deleted account, each give `401` `Please sign in again` and clear the cookie.
-  - [ ] `RefreshTest`: the admin's refresh gives a token with `role=admin`.
-  - [ ] `RefreshTest`: two refreshes at once with the same cookie give one `200` and one `401`.
-  - [ ] `RefreshTest`: after `POST /auth/logout`, the cookie gives `401`; logout with no cookie is `204`.
-  - [ ] `RefreshTest`: the `refresh_tokens` table holds no raw token value.
-  - [ ] `cd users && ./mvnw test -Dtest=DeleteAccountTest`: deleting the account leaves no `refresh_tokens` row.
-  - [ ] `RefreshTest`: with `users.refresh-cookie-secure=true`, the cookie has `Secure`.
-  - [ ] `cd users && ./mvnw test` passes.
+  - [x] `cd users && ./mvnw test -Dtest=LoginTest`: the access token expires 1 hour after issue (`TokenAssertions`), and the response sets a `refresh_token` cookie with `HttpOnly`, `SameSite=Strict`, `Path=/auth` and `Max-Age=604800`.
+  - [x] `cd users && ./mvnw test -Dtest=RegisterTest`: the same for register.
+  - [x] `cd users && ./mvnw test -Dtest=RefreshTest`: a valid cookie gives `200` with a new access token for the same user, and a new cookie different from the old one.
+  - [x] `RefreshTest`: a missing, unknown, expired, already used cookie, and the cookie of a deleted account, each give `401` `Please sign in again` and clear the cookie.
+  - [x] `RefreshTest`: the admin's refresh gives a token with `role=admin`.
+  - [x] `RefreshTest`: two refreshes at once with the same cookie give one `200` and one `401`.
+  - [x] `RefreshTest`: after `POST /auth/logout`, the cookie gives `401`; logout with no cookie is `204`.
+  - [x] `RefreshTest`: the `refresh_tokens` table holds no raw token value.
+  - [x] `cd users && ./mvnw test -Dtest=DeleteAccountTest`: deleting the account leaves no `refresh_tokens` row.
+  - [x] `RefreshTest`: with `users.refresh-cookie-secure=true`, the cookie has `Secure`.
+  - [x] `cd users && ./mvnw test` passes.
 - **Doc deltas:**
   - `docs/CONTRACTS.md`, "Auth": access tokens last 1 hour (user and admin); refresh tokens as in I10; `POST /auth/refresh` and `POST /auth/logout` under "Frontend ↔ User Management"; register and login set the cookie.
   - `docs/CONTRACTS.md`, env table, and `docs/SETUP.md`: `REFRESH_COOKIE_SECURE`.
   - `docs/DEPLOY.md`: `REFRESH_COOKIE_SECURE=true` on the server.
   - `docs/ARCHITECTURE.md`, "Auth" and "Data model": the two tokens, `refresh_tokens`, and a deleted account's access token working for up to 1 hour, not 24.
   - `docs/ROADMAP.md`: the open item about a deleted account's token working for up to 24 hours now says 1 hour.
+  - Spec change: also new, `users/src/main/java/com/g4t1/users/auth/SignedIn.java`, a record of the reply body and the refresh token, which `AuthService` returns so the controller can set the cookie. Also edited: `AccountGoneException.java` and `AdminUsersTest.java`, whose comments said a token outlives an account by a day or 24 hours. Doc: none.
+  - Decision made: expired and used `refresh_tokens` rows are never pruned; they go when the account is deleted. Each sign-in or refresh adds one small row, and nothing reads old ones. Doc: `docs/ARCHITECTURE.md`, "Data model".
+  - Decision made: `POST /auth/refresh`'s `401` is built in the controller as a `ProblemDetail` `ResponseEntity`, so the same response carries the clearing `Set-Cookie`. Register and login also return a `ResponseEntity` to add the cookie. Doc: none.
+  - Decision made: a token is 32 bytes as unpadded base64url, 43 characters; its hash is lowercase hex SHA-256. A token is checked as unused and unexpired, then marked used by the conditional update. A deleted account's tokens are gone by cascade, so its refresh is an unknown token. Doc: `docs/CONTRACTS.md`, with I10.
+  - Decision made: the cleared cookie is `refresh_token=` with `Max-Age=0` and the same `Path`, `HttpOnly`, `SameSite` and `Secure` as the real one, so the browser replaces it. Doc: `docs/CONTRACTS.md`, with I10.
+  - Decision made: `RefreshTest`'s admin case saves the admin row directly and deletes it after, because the shared test database runs with dev mode off. The `Secure` case is a nested class with `users.refresh-cookie-secure=true`. Doc: none, test detail.
   - `docs/DECISIONS.md`, a new top entry, `2026-11-10 — A 1-hour access token and a 1-week refresh token`, superseding "24 hours, no refresh token" in the 2026-10-24 entry and narrowing "No token revocation" to the access token: why 1 hour and 1 week (the user's call); why an `HttpOnly` cookie (a script injected into the page can't read a token that works for a week; `localStorage` was rejected); why a sliding week (a researcher who uses the app weekly stays signed in; a fixed week from login was rejected); why rotation, and how tabs share one refresh; why only a hash is stored.
 
 ### S14: Refresh in the frontend

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -170,11 +171,13 @@ class RegisterTest {
 
     @Test
     void registeringLogsTheResearcherIn() {
-        String body = register(newEmail(), "correct horse battery")
+        var result = register(newEmail(), "correct horse battery")
                 .expectStatus().isCreated()
-                .expectBody(String.class).returnResult().getResponseBody();
+                .expectBody(String.class).returnResult();
+        String body = result.getResponseBody();
 
         TokenAssertions.assertIsTokenFor(JsonPath.read(body, "$.token"), JsonPath.read(body, "$.user.id"), jwtSecret);
+        TokenAssertions.assertSetsRefreshCookie(result.getResponseHeaders().get(HttpHeaders.SET_COOKIE), false);
     }
 
     private static final Map<String, Object> QUESTIONNAIRE = Map.of(

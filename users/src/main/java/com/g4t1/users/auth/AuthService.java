@@ -26,17 +26,20 @@ public class AuthService {
     private final StorageClient storage;
     private final UserProfileRepository profiles;
     private final ProfileOptions profileOptions;
+    private final RefreshTokenService refreshTokens;
     private final PasswordEncoder passwords = new BCryptPasswordEncoder();
     // checked when an email has no account, so that answer takes as long as a wrong password
     private final String hashForUnknownEmails = passwords.encode("no account has this password");
 
     public AuthService(UserRepository users, TokenService tokens, StorageClient storage,
-                       UserProfileRepository profiles, ProfileOptions profileOptions) {
+                       UserProfileRepository profiles, ProfileOptions profileOptions,
+                       RefreshTokenService refreshTokens) {
         this.users = users;
         this.tokens = tokens;
         this.storage = storage;
         this.profiles = profiles;
         this.profileOptions = profileOptions;
+        this.refreshTokens = refreshTokens;
     }
 
     /**
@@ -44,7 +47,7 @@ public class AuthService {
      * The questionnaire is checked first: a bad one is a 400 even on a taken email.
      */
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public SignedIn register(RegisterRequest request) {
         ProfileRequest answers = request.profile() == null ? null : profileOptions.normalise(request.profile());
         String email = normalised(request.email());
         if (users.existsByEmail(email)) {
@@ -57,10 +60,10 @@ public class AuthService {
             profile.replace(answers);
             profiles.saveAndFlush(profile);
         }
-        return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
+        return signedIn(user);
     }
 
-    public AuthResponse login(LoginRequest request) {
+    public SignedIn login(LoginRequest request) {
         Optional<User> found = users.findByEmail(normalised(request.email()));
         String hash = found.map(User::getPasswordHash).orElse(hashForUnknownEmails);
         boolean passwordMatches = passwords.matches(request.password(), hash);
@@ -68,9 +71,26 @@ public class AuthService {
         if (found.isEmpty() || !passwordMatches) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong email or password");
         }
-        User user = found.get();
+        return signedIn(found.get());
+    }
+
+    /**
+     * Uses a refresh token: a new access token and a new refresh token for its account. Empty when
+     * the token is missing, unknown, expired or used, or its account is gone, all of which mean
+     * signing in again.
+     */
+    public Optional<SignedIn> refresh(String refreshToken) {
+        return refreshTokens.use(refreshToken).flatMap(users::findById).map(this::signedIn);
+    }
+
+    public void logout(String refreshToken) {
+        refreshTokens.revoke(refreshToken);
+    }
+
+    // a 1-hour access token (the admin's says role=admin) and a new 1-week refresh token
+    private SignedIn signedIn(User user) {
         String token = user.isAdmin() ? tokens.issueAdmin(user.getId()) : tokens.issue(user.getId());
-        return new AuthResponse(token, UserResponse.from(user));
+        return new SignedIn(new AuthResponse(token, UserResponse.from(user)), refreshTokens.issue(user.getId()));
     }
 
     public void deleteAccount(UUID userId, DeleteAccountRequest request) {

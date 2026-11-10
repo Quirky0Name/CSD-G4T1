@@ -78,6 +78,8 @@ services:
       DEV_MODE: ${DEV_MODE:-false}
       # deleting a project clears its papers and draft there first
       SM_BASE_URL: http://storage:8081
+      # true on the deployed server, so the refresh token's cookie is only sent over HTTPS
+      REFRESH_COOKIE_SECURE: ${REFRESH_COOKIE_SECURE:-false}
     restart: unless-stopped
 
   research-evaluation:

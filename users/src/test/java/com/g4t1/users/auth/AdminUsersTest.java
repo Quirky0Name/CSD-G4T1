@@ -62,7 +62,7 @@ class AdminUsersTest {
         }
     }
 
-    // a token from before the restart still checks out for up to 24 hours, but the endpoint is gone
+    // a token from before the restart still checks out for up to an hour, but the endpoint is gone
     @Test
     void withDevModeOffAnAdminTokenGetsNotFound() {
         try (var app = start(false)) {
