@@ -454,10 +454,10 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - `String` fields map to `text` columns with no `columnDefinition`, as Storage's do. (code: `storage/.../report/Report.java`)
   - `ProfileService.save` is not `@Transactional`, and retries as in I4. (carried from draft)
 - **Acceptance criteria**, all by `cd users && ./mvnw test -Dtest=ProfileValidationTest`:
-  - [ ] Migrations apply on H2, and the context starts with `ddl-auto: validate`.
-  - [ ] Each rule in I2 has a passing and a failing case, including: `occupation_other` of 60 and 61 characters, `occupation_other` sent with an occupation other than `Other`, `Other` with no `occupation_other`, an unlisted field, a field in the wrong letter case, 5 and 6 interests, a 60- and a 61-character interest, a blank interest, duplicate interests differing only in case, a duplicate work type, an unlisted occupation, U+0000 in `response_preferences`, a `null` element in each list.
-  - [ ] 500 characters of `response_preferences` pass and 501 are `400`, for ASCII text and for text with emoji counted as two units.
-  - [ ] Saving and reading back keeps lists in order and turns a stored `null` list into `[]`.
+  - [x] Migrations apply on H2, and the context starts with `ddl-auto: validate`.
+  - [x] Each rule in I2 has a passing and a failing case, including: `occupation_other` of 60 and 61 characters, `occupation_other` sent with an occupation other than `Other`, `Other` with no `occupation_other`, an unlisted field, a field in the wrong letter case, 5 and 6 interests, a 60- and a 61-character interest, a blank interest, duplicate interests differing only in case, a duplicate work type, an unlisted occupation, U+0000 in `response_preferences`, a `null` element in each list.
+  - [x] 500 characters of `response_preferences` pass and 501 are `400`, for ASCII text and for text with emoji counted as two units.
+  - [x] Saving and reading back keeps lists in order and turns a stored `null` list into `[]`.
 - **Doc deltas:**
   - `docs/ARCHITECTURE.md`, "Data model": `user_profiles`, at most one row per account, no row meaning no profile.
   - `GLOSSARY.md`, a new "### Researchers" section:
@@ -470,6 +470,12 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
 
   - `docs/CONTRACTS.md`: the rules in I2, under the profile body.
   - `docs/DECISIONS.md`, part of S8's entry: lists are JSON text so the same migration runs on Postgres and H2.
+  - Decision made: `options.json` is one object with the snake_case keys `occupations`, `research_fields` and `work_types`, so S9's drift test can read each list by name. Doc: the frontend `README.md` note on where the lists live (S9).
+  - Decision made: a control character is anything `Character.isISOControl` accepts (U+0000–U+001F, U+007F–U+009F). `response_preferences` allows `\n`, `\r` and `\t`, with `\r` included so a CRLF line break counts as a newline. Doc: `docs/CONTRACTS.md`, with the rules in I2.
+  - Decision made: trimming is `String.strip()`, which removes Unicode whitespace, not just ASCII. Doc: none, an implementation detail.
+  - Decision made: every `400` reason starts with the field's snake_case name, for example `research_interests must have at most 5 interests`, and the first broken rule in field order is the one reported. Doc: `docs/CONTRACTS.md`, with the rules in I2.
+  - Decision made: `StringListConverter` uses its own `JsonMapper`, because Hibernate creates converters itself. Doc: none, explained in code.
+  - Decision made: `ProfileService.find` returns an `Optional`, and each controller (S4, S5) turns an empty one into its `404`. Doc: none, an implementation detail.
 
 ### S3: Register with a questionnaire (User Management)
 

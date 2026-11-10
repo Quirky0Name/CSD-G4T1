@@ -1,0 +1,51 @@
+{
+  "occupations": [
+    "Undergraduate student",
+    "Master's student",
+    "PhD student",
+    "Postdoctoral researcher",
+    "Faculty or principal investigator",
+    "Research staff",
+    "Clinician",
+    "Industry researcher",
+    "Other"
+  ],
+  "research_fields": [
+    "Agricultural and Biological Sciences",
+    "Arts and Humanities",
+    "Biochemistry, Genetics and Molecular Biology",
+    "Business, Management and Accounting",
+    "Chemical Engineering",
+    "Chemistry",
+    "Computer Science",
+    "Decision Sciences",
+    "Dentistry",
+    "Earth and Planetary Sciences",
+    "Economics, Econometrics and Finance",
+    "Energy",
+    "Engineering",
+    "Environmental Science",
+    "Health Professions",
+    "Immunology and Microbiology",
+    "Materials Science",
+    "Mathematics",
+    "Medicine",
+    "Neuroscience",
+    "Nursing",
+    "Pharmacology, Toxicology and Pharmaceutics",
+    "Physics and Astronomy",
+    "Psychology",
+    "Social Sciences",
+    "Veterinary"
+  ],
+  "work_types": [
+    "Experimental or laboratory",
+    "Clinical",
+    "Computational or modelling",
+    "Theoretical",
+    "Survey or qualitative",
+    "Systematic review or meta-analysis",
+    "Data or software",
+    "Other"
+  ]
+}
