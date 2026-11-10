@@ -5,6 +5,7 @@ import { ToastProvider } from './components/Toasts'
 import { TrackingProvider } from './tracking'
 import Alerts from './pages/Alerts'
 import Paper from './pages/Paper'
+import Profile from './pages/Profile'
 import Project from './pages/Project'
 import Projects from './pages/Projects'
 import Register from './pages/Register'
@@ -52,6 +53,7 @@ function App() {
                   <Route path="/papers/:paperId" element={<Paper />} />
                   <Route path="/alerts" element={<Alerts />} />
                   <Route path="/reports" element={<Reports />} />
+                  <Route path="/profile" element={<Profile />} />
                   <Route
                     path="/reports/:paperId/:reportId"
                     element={

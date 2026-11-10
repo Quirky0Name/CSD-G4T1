@@ -766,12 +766,16 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - On this page, a saved `Other` shows the box with its saved text.
   - **Save** calls `saveProfile`, replaces the form with the response and shows a toast through `useToast`. A `400` shows the server's message in `role="alert"`, and the edits stay.
 - **Acceptance criteria:**
-  - [ ] `cd frontend/csd-frontend-vite && npm test`, `npm run build` and `npm run lint` pass.
-  - [ ] `cd frontend/csd-frontend-vite && grep -q 'path="/profile"' src/App.tsx && grep -qF 'Your profile' src/components/Sidebar.tsx && grep -qF "You haven't filled in your profile yet." src/pages/Profile.tsx` exits 0.
-  - [ ] `cd frontend/csd-frontend-vite && grep -q 'ProfileQuestions' src/pages/Profile.tsx` exits 0.
+  - [x] `cd frontend/csd-frontend-vite && npm test`, `npm run build` and `npm run lint` pass.
+  - [x] `cd frontend/csd-frontend-vite && grep -q 'path="/profile"' src/App.tsx && grep -qF 'Your profile' src/components/Sidebar.tsx && grep -qF "You haven't filled in your profile yet." src/pages/Profile.tsx` exits 0.
+  - [x] `cd frontend/csd-frontend-vite && grep -q 'ProfileQuestions' src/pages/Profile.tsx` exits 0.
 - **Doc deltas:**
   - Frontend `README.md`: the `/profile` route.
   - Frontend `README.md`: an existing account is prompted only by the page's empty state.
+  - Decision made: `meApi` joins the token and `401` interceptor loop, so an expired token on the profile page signs out as on any other page. `getProfile` and `saveProfile` sit next to the other User Management calls in `api.ts`. Doc: none.
+  - Decision made: the page's intro says every question is optional and that changes apply to reports assessed from now on. That's the user-facing form of "nothing re-assesses an earlier report". Doc: none; the wording can be revised by H5/H6.
+  - Decision made: **Try again** sets the page back to loading and bumps a retry counter, which reruns the load effect. The effect itself sets no state synchronously, as the lint's `react-hooks` rule requires. Doc: none.
+  - Decision made: the toast says `Your profile is saved.`, and **Save** reads `Saving…` and is disabled while the request is out. Doc: none.
 
 ### S13: Access and refresh tokens (User Management)
 

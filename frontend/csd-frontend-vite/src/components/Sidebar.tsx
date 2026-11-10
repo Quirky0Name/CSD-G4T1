@@ -1,6 +1,6 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { BellAlertIcon, DocumentTextIcon, FolderIcon } from '@heroicons/react/24/outline'
-import { NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth'
 
 const navigationItems = [
@@ -56,6 +56,11 @@ function Sidebar() {
           className="z-50 w-60 rounded-md bg-gray-800 py-1 shadow-lg outline outline-white/10 focus:outline-none"
         >
           <p className="truncate border-b border-white/10 px-3 py-2 text-xs/5 text-gray-400">{email ?? 'Your account'}</p>
+          <MenuItem>
+            <Link to="/profile" className="block w-full px-3 py-2 text-left text-white data-focus:bg-white/5">
+              <span className="text-sm/5">Your profile</span>
+            </Link>
+          </MenuItem>
           <MenuItem>
             <button
               type="button"

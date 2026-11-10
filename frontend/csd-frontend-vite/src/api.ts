@@ -194,9 +194,11 @@ const adminAuth = axios.create({ baseURL: '/auth/admin' })
 
 // User Management's projects
 const projectsApi = axios.create({ baseURL: '/projects' })
+// User Management's routes for the signed-in researcher's own account, which take a token
+const meApi = axios.create({ baseURL: '/auth/me' })
 
-// every call to Storage, Updating and the projects carries the signed-in user's token
-for (const client of [storage, updating, adminAuth, projectsApi]) {
+// every call to Storage, Updating, the projects and the account carries the signed-in user's token
+for (const client of [storage, updating, adminAuth, projectsApi, meApi]) {
   client.interceptors.request.use((config) => {
     const token = getToken()
     if (token) config.headers.Authorization = `Bearer ${token}`
@@ -216,6 +218,23 @@ export async function login(email: string, password: string): Promise<Session> {
 // one request makes the account and saves its questionnaire (docs/CONTRACTS.md, POST /auth/register)
 export async function register(email: string, password: string, profile: Profile): Promise<Session> {
   const res = await authApi.post<Session>('/register', { email, password, profile })
+  return res.data
+}
+
+// the researcher's profile; null when they have none yet (404), as getDraft does for a draft
+export async function getProfile(): Promise<Profile | null> {
+  try {
+    const res = await meApi.get<Profile>('/profile')
+    return res.data
+  } catch (err) {
+    if (isNotFound(err)) return null
+    throw err
+  }
+}
+
+// replaces every answer, creating the profile when there is none; returns it as stored
+export async function saveProfile(profile: Profile): Promise<Profile> {
+  const res = await meApi.put<Profile>('/profile', profile)
   return res.data
 }
 
