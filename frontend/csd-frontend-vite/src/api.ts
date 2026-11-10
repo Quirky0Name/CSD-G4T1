@@ -213,8 +213,9 @@ export async function login(email: string, password: string): Promise<Session> {
   return res.data
 }
 
-export async function register(email: string, password: string): Promise<Session> {
-  const res = await authApi.post<Session>('/register', { email, password })
+// one request makes the account and saves its questionnaire (docs/CONTRACTS.md, POST /auth/register)
+export async function register(email: string, password: string, profile: Profile): Promise<Session> {
+  const res = await authApi.post<Session>('/register', { email, password, profile })
   return res.data
 }
 
@@ -405,4 +406,9 @@ export async function addFakeReport(paperId: string, status: ReportStatus): Prom
 
 export function isNotFound(err: unknown): boolean {
   return axios.isAxiosError(err) && err.response?.status === 404
+}
+
+// a 409: on register, an account with this email already exists
+export function isConflict(err: unknown): boolean {
+  return axios.isAxiosError(err) && err.response?.status === 409
 }

@@ -742,10 +742,15 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - **Text area:** `maxLength={500}`, the exact placeholder, and a visible `<n>/500` count tied to the text area with `aria-describedby`.
   - Wording as in I1.
 - **Acceptance criteria:**
-  - [ ] `cd frontend/csd-frontend-vite && npm test`, `npm run build` and `npm run lint` pass.
-  - [ ] `cd frontend/csd-frontend-vite && for q in 'What is your occupation?' 'What are your research fields?' 'What are your research interests?' 'What type of work do you do?' 'How would you like your reports written?' 'Please specify your occupation'; do grep -qF "$q" src/components/ProfileQuestions.tsx || exit 1; done` exits 0.
-  - [ ] `cd frontend/csd-frontend-vite && grep -q GEMINI_NOTICE src/components/ProfileQuestions.tsx && grep -q PREFERENCES_PLACEHOLDER src/components/ProfileQuestions.tsx` exits 0.
+  - [x] `cd frontend/csd-frontend-vite && npm test`, `npm run build` and `npm run lint` pass.
+  - [x] `cd frontend/csd-frontend-vite && for q in 'What is your occupation?' 'What are your research fields?' 'What are your research interests?' 'What type of work do you do?' 'How would you like your reports written?' 'Please specify your occupation'; do grep -qF "$q" src/components/ProfileQuestions.tsx || exit 1; done` exits 0.
+  - [x] `cd frontend/csd-frontend-vite && grep -q GEMINI_NOTICE src/components/ProfileQuestions.tsx && grep -q PREFERENCES_PLACEHOLDER src/components/ProfileQuestions.tsx` exits 0.
 - **Doc deltas:** none. The behaviour is covered by `CONTRACTS.md` (S3) and the code.
+  - Decision made: **Back** and **Create account** are disabled while the request is out, so its answer always lands on screen 2, and a `409` alone moves back to screen 1. Doc: none, explained in code.
+  - Decision made: screen 2's answers are checked with `validateAnswers` before sending. Errors show under the field (the other occupation, interests, preferences), and no request is sent. Doc: none.
+  - Decision made: the headings are `Create your account` and `Tell us about your research`, under a `Step 1 of 2` / `Step 2 of 2` line, and screen 2 says every question is optional and can be changed later in the profile. Doc: none; the wording can be revised by H5/H6.
+  - Decision made: the occupation dropdown's blank choice reads `No answer`. Work types are checkboxes in a `fieldset` whose `legend` is the question, kept in the list's order. Doc: none.
+  - Decision made: the taken-email message has `role="alert"` and is tied to the email field with `aria-describedby`. Focus moves to the heading when the screen changes, not on first load; this is compared with the last screen shown, so StrictMode's double effect run doesn't move it. Doc: none.
 
 ### S12: Profile page (frontend)
 

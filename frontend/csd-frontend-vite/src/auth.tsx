@@ -1,12 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
-import { login as apiLogin, register as apiRegister } from './api'
+import { login as apiLogin, register as apiRegister, type Profile } from './api'
 import { clearSession, loadSession, saveSession, setUnauthorizedHandler, type Session } from './session'
 
 type AuthValue = {
   session: Session | null
   login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string) => Promise<void>
+  register: (email: string, password: string, profile: Profile) => Promise<void>
   logout: () => void
 }
 
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       session,
       login: async (email, password) => start(await apiLogin(email, password)),
-      register: async (email, password) => start(await apiRegister(email, password)),
+      register: async (email, password, profile) => start(await apiRegister(email, password, profile)),
       logout: () => {
         clearSession()
         setSession(null)
