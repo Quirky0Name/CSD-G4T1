@@ -2,14 +2,12 @@ package com.g4t1.users.profile;
 
 import com.g4t1.users.auth.AccountGoneException;
 import com.g4t1.users.auth.UserRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
@@ -33,7 +31,7 @@ public class ProfileController {
     public ProfileResponse read(@AuthenticationPrincipal UUID userId) {
         requireAccount(userId);
         return profiles.find(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No profile " + userId));
+                .orElseThrow(() -> ProfileService.noProfile(userId));
     }
 
     // the whole profile: a field left out or null is cleared, and {} clears every answer but keeps the row

@@ -2,8 +2,10 @@ package com.g4t1.users.profile;
 
 import com.g4t1.users.auth.AccountGoneException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -22,6 +24,11 @@ public class ProfileService {
     @Transactional(readOnly = true)
     public Optional<ProfileResponse> find(UUID userId) {
         return profiles.findById(userId).map(ProfileResponse::from);
+    }
+
+    // the 404 for no profile; Research Evaluation matches this detail exactly to tell it from any other 404
+    public static ResponseStatusException noProfile(UUID userId) {
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "No profile " + userId);
     }
 
     /**
