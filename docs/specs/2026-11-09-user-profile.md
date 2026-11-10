@@ -490,16 +490,18 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - `saveNew`'s catch still throws the `409` inside the transaction, so it rolls back as a normal runtime exception. (carried from draft)
   - Register saves through `UserProfileRepository.saveAndFlush` directly, not `ProfileService.save`, whose retry is for an account that already exists. (code: `AuthService.java`)
 - **Acceptance criteria**, all by `cd users && ./mvnw test -Dtest=RegisterTest`:
-  - [ ] Register with a questionnaire: `201` in today's shape, and the `user_profiles` row holds the answers.
-  - [ ] Register without a questionnaire, and with `"profile": null`: `201` and no `user_profiles` row.
-  - [ ] Taken email, with a questionnaire: `409`, and the first account's profile is unchanged.
-  - [ ] An invalid questionnaire on a taken email is `400`.
-  - [ ] An invalid questionnaire on an email with no account yet: `400`, and no `users` row.
-  - [ ] A questionnaire with every answer empty: `201`.
-  - [ ] A profile save that fails (a `@MockitoSpyBean` repository throwing) leaves no `users` row.
-  - [ ] The existing `anEmailRegisteredTwiceAtOnceIsStillOneAccount` still passes.
+  - [x] Register with a questionnaire: `201` in today's shape, and the `user_profiles` row holds the answers.
+  - [x] Register without a questionnaire, and with `"profile": null`: `201` and no `user_profiles` row.
+  - [x] Taken email, with a questionnaire: `409`, and the first account's profile is unchanged.
+  - [x] An invalid questionnaire on a taken email is `400`.
+  - [x] An invalid questionnaire on an email with no account yet: `400`, and no `users` row.
+  - [x] A questionnaire with every answer empty: `201`.
+  - [x] A profile save that fails (a `@MockitoSpyBean` repository throwing) leaves no `users` row.
+  - [x] The existing `anEmailRegisteredTwiceAtOnceIsStillOneAccount` still passes.
 - **Doc deltas:**
   - `docs/CONTRACTS.md`, `POST /auth/register`: `profile`, its errors, and that a `400` is decided before the email is checked.
+  - Decision made: a questionnaire sent as `{}` is present, so it saves a row with every answer empty. Only an absent or `null` `profile` means no row. Doc: `docs/CONTRACTS.md`, `POST /auth/register`.
+  - Decision made: a profile save that fails for any other reason is the default `500`, with nothing saved. Doc: none, no new contract.
 
 ### S4: `GET/PUT /auth/me/profile` (User Management)
 

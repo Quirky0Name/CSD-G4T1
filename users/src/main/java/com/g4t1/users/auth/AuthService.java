@@ -1,11 +1,16 @@
 package com.g4t1.users.auth;
 
+import com.g4t1.users.profile.ProfileOptions;
+import com.g4t1.users.profile.ProfileRequest;
+import com.g4t1.users.profile.UserProfile;
+import com.g4t1.users.profile.UserProfileRepository;
 import com.g4t1.users.storage.StorageClient;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -19,22 +24,39 @@ public class AuthService {
     private final UserRepository users;
     private final TokenService tokens;
     private final StorageClient storage;
+    private final UserProfileRepository profiles;
+    private final ProfileOptions profileOptions;
     private final PasswordEncoder passwords = new BCryptPasswordEncoder();
     // checked when an email has no account, so that answer takes as long as a wrong password
     private final String hashForUnknownEmails = passwords.encode("no account has this password");
 
-    public AuthService(UserRepository users, TokenService tokens, StorageClient storage) {
+    public AuthService(UserRepository users, TokenService tokens, StorageClient storage,
+                       UserProfileRepository profiles, ProfileOptions profileOptions) {
         this.users = users;
         this.tokens = tokens;
         this.storage = storage;
+        this.profiles = profiles;
+        this.profileOptions = profileOptions;
     }
 
+    /**
+     * The account and its questionnaire in one transaction, so neither is saved without the other.
+     * The questionnaire is checked first: a bad one is a 400 even on a taken email.
+     */
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
+        ProfileRequest answers = request.profile() == null ? null : profileOptions.normalise(request.profile());
         String email = normalised(request.email());
         if (users.existsByEmail(email)) {
             throw emailTaken();
         }
         User user = saveNew(new User(email, passwords.encode(request.password())));
+        if (answers != null) {
+            // straight to the repository: ProfileService.save's retry is for an account that already exists
+            UserProfile profile = new UserProfile(user.getId());
+            profile.replace(answers);
+            profiles.saveAndFlush(profile);
+        }
         return new AuthResponse(tokens.issue(user.getId()), UserResponse.from(user));
     }
 
@@ -66,7 +88,8 @@ public class AuthService {
         users.deleteIfPresent(userId);
     }
 
-    // another registration of the same email can be saved between the check and this insert
+    // another registration of the same email can be saved between the check and this insert; the 409
+    // is a runtime exception, so it rolls the transaction back
     private User saveNew(User user) {
         try {
             return users.saveAndFlush(user);
