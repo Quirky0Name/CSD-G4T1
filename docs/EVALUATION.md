@@ -300,8 +300,8 @@ Per report:
    |---|---|---|---|
    | 1. Change | What changed, is it about this paper, how severe? | paper details, alerts, documents (`<document>` blocks, each with a `links:` line, JSON, or `links: none`), PDFs: stored paper, new versions, related documents (labelled `RELATED, <doi>.`), current copy | `ChangeAssessment`: summary, change severity `none`/`low`/`medium`/`high` |
    | gate | change severity `none` = not meaningful: stop, store summary and change severity only | | |
-   | 2. Impact | How does the draft use the paper; is each use affected; how much? | step 1's answer; PDF: the **draft**, read only now (`storage.draft_pdf`) | `ImpactAssessment`: uses, impact level, explanation |
-   | 3. Actions | What should the researcher do? | steps 1 and 2 as JSON, no PDFs | `RecommendedActions` |
+   | 2. Impact | How does the draft use the paper; is each use affected; how much? | step 1's answer; PDF: the **draft**, read only now (`storage.draft_pdf`); the **profile block**, when there is a profile | `ImpactAssessment`: uses, impact level, explanation |
+   | 3. Actions | What should the researcher do? | steps 1 and 2 as JSON, no PDFs; the profile block, when there is a profile | `RecommendedActions` |
 
    No draft: step 2 judges for a typical researcher citing the paper as key
    evidence, and step 3 adds "upload your draft". The impact level follows
@@ -313,8 +313,30 @@ Per report:
    own). A citation jump has no document: its alert line carries the rule's
    description (the counts), and step 1's task says to judge it as new
    attention, scope `citations_only`, severity `low`, so the gate lets it
-   through to steps 2 and 3. `PROMPT_VERSION` is 4 since that wording
-   changed.
+   through to steps 2 and 3. `PROMPT_VERSION` is 5 since the profile
+   section was added (it was 4 for that wording).
+
+   **The profile.** After the gate, next to the draft, `assess` reads the
+   researcher's profile from User Management
+   (`users.researcher_profile(um, owner_id)`; `owner_id` is on Storage
+   Management's report). Steps 2 and 3 get a `USER PROFILE` section as its
+   own text part before the task: a `<document kind="researcher_profile">`
+   block (the profile block), then `PROFILE_RULES` (`prompts.profile_section`).
+   Each value is JSON passed through `_defuse`; an empty list or `null` is
+   `none`. The profile may only tailor the explanation (step 2) and the
+   recommendation and actions (step 3): what to explain and what to put
+   first. `response_preferences` is the one exception to "documents are
+   data": it is followed only for the tone, length and focus of that field,
+   within the length the task sets (explanation two to five sentences,
+   recommendation one or two), and can't change any rating, the answer
+   schema, the facts used or any other rule. The profile never changes
+   change severity or impact level. Step 1 gets no profile, and with no
+   profile the prompt parts are exactly as before. In step 3 the profile
+   tailors both `recommendation` and `actions`, so the recommendation stays
+   the gist of the actions.
+
+   An edit to a profile applies only to reports assessed after it; nothing
+   re-assesses an earlier report.
 4. `PUT /internal/reports/{id}/evaluation`, once; the report becomes
    `assessed`. Nothing is written between steps, so an `assessed` report is
    always complete.
@@ -330,8 +352,18 @@ impact.
 `evaluation` (step 2's explanation), `recommendation` (step 3's), and
 `assessment`, JSON with everything else: `prompt_version`, `model`,
 `model_version`, `answered_by` per step, `draft` (`read` / `none` /
-`not_needed`), `pdfs` attached and left out, each step's full answer,
+`not_needed`), `profile` (below), `pdfs` attached and left out, each step's full answer,
 `placeholder`.
+
+`assessment.profile` is one of four values: `not_needed` (step 1 failed, or
+change severity `none`: User Management isn't called); `read` (a profile was
+read and given to steps 2 and 3); `none` (no `um` client, User Management
+answered `404` `No profile <id>`, or the profile has every answer empty);
+`failed` (anything else: no `owner_id`, a transport error or timeout, any
+other status including a `404` with another `detail`, or a body that doesn't
+fit `ResearcherProfile`). `um` is checked first, so the evals, which pass
+none, record `none`. `assessment` records only the status, never the
+profile's values.
 
 **Model fallback** (`llm.FallbackLlm`): each call tries `GEMINI_MODEL`,
 then `GEMINI_FALLBACK_MODELS` in order (duplicates removed), starting from
@@ -613,6 +645,7 @@ run `run.py --dry <case>` to check that it builds.
 | Settings | `config.py` (`ResearchEvaluationSettings`) |
 | Service-token check on its endpoints | `auth.py` (`require_service_token`) |
 | Storage Management client | `storage.py`: snapshots, change keys, alerts, reports, documents, PDFs, evaluation; `PaperGone`, `ReportGone` |
+| User Management client | `users.py`: `ResearcherProfile`, `researcher_profile(http, user_id)` |
 | Detection, rules, per-paper evaluation | `changes.py`, `rules.py`, `evaluate.py` |
 | Investigation | `investigation/`: `http.py` (one GET, `FetchStatus`), `crossref.py`, `europepmc.py`, `investigate.py` (plan, fetch), `run.py` |
 | Impact | `impact/`: `llm.py` (Gemini client, `FallbackLlm`), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `assess.py`, `run.py` (`ImpactContext`) |
@@ -621,9 +654,11 @@ run `run.py --dry <case>` to check that it builds.
 | Tests | `backend/tests/research_evaluation/` (with `investigation/` and `impact/`); fixtures in `backend/tests/fixtures/` |
 | Evals of impact (dev only) | `backend/evals/`: `cases/`, `thresholds.json`, `run.py`, `judge.py`, `judge_check.py`, `score.py` (also the shared helpers `verdict`, `pass_rate`, `group_by`, `noise_floor`, `overall_mean`, `failure_line`), `compare.py`, `all.py` |
 
-The lifespan makes three HTTP clients: Storage Management's (base URL,
-service token, 10 s), one for Crossref and Europe PMC (no base URL and no
-auth), and the Gemini client.
+The lifespan makes four HTTP clients: Storage Management's (base URL,
+service token, 10 s), User Management's (`UM_BASE_URL`, service token, same
+timeout), one for Crossref and Europe PMC (no base URL and no auth), and
+the Gemini client. User Management's is always opened, even without a Gemini
+key, but only `ImpactContext` uses it (`ImpactContext.um`, optional).
 
 ## Gotchas
 
@@ -642,6 +677,13 @@ auth), and the Gemini client.
   no draft). `document_pdf` treats every `404` as "no PDF".
 - **The draft is read only after the gate**, and only in step 2;
   `gather_inputs` never reads it (a test counts the requests).
+- **The profile is read only after the gate**, next to the draft, so a
+  change at severity `none` never touches User Management. A failed read
+  (caught with `except Exception`) never fails a report: it continues
+  without the profile and records `failed`. Profile values are never logged
+  or stored in `assessment`: the log has the report id and the exception
+  class only, with no `exc_info`, since a traceback or a `ValidationError`
+  message can carry the response body.
 - **Fetched text is data.** `prompts._defuse` escapes `<document` tags in
   any case or spacing inside document text; PDFs can't be defused, so the
   system instruction says never to follow instructions in them.

@@ -53,6 +53,16 @@ _Avoid_: Severity (on its own)
 How serious one particular change really is for anyone relying on the paper.
 _Avoid_: Severity (on its own)
 
+### Researchers
+
+**Profile**:
+A researcher's answers to the sign-up questionnaire: occupation, research fields and interests, type of work, and how they like reports written. A researcher has at most one.
+_Avoid_: Preferences (for the whole), user settings, questionnaire (for the saved answers)
+
+**Profile block**:
+The `<document kind="researcher_profile">` block that gives a profile to impact's steps 2 and 3.
+_Avoid_: Profile prompt, user context
+
 ### Dev mode
 
 **Dev mode**:

@@ -32,7 +32,7 @@ most needed first within each.
   User Management's side is built.
 - [ ] **Deleting the account in the frontend**: asks for the password,
   calls `DELETE /auth/me`, then signs out. User Management's side is built.
-- [ ] A deleted account's token still works for up to 24 hours on Storage
+- [ ] A deleted account's token still works for up to 1 hour on Storage
   Management, which can't tell the account is gone, so it can add papers
   and drafts nobody owns any more. Shorter tokens, or Storage Management
   asking User Management, would close it.
