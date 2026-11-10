@@ -620,14 +620,14 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - `um` is checked before `owner_id`. (code: `backend/evals/run.py` passes no `um`)
   - Step 1 gets no profile. (carried from draft)
 - **Acceptance criteria**, all by `cd backend && uv run pytest tests/research_evaluation/impact/test_assess.py` unless named:
-  - [ ] With a profile available, the first call's parts contain no `USER PROFILE`, and steps 2 and 3 do. `assessment["profile"]` is `read`.
-  - [ ] At change severity `none`, User Management isn't called and `assessment["profile"]` is `not_needed`.
-  - [ ] `404` `No profile <id>`, a profile with every answer empty, and `um=None` each give `none`, no block and a complete evaluation.
-  - [ ] A `500`, a timeout, a `404` with another `detail`, a malformed body and a report with no `owner_id` each give `failed`, no block and a complete evaluation.
-  - [ ] On a `failed` read, the log has the report id and the exception class, and no response body or profile value (`caplog`).
-  - [ ] `assessment` contains no profile value after a `read`.
-  - [ ] `cd backend && uv run pytest tests/research_evaluation/impact/test_run.py`: `assess_report` passes `ImpactContext.um` to `assess`.
-  - [ ] `cd backend && uv run pytest tests/research_evaluation` and `cd backend && uv run ruff check` pass.
+  - [x] With a profile available, the first call's parts contain no `USER PROFILE`, and steps 2 and 3 do. `assessment["profile"]` is `read`.
+  - [x] At change severity `none`, User Management isn't called and `assessment["profile"]` is `not_needed`.
+  - [x] `404` `No profile <id>`, a profile with every answer empty, and `um=None` each give `none`, no block and a complete evaluation.
+  - [x] A `500`, a timeout, a `404` with another `detail`, a malformed body and a report with no `owner_id` each give `failed`, no block and a complete evaluation.
+  - [x] On a `failed` read, the log has the report id and the exception class, and no response body or profile value (`caplog`).
+  - [x] `assessment` contains no profile value after a `read`.
+  - [x] `cd backend && uv run pytest tests/research_evaluation/impact/test_run.py`: `assess_report` passes `ImpactContext.um` to `assess`.
+  - [x] `cd backend && uv run pytest tests/research_evaluation` and `cd backend && uv run ruff check` pass.
 - **Doc deltas:**
   - `docs/EVALUATION.md`, "Impact": `assessment.profile` and its four values; an edit applies only to reports assessed after it, and nothing re-assesses an earlier report.
   - `docs/EVALUATION.md`, "Gotchas": the profile is read only after the gate; a failed read never fails a report; profile values are never logged or stored in `assessment`.
@@ -638,6 +638,9 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
     - User Management owns the profile because it's account data, deleted with the account. Research Evaluation calls it with its service token, and learns the owner from Storage's `owner_id`, because it only has a `paper_id`.
     - The option lists are duplicated with a drift test, because the frontend and User Management build from separate Docker contexts.
     - Lists are JSON text, so the same migration runs on Postgres and H2.
+  - Decision made: a report with no `owner_id` raises inside the read's `try`, so it's logged like any other failed read: `ValueError`, report id. Doc: none, covered by "a failed read never fails a report".
+  - Decision made: the blind `except Exception` carries `# noqa: BLE001` instead of `exc_info`, which is how the other blind catches satisfy ruff. A traceback, or a `ValidationError`'s message, can carry the response body and so the profile's values. Doc: `docs/EVALUATION.md`, "Gotchas" (profile values are never logged).
+  - Decision made: `_read_profile` returns the status and the profile together, and `assessment["profile"]` sits right after `assessment["draft"]`. Doc: none, an implementation detail.
 
 ### S9: Lists and form logic (frontend)
 

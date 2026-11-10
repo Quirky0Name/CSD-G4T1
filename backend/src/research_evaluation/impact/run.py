@@ -50,7 +50,7 @@ async def assess_report(sm: httpx.AsyncClient, context: ImpactContext, report_id
             log.info("impact skipped report %s: it is %s", report_id, report.status)
             return False
         inputs = await gather_inputs(sm, report)
-        evaluation = await assess(context.llm, sm, inputs)
+        evaluation = await assess(context.llm, sm, inputs, um=context.um)
         await store_evaluation(sm, report_id, evaluation.model_dump(mode="json"))
     except (PaperGone, ReportGone):
         log.info("impact skipped report %s: Storage Management has no such report or paper", report_id)

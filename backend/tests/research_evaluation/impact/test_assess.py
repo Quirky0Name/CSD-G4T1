@@ -1,6 +1,9 @@
 """impact/assess.py and impact/prompts.py: the three steps, the gate, and what each step is given,
 with a fake model and the stub Storage Management (for the draft). One `live` test asks Gemini."""
 
+import dataclasses
+import json
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
@@ -796,3 +799,135 @@ def test_non_ascii_answers_are_written_as_they_are():
 
 def test_the_prompt_version_is_5():
     assert PROMPT_VERSION == 5
+
+
+# Reading the profile in assess: after the gate, next to the draft; a failed read never fails the
+# report (docs/EVALUATION.md, "Impact")
+
+OWNER = UUID("00000000-0000-0000-0000-00000000a11c")
+SAVED_PROFILE = {
+    "occupation": "Faculty or principal investigator",
+    "occupation_other": None,
+    "research_fields": ["Medicine"],
+    "research_interests": ["hydroxychloroquine trials"],
+    "work_types": ["Clinical"],
+    "response_preferences": "Lead with what my team should do.",
+}
+
+
+async def owned_inputs(sm, owner: UUID | None = OWNER, **overrides) -> ReportInputs:
+    inputs = await inputs_for(sm, **overrides)
+    return dataclasses.replace(inputs, report=inputs.report.model_copy(update={"owner_id": owner}))
+
+
+def steps_with_profile(llm) -> list[bool]:
+    return ['<document kind="researcher_profile">' in texts(call["parts"]) for call in llm.calls]
+
+
+def complete(evaluation) -> bool:
+    return bool(evaluation.evaluation and evaluation.recommendation and evaluation.impact_level)
+
+
+async def test_a_profile_is_read_and_given_to_steps_two_and_three_only(sm, um):
+    um.profiles[OWNER] = SAVED_PROFILE
+    llm = fake(sm)
+
+    evaluation = await assess(llm, sm.client, await owned_inputs(sm), um=um.client)
+
+    assert steps_with_profile(llm) == [False, True, True]
+    assert "USER PROFILE" not in texts(llm.calls[0]["parts"])
+    assert evaluation.assessment["profile"] == "read"
+    [request] = um.requests
+    assert request.url.path == f"/internal/users/{OWNER}/profile"
+
+
+async def test_the_profile_is_read_after_the_draft_gate_so_severity_none_never_reads_it(sm, um):
+    um.profiles[OWNER] = SAVED_PROFILE
+
+    evaluation = await assess(fake(sm, severity="none"), sm.client, await owned_inputs(sm), um=um.client)
+
+    assert um.requests == []
+    assert evaluation.assessment["profile"] == "not_needed"
+
+
+async def test_a_failed_step_one_never_reads_the_profile(sm, um):
+    um.profiles[OWNER] = SAVED_PROFILE
+    llm = fake(sm, overrides={ChangeAssessment: AllModelsFailed(FAILURES)})
+
+    evaluation = await assess(llm, sm.client, await owned_inputs(sm), um=um.client)
+
+    assert um.requests == []
+    assert evaluation.assessment["profile"] == "not_needed"
+
+
+@pytest.mark.parametrize("case", ["no profile", "every answer cleared", "no client"])
+async def test_no_profile_gives_none_and_a_complete_evaluation(sm, um, case):
+    if case == "every answer cleared":
+        um.profiles[OWNER] = {key: [] if isinstance(value, list) else None for key, value in SAVED_PROFILE.items()}
+    llm = fake(sm)
+
+    evaluation = await assess(
+        llm, sm.client, await owned_inputs(sm), um=None if case == "no client" else um.client
+    )
+
+    assert evaluation.assessment["profile"] == "none"
+    assert steps_with_profile(llm) == [False, False, False]
+    assert complete(evaluation)
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        500,
+        httpx.ReadTimeout("timed out"),
+        httpx.ConnectError("refused"),
+        httpx.Response(404, json={"detail": "No static resource internal/users"}),
+        httpx.Response(200, json={**SAVED_PROFILE, "research_fields": "Medicine"}),
+        httpx.Response(200, text="not json"),
+    ],
+    ids=["500", "timeout", "transport error", "another 404", "body that doesn't fit", "not json"],
+)
+async def test_a_failed_read_gives_failed_and_a_complete_evaluation(sm, um, failure):
+    um.failure = failure
+    llm = fake(sm)
+
+    evaluation = await assess(llm, sm.client, await owned_inputs(sm), um=um.client)
+
+    assert evaluation.assessment["profile"] == "failed"
+    assert steps_with_profile(llm) == [False, False, False]
+    assert complete(evaluation)
+
+
+async def test_a_report_with_no_owner_id_gives_failed_without_calling_user_management(sm, um):
+    llm = fake(sm)
+
+    evaluation = await assess(llm, sm.client, await owned_inputs(sm, owner=None), um=um.client)
+
+    assert evaluation.assessment["profile"] == "failed"
+    assert um.requests == []
+    assert complete(evaluation)
+
+
+async def test_a_failed_read_logs_the_report_and_exception_class_only(sm, um, caplog):
+    um.failure = httpx.Response(200, json={**SAVED_PROFILE, "research_fields": "a-secret-field"})
+
+    with caplog.at_level(logging.DEBUG):
+        await assess(fake(sm), sm.client, await owned_inputs(sm), um=um.client)
+
+    [record] = [r for r in caplog.records if "profile" in r.getMessage()]
+    assert "report 3" in record.getMessage()
+    assert "ValidationError" in record.getMessage()
+    assert record.exc_info is None
+    for value in ("a-secret-field", "Faculty or principal investigator", "Lead with what my team"):
+        assert value not in caplog.text
+
+
+async def test_the_assessment_records_only_that_the_profile_was_read(sm, um):
+    um.profiles[OWNER] = SAVED_PROFILE
+
+    evaluation = await assess(fake(sm), sm.client, await owned_inputs(sm), um=um.client)
+
+    stored = json.dumps(evaluation.assessment)
+    assert evaluation.assessment["profile"] == "read"
+    for value in ("Faculty or principal investigator", "hydroxychloroquine trials", "Lead with what my team"):
+        assert value not in stored
