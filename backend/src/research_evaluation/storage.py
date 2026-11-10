@@ -95,12 +95,15 @@ class DocumentInReport(BaseModel):
 
 
 class Report(BaseModel):
-    """A report read by its id (impact's handoff): its paper, status, alerts and documents."""
+    """A report read by its id (impact's handoff): its paper and the paper's owner, status, alerts
+    and documents. owner_id is optional so a response without it fails only the profile read, not
+    the report."""
 
     model_config = ConfigDict(extra="ignore")
 
     id: int
     paper_id: UUID
+    owner_id: UUID | None = None
     status: str
     alerts: list[AlertInReport]
     documents: list[DocumentInReport]

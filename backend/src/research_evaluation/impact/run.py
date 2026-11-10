@@ -22,9 +22,12 @@ log = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ImpactContext:
-    """What impact runs with besides the Storage Management client: the model."""
+    """What impact runs with besides the Storage Management client: the model, and the User
+    Management client the researcher's profile is read with (None reads no profile, as in the
+    evals)."""
 
     llm: Llm
+    um: httpx.AsyncClient | None = None
 
 
 async def assess_reports(

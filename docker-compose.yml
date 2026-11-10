@@ -88,8 +88,10 @@ services:
     env_file: .env
     environment:
       SM_BASE_URL: http://storage:8081
+      UM_BASE_URL: http://users:8080
     depends_on:
       - storage
+      - users
     restart: unless-stopped
 
   updating:

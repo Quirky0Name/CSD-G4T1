@@ -563,17 +563,20 @@ Each backend and frontend subtask is test-first. Tests use the existing fakes: `
   - `docker-compose.yml`: `UM_BASE_URL: http://users:8080`, and `research-evaluation` `depends_on` `users`. `backend/docker-compose.dev.yml`: `UM_BASE_URL: http://host.docker.internal:8080`. `deploy/stack.yml` runs the root compose file and needs no change. (carried from draft; code: `deploy/stack.yml`)
   - `backend/tests/conftest.py` adds `UM_BASE_URL` to `SETTINGS_ENV_VARS`. `backend/tests/research_evaluation/conftest.py` adds a `StubUm` on `httpx.MockTransport`. (carried from draft)
 - **Acceptance criteria:**
-  - [ ] `cd backend && uv run pytest tests/research_evaluation/test_users.py`: `researcher_profile` returns the profile for a `200`, `None` for `404` `No profile <id>`, `None` for a profile with every answer empty, and raises for a `500`, for a `404` with another `detail`, and for a body that doesn't fit.
-  - [ ] `test_users.py`: with Gemini configured, the lifespan's `ImpactContext.um` has the configured base URL and a `ServiceTokenAuth`.
-  - [ ] `cd backend && uv run pytest tests/research_evaluation/test_config.py`: `um_base_url` defaults to `http://localhost:8080` and reads `UM_BASE_URL`.
-  - [ ] `test_users.py`: `Report` parses a body with `owner_id` and one without it.
-  - [ ] `cd backend && docker compose -f ../docker-compose.yml config --format json | python3 -c "import json,sys; s=json.load(sys.stdin)['services']['research-evaluation']; assert s['environment']['UM_BASE_URL']=='http://users:8080' and 'users' in s['depends_on']"`, with `POSTGRES_PASSWORD` and `JWT_SECRET` set in the environment.
-  - [ ] `cd backend && uv run ruff check` passes.
+  - [x] `cd backend && uv run pytest tests/research_evaluation/test_users.py`: `researcher_profile` returns the profile for a `200`, `None` for `404` `No profile <id>`, `None` for a profile with every answer empty, and raises for a `500`, for a `404` with another `detail`, and for a body that doesn't fit.
+  - [x] `test_users.py`: with Gemini configured, the lifespan's `ImpactContext.um` has the configured base URL and a `ServiceTokenAuth`.
+  - [x] `cd backend && uv run pytest tests/research_evaluation/test_config.py`: `um_base_url` defaults to `http://localhost:8080` and reads `UM_BASE_URL`.
+  - [x] `test_users.py`: `Report` parses a body with `owner_id` and one without it.
+  - [x] `cd backend && docker compose -f ../docker-compose.yml config --format json | python3 -c "import json,sys; s=json.load(sys.stdin)['services']['research-evaluation']; assert s['environment']['UM_BASE_URL']=='http://users:8080' and 'users' in s['depends_on']"`, with `POSTGRES_PASSWORD` and `JWT_SECRET` set in the environment.
+  - [x] `cd backend && uv run ruff check` passes.
 - **Doc deltas:**
   - `docs/CONTRACTS.md`, env table: `UM_BASE_URL`.
   - `docs/SETUP.md`, variable table: `UM_BASE_URL`.
   - `docs/ARCHITECTURE.md`: Research Evaluation now calls User Management, in the data flow diagram, the services table and "Rules that hold across the flow".
   - `docs/EVALUATION.md`, "Where the code lives": `users.py`; the lifespan makes four HTTP clients, not three.
+  - Decision made: the lifespan always opens the User Management client, even without a Gemini key, as it does the other clients. Only `ImpactContext` uses it, and there's no `ImpactContext` without a key. Doc: `docs/EVALUATION.md`, with the four clients.
+  - Decision made: `StubUm` serves `profiles` by user id. An unknown id is User Management's `No profile <id>` `404`, and `failure` (a status, a whole response or an exception) overrides every answer. Doc: none, a test fixture.
+  - Decision made: `backend/.env.example`'s comment on compose overrides now names `UM_BASE_URL`. Doc: none, the file is its own doc.
 
 ### S7: Prompt section (Research Evaluation)
 

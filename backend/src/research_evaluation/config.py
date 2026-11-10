@@ -12,6 +12,7 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from common.service_token import decode_jwt_secret
 
 DEFAULT_SM_BASE_URL = "http://localhost:8081"
+DEFAULT_UM_BASE_URL = "http://localhost:8080"
 DEFAULT_SNAPSHOT_WINDOW = 5
 DEFAULT_GEMINI_MODEL = "gemini-flash-latest"
 # not gemini-3.8-flash (what gemini-flash-latest resolves to) nor gemini-2.5-flash (gone for new
@@ -27,6 +28,8 @@ class ResearchEvaluationSettings(BaseSettings):
     # wrapper to hide value unless explicitly requested
     jwt_secret: SecretBytes
     sm_base_url: str = DEFAULT_SM_BASE_URL
+    # User Management, which impact reads the researcher's profile from
+    um_base_url: str = DEFAULT_UM_BASE_URL
     # how many of the newest snapshots each evaluation compares (N snapshots = N - 1 pairs);
     # a change is missed if its nudge keeps failing for more than N - 2 polls in a row
     evaluation_snapshot_window: int = Field(default=DEFAULT_SNAPSHOT_WINDOW, ge=2)

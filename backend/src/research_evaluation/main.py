@@ -152,6 +152,10 @@ def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
             ) as sm,
             # Crossref and Europe PMC only: no base URL, no auth, never the service token
             httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as external,
+            # User Management, for the researcher's profile impact reads
+            httpx.AsyncClient(
+                base_url=config.um_base_url, auth=ServiceTokenAuth(key, SERVICE_SUBJECT), timeout=HTTP_TIMEOUT_SECONDS
+            ) as um,
         ):
             app.state.jwt_key = key
             app.state.sm = sm
@@ -168,6 +172,7 @@ def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
                         # a name listed twice is tried once
                         tuple(dict.fromkeys((config.gemini_model, *config.gemini_fallback_models))),
                     ),
+                    um=um,
                 )
                 if gemini_configured(config)
                 else None
