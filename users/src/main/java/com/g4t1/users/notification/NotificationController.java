@@ -31,4 +31,10 @@ public class NotificationController {
                                                         @RequestBody EmailRequest request) {
         return notifications.replaceEmail(userId, request);
     }
+
+    @PutMapping("/telegram")
+    public NotificationPreferencesResponse replaceTelegram(@AuthenticationPrincipal UUID userId,
+                                                           @RequestBody TelegramRequest request) {
+        return notifications.replaceTelegram(userId, request);
+    }
 }

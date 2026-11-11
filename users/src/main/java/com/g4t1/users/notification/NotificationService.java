@@ -33,4 +33,12 @@ public class NotificationService {
         prefs.replaceEmail(request);
         return NotificationPreferencesResponse.from(preferences.save(prefs), user.getEmail());
     }
+
+    @Transactional
+    public NotificationPreferencesResponse replaceTelegram(UUID userId, TelegramRequest request) {
+        User user = users.findById(userId).orElseThrow(AccountGoneException::new);
+        NotificationPreferences prefs = preferences.findById(userId).orElseThrow();
+        prefs.replaceTelegram(request);
+        return NotificationPreferencesResponse.from(preferences.save(prefs), user.getEmail());
+    }
 }

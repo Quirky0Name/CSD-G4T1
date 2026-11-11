@@ -98,6 +98,51 @@ class NotificationPreferencesTest {
                 .jsonPath("$.email.min_impact_level").isEqualTo(null);
     }
 
+    // a chat id can be past an int (and negative, for a group), so it round-trips as a long
+    @Test
+    void putTelegramReplacesThatChannelAndLeavesEmailAlone() {
+        Account account = registered();
+        Map<String, Object> telegram = new HashMap<>();
+        telegram.put("enabled", true);
+        telegram.put("chat_id", 5000000000L);
+        telegram.put("min_alert_severity", null);
+        telegram.put("min_change_severity", "low");
+        telegram.put("min_impact_level", "high");
+
+        putTelegram(account.token(), telegram)
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.telegram.enabled").isEqualTo(true)
+                .jsonPath("$.telegram.chat_id").isEqualTo(5000000000L)
+                .jsonPath("$.telegram.min_alert_severity").isEqualTo(null)
+                .jsonPath("$.telegram.min_change_severity").isEqualTo("low")
+                .jsonPath("$.telegram.min_impact_level").isEqualTo("high")
+                .jsonPath("$.email.enabled").isEqualTo(false)
+                .jsonPath("$.email.min_alert_severity").isEqualTo("high");
+        get(account.token())
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.telegram.enabled").isEqualTo(true)
+                .jsonPath("$.telegram.chat_id").isEqualTo(5000000000L)
+                .jsonPath("$.telegram.min_alert_severity").isEqualTo(null)
+                .jsonPath("$.telegram.min_change_severity").isEqualTo("low")
+                .jsonPath("$.telegram.min_impact_level").isEqualTo("high")
+                .jsonPath("$.email.enabled").isEqualTo(false)
+                .jsonPath("$.email.min_change_severity").isEqualTo("medium")
+                .jsonPath("$.email.min_impact_level").isEqualTo("medium");
+    }
+
+    @Test
+    void putTelegramWithNoChatIdClearsTheOneSaved() {
+        Account account = registered();
+        putTelegram(account.token(), Map.of("enabled", true, "chat_id", -1001234567890L)).expectStatus().isOk();
+
+        putTelegram(account.token(), Map.of("enabled", false))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.telegram.chat_id").isEqualTo(null);
+    }
+
     private record Account(String token, String id, String email) {
     }
 
@@ -120,6 +165,14 @@ class NotificationPreferencesTest {
 
     private RestTestClient.ResponseSpec putEmail(String token, Map<String, ?> body) {
         return client.put().uri("/auth/me/notifications/email")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec putTelegram(String token, Map<String, ?> body) {
+        return client.put().uri("/auth/me/notifications/telegram")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
