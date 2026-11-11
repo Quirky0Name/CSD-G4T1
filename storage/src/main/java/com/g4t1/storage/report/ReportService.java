@@ -87,10 +87,9 @@ public class ReportService {
     @Transactional
     public ReportResponse recordEvaluation(long reportId, ReportEvaluationRequest request) {
         checkShape(request);
-        JsonNode assessment = request.assessment();
         int updated = reports.recordEvaluation(reportId, request.changeSummary(), request.changeSeverity(),
                 request.impactLevel(), request.evaluation(), request.recommendation(),
-                assessment == null || assessment.isNull() ? null : json.writeValueAsString(assessment),
+                jsonText(request.assessment()), jsonText(request.contextChunks()),
                 Instant.now().truncatedTo(ChronoUnit.MICROS), ReportStatus.ASSESSED, ReportStatus.INVESTIGATED);
         Report report = reports.findById(reportId).orElseThrow(() -> noReport(reportId));
         if (updated == 0) {
@@ -181,8 +180,14 @@ public class ReportService {
         return found.stream()
                 .map(report -> UserReportResponse.from(report,
                         alertsByReport.getOrDefault(report.getId(), List.of()),
-                        documentsByReport.getOrDefault(report.getId(), List.of())))
+                        documentsByReport.getOrDefault(report.getId(), List.of()),
+                        report.getContextChunks() == null ? null : json.readTree(report.getContextChunks())))
                 .toList();
+    }
+
+    // JSON stored as text, as sent; absent or null is null
+    private String jsonText(JsonNode node) {
+        return node == null || node.isNull() ? null : json.writeValueAsString(node);
     }
 
     /**
