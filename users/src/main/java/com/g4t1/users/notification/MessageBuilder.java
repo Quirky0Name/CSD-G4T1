@@ -37,8 +37,10 @@ public class MessageBuilder {
         lines.add("");
         lines.add("Change: " + event.changeSeverity());
         lines.add(event.changeSummary());
-        if (event.impactLevel() != null) {
+        if (event.impactLevel() != null || event.evaluation() != null) {
             lines.add("");
+        }
+        if (event.impactLevel() != null) {
             lines.add("Impact on your draft: " + event.impactLevel());
         }
         if (event.evaluation() != null) {

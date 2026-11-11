@@ -250,6 +250,18 @@ class SendNotificationTest {
     }
 
     @Test
+    void aReportWithAnEvaluationButNoImpactLevelKeepsTheEvaluationInItsOwnParagraph() throws Exception {
+        Account account = registered();
+        putEmail(account, Map.of("enabled", true, "min_change_severity", "low"));
+
+        postEvent(account.id(), reportEvent("high", "The abstract changed.", null, "Your section 3 is affected.", null))
+                .expectStatus().isOk();
+
+        String body = GreenMailUtil.getBody(mail.getReceivedMessages()[0]).replace("\r\n", "\n");
+        assertThat(body).contains("The abstract changed.\n\nYour section 3 is affected.");
+    }
+
+    @Test
     void theMailEndsWithTheLinkToThePaperWithoutADoubleSlash() throws Exception {
         Account account = registered();
         putEmail(account, Map.of("enabled", true, "min_alert_severity", "low"));
