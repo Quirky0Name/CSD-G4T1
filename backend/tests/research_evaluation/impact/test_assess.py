@@ -797,8 +797,8 @@ def test_non_ascii_answers_are_written_as_they_are():
     assert 'research_interests: ["épidémiologie"]' in block
 
 
-def test_the_prompt_version_is_5():
-    assert PROMPT_VERSION == 5
+def test_the_prompt_version_is_6():
+    assert PROMPT_VERSION == 6
 
 
 # Reading the profile in assess: after the gate, next to the draft; a failed read never fails the

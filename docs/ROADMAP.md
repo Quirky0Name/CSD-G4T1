@@ -55,6 +55,21 @@ most needed first within each.
 - [ ] Linking Telegram without typing a chat id (a deep link, `getUpdates` or
   a webhook).
 
+## Chunks and the paper's past
+
+- [ ] **Writing and using profile chunks.** Storage Management stores and
+  searches `profile` chunks, but nothing writes them and impact doesn't
+  search them. Which service embeds a profile, and when, is undecided.
+- [ ] **Draft chunks**: a `draft_id` column and source type, by migration.
+- [ ] **Retrieved chunks in place of whole PDFs.** Step 1 still attaches the
+  current report's PDFs; the past is added beside them.
+- [ ] **A frontend view of a report's `context_chunks`**: open the alert,
+  report, or document PDF at `page`. Nothing shows retrieved chunks to the
+  researcher yet.
+- [ ] **Search across a researcher's papers.** Search is per paper.
+- [ ] **Backfill** of rows stored before V13 (they have no chunks), and
+  embedding snapshots, tracked papers' PDFs and drafts.
+
 ## Frontend and the researcher's view
 
 - [ ] **Return impact's fields to the frontend.** `UserReportResponse`

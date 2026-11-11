@@ -51,7 +51,7 @@ topic discovery) is in [ROADMAP.md](ROADMAP.md).
 |---|---|---|---|
 | User Management | Java 25 + Spring Boot, Postgres, Flyway | `users`, `projects`, `user_profiles`, `refresh_tokens` and `notification_preferences`: register, login, refresh and the JWTs, each researcher's projects, profile and notification preferences, sending their outside notifications, and deleting an account | `users/` |
 | Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls the services at `/api`, `/auth`, `/projects` and `/updating` on its own address (the Vite proxy in development, Caddy in the root stack) | `frontend/csd-frontend-vite/` |
-| Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts, reports and documents, drafts | `storage/` |
+| Storage Management | Java 25 + Spring Boot, Postgres (pgvector), Flyway | all persistence: papers and their PDFs, snapshots, alerts, reports and documents, chunks and their embeddings, drafts | `storage/` |
 | Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact); no database of its own; reads a researcher's profile from User Management | `backend/src/research_evaluation/` |
 | Updating | Python 3.13, FastAPI, APScheduler | the polling job and its small state (`tracked_papers`, `polls`) in its own schema | `backend/src/updating/` |
 
@@ -93,11 +93,15 @@ One poll, end to end:
    grouping the paper's new alerts, posts an `alerts` event to User
    Management for the report's owner, and stores what it fetched as the
    report's documents (Storage Management downloads their PDFs); then
-   **impact** asks Gemini about the report and stores its evaluation (the
-   report becomes `assessed`) and posts a `report_assessed` event with it.
-   A placeholder evaluation is not posted. Research Evaluation only posts
-   the events: User Management applies each channel's thresholds, builds the
-   message and sends it (below). A failed post is logged and changes nothing.
+   **impact** reads the paper's past chunks from Storage Management
+   (`POST /internal/chunks/search`), asks Gemini about the report and stores
+   its evaluation (the report becomes `assessed`) and posts a `report_assessed`
+   event with it. A placeholder evaluation is not posted. After the evaluation
+   is stored, the report's, its alerts' and its documents' chunks are embedded
+   (Gemini) and stored (`PUT /internal/chunks`), so a later report's impact
+   finds them. Research Evaluation only posts the events: User Management
+   applies each channel's thresholds, builds the message and sends it (below).
+   A failed post is logged and changes nothing.
 5. The **frontend** reads alerts and reports from Storage Management; the
    researcher acknowledges or dismisses them. The shared refresh of
    papers, alerts and reports runs every 30 s only while a user is signed
@@ -232,10 +236,12 @@ diagram, up to V9: [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html); V
 | `alerts` | detected change on a paper (type, `change_key`, rule-based alert severity and text, the researcher's status, `report_id`) | V3, V7, V9 |
 | `snapshots` | snapshot Updating sent (insert-only, the full snapshot history per paper) | V4, V9 |
 | `drafts` | project's draft PDF | V6, V9 |
-| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation) | V7, V8 |
+| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation, the `context_chunks` impact added to its prompt) | V7, V8, V14 |
 | `report_documents` | DOI fetched for a report (notice, new version, related document, current copy) | V7 |
+| `chunks` | embedded piece of an alert's, report's, document's or profile's text (`vector(1536)`, HNSW cosine index); `paper_id` null for profile chunks | V13 |
 
-Everything referring to a paper is deleted with it. PDFs are files in
+Everything referring to a paper is deleted with it (a profile's chunks, which
+have no paper, with their user). PDFs are files in
 `UPLOAD_DIR`, never in Postgres.
 
 Updating's own schema (`updating`, Alembic): `tracked_papers` (`paper_id`,
