@@ -125,11 +125,15 @@ async def notify_alerts(
     """Posts the report's alerts to its owner; User Management decides how to tell them."""
     if context.um is None:
         return
-    opened = await read_report(sm, report.id)
+    try:
+        opened = await read_report(sm, report.id)
+        details = await paper_details(sm, paper.paper_id)
+    except Exception as exc:  # noqa: BLE001 telling the owner must not leave the report uninvestigated
+        log.warning("reading report %s for its notification failed: %s", report.id, _cause(exc))
+        return
     if opened.owner_id is None:
         log.info("report %s has no owner: its alerts are not posted", report.id)
         return
-    details = await paper_details(sm, paper.paper_id)
     await notify_quietly(
         context.um,
         opened.owner_id,

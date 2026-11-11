@@ -843,3 +843,19 @@ async def test_a_report_with_no_owner_posts_nothing_and_is_still_finished(
     assert "report 1 has no owner" in caplog.text
     del sm.transport.faults[("GET", "/internal/reports/1")]
     assert (await read_report(sm, paper, 1))["status"] == "investigated"
+
+
+async def test_storage_management_failing_on_the_notification_reads_still_finishes_the_report(
+    client, sm, um, external, caplog
+):
+    external.crossref[RETRACTION_NOTICE] = "ijaa_notice"
+    paper = await changed_paper(sm, **retraction_and_correction())
+    sm.transport.faults[("GET", "/internal/reports/1")] = 500
+
+    with caplog.at_level(logging.WARNING, logger="research_evaluation.investigation.run"):
+        await nudge(client, [paper])
+
+    assert um.requests == []
+    assert "reading report 1 for its notification failed: Storage Management answered 500" in caplog.text
+    del sm.transport.faults[("GET", "/internal/reports/1")]
+    assert (await read_report(sm, paper, 1))["status"] == "investigated"
