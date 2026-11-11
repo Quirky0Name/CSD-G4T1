@@ -227,6 +227,22 @@ async def test_nothing_found_or_no_embedder_is_none(sm, mock_sm):
     assert section(llm.parts[ChangeAssessment]) == []
 
 
+async def test_nothing_to_search_with_is_none(sm, mock_sm):
+    # no alerts and no notice text: the query would be empty, so nothing is embedded or searched
+    report = {**report_json(sample_inputs()), "alerts": []}
+    report["documents"] = [
+        {**document, "text": None} for document in report["documents"]
+    ]
+    mock_sm.get(f"/internal/reports/{REPORT}").respond(200, json=report)
+    embedder = FakeEmbedder()
+
+    await assess_report(sm, ImpactContext(RecordingLlm(), embedder=embedder), REPORT)
+
+    assert [task for _, task in embedder.calls if task == "query"] == []
+    assert mock_sm.routes["search"].calls.call_count == 0
+    assert sent_evaluation(mock_sm)["assessment"]["history"] == "none"
+
+
 async def test_no_embedder_reads_no_history(sm, mock_sm):
     await assess_report(sm, ImpactContext(RecordingLlm()), REPORT)
 

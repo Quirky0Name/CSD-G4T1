@@ -50,10 +50,12 @@ async def read_history(
     sm: httpx.AsyncClient, embedder: Embedder | None, report: Report
 ) -> History:
     """The paper's past nearest to this report. Never raises."""
-    if embedder is None:
+    text = query_text(report)
+    # no embedder, or nothing to search with (no alerts and no notice text): nothing is found
+    if embedder is None or not text.strip():
         return History("none")
     try:
-        [query] = await embedder.embed([query_text(report)], "query")
+        [query] = await embedder.embed([text], "query")
         found = [
             chunk
             for source_type, limit in LIMITS.items()
