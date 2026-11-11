@@ -143,12 +143,7 @@ async def notify_alerts(
             "paper": paper_body(paper.paper_id, details),
             "report_id": report.id,
             "alerts": [
-                {
-                    "id": alert.id,
-                    "change_type": alert.change_type,
-                    "alert_severity": alert.alert_severity,
-                    "description": alert.description,
-                }
+                alert.model_dump(include={"id", "change_type", "alert_severity", "description"})
                 for alert in opened.alerts
             ],
         },
