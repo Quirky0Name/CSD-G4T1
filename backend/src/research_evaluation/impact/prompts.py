@@ -18,7 +18,7 @@ from research_evaluation.impact.llm import Part, Pdf
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 12
+PROMPT_VERSION = 13
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -47,30 +47,40 @@ Rules:
   the material itself (notices, PDFs, alert lines, the draft), never an
   earlier step's own wording or a field name this prompt adds (such as
   update_to_includes_paper).
-- A claim states one fact, and each of its quotes must show that whole fact
-  to someone who reads only the claim and the quote. A reason, a consequence
-  or a second fact is another claim: "retracted because the data were
-  fabricated" needs the sentence that gives the reason, not only "has been
-  retracted".
+- A claim states one fact, and its quotes together must show that whole fact
+  to someone who reads only the claim and the quotes; each quote shows some
+  of it. When one quote can't hold the whole fact (it would run past 30
+  words, or the source splits it, such as a notice naming "the following
+  result" and then quoting it), give each piece as its own quote, or split
+  the claim into one claim per piece. A reason, a consequence or a second
+  fact is another claim: "retracted because the data were fabricated" needs
+  the sentence that gives the reason, not only "has been retracted".
 - Your own conclusions are facts to back too ("the whole paper is affected",
-  "the main findings stand", "this use is touched", "the method rests on
-  it"), and so is every "so" or "because" clause. Give each its own claim,
-  worded no wider than its quote, and quote the sentence that comes closest
-  to stating it: for "the main findings stand", a notice's "all other results
-  are unchanged". When no quote comes close, narrow the statement until one
-  does, or cut it.
+  "the main findings stand", "this use is touched", "the impact is low"),
+  and so is every "so" or "because" clause. Give each its own claim. When a
+  quote states it, quote that. When it is drawn from other facts rather
+  than stated anywhere, make it a derived claim: from_claims lists the
+  numbers of the claims it follows from (counting from 1 in this step's
+  claims), each of them quoted or an absence, and its passages stay empty.
+  Word it no wider than those claims and this prompt's rules allow: "this
+  use is touched" from the draft's citing sentence and the notice's
+  retraction of that result. Every other claim has from_claims empty.
 - Words that widen a fact (only, once, twice, both, every, the whole,
-  nothing else) and places
-  in a paper (the abstract, Table 2) are part of the fact: keep them only if
-  the quote shows them. Don't write "the draft cites it once" or "this is
-  the only place the draft cites it": no quote shows a citation is the only
-  one, so say where it cites it and stop there. A place such as "in the
-  abstract" needs a quote that names it, or leave the place out.
+  nothing else) are part of the fact: keep them only if the quotes show
+  them. Don't write "the draft cites it once" or "this is the only place
+  the draft cites it": no quote shows a citation is the only one, so say
+  where it cites it and stop there.
+- To show where something is (a section, the abstract, Table 2), quote the
+  sentence itself, never a heading or a label on its own. A claim may name
+  the section of the draft or paper its quoted sentence sits in; any other
+  place (a table, a figure, "the abstract" for a sentence outside it) needs
+  a quote that names it, or leave the place out.
 - A quote that is only on the same topic backs nothing, so never add one to
   fill passages.
 - A statement that something is missing (no notice, no banner, no reason
   given, no current copy, no draft, no other citation in the draft, no entry
-  in the reference list) is a claim of its own with empty passages and
+  in the reference list, no difference between the current copy and the
+  stored paper) is a claim of its own with empty passages and
   absence true, saying only that. A consequence of it is another claim.
   Never quote what is there to show what isn't: a reference list's entries
   don't show another is missing. Every other claim has absence false.
@@ -85,8 +95,9 @@ Rules:
   to do or check) lists no claims.
 - A verdict is a fact: "the draft is not affected", "the impact is low",
   "both depend on it", "the headline result rests on that data". It needs a
-  claim whose quote shows it, or it comes out. Never drop a fact the task
-  asks for: back it with the quote that comes closest to stating it.
+  claim: one whose quotes show it, or a derived claim naming the claims it
+  follows from. Never drop a fact the task asks for: when no quote states
+  it, derive it.
 - Link a change to the draft by naming the shared fact, not by a verdict:
   "your Introduction quotes the d = 1.8 that the correction changes to
   0.8", which is two claims (the draft's sentence, the notice's), not "the
@@ -263,11 +274,13 @@ uses, and how much the researcher is affected overall.
    passage of it that sentence relies on (source "stored paper"). Word the
    use claim with the citation as the draft writes it ("cites [12]", "cites
    Lee, 2019") and only what the citing sentence shows; don't claim that a
-   reference entry is the tracked paper, which no quote can show. Then,
-   instead of a claim that the change touches or doesn't
-   touch the use, write one claim on what changed in the part that use
-   relies on, worded as CHANGE's quote words it and copying that quote ("the
-   notice says the conclusions cannot be relied on"). When you copy from
+   reference entry is the tracked paper, which no quote can show. Then
+   write one claim on what changed in the part that use relies on, worded
+   as CHANGE's quote words it and copying that quote ("the notice says the
+   conclusions cannot be relied on"), and whether the change touches the
+   use as a derived claim from the use claim and that one. The impact level
+   is a derived claim too, from the claims on the uses and the change, by
+   the table above. When you copy from
    CHANGE's claims, copy only a quote that shows your claim's fact. A paper
    the draft doesn't cite is a missing-entry claim, with empty passages, and
    the explanation then says only that the draft doesn't cite it: no
@@ -323,7 +336,9 @@ including the facts its advice rests on. text: the statement; passages: the
 quotes from the CHANGE and IMPACT claims that show that statement, copied
 with their sources; leave out the ones that don't. Copy only those claims'
 passages, never IMPACT's explanation or a use's reason. A claim of theirs
-with no passages (something missing) is copied with none.
+with no passages (something missing) is copied with none. A derived claim
+of theirs is copied as a derived claim whose from_claims names your copies
+of the claims it follows from.
 
 recommendation: two to four sentences with the gist of the actions: each
 piece of advice is an advice sentence, and the fact it rests on is a fact

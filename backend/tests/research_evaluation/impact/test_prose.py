@@ -59,3 +59,9 @@ def test_kept_gives_the_sentences_the_stored_text_keeps():
 def test_a_claim_states_no_absence_unless_the_model_says_so():
     assert Claim(text="The paper was retracted.", passages=[]).absence is False
     assert Claim.model_validate({"text": "No notice was given.", "passages": [], "absence": True}).absence
+
+
+def test_a_claim_is_quoted_not_derived_unless_the_model_names_claims():
+    assert Claim(text="The paper was retracted.", passages=[]).from_claims == []
+    derived = Claim.model_validate({"text": "The impact is low.", "passages": [], "from_claims": [1, 2]})
+    assert derived.from_claims == [1, 2]

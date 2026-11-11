@@ -64,7 +64,7 @@ def load_env(keys: tuple[str, ...]) -> None:
     env = ROOT.parent / ".env"
     if not env.exists():
         return
-    for line in env.read_text().splitlines():
+    for line in env.read_text(encoding="utf-8").splitlines():
         key, sep, value = line.partition("=")
         if sep and key.strip() in keys:
             os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
@@ -311,9 +311,9 @@ def fake_storage(draft: bytes | None) -> httpx.AsyncClient:
 def record_run(out_dir: Path, name: str, entry: dict) -> None:
     """Adds a run's entry to <out_dir>/meta.json, replacing the entry of a run that is re-run."""
     path = out_dir / "meta.json"
-    meta = json.loads(path.read_text()) if path.exists() else {"runs": {}}
+    meta = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"runs": {}}
     meta["runs"][name] = entry
-    path.write_text(json.dumps(meta, indent=2))
+    path.write_text(json.dumps(meta, indent=2), encoding="utf-8")
 
 
 def prompt_texts() -> dict[str, str]:
@@ -362,7 +362,7 @@ async def run_case(
     async with fake_storage(draft) as sm:
         evaluation = await assess(llm, sm, inputs)
     body = evaluation.model_dump(mode="json")
-    (out_dir / f"{name}.json").write_text(json.dumps(body, indent=2))
+    (out_dir / f"{name}.json").write_text(json.dumps(body, indent=2), encoding="utf-8")
     record_run(out_dir, name, entry)
     a = body["assessment"]
     print(
@@ -377,7 +377,7 @@ def saved(out_dir: Path, name: str) -> bool:
     if not path.exists():
         return False
     try:
-        return not json.loads(path.read_text())["assessment"]["placeholder"]
+        return not json.loads(path.read_text(encoding="utf-8"))["assessment"]["placeholder"]
     except (json.JSONDecodeError, KeyError, TypeError):
         return False
 
@@ -457,7 +457,7 @@ def failed_runs(out_dir: Path, names: list[str]) -> list[tuple[str, str]]:
         path = out_dir / f"{name}.json"
         if not path.exists():
             continue
-        a = json.loads(path.read_text())["assessment"]
+        a = json.loads(path.read_text(encoding="utf-8"))["assessment"]
         if a["placeholder"]:
             causes = "; ".join(f"{f['model']}: {f['cause']}" for f in a.get("failures") or [])
             out.append((name, f"step {a.get('failed_step')}: {causes}"))
@@ -487,7 +487,7 @@ async def main() -> None:
         for path in sorted((ROOT / "cases").glob("*.json")):
             if args.cases and path.stem not in args.cases:
                 continue
-            inputs, draft = build_inputs(json.loads(path.read_text()))
+            inputs, draft = build_inputs(json.loads(path.read_text(encoding="utf-8")))
             prompt = prompts.change_prompt(inputs)
             print(
                 f"{path.stem}: alerts={len(inputs.report.alerts)} documents={len(inputs.report.documents)} "

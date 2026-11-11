@@ -56,7 +56,7 @@ def get_span(scores: list[float]) -> str:
 
 
 def load_runs(folder: Path) -> list[dict]:
-    cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
+    cases = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in (ROOT / "cases").glob("*.json")}
     runs = []
     for path in score.run_paths(folder):
         name, _, number = path.stem.partition("__run")
@@ -186,7 +186,7 @@ def main() -> None:
     summary_text = "\n".join(summary_lines)
     
     print(f"\n{'='*20} FINAL SUMMARY {'='*20}\n{summary_text}")
-    (folder / "summary.txt").write_text(summary_text + "\n")
+    (folder / "summary.txt").write_text(summary_text + "\n", encoding="utf-8")
     print(f"\n💾 Saved summary to: {folder / 'summary.txt'}")
 
     # Always run score.py at the end: the grid, the per-category table and the diagnostics

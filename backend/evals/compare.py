@@ -24,7 +24,7 @@ def load(folder: Path) -> tuple[dict[str, list[dict]], dict | None]:
     """The folder's scored runs by case, and its meta.json (None for a folder made before it)."""
     by_case = score.group_by(orchestrator.load_runs(folder), "case")
     meta_path = folder / "meta.json"
-    meta = json.loads(meta_path.read_text()) if meta_path.exists() else None
+    meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else None
     return dict(by_case), meta
 
 

@@ -7,6 +7,7 @@ the PDF from the first two and attaches a real one as it is; a real PDF's text i
 <same stem>.txt beside it, made by evals/real/extract.py. Standard library only: judge.py
 imports this and needs neither rich nor research_evaluation."""
 
+import re
 from pathlib import Path
 
 # where the real PDFs (`*_file`) and their extracted .txt texts are
@@ -80,3 +81,60 @@ def draft_text(case: dict) -> str | None:
 def pdf_text(document: dict) -> str | None:
     """The text of the PDF stored for a document; None when it has none."""
     return _text(document, "pdf")
+
+
+# a heading line in a `*_text` field: a numbered one ("4. Discussion", "1.1 Scope") or a plain name
+_HEADING_NUMBER = re.compile(r"^\d+(\.\d+)*\.?\s+\S")
+_HEADING_NAMES = {"abstract", "introduction", "background", "methods", "results", "discussion",
+                  "conclusion", "conclusions", "references"}
+
+
+def _is_heading(line: str) -> bool:
+    line = line.strip()
+    return bool(line) and len(line) <= 80 and not line.endswith((".", ":")) and (
+        bool(_HEADING_NUMBER.match(line)) or line.lower() in _HEADING_NAMES
+    )
+
+
+def _sections(holder: dict, field: str) -> list[tuple[str | None, str]]:
+    """`(heading, text)` for each part of a `*_text` or `*_doc` field, in order; the part before
+    the first heading has none. A `*_file` (a real PDF) has no reliable headings: none."""
+    kind = form(holder, field)
+    if kind == "doc":
+        doc = holder[f"{field}_doc"]
+        parts = [(ABSTRACT, doc["abstract"])] if doc.get("abstract") else []
+        for section in doc["sections"]:
+            body = [section.get("text")]
+            if table := section.get("table"):
+                body += [table.get("caption"), *(" ".join(row) for row in table["rows"])]
+            if figure := section.get("figure"):
+                body.append(figure.get("caption"))
+            parts.append((section.get("heading"), "\n".join(b for b in body if b)))
+        if doc.get("references"):
+            parts.append((REFERENCES, "\n".join(doc["references"])))
+        return parts
+    if kind == "text":
+        parts: list[tuple[str | None, list[str]]] = [(None, [])]
+        for line in holder[f"{field}_text"].split("\n"):
+            if _is_heading(line):
+                parts.append((line.strip(), []))
+            else:
+                parts[-1][1].append(line)
+        return [(h, "\n".join(lines)) for h, lines in parts]
+    return []
+
+
+def _flat(text: str) -> str:
+    return " ".join(text.split()).casefold()
+
+
+def section_of(case: dict, target: str | None, quote: str) -> str | None:
+    """The heading of the part of the draft (`target` "draft") or stored paper ("paper") that
+    `quote` sits in, when the case gives that text with headings; else None."""
+    if target not in ("draft", "paper"):
+        return None
+    wanted = _flat(quote)
+    for heading, text in _sections(case, target):
+        if heading and wanted and wanted in _flat(text):
+            return heading
+    return None

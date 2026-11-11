@@ -37,11 +37,14 @@ class Claim(_Answer):
     """One factual statement of a step's answer and the quotes behind it (docs/EVALUATION.md,
     "Impact"). A claim is about anything the step says, not tied to an alert, use or action;
     a statement with nothing to quote has no passages. `absence` is the model saying the claim
-    states only that something is missing from the material, so it has nothing to quote."""
+    states only that something is missing from the material, so it has nothing to quote.
+    `from_claims` makes it a derived claim: a conclusion (a level, "this use is touched") drawn
+    from the claims it names, numbered from 1 in the same step's list, rather than quoted."""
 
     text: str
     passages: list[Evidence]
     absence: bool = False
+    from_claims: list[int] = []
 
 
 # every step states at least one thing, so an empty list is an answer that doesn't fit

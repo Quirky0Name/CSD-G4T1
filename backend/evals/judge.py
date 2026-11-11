@@ -47,7 +47,9 @@ from pydantic import BaseModel, ConfigDict, StringConstraints, ValidationError, 
 ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT.parent / "src"))
 
+import case_text
 import claude_llm
+import score
 from claude_llm import ApiStopped, ClaudeLimitReached, NotOnSubscription
 
 from research_evaluation.impact.llm import AllModelsFailed
@@ -103,8 +105,17 @@ class Verdicts(BaseModel):
 PASSAGE_SYSTEM = """You check an AI assistant's claims and the passages it quoted for them. \
 Use only what is given; do not use outside knowledge. For each numbered PASSAGE, give a short \
 reason, then `backs`: true if the quoted words, read on their own and knowing where they come \
-from, show what the claim states, false if they don't (they are about something else, say less, \
-or contradict it). A quote from the researcher's draft can show what the draft says. Then list \
+from, show all or part of what the claim states, false if they show none of it (they are about \
+something else, only on the same topic, or contradict it). A quote from the researcher's draft \
+can show what the draft says. A passage shown "under" a heading sits in that part of its \
+document, so a claim may name that part. Then, for each claim listed under QUOTED CLAIMS, give a \
+short reason and `backed`: true if its passages together show everything the claim states, \
+false if any part of it (a number, a place, a reason, a word such as "only" or "whole") is in \
+none of them. Then, for each claim listed under DERIVED CLAIMS, give a short reason and \
+`follows`: true if it follows from the claims it names, adding no fact they don't give, false \
+if it says more than they support. A level (none, low, medium, high) comes from the \
+assistant's own rubric, which you don't have: accept one when the named claims give the facts \
+it rests on (how the draft uses the paper, what changed). Then list \
 each factual statement in the ANSWER's change_summary, evaluation and recommendation, with its \
 field, and `covered_by`: the numbers of the CLAIMS that state it (empty if no claim does). A \
 factual statement is one the source documents could show true or false. Advice, instructions and \
@@ -137,8 +148,22 @@ class StatementVerdict(BaseModel):
     covered_by: list[int]
 
 
+class ClaimVerdict(BaseModel):
+    n: int
+    reason: str
+    backed: bool
+
+
+class DerivedVerdict(BaseModel):
+    n: int
+    reason: str
+    follows: bool
+
+
 class PassageVerdicts(BaseModel):
     passages: list[PassageVerdict]
+    claims: list[ClaimVerdict]
+    derived: list[DerivedVerdict]
     statements: list[StatementVerdict]
     absences: list[int]
 
@@ -146,7 +171,7 @@ class PassageVerdicts(BaseModel):
 def load_env(keys: tuple[str, ...]) -> None:
     env = ROOT.parent / ".env"
     if env.exists():
-        for line in env.read_text().splitlines():
+        for line in env.read_text(encoding="utf-8").splitlines():
             key, sep, value = line.partition("=")
             if sep and key.strip() in keys:
                 os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
@@ -209,26 +234,49 @@ def numbered_passages(ev: dict) -> list[tuple[int, dict]]:
     return [(i, p) for i, claim in enumerate(ev["claims"]) for p in claim["passages"]]
 
 
-def passage_prompt(ev: dict) -> str:
-    claims = [
-        f"{i}. {c['text']}" + ("" if c["passages"] else " (no passages)")
-        for i, c in enumerate(ev["claims"], 1)
-    ]
+def passage_prompt(ev: dict, case: dict | None = None) -> str:
+    """The claims grading's prompt. Claims are numbered from 1 across the run; a derived claim
+    names the claims it follows from by those numbers; a draft or paper passage says which
+    section of the case's text it sits in, when the case gives headings."""
+    number = {c["id"]: n for n, c in enumerate(ev["claims"], 1)}
+    derived = {
+        cid: [number[s] for s in sources if s in number]
+        for cid, sources in score.derived_claims(ev).items() if cid in number
+    }
+
+    def label(c: dict) -> str:
+        if c["id"] in derived:
+            return " (derived from claims " + ", ".join(map(str, derived[c["id"]])) + ")"
+        return "" if c["passages"] else " (no passages)"
+
+    def where(p: dict) -> str:
+        source = PASSAGE_SOURCES.get(p.get("target"), "an unknown source")
+        heading = case_text.section_of(case, p.get("target"), p["quote"]) if case else None
+        return f'{source}, under "{heading}"' if heading else source
+
+    claims = [f"{n}. {c['text']}{label(c)}" for n, c in enumerate(ev["claims"], 1)]
     passages = [
-        f"{n}. for claim {i + 1}, from {PASSAGE_SOURCES.get(p.get('target'), 'an unknown source')}: \"{p['quote']}\""
+        f"{n}. for claim {i + 1}, from {where(p)}: \"{p['quote']}\""
         for n, (i, p) in enumerate(numbered_passages(ev), 1)
     ]
+    quoted = [str(number[c["id"]]) for c in ev["claims"] if c["passages"]]
     return (
         f"ANSWER\n{answer(ev)}\n\n"
         "CLAIMS\n" + "\n".join(claims) + "\n\n"
-        "PASSAGES (return one item per number)\n" + ("\n".join(passages) or "(none)")
+        "PASSAGES (return one item per number)\n" + ("\n".join(passages) or "(none)") + "\n\n"
+        "QUOTED CLAIMS (return one item per number): " + (", ".join(quoted) or "(none)") + "\n"
+        "DERIVED CLAIMS (return one item per number): "
+        + (", ".join(str(number[cid]) for cid in derived) or "(none)")
     )
 
 
 def passage_grade(ev: dict, verdicts: PassageVerdicts) -> dict:
-    """The code's decision on the judge's report: a passage passes when the judge says it backs
-    its claim (one the judge skipped fails); a statement passes when at least one claim that
-    exists covers it. An absence counts only for a claim that exists and has no passage."""
+    """The code's decision on the judge's report: a passage passes when the judge says it shows
+    some of its claim, a quoted claim when its passages together show all of it, and a derived
+    claim when it follows from the claims it names (one the judge skipped fails); a statement
+    passes when at least one claim that exists covers it. An absence counts only for a claim
+    that exists and has no passage. With no draft read, the evaluation's statements aren't
+    graded: it is a general judgment, with nothing of the researcher's to quote."""
     said = {v.n: v for v in verdicts.passages}
     claims = ev["claims"]
     passages = []
@@ -243,10 +291,41 @@ def passage_grade(ev: dict, verdicts: PassageVerdicts) -> dict:
                 "reason": verdict.reason if verdict else "",
             }
         )
+    backed = {v.n: v for v in verdicts.claims}
+    quoted = []
+    for n, c in enumerate(claims, 1):
+        if c["passages"]:
+            verdict = backed.get(n)
+            quoted.append(
+                {
+                    "claim_id": c["id"],
+                    "backed": verdict.backed if verdict else None,
+                    "pass": verdict is not None and verdict.backed,
+                    "reason": verdict.reason if verdict else "",
+                }
+            )
+    follows = {v.n: v for v in verdicts.derived}
+    sources = score.derived_claims(ev)
+    derived = []
+    for n, c in enumerate(claims, 1):
+        if c["id"] in sources:
+            verdict = follows.get(n)
+            derived.append(
+                {
+                    "claim_id": c["id"],
+                    "from": sources[c["id"]],
+                    "follows": verdict.follows if verdict else None,
+                    "pass": verdict is not None and verdict.follows,
+                    "reason": verdict.reason if verdict else "",
+                }
+            )
+    draft_read = ev["assessment"].get("draft") == "read"
     statements = []
     for s in verdicts.statements:
         # the judge sometimes lists an empty field's "(none)" as a statement; it has none
         if not ev.get(s.field) or s.statement.strip() == "(none)":
+            continue
+        if s.field == "evaluation" and not draft_read:
             continue
         covered = [claims[k - 1]["id"] for k in s.covered_by if 1 <= k <= len(claims)]
         statements.append(
@@ -257,7 +336,13 @@ def passage_grade(ev: dict, verdicts: PassageVerdicts) -> dict:
         for k in verdicts.absences
         if 1 <= k <= len(claims) and not claims[k - 1]["passages"]
     ]
-    return {"passages": passages, "statements": statements, "absent_claims": absent}
+    return {
+        "passages": passages,
+        "claims": quoted,
+        "derived": derived,
+        "statements": statements,
+        "absent_claims": absent,
+    }
 
 
 async def ask(client, model: str, system: str, contents: str, schema: type[BaseModel]) -> str:
@@ -361,14 +446,14 @@ async def main() -> None:
     load_env(keys)
     model = os.environ.get("JUDGE_MODEL") or DEFAULT_MODELS[args.provider]
     folder = Path(args.folder) if args.folder else max((ROOT / "results").glob("*"))
-    cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
+    cases = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in (ROOT / "cases").glob("*.json")}
     if bad := check_rubrics(cases):
         sys.exit("cases break the rubric contract (docs/EVALUATION.md, \"A case\"):\n  " + "\n  ".join(bad))
     runs = []
     for path in sorted(folder.glob("*__run*.json")):
         if ".judge" in path.name:
             continue  # a grade, not a run (same run list as score.run_paths)
-        runs.append((path, json.loads(path.read_text())))
+        runs.append((path, json.loads(path.read_text(encoding="utf-8"))))
     if same := [p.stem for p, ev in runs if ev["assessment"].get("model") == model]:
         parser.error(
             f"the judge model {model!r} is the tested model of {', '.join(same)}: "
@@ -404,7 +489,7 @@ async def main() -> None:
 
 async def judge_run(judge: Judge, cases: dict, path: Path, ev: dict, args: argparse.Namespace) -> None:
     out_path = grade_path(path, args.label)
-    existing = json.loads(out_path.read_text()) if out_path.exists() else None
+    existing = json.loads(out_path.read_text(encoding="utf-8")) if out_path.exists() else None
     # --redo grades again; a run graded before claims were judged gets only that grading
     grade_facts = existing is None or args.redo
     grade_claims = ev.get("claims") is not None and (grade_facts or "passages" not in existing)
@@ -412,9 +497,10 @@ async def judge_run(judge: Judge, cases: dict, path: Path, ev: dict, args: argpa
         return
     out = existing if not grade_facts else await grade(judge, cases, path, ev)
     if grade_claims:
-        text = await judge.ask(PASSAGE_SYSTEM, passage_prompt(ev), PassageVerdicts)
+        case = cases[path.name.split("__")[0]]
+        text = await judge.ask(PASSAGE_SYSTEM, passage_prompt(ev, case), PassageVerdicts)
         out |= passage_grade(ev, PassageVerdicts.model_validate_json(text))
-    out_path.write_text(json.dumps(out, indent=2))
+    out_path.write_text(json.dumps(out, indent=2), encoding="utf-8")
     facts = f"{sum(i['pass'] for i in out['items'])}/{len(out['items'])} facts met"
     if "passages" in out:
         backed = sum(p["pass"] for p in out["passages"])
