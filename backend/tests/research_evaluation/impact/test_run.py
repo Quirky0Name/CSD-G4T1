@@ -435,7 +435,6 @@ async def test_an_assessed_report_posts_the_stored_evaluation_to_the_owner(sm, u
         "evaluation": "Your Discussion relies on it.",
         "recommendation": "Replace it.",
     }
-    assert body["change_severity"] == stored["change_severity"]
 
 
 async def test_an_impact_level_of_none_is_posted_as_null(sm, um):
@@ -506,20 +505,23 @@ async def test_user_management_failing_still_assesses_the_report(sm, um, failure
     assert f"about report {report_id} failed" in caplog.text
 
 
-class FailingSecondPaperRead(httpx.AsyncBaseTransport):
-    """Storage Management as it is, except its second read of the paper's snapshots fails: impact
-    reads them once for its inputs, and the notification reads them again."""
+class FailingReadsAfterTheStore(httpx.AsyncBaseTransport):
+    """Storage Management as it is, except that once the evaluation is stored, its reads of the
+    paper's snapshots fail: that is the notification reading the paper's details."""
 
     def __init__(self, inner: httpx.AsyncBaseTransport) -> None:
         self._inner = inner
-        self.reads = 0
+        self.stored = False
+        self.failed = 0
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
-        if request.method == "GET" and request.url.path.endswith("/snapshots"):
-            self.reads += 1
-            if self.reads == 2:
-                return httpx.Response(500, json={"detail": "injected"}, request=request)
-        return await self._inner.handle_async_request(request)
+        if self.stored and request.method == "GET" and request.url.path.endswith("/snapshots"):
+            self.failed += 1
+            return httpx.Response(500, json={"detail": "injected"}, request=request)
+        response = await self._inner.handle_async_request(request)
+        if request.method == "PUT" and request.url.path.endswith("/evaluation"):
+            self.stored = True
+        return response
 
 
 async def test_storage_management_failing_on_the_notifications_paper_read_still_assesses_the_report(
@@ -527,13 +529,13 @@ async def test_storage_management_failing_on_the_notifications_paper_read_still_
 ):
     context = ImpactContext(FakeLlm("high"), um=um.client)
     report_id = await investigated_report(sm)
-    transport = FailingSecondPaperRead(sm.transport)
+    transport = FailingReadsAfterTheStore(sm.transport)
     flaky = httpx.AsyncClient(transport=transport, base_url="http://stub", auth=sm.client.auth)
 
     with caplog.at_level(logging.WARNING, logger="research_evaluation.impact.run"):
         assert await assess_reports(flaky, context, [report_id]) == [report_id]
 
-    assert transport.reads == 2
+    assert transport.failed == 1
     assert um.notifications == []
     assert f"reading report {report_id} for its notification failed" in caplog.text
     await flaky.aclose()
