@@ -18,7 +18,7 @@ from research_evaluation.impact.llm import Part, Pdf
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 10
+PROMPT_VERSION = 11
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -62,8 +62,10 @@ Rules:
 - Words that widen a fact (only, once, twice, both, every, the whole,
   nothing else) and places
   in a paper (the abstract, Table 2) are part of the fact: keep them only if
-  the quote shows them. Don't write "the draft cites it once": say where it
-  cites it.
+  the quote shows them. Don't write "the draft cites it once" or "this is
+  the only place the draft cites it": no quote shows a citation is the only
+  one, so say where it cites it and stop there. A place such as "in the
+  abstract" needs a quote that names it, or leave the place out.
 - A quote that is only on the same topic backs nothing, so never add one to
   fill passages.
 - A statement that something is missing (no notice, no banner, no reason
@@ -300,8 +302,9 @@ pick from what fits:
 - a correction or erratum changed numbers or figures the draft quotes:
   update them and cite the correction;
 - an expression of concern about something the draft relies on: hedge the
-  wording and don't build new work on it; tracking continues, so a
-  retraction would raise a new alert;
+  wording and don't build new work on it; that tracking continues, so a
+  retraction would raise a new alert, is about this assistant, not the
+  paper: write it as an advice sentence, never as a fact or a claim;
 - a retraction and replacement, or a new version: cite the corrected or new
   version, after checking the finding still holds there;
 - a retraction known only from a flag, with no notice: check the journal's
