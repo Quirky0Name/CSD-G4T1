@@ -1,7 +1,7 @@
 # Outside notifications by email and Telegram
 
 **Status:** approved
-**Base commit:** not set
+**Base commit:** 0758864586f2834e6849ff98fd13735ba2bdc05b
 **Repo:** `D:\SMU\CS203\project\CSD-G4T1`
 **Context file to update:** none named
 
@@ -30,7 +30,8 @@ calling an endpoint that doesn't exist yet.
 
 External blockers:
 - Human checks need a real Telegram bot token (BotFather) and SMTP
-  credentials. The automated tests need neither.
+  credentials. The automated tests need neither, so this blocks only the
+  Human checks below, not the run (user, 2026-11-11: "proceed with it all").
 
 Git state: on `feat/external-notif` (not `main`), working tree clean.
 
@@ -40,7 +41,14 @@ Starting branch: `feat/external-notif`
 
 | Order | Branch | Based on | Subtasks |
 |---|---|---|---|
-| 1 | `feat/external-notif` | none | S1, S2, S3 |
+| 1 | `feat/external-notif` | none | S1 |
+| 2 | `feat/external-notif-send` | `feat/external-notif` | S2 |
+| 3 | `feat/external-notif-research-evaluation` | `feat/external-notif-send` | S3 |
+
+One subtask per branch (user, 2026-11-11: "split into a chain of three
+branches"), so each stays under the 500-line PR limit and passes the full
+suite at its tip: S1 alone is a working preferences API, S2 adds sending on
+top of it, and S3 only calls the endpoint S2 makes.
 
 ## Out of scope
 
@@ -266,8 +274,8 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
   sends a test message. The root stack passes the mail and Telegram
   settings to User Management.
 - **Blocked by:** S1
-- **Branch:** `feat/external-notif`
-- **Order on branch:** 2
+- **Branch:** `feat/external-notif-send`
+- **Order on branch:** 1
 - **Files:** `users/pom.xml` (`spring-boot-starter-mail`; GreenMail as a
   test dependency), `users/src/main/java/com/g4t1/users/notification/`
   (`InternalNotificationController`, `NotificationSender`, `EmailChannel`,
@@ -402,8 +410,8 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
   report's owner. A failed post never changes investigation or impact.
 - **Blocked by:** none (tests against the Interface with a fake User
   Management)
-- **Branch:** `feat/external-notif`
-- **Order on branch:** 3
+- **Branch:** `feat/external-notif-research-evaluation`
+- **Order on branch:** 1
 - **Files:** `backend/src/research_evaluation/users.py`,
   `backend/src/research_evaluation/investigation/run.py`,
   `backend/src/research_evaluation/impact/run.py`,
