@@ -84,6 +84,15 @@ class RecommendedActions(_Answer):
     recommendation: str
 
 
+class ContextChunk(BaseModel):
+    """A past chunk added to the prompt: enough to find it again (a document's PDF at `page`, or
+    the alert or report in the paper's report list)."""
+
+    source_type: str
+    source_id: str
+    page: int | None = None
+
+
 class Evaluation(BaseModel):
     """The body of `PUT /internal/reports/{id}/evaluation`. With change_severity none only the
     summary and change severity are set (and assessment); the rest stays null."""
@@ -94,3 +103,5 @@ class Evaluation(BaseModel):
     evaluation: str | None = None
     recommendation: str | None = None
     assessment: dict[str, Any]
+    # the past chunks steps 1 and 2 were given, in prompt order, so a frontend can show them (I5)
+    context_chunks: list[ContextChunk] = []
