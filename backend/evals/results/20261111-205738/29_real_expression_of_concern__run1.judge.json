@@ -1,0 +1,221 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the expression of concern states that Fig. 7 does not show LSD1 siRNA data, so the H460 knockdown migration result is not supported",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The notice says Fig. 7 does not report data for an LSD1 siRNA experiment, and that the result that LSD1 siRNA reduced migrated H460 cells is not supported"
+    },
+    {
+      "fact": "says the draft's Aim 2 rationale rests on that H460 siRNA migration result",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": ""
+    },
+    {
+      "fact": "advises not resting Aim 2 on this result alone, for example by hedging the wording, adding independent evidence, or presenting the effect as what the planned experiments will test",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "if it cites this paper, hedge the wording that relies on it and don't build new work on its results"
+    },
+    {
+      "fact": "notes that the concern is unresolved (the authors did not respond) and the paper may later be corrected or retracted",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "the authors did not respond or could not be reached; ... a retraction would raise a new alert."
+    },
+    {
+      "fact": "says the paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the draft's use of the migration result is not affected by the concern",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The PLOS ONE Editors issue this Expression of Concern to inform readers of the unresolved issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "States editors issued the Expression of Concern to inform readers of unresolved issues."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "In Fig. 4, when levels are adjusted to visualize background, there appears to be a vertical discontinuity in the LSD1 panel between the 293T and A549 lanes.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly reports the vertical discontinuity in the Fig. 4 LSD1 panel between 293T and A549 lanes."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The expression of LSD1 was lower in the A549 cell than in the H460 cell line, as shown in Figure 4.",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper says LSD1 was lower in A549 than H460, as shown in Figure 4."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "the figure does not report data for an LSD1 siRNA experiment",
+      "backs": true,
+      "pass": true,
+      "reason": "States the figure does not report data for an LSD1 siRNA experiment."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "so the following result statement is not supported",
+      "backs": true,
+      "pass": true,
+      "reason": "Says the following result statement is not supported; together with the quoted result it supports the claim."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "the number and rate of migrated cells was gradually reduced after transfection with LSD1 siRNA plasmid in the H460 cell lines",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives the result statement about LSD1 siRNA reducing migrated H460 cells, which the notice calls unsupported."
+    },
+    {
+      "claim_id": "change-5",
+      "quote": "The article does not report sufficient detail about the controls used in the Flag-LSD1 and LSD1 siRNA transfection experiments to replicate these experiments.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly says insufficient control detail to replicate the Flag-LSD1 and LSD1 siRNA experiments."
+    },
+    {
+      "claim_id": "change-6",
+      "quote": "Similarities were noted between this article [1] and work by other research groups which call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states similarities with other groups' work call into question validity and provenance."
+    },
+    {
+      "claim_id": "change-7",
+      "quote": "The authors did not respond or could not be reached to discuss these issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states authors did not respond or could not be reached."
+    },
+    {
+      "claim_id": "change-8",
+      "quote": "Interruption of LSD1 using siRNA or a chemical inhibitor, pargyline, suppressed proliferation, migration and invasion of A549, H460 and 293T cells.",
+      "backs": true,
+      "pass": true,
+      "reason": "The abstract says siRNA or pargyline interruption suppressed proliferation, migration and invasion."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "The PLOS ONE Editors issue this Expression of Concern to inform readers of the unresolved issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "States editors issued the Expression of Concern to inform readers of unresolved issues."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The authors did not respond or could not be reached to discuss these issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states authors did not respond or could not be reached."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "so the following result statement is not supported",
+      "backs": true,
+      "pass": true,
+      "reason": "Says the following result statement is not supported; paired with the result passage it supports the claim."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "the number and rate of migrated cells was gradually reduced after transfection with LSD1 siRNA plasmid in the H460 cell lines",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives the LSD1 siRNA H460 migration result the notice calls unsupported."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The PLOS ONE editors issued an Expression of Concern to inform readers of unresolved issues, and the authors did not respond or could not be reached.",
+      "covered_by": [
+        "change-0",
+        "change-7",
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice reports an apparent vertical discontinuity in the Fig. 4 LSD1 blot between 293T and A549 lanes; the paper uses Fig. 4 to show LSD1 is lower in A549 than H460.",
+      "covered_by": [
+        "change-1",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says Fig. 7 does not report data for an LSD1 siRNA experiment and the result that LSD1 siRNA reduced migrated H460 cells is not supported; the abstract reports siRNA or pargyline suppressed proliferation, migration and invasion.",
+      "covered_by": [
+        "change-3",
+        "change-4",
+        "change-8",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says controls in the Flag-LSD1 and LSD1 siRNA transfection experiments are not described in enough detail to replicate, and similarities with other groups' work call into question validity and provenance.",
+      "covered_by": [
+        "change-5",
+        "change-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No impact assessment was completed for this alert; these fields are placeholders, not findings.",
+      "covered_by": [
+        "impact-0",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The PLOS ONE editors issued an Expression of Concern to inform readers of unresolved issues, and the authors did not respond or could not be reached; the notice says the result that LSD1 siRNA reduced migrated H460 cells is not supported.",
+      "covered_by": [
+        "change-0",
+        "change-4",
+        "change-7",
+        "action-0",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No impact assessment was completed for this alert; these fields are placeholders, not findings.",
+      "covered_by": [
+        "impact-0",
+        "action-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

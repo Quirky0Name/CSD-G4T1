@@ -1,0 +1,160 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the draft does not cite the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Your draft does not cite \"Green roofs and urban cooling\" (Haddad and Berg, 2018), either in its reference list or in its text."
+    },
+    {
+      "fact": "says no action is needed for the draft or the alert can be dismissed",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "No change to the draft is needed, and you can dismiss this alert."
+    },
+    {
+      "fact": "says the draft cites the retracted paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing a reference from the draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: Green roofs and urban cooling",
+      "backs": true,
+      "pass": true,
+      "reason": "Title says Retraction of the paper; shows it was retracted."
+    },
+    {
+      "claim_id": "change-0",
+      "quote": "This article has been retracted",
+      "backs": true,
+      "pass": true,
+      "reason": "States the article has been retracted."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "retracted because of image manipulation in the supplementary figures",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states retraction because of image manipulation in supplementary figures."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "because the temperature data could not be verified",
+      "backs": true,
+      "pass": true,
+      "reason": "States the temperature data could not be verified as a reason."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Green roofs lowered surface temperature by 4 C in three cities.",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote from the paper states the finding of 4 C lowering in three cities."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Retraction: Green roofs and urban cooling",
+      "backs": true,
+      "pass": true,
+      "reason": "Title says Retraction of the paper."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "This article has been retracted",
+      "backs": true,
+      "pass": true,
+      "reason": "States the article has been retracted."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "retracted because of image manipulation in the supplementary figures",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states image manipulation reason."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "because the temperature data could not be verified",
+      "backs": true,
+      "pass": true,
+      "reason": "States temperature data could not be verified."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper has been retracted.",
+      "covered_by": [
+        "change-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Retracted because of image manipulation in supplementary figures and because temperature data could not be verified.",
+      "covered_by": [
+        "change-1",
+        "change-2",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Headline finding was green roofs lowered surface temperature by 4 C in three cities.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Draft does not cite the paper in reference list or text.",
+      "covered_by": [
+        "impact-0",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper has been retracted because of image manipulation in supplementary figures and because temperature data could not be verified.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "change-2",
+        "action-0",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Draft does not cite the paper in reference list or text.",
+      "covered_by": [
+        "impact-0",
+        "action-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

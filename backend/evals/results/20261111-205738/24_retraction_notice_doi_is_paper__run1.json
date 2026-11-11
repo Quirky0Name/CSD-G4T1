@@ -1,0 +1,253 @@
+{
+  "change_summary": "The alert records a retraction notice with DOI 10.9999/fake.2020.024, detected on 2026-10-01, and the tracked paper's own DOI is 10.9999/fake.2020.024. No separate retraction notice or notice text was provided, and the current copy shows no retraction watermark or banner. The current copy still reports AAD in 18 of 156 participants given LGG and 33 of 156 given placebo, and it still concludes that LGG reduced AAD and was well tolerated. The paper was published online in April 2020.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 12,
+    "model": "opus",
+    "model_version": "claude-opus-5-5",
+    "answered_by": {
+      "change": "opus",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "pdfs": {
+      "attached": [
+        "stored paper",
+        "current copy"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 241,
+          "about_this_paper": "no",
+          "what_changed": "Nothing visible. The retraction alert points to a notice whose DOI is the paper's own DOI. There is no separate notice text, and the current copy downloaded on 2026-10-02 shows no retraction mark and has the same content as the stored paper. Only metadata is available.",
+          "scope": "unclear",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "The notice's DOI is the paper's own DOI and nothing else shows a change: the current copy has no retraction watermark or banner and reports the same results. The alert date (2026) does not match the paper's 2020 publication date, so this looks like a metadata flag rather than a confirmed retraction.",
+          "evidence": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01"
+            },
+            {
+              "source": "stored paper",
+              "quote": "doi: 10.9999/fake.2020.024"
+            },
+            {
+              "source": "current copy",
+              "quote": "AAD occurred in 18 of 156 participants (11.5%) in the LGG group and in 33 of 156 (21.2%) in the placebo group"
+            },
+            {
+              "source": "current copy",
+              "quote": "Available online 3 April 2020."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "none",
+      "claims": [
+        {
+          "text": "The alert records a retraction notice with DOI 10.9999/fake.2020.024, detected on 2026-10-01.",
+          "passages": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "doi: 10.9999/fake.2020.024"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "No separate retraction notice or notice text was provided.",
+          "passages": [],
+          "absence": true
+        },
+        {
+          "text": "The current copy shows no retraction watermark or banner.",
+          "passages": [],
+          "absence": true
+        },
+        {
+          "text": "The current copy still reports AAD in 18 of 156 participants given LGG and 33 of 156 given placebo.",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "AAD occurred in 18 of 156 participants (11.5%) in the LGG group and in 33 of 156 (21.2%) in the placebo group"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The current copy still concludes that LGG reduced AAD and was well tolerated.",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "antibiotic course reduced AAD and was well tolerated"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The paper was published online in April 2020.",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "Available online 3 April 2020."
+            }
+          ],
+          "absence": false
+        }
+      ],
+      "summary": [
+        {
+          "text": "The alert records a retraction notice with DOI 10.9999/fake.2020.024, detected on 2026-10-01, and the tracked paper's own DOI is 10.9999/fake.2020.024.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "No separate retraction notice or notice text was provided, and the current copy shows no retraction watermark or banner.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The current copy still reports AAD in 18 of 156 participants given LGG and 33 of 156 given placebo, and it still concludes that LGG reduced AAD and was well tolerated.",
+          "kind": "fact",
+          "claims": [
+            5,
+            6
+          ]
+        },
+        {
+          "text": "The paper was published online in April 2020.",
+          "kind": "fact",
+          "claims": [
+            7
+          ]
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The alert records a retraction notice with DOI 10.9999/fake.2020.024, detected on 2026-10-01.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 241,
+          "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "doi: 10.9999/fake.2020.024",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "No separate retraction notice or notice text was provided.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The current copy shows no retraction watermark or banner.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The current copy still reports AAD in 18 of 156 participants given LGG and 33 of 156 given placebo.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "AAD occurred in 18 of 156 participants (11.5%) in the LGG group and in 33 of 156 (21.2%) in the placebo group",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-5",
+      "kind": "change",
+      "text": "The current copy still concludes that LGG reduced AAD and was well tolerated.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "antibiotic course reduced AAD and was well tolerated",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-6",
+      "kind": "change",
+      "text": "The paper was published online in April 2020.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Available online 3 April 2020.",
+          "page": 4,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

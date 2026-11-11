@@ -1,0 +1,319 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the paper was retracted and replaced by a corrected version",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "the article was retracted and replaced by a corrected version"
+    },
+    {
+      "fact": "says the slope changed from 0.45 to 0.28 points per 10 mg",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "it was reported as 0.45 points per 10 mg and the correct value is 0.28"
+    },
+    {
+      "fact": "tells the researcher to update the comparison in the Discussion or cite the corrected version",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "In your Discussion, change the cited slope to 0.28, cite the corrected version"
+    },
+    {
+      "fact": "says the finding that iron reduces fatigue is invalid",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The finding that iron supplementation reduces fatigue is unchanged."
+    },
+    {
+      "fact": "says the paper was retracted for misconduct or fabrication",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The editors have received concerns about the calculation of the dose-response analysis in this article and are investigating.",
+      "backs": true,
+      "pass": true,
+      "reason": "States editors received concerns and are investigating."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "Following the editors' investigation, this article is retracted",
+      "backs": true,
+      "pass": true,
+      "reason": "States retraction followed investigation."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "this article is retracted and replaced by a corrected version (doi 10.9999/fake.2019.011v2)",
+      "backs": true,
+      "pass": true,
+      "reason": "States retracted and replaced by corrected version."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The dose-response slope in Table 3 was miscalculated",
+      "backs": true,
+      "pass": true,
+      "reason": "Says slope miscalculated; part of claim."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "it was reported as 0.45 points per 10 mg and the correct value is 0.28 points per 10 mg",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives reported 0.45 and correct 0.28."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "Table 3 gives the dose-response slope: 0.45 points per 10 mg (95% CI 0.30 to 0.60).",
+      "backs": true,
+      "pass": true,
+      "reason": "Tracked paper gives 0.45 (CI 0.30 to 0.60) in Table 3."
+    },
+    {
+      "claim_id": "change-5",
+      "quote": "Table 3 gives the dose-response slope: 0.28 points per 10 mg (95% CI 0.15 to 0.41).",
+      "backs": true,
+      "pass": true,
+      "reason": "Corrected version gives 0.28 with CI 0.15 to 0.41."
+    },
+    {
+      "claim_id": "change-6",
+      "quote": "The finding that iron supplementation reduces fatigue is unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "States finding unchanged."
+    },
+    {
+      "claim_id": "change-7",
+      "quote": "the reduction in fatigue after 12 weeks of oral iron increased with the daily dose between 20 and 60 mg",
+      "backs": true,
+      "pass": true,
+      "reason": "States reduction increased with dose between 20 and 60 mg."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Our estimated slope of 0.41 fatigue points per 10 mg of iron is close to that of Park and Singh [7] (0.45 per 10 mg)",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft quote states the closeness to Park and Singh."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "which supports the validity of our design",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft says closeness supports validity of design."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "the estimate, its interpretation and its comparison with earlier trials are given in the Results and Discussion.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft says comparison is in Results and Discussion."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "Table 3 gives the dose-response slope: 0.45 points per 10 mg (95% CI 0.30 to 0.60).",
+      "backs": true,
+      "pass": true,
+      "reason": "Tracked paper gives the slope and CI in Table 3."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "this article is retracted and replaced by a corrected version (doi 10.9999/fake.2019.011v2)",
+      "backs": true,
+      "pass": true,
+      "reason": "States retracted and replaced."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "The dose-response slope in Table 3 was miscalculated",
+      "backs": true,
+      "pass": true,
+      "reason": "Says slope miscalculated; part of claim."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "it was reported as 0.45 points per 10 mg and the correct value is 0.28 points per 10 mg",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives reported 0.45 and correct 0.28."
+    },
+    {
+      "claim_id": "impact-6",
+      "quote": "Table 3 gives the dose-response slope: 0.28 points per 10 mg (95% CI 0.15 to 0.41).",
+      "backs": true,
+      "pass": true,
+      "reason": "Corrected version values."
+    },
+    {
+      "claim_id": "impact-7",
+      "quote": "The finding that iron supplementation reduces fatigue is unchanged.",
+      "backs": false,
+      "pass": false,
+      "reason": "Says finding unchanged, but claim also asserts impact is low, which is an inference beyond the quote."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Our estimated slope of 0.41 fatigue points per 10 mg of iron is close to that of Park and Singh [7] (0.45 per 10 mg)",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft quote states the closeness."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "which supports the validity of our design",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft says it supports validity."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "this article is retracted and replaced by a corrected version (doi 10.9999/fake.2019.011v2)",
+      "backs": true,
+      "pass": true,
+      "reason": "States retracted and replaced."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "The dose-response slope in Table 3 was miscalculated",
+      "backs": true,
+      "pass": true,
+      "reason": "Says slope miscalculated."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "it was reported as 0.45 points per 10 mg and the correct value is 0.28 points per 10 mg",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives reported and correct values."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "Table 3 gives the dose-response slope: 0.28 points per 10 mg (95% CI 0.15 to 0.41).",
+      "backs": true,
+      "pass": true,
+      "reason": "Corrected version values."
+    },
+    {
+      "claim_id": "action-5",
+      "quote": "The finding that iron supplementation reduces fatigue is unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "States finding unchanged."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The editors received concerns about the calculation of the dose-response analysis and investigated; the retraction followed that investigation, and the article was retracted and replaced by a corrected version.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The slope in Table 3 was miscalculated: reported 0.45 per 10 mg, correct 0.28; original 0.45 (CI 0.30 to 0.60), corrected 0.28 (CI 0.15 to 0.41).",
+      "covered_by": [
+        "change-3",
+        "change-4",
+        "change-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The finding that iron supplementation reduces fatigue is unchanged, and the corrected version still concludes the reduction increased with daily dose between 20 and 60 mg.",
+      "covered_by": [
+        "change-6",
+        "change-7"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft says its estimated slope of 0.41 is close to Park and Singh's 0.45, and says this supports the validity of its design.",
+      "covered_by": [
+        "impact-0",
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft places its comparison with earlier trials in the Results and Discussion.",
+      "covered_by": [
+        "impact-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The original paper gave a slope of 0.45 (95% CI 0.30 to 0.60) in Table 3, but the article was retracted and replaced by a corrected version.",
+      "covered_by": [
+        "impact-3",
+        "impact-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The slope in Table 3 was miscalculated: reported 0.45, correct 0.28; the corrected version gives 0.28 (95% CI 0.15 to 0.41).",
+      "covered_by": [
+        "impact-5",
+        "impact-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The impact is low because the notice says the finding that iron supplementation reduces fatigue is unchanged.",
+      "covered_by": [
+        "impact-7"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft says its estimated slope of 0.41 is close to Park and Singh's 0.45, and says this closeness supports the validity of its design.",
+      "covered_by": [
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The article was retracted and replaced by a corrected version: slope miscalculated, reported 0.45, correct 0.28, corrected version gives 0.28 (95% CI 0.15 to 0.41).",
+      "covered_by": [
+        "action-2",
+        "action-3",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The finding that iron supplementation reduces fatigue is unchanged.",
+      "covered_by": [
+        "action-5"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}
