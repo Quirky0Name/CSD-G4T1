@@ -103,9 +103,7 @@ Doc delta: CONTRACTS.md, both endpoints (S1).
   - EVALUATION.md, the `context_chunks` bullet: `start`/`end` for a cut text chunk, and how they're computed.
   - ROADMAP.md, "A frontend view of a report's `context_chunks`": I1's display rule.
   - New: `impact.history.context_chunk(chunk)` builds each `context_chunks` item from a search hit, and `assess` calls it; why: the range depends on the hit's `chunk_index` and content, which only the search hit has. Needs no doc beyond EVALUATION.md's `context_chunks` bullet.
-  - New: the header is everything up to and including the content's first blank line (`"
-
-"`); why: `document_pieces`' header is one line ending in a blank line, and a kind or DOI has no newline. Recorded in `context_chunk`'s docstring.
+  - New: the header is everything up to and including the content's first blank line (`"\n\n"`); why: `document_pieces`' header is one line ending in a blank line, and a kind or DOI has no newline. Recorded in `context_chunk`'s docstring.
   - New: `ContextChunk` leaves `start`/`end` out of its JSON when unset (a wrap `model_serializer`), while `page` stays `null`; why: I1 says "both or neither" and "absent otherwise". Recorded in `ContextChunk`'s docstring.
   - New: `embedding.CHUNK_SIZE` (3,200) and `CHUNK_OVERLAP` (400) are `chunk_text`'s defaults, read by `context_chunk`; why: one source for the step. Needs no doc beyond EVALUATION.md.
   - Spec change: **Repo** is now the `chunk-monkey` worktree (was `D:\SMU\CS203\project\CSD-G4T1`, which has `feat/claim-passages-backend` checked out); why: the run works on `feat/context-chunk-ranges` there. Needs no doc.
