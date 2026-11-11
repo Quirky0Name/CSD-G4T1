@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -233,6 +234,54 @@ class ChunkControllerTest {
         assertThat(jdbc.queryForObject("select count(*) from chunks where alert_id = ?", Integer.class, alert)).isZero();
         assertThat(jdbc.queryForObject("select count(*) from chunks where user_id = ?", Integer.class, someoneElse))
                 .isEqualTo(1);
+    }
+
+    // POST /internal/chunks/search answers before any distance is computed, so H2 can check these;
+    // ranking is ChunkSearchPostgresIT's
+    @Test
+    void searchValidation() throws Exception {
+        for (String field : List.of("paper_id", "embedding", "source_type", "limit")) {
+            Map<String, Object> body = searchBody(paper);
+            body.remove(field);
+            search(body).andExpect(status().isBadRequest());
+        }
+        for (int size : List.of(1535, 1537)) {
+            Map<String, Object> body = searchBody(paper);
+            body.put("embedding", embedding(size));
+            search(body).andExpect(status().isBadRequest());
+        }
+        for (int limit : List.of(0, 21)) {
+            Map<String, Object> body = searchBody(paper);
+            body.put("limit", limit);
+            search(body).andExpect(status().isBadRequest());
+        }
+        Map<String, Object> unknownType = searchBody(paper);
+        unknownType.put("source_type", "draft");
+        search(unknownType).andExpect(status().isBadRequest());
+
+        search(searchBody(UUID.randomUUID())).andExpect(status().isNotFound());
+
+        mvc.perform(post("/internal/chunks/search")
+                        .header(HttpHeaders.AUTHORIZATION, TestTokens.user(owner))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(searchBody(paper))))
+                .andExpect(status().isForbidden());
+    }
+
+    private ResultActions search(Map<String, Object> body) throws Exception {
+        return mvc.perform(post("/internal/chunks/search")
+                .header(HttpHeaders.AUTHORIZATION, TestTokens.service())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(body)));
+    }
+
+    private static Map<String, Object> searchBody(UUID paper) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("paper_id", paper.toString());
+        body.put("embedding", embedding(1536));
+        body.put("source_type", "alert");
+        body.put("limit", 3);
+        return body;
     }
 
     private ResultActions store(Map<String, Object> body) throws Exception {

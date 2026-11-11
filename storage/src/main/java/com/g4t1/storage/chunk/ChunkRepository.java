@@ -52,6 +52,50 @@ public class ChunkRepository {
         }
     }
 
+    // The paper's chunks of one source type (the owner's, for a profile), nearest first by cosine
+    // distance. Postgres only: H2 has no vector distance. Runs inside a transaction, for set local.
+    public List<ChunkMatch> search(UUID paperId, SourceType type, List<Double> embedding, int limit) {
+        // the HNSW index with a where filter otherwise stops at ef_search candidates and can return fewer
+        // than limit; iterative scan keeps going until the filter has found enough, still nearest first
+        jdbc.execute("set local hnsw.iterative_scan = strict_order");
+        String scope = type == SourceType.PROFILE
+                ? "c.source_type = 'profile' and c.user_id = (select owner_id from papers where id = ?)"
+                : "c.paper_id = ? and c.source_type = ?";
+        String sql = """
+                select c.source_type, c.alert_id, c.report_id, c.document_id, c.user_id, c.chunk_index, c.page,
+                       c.content,
+                       case c.source_type when 'alert' then a.report_id when 'report' then c.report_id
+                                          when 'document' then d.report_id end as source_report_id,
+                       case c.source_type when 'alert' then a.detected_at when 'report' then r.evaluated_at
+                                          when 'document' then d.created_at else c.created_at end as source_date,
+                       1 - (c.embedding <=> cast(? as vector)) as score
+                from chunks c
+                left join alerts a on a.id = c.alert_id
+                left join reports r on r.id = c.report_id
+                left join report_documents d on d.id = c.document_id
+                where %s
+                order by c.embedding <=> cast(? as vector)
+                limit ?""".formatted(scope);
+        String vector = (String) vector(embedding);
+        Object[] args = type == SourceType.PROFILE
+                ? new Object[]{vector, paperId, vector, limit}
+                : new Object[]{vector, paperId, type.value(), vector, limit};
+        return jdbc.query(sql, (rs, row) -> {
+            SourceType source = SourceType.of(rs.getString("source_type"));
+            Object sourceId = rs.getObject(sourceColumn(source));
+            long reportId = rs.getLong("source_report_id");
+            Long report = rs.wasNull() ? null : reportId;
+            Timestamp date = rs.getTimestamp("source_date");
+            return new ChunkMatch(source, sourceId.toString(), rs.getInt("chunk_index"),
+                    (Integer) rs.getObject("page"), report, date == null ? null : date.toInstant(),
+                    rs.getString("content"), rs.getDouble("score"));
+        }, args);
+    }
+
+    public boolean paperExists(UUID paperId) {
+        return !jdbc.queryForList("select 1 from papers where id = ?", Integer.class, paperId).isEmpty();
+    }
+
     public void deleteProfile(UUID userId) {
         jdbc.update("delete from chunks where user_id = ?", userId);
     }

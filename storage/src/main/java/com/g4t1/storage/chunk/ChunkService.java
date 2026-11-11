@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -29,6 +30,16 @@ public class ChunkService {
         UUID paperId = chunks.paperOf(type, sourceId).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "No " + type.value() + " " + sourceId));
         chunks.replace(type, sourceId, paperId, request.embedModel(), request.chunks());
+    }
+
+    // every chunk of the paper of that source type is a candidate: there's no date, order or exclusion
+    // filter, since a report's chunks are only written once impact has assessed it. Ranked by similarity only.
+    @Transactional(readOnly = true)
+    public List<ChunkMatch> search(SearchChunksRequest request) {
+        if (!chunks.paperExists(request.paperId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + request.paperId());
+        }
+        return chunks.search(request.paperId(), request.sourceType(), request.embedding(), request.limit());
     }
 
     // a user's profile chunks, which have no foreign key to cascade from
