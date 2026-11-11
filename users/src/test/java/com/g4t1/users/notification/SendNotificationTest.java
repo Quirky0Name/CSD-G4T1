@@ -62,6 +62,7 @@ class SendNotificationTest {
         registry.add("users.storage-url", storage::url);
         registry.add("users.telegram-api-url", telegram::url);
         registry.add("spring.mail.port", () -> mail.getSmtp().getPort());
+        registry.add("users.app-url", () -> "https://ra.test/");
     }
 
     @AfterAll
@@ -241,6 +242,35 @@ class SendNotificationTest {
                 "Change: high", "The paper's main result was withdrawn.",
                 "Impact on your draft: medium", "Your section 3 leans on that result.",
                 "What to do:", "Cite the correction instead.");
+    }
+
+    @Test
+    void theMailEndsWithTheLinkToThePaperWithoutADoubleSlash() throws Exception {
+        Account account = registered();
+        putEmail(account, Map.of("enabled", true, "min_alert_severity", "low"));
+
+        postEvent(account.id(), alertsEvent(alert(7, "retraction", "high", "Retracted."))).expectStatus().isOk();
+
+        String body = GreenMailUtil.getBody(mail.getReceivedMessages()[0]).trim();
+        assertThat(body).endsWith("https://ra.test/papers/6b1f3c1e-2d34-4c1e-9d0a-0a2b4c6d8e10");
+    }
+
+    @Test
+    void aPaperWithNoTitleOrDoiIsCalledATrackedPaperAndHasNoDoiLine() throws Exception {
+        Account account = registered();
+        putEmail(account, Map.of("enabled", true, "min_alert_severity", "low"));
+        Map<String, Object> event = new HashMap<>(alertsEvent(alert(7, "retraction", "high", "Retracted.")));
+        Map<String, Object> bare = new HashMap<>();
+        bare.put("id", "6b1f3c1e-2d34-4c1e-9d0a-0a2b4c6d8e10");
+        bare.put("title", null);
+        bare.put("doi", null);
+        event.put("paper", bare);
+
+        postEvent(account.id(), event).expectStatus().isOk();
+
+        MimeMessage received = mail.getReceivedMessages()[0];
+        assertThat(received.getSubject()).isEqualTo("Research Assistant: New alerts on \"a tracked paper\"");
+        assertThat(GreenMailUtil.getBody(received)).startsWith("a tracked paper").doesNotContain("DOI:");
     }
 
     @Test
