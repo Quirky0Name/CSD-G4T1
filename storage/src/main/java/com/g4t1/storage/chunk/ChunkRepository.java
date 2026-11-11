@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,7 +45,7 @@ public class ChunkRepository {
         jdbc.update("delete from chunks where " + column + " = ?", sourceId);
         String sql = "insert into chunks (source_type, " + column + ", paper_id, chunk_index, content, page, embedding,"
                 + " embed_model, created_at) values (?, ?, ?, ?, ?, ?, " + vectorParameter() + ", ?, ?)";
-        Timestamp now = Timestamp.from(Instant.now());
+        Timestamp now = Timestamp.from(Instant.now().truncatedTo(ChronoUnit.MICROS));
         for (int i = 0; i < chunks.size(); i++) {
             StoreChunksRequest.Chunk chunk = chunks.get(i);
             jdbc.update(sql, type.value(), sourceId, paperId, i, chunk.content(), chunk.page(),
