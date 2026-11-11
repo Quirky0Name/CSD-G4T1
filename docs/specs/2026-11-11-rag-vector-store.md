@@ -401,7 +401,9 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - `backend/src/research_evaluation/impact/run.py`
   - `backend/src/research_evaluation/impact/prompts.py` (`history_block`, the rules, `PROMPT_VERSION` 6)
   - `backend/src/research_evaluation/impact/assess.py` (`assessment["history"]`)
-  - `backend/tests/research_evaluation/impact/`
+  - `backend/tests/research_evaluation/impact/` (`test_history.py`; `test_assess.py`'s prompt version)
+  - `backend/tests/impact_prompt_support.py` and `backend/tests/fixtures/impact/step{1,2}_prompt_parts.json` (the fixed prompts `test_no_history_unchanged` compares with, saved from the code before this subtask)
+  - `backend/tests/research_evaluation/test_chunks_pipeline.py` (the search route, and its fake embedder counts only stored text)
 - **Seams:**
   - `assess_report(sm, context, report_id)`, with Storage Management and Gemini mocked: catches the query text, the three search calls and their limits, the failure rule, `assessment["history"]` and `context_chunks` in the evaluation `PUT`; misses real retrieval quality.
   - `change_prompt(inputs)`: catches the section's place, order, labels and defusing in step 1, and unchanged parts with no history; misses how the model reads it (evals spec).
@@ -420,14 +422,14 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - The chunks added to the prompt go in the evaluation body as `context_chunks` (I5): `source_type`, `source_id` and `page` of each, in prompt order, so they can be shown later. Source: user ("i want the fetched chunks to be able to show. so just need the id and the page number").
   - `PROMPT_VERSION` goes from 5 to 6. Source: `code: impact/prompts.py` (bumped on every prompt change).
 - **Acceptance criteria:**
-  - [ ] With past chunks of all three types returned, step 1's parts and step 2's parts each contain one `PAST TIMELINE` section, before the task, listing them nearest first, with source, date and report id: `test_history.py::test_section_in_steps_1_and_2`.
-  - [ ] With no past chunks, step 1's and step 2's parts equal those `change_prompt` and `impact_prompt` built before this subtask (fixed fixtures): `test_history.py::test_no_history_unchanged`.
-  - [ ] The search makes one call per source type with limits 3, 3 and 5, and a query embedded with `RETRIEVAL_QUERY` from the query text above: `test_history.py::test_search_calls`.
-  - [ ] When the search answers `500`, or embedding raises: the report is still assessed, `assessment["history"]` is `failed`, and step 1's and step 2's parts have no section. Test: `test_history.py::test_search_failure`.
-  - [ ] The evaluation `PUT` carries `context_chunks` with the `source_type`, `source_id` and `page` of exactly the chunks in the prompt, in prompt order; with none, `context_chunks` is `[]`: `test_history.py::test_context_chunks_sent`.
-  - [ ] A past chunk containing `</document>` can't close its block: `test_history.py::test_defused`.
-  - [ ] Step 3's parts don't contain the section: `test_history.py::test_not_in_step_3`.
-  - [ ] `uv run pytest` and `uv run ruff check` pass.
+  - [x] With past chunks of all three types returned, step 1's parts and step 2's parts each contain one `PAST TIMELINE` section, before the task, listing them nearest first, with source, date and report id: `test_history.py::test_section_in_steps_1_and_2`.
+  - [x] With no past chunks, step 1's and step 2's parts equal those `change_prompt` and `impact_prompt` built before this subtask (fixed fixtures): `test_history.py::test_no_history_unchanged`.
+  - [x] The search makes one call per source type with limits 3, 3 and 5, and a query embedded with `RETRIEVAL_QUERY` from the query text above: `test_history.py::test_search_calls`.
+  - [x] When the search answers `500`, or embedding raises: the report is still assessed, `assessment["history"]` is `failed`, and step 1's and step 2's parts have no section. Test: `test_history.py::test_search_failure`.
+  - [x] The evaluation `PUT` carries `context_chunks` with the `source_type`, `source_id` and `page` of exactly the chunks in the prompt, in prompt order; with none, `context_chunks` is `[]`: `test_history.py::test_context_chunks_sent`.
+  - [x] A past chunk containing `</document>` can't close its block: `test_history.py::test_defused`.
+  - [x] Step 3's parts don't contain the section: `test_history.py::test_not_in_step_3`.
+  - [x] `uv run pytest` and `uv run ruff check` pass.
 - **Doc deltas:**
   - EVALUATION.md, "Impact":
     - the history read before step 1, and given to steps 1 and 2;
@@ -439,6 +441,13 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - ARCHITECTURE.md, "Data flow" step 4: impact reads the paper's past chunks from Storage Management.
   - GLOSSARY.md: **Past timeline**: a tracked paper's earlier alerts, reports and report documents, found by vector search, that impact's steps 1 and 2 read beside the current report.
   - ROADMAP.md: retrieved chunks in place of whole PDFs; a frontend view of a report's `context_chunks` (open the alert, report, or document PDF at `page`).
+  - EVALUATION.md, "Impact": the three searches are merged and ordered by `score`, highest first, so the section and `context_chunks` are nearest first across source types, not grouped by type.
+  - EVALUATION.md, "Impact": the section's place. Step 1: after the attached PDFs, right before the task. Step 2: after the draft (or NO DRAFT), before the profile section and the task. Its rules (`PAST_RULES`) follow its blocks, so untrusted text never comes last.
+  - EVALUATION.md, "Impact": each item is `<document kind="past_<type>" source_id=".." date="YYYY-MM-DD" report="<id or none>" page="..">` (page only when set); the date is `source_date`.
+  - EVALUATION.md, "Impact": `assess` takes `history` (`read`/`none`/`failed`); left out, it is `read` when `inputs.chunks` is set and `none` otherwise, which is what the evals get. A failure logs the report id and exception class only, since an error could carry the query's text; `assessment.history` holds only the status.
+  - EVALUATION.md, "Impact": the query is the alert lines joined by newlines (`<change_type> <notice_doi or "no notice"> <description>`), then each notice's `text`, cut to the first 8000 characters.
+  - EVALUATION.md, "Impact": `context_chunks` is sent with every evaluation, the placeholder and change severity `none` included, since steps 1 and 2 had the chunks either way.
+  - EVALUATION.md, "Impact": the embedder that stores a report's chunks also embeds the query (`ImpactContext.embedder`); with none, no history is read.
 
 ## Human checks
 
