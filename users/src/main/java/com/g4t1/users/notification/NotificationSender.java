@@ -9,6 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 // Applies each channel's thresholds to an event and sends it to the channels it passes, one after the other
@@ -43,28 +44,34 @@ public class NotificationSender {
         if (!prefs.isEmailEnabled()) {
             return Outcome.DISABLED;
         }
-        List<NotificationEvent.Alert> passing = passingAlerts(event, prefs.getEmailMinAlertSeverity());
-        if (passing.isEmpty()) {
-            return Outcome.NO_MATCH;
-        }
-        return email.send(user.getId(), user.getEmail(), messages.alerts(event, passing));
+        return match(event, prefs.getEmailMinAlertSeverity(), prefs.getEmailMinChangeSeverity(),
+                prefs.getEmailMinImpactLevel())
+                .map(message -> email.send(user.getId(), user.getEmail(), message))
+                .orElse(Outcome.NO_MATCH);
     }
 
     private Outcome sendTelegram(NotificationPreferences prefs, NotificationEvent event) {
         if (!prefs.isTelegramEnabled()) {
             return Outcome.DISABLED;
         }
-        List<NotificationEvent.Alert> passing = passingAlerts(event, prefs.getTelegramMinAlertSeverity());
-        if (passing.isEmpty()) {
-            return Outcome.NO_MATCH;
-        }
-        return telegram.send(prefs.getUserId(), prefs.getTelegramChatId(), messages.alerts(event, passing).text());
+        return match(event, prefs.getTelegramMinAlertSeverity(), prefs.getTelegramMinChangeSeverity(),
+                prefs.getTelegramMinImpactLevel())
+                .map(message -> telegram.send(prefs.getUserId(), prefs.getTelegramChatId(), message.text()))
+                .orElse(Outcome.NO_MATCH);
     }
 
-    private static List<NotificationEvent.Alert> passingAlerts(NotificationEvent event, String minAlertSeverity) {
-        return event.alerts().stream()
-                .filter(alert -> Levels.reaches(alert.alertSeverity(), minAlertSeverity))
-                .toList();
+    // the message for a channel's thresholds, or nothing when the event is below them
+    private Optional<Message> match(NotificationEvent event, String minAlertSeverity, String minChangeSeverity,
+                                    String minImpactLevel) {
+        if (event.event().equals("alerts")) {
+            List<NotificationEvent.Alert> passing = event.alerts().stream()
+                    .filter(alert -> Levels.reaches(alert.alertSeverity(), minAlertSeverity))
+                    .toList();
+            return passing.isEmpty() ? Optional.empty() : Optional.of(messages.alerts(event, passing));
+        }
+        boolean passes = Levels.reaches(event.changeSeverity(), minChangeSeverity)
+                || Levels.reaches(event.impactLevel(), minImpactLevel);
+        return passes ? Optional.of(messages.report(event)) : Optional.empty();
     }
 
     private static ResponseStatusException noUser(UUID userId) {

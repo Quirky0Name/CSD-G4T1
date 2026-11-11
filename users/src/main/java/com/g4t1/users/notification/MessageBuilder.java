@@ -30,6 +30,26 @@ public class MessageBuilder {
         return new Message("Research Assistant: New alerts on \"" + title(event) + "\"", withLink(event, lines));
     }
 
+    public Message report(NotificationEvent event) {
+        List<String> lines = header(event);
+        lines.add("");
+        lines.add("Change: " + event.changeSeverity());
+        lines.add(event.changeSummary());
+        if (event.impactLevel() != null) {
+            lines.add("");
+            lines.add("Impact on your draft: " + event.impactLevel());
+        }
+        if (event.evaluation() != null) {
+            lines.add(event.evaluation());
+        }
+        if (event.recommendation() != null) {
+            lines.add("");
+            lines.add("What to do:");
+            lines.add(event.recommendation());
+        }
+        return new Message("Research Assistant: Report ready on \"" + title(event) + "\"", withLink(event, lines));
+    }
+
     private List<String> header(NotificationEvent event) {
         List<String> lines = new ArrayList<>();
         lines.add(title(event));

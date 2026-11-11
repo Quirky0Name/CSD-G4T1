@@ -10,6 +10,9 @@ import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -25,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static com.g4t1.users.TestTokens.serviceToken;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -144,12 +148,68 @@ class SendNotificationTest {
         assertThat(telegram.requests()).isEmpty();
     }
 
+    @ParameterizedTest(name = "change {0} and impact {1} gives {2}")
+    @MethodSource("reportLevels")
+    void aReportSendsWhenEitherItsChangeSeverityOrItsImpactLevelReachesTheThreshold(String change, String impact,
+                                                                                     String outcome, int mails) throws Exception {
+        Account account = registered();
+        putEmail(account, Map.of("enabled", true, "min_change_severity", "high", "min_impact_level", "high"));
+
+        postEvent(account.id(), reportEvent(change, "The abstract changed.", impact, null, null))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.channels.email").isEqualTo(outcome);
+
+        assertThat(mail.getReceivedMessages()).hasSize(mails);
+    }
+
+    static Stream<Arguments> reportLevels() {
+        return Stream.of(
+                Arguments.of("high", "low", "sent", 1),
+                Arguments.of("medium", "high", "sent", 1),
+                Arguments.of("medium", "medium", "no_match", 0),
+                Arguments.of("none", null, "no_match", 0));
+    }
+
+    @Test
+    void anAssessedReportIsMailedWithItsSummaryEvaluationAndRecommendation() throws Exception {
+        Account account = registered();
+        putEmail(account, Map.of("enabled", true, "min_change_severity", "low"));
+
+        postEvent(account.id(), reportEvent("high", "The paper's main result was withdrawn.", "medium",
+                "Your section 3 leans on that result.", "Cite the correction instead."))
+                .expectStatus().isOk();
+
+        MimeMessage[] received = mail.getReceivedMessages();
+        assertThat(received).hasSize(1);
+        assertThat(received[0].getSubject()).isEqualTo("Research Assistant: Report ready on \"Quantum Widgets\"");
+        assertThat(GreenMailUtil.getBody(received[0])).contains(
+                "Quantum Widgets", "DOI: 10.1234/qw",
+                "Change: high", "The paper's main result was withdrawn.",
+                "Impact on your draft: medium", "Your section 3 leans on that result.",
+                "What to do:", "Cite the correction instead.");
+    }
+
     private static Map<String, Object> alert(int id, String changeType, String severity, String description) {
         return Map.of("id", id, "change_type", changeType, "alert_severity", severity, "description", description);
     }
 
     private static Map<String, Object> alertsEvent(Map<String, Object>... alerts) {
         return Map.of("event", "alerts", "paper", paper(), "report_id", 3, "alerts", List.of(alerts));
+    }
+
+    private static Map<String, Object> reportEvent(String changeSeverity, String changeSummary, String impactLevel,
+                                                   String evaluation, String recommendation) {
+        Map<String, Object> event = new HashMap<>();
+        event.put("event", "report_assessed");
+        event.put("paper", paper());
+        event.put("report_id", 3);
+        event.put("change_severity", changeSeverity);
+        event.put("change_summary", changeSummary);
+        event.put("impact_level", impactLevel);
+        event.put("evaluation", evaluation);
+        event.put("recommendation", recommendation);
+        return event;
     }
 
     private static Map<String, Object> paper() {
