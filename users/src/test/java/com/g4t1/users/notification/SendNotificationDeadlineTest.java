@@ -6,9 +6,12 @@ import com.icegreen.greenmail.util.ServerSetupTest;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -29,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 // the deadline is set to a second here so the test is fast
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = "users.channel-deadline=1s")
 @ActiveProfiles("test")
+@ExtendWith(OutputCaptureExtension.class)
 class SendNotificationDeadlineTest {
 
     private static final TelegramStub telegram = new TelegramStub();
@@ -57,7 +61,8 @@ class SendNotificationDeadlineTest {
     private String jwtSecret;
 
     @Test
-    void aChannelThatAnswersPastTheDeadlineIsFailedAndTheOtherChannelIsStillSent() {
+    void aChannelThatAnswersPastTheDeadlineIsFailedAndTheOtherChannelIsStillSent(CapturedOutput output)
+            throws Exception {
         RestTestClient client = RestTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
         String reply = client.post().uri("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -97,5 +102,9 @@ class SendNotificationDeadlineTest {
 
         assertThat(took).isLessThan(Duration.ofSeconds(5));
         assertThat(mail.getReceivedMessages()).hasSize(1);
+        // the cancelled send can fail a moment after the answer; a timeout is one log line, not two
+        Thread.sleep(500);
+        assertThat(output.getAll()).contains("telegram to user " + id + " failed: TimeoutException")
+                .doesNotContain("telegram message to user " + id);
     }
 }

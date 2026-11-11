@@ -44,7 +44,10 @@ public class EmailChannel {
             sender.getObject().send(mail);
             return Outcome.SENT;
         } catch (MailException e) {
-            log.warn("emailing user {} failed: {}", userId, e.getClass().getSimpleName());
+            // an interrupt is the sender's deadline passing, and the sender logs that
+            if (!Thread.currentThread().isInterrupted()) {
+                log.warn("emailing user {} failed: {}", userId, e.getClass().getSimpleName());
+            }
             return Outcome.FAILED;
         }
     }

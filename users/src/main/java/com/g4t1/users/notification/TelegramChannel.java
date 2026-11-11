@@ -60,7 +60,10 @@ public class TelegramChannel {
         } catch (RestClientResponseException e) {
             log.warn("telegram message to user {} failed: status {}", userId, e.getStatusCode().value());
         } catch (RestClientException e) {
-            log.warn("telegram message to user {} failed: {}", userId, e.getClass().getSimpleName());
+            // an interrupt is the sender's deadline passing, and the sender logs that
+            if (!Thread.currentThread().isInterrupted()) {
+                log.warn("telegram message to user {} failed: {}", userId, e.getClass().getSimpleName());
+            }
         }
         return Outcome.FAILED;
     }
