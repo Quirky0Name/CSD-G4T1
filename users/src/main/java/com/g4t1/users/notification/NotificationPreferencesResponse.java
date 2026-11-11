@@ -3,13 +3,14 @@ package com.g4t1.users.notification;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 // A researcher's preferences for both channels; a threshold or the chat id is null when unset
-@JsonInclude(JsonInclude.Include.ALWAYS)
 public record NotificationPreferencesResponse(Email email, Telegram telegram) {
 
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     public record Email(boolean enabled, String address, String minAlertSeverity, String minChangeSeverity,
                         String minImpactLevel) {
     }
 
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     public record Telegram(boolean enabled, Long chatId, String minAlertSeverity, String minChangeSeverity,
                            String minImpactLevel) {
     }
