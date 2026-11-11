@@ -86,22 +86,35 @@ class StubSm:
 
 
 def rejection(body: dict) -> str | None:
-    """Why User Management would answer this notification 400, or None if it would take it."""
+    """Why User Management would answer this notification 400, or None if it would take it; the
+    rules and details are those of its EventValidator."""
     levels = ("low", "medium", "high")
-    match body.get("event"):
-        case "alerts":
-            sent = body.get("alerts")
-            if not sent:
-                return "alerts needs at least one alert"
-            if any(alert.get("alert_severity") not in levels for alert in sent):
+    if body.get("event") not in ("alerts", "report_assessed"):
+        return "event must be alerts or report_assessed"
+    if (body.get("paper") or {}).get("id") is None:
+        return "paper is required"
+    if body["event"] == "alerts":
+        sent = body.get("alerts")
+        if not sent:
+            return "alerts must have at least one alert"
+        for alert in sent:
+            if alert is None:
+                return "alerts must not contain null"
+            if alert.get("alert_severity") not in levels:
                 return "alert_severity must be low, medium or high"
-        case "report_assessed":
-            if body.get("change_severity") not in ("none", *levels):
-                return "change_severity must be a severity level"
-            if body.get("impact_level") not in (None, *levels):
-                return "impact_level must be low, medium, high or null"
-        case event:
-            return f"unknown event {event!r}"
+            if alert.get("change_type") is None or alert.get("description") is None:
+                return "change_type and description are required"
+        return None
+    if body.get("change_severity") not in ("none", *levels):
+        return "change_severity must be none, low, medium or high"
+    if body.get("change_summary") is None:
+        return "change_summary is required"
+    if body.get("impact_level") not in (None, *levels):
+        return "impact_level must be low, medium, high or null"
+    if body["change_severity"] == "none":
+        for field in ("impact_level", "evaluation", "recommendation"):
+            if body.get(field) is not None:
+                return f"{field} must be null when change_severity is none"
     return None
 
 

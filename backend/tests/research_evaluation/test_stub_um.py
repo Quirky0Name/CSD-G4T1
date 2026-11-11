@@ -49,28 +49,50 @@ async def test_a_body_within_the_rules_is_accepted_and_recorded(um, body):
 
 
 @pytest.mark.parametrize(
-    "body",
+    ("body", "detail"),
     [
-        alerts(event="digest"),
-        alerts(alerts=[]),
-        alerts(alerts=[{**ALERT, "alert_severity": "none"}]),
-        alerts(alerts=[{**ALERT, "alert_severity": "critical"}]),
-        assessed(impact_level="none"),
-        assessed(impact_level="severe"),
-        assessed(change_severity="severe"),
-        assessed(change_severity=None),
+        (alerts(event="digest"), "event must be alerts or report_assessed"),
+        (alerts(paper={"title": None, "doi": None}), "paper is required"),
+        (alerts(alerts=[]), "alerts must have at least one alert"),
+        (alerts(alerts=[None]), "alerts must not contain null"),
+        (alerts(alerts=[{**ALERT, "alert_severity": "none"}]), "alert_severity must be low, medium or high"),
+        (alerts(alerts=[{**ALERT, "change_type": None}]), "change_type and description are required"),
+        (alerts(alerts=[{**ALERT, "description": None}]), "change_type and description are required"),
+        (assessed(change_severity="severe"), "change_severity must be none, low, medium or high"),
+        (assessed(change_summary=None), "change_summary is required"),
+        (assessed(impact_level="none"), "impact_level must be low, medium, high or null"),
+        (
+            assessed(change_severity="none", impact_level="low"),
+            "impact_level must be null when change_severity is none",
+        ),
+        (
+            assessed(change_severity="none", impact_level=None, evaluation="e"),
+            "evaluation must be null when change_severity is none",
+        ),
+        (
+            assessed(change_severity="none", impact_level=None, recommendation="r"),
+            "recommendation must be null when change_severity is none",
+        ),
     ],
     ids=[
         "unknown event",
+        "paper with no id",
         "no alerts",
+        "null alert",
         "alert severity none",
-        "alert severity unknown",
-        "impact level none",
-        "impact level unknown",
+        "alert with no change type",
+        "alert with no description",
         "change severity unknown",
-        "change severity missing",
+        "no change summary",
+        "impact level none",
+        "impact on a none change",
+        "evaluation on a none change",
+        "recommendation on a none change",
     ],
 )
-async def test_a_body_breaking_the_rules_is_answered_400_and_not_recorded(um, body):
-    assert (await post(um, body)).status_code == 400
+async def test_a_body_breaking_the_rules_is_answered_400_with_the_detail_and_not_recorded(um, body, detail):
+    response = await post(um, body)
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": detail}
     assert um.notifications == []
