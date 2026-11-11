@@ -1,0 +1,381 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the expression of concern states that Fig. 7 does not show LSD1 siRNA data, so the H460 knockdown migration result is not supported",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "change_summary: \"Fig. 7 does not report LSD1 siRNA data, yet the paper states that LSD1 siRNA reduced H460 migration.\" evaluation: \"The notice says Fig. 7 does not report LSD1 siRNA data, so the result your Section 3 rationale rests on is not supported.\""
+    },
+    {
+      "fact": "says the draft's Aim 2 rationale rests on that H460 siRNA migration result",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "evaluation: \"the result your Section 3 rationale rests on is not supported.\" recommendation: \"don't build Aim 2 on this result alone\" (implies Aim 2 is built on the H460 migration result)."
+    },
+    {
+      "fact": "advises not resting Aim 2 on this result alone, for example by hedging the wording, adding independent evidence, or presenting the effect as what the planned experiments will test",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "recommendation: \"Hedge that sentence, cite the notice, and don't build Aim 2 on this result alone; look for independent support or run your own knockdown.\""
+    },
+    {
+      "fact": "notes that the concern is unresolved (the authors did not respond) and the paper may later be corrected or retracted",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "change_summary: \"the authors did not respond or could not be reached.\" recommendation: \"PLOS ONE issued an expression of concern about unresolved issues.\" and \"Tracking continues, so a retraction would raise a new alert.\""
+    },
+    {
+      "fact": "says the paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "No statement that the paper was retracted; the only mention is the hypothetical \"a retraction would raise a new alert.\""
+    },
+    {
+      "fact": "says the draft's use of the migration result is not affected by the concern",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "evaluation: \"the impact on your draft is medium, mainly through Section 3.\" This says the concern does affect the draft."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The PLOS ONE Editors issue this Expression of Concern to inform readers of the unresolved issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote says PLOS ONE issued an Expression of Concern, matching claim 1."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "the figure does not report data for an LSD1 siRNA experiment and so the following result statement is not supported",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote says Fig. 7 does not report data for an LSD1 siRNA experiment. Matches the core of claim 2; the claim's added point about mismatch with the legend and Results text is not shown in the quote."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Similarities were noted between this article [1] and work by other research groups which call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote says similarities with other groups' work call into question validity and provenance of the results, matching claim 3."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The authors did not respond or could not be reached to discuss these issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote says the authors did not respond or could not be reached, matching claim 4."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "the number and rate of migrated cells was gradually reduced after transfection with LSD1 siRNA plasmid in the H460 cell lines.",
+      "backs": true,
+      "pass": true,
+      "reason": "Tracked paper says migrated cells were reduced after LSD1 siRNA transfection in H460 cells, matching claim 5."
+    },
+    {
+      "claim_id": "change-5",
+      "quote": "there appears to be a vertical discontinuity in the LSD1 panel between the 293T and A549 lanes.",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote describes a possible vertical discontinuity in the LSD1 panel, matching the first half of claim 6. The control-detail half is shown only by passage 7."
+    },
+    {
+      "claim_id": "change-5",
+      "quote": "The article does not report sufficient detail about the controls used in the Flag-LSD1 and LSD1 siRNA transfection experiments to replicate these experiments.",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote says the article lacks sufficient control detail to replicate the Flag-LSD1 and LSD1 siRNA experiments, matching the second half of claim 6. The discontinuity half is shown only by passage 6."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We take this knockdown result as the clearest indication that LSD1 is a driver, and not only a marker, of migration in lung cancer cells",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft calls the H460 knockdown result the clearest indication that LSD1 is a driver of migration, matching claim 7's core. The [12] citation and Section 3 location are not in the quote."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "the number and rate of migrated cells was gradually reduced after transfection with LSD1 siRNA plasmid in the H460 cell lines.",
+      "backs": true,
+      "pass": true,
+      "reason": "Tracked paper reports reduced H460 migration after LSD1 siRNA transfection, matching claim 8."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "the figure does not report data for an LSD1 siRNA experiment and so the following result statement is not supported",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote says Fig. 7 does not report LSD1 siRNA data and the result statement is not supported, matching claim 9."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "In surgically resected samples from 80 NSCLC patients, Lv et al. found LSD1 expression higher in lung cancer tissue than in normal lung tissue",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft attributes to Lv et al. the finding of higher LSD1 in lung cancer tissue than normal tissue, matching claim 10's core. The [12] mapping is not shown in the quote."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "LSD1 expression was higher in lung cancer tissue more than in normal lung tissue.",
+      "backs": true,
+      "pass": true,
+      "reason": "Tracked paper says LSD1 expression was higher in lung cancer tissue than normal lung tissue, matching claim 11."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "Similarities were noted between this article [1] and work by other research groups which call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote says similarities with other groups' work call into question validity and provenance, matching claim 12."
+    },
+    {
+      "claim_id": "impact-6",
+      "quote": "The PLOS ONE Editors issue this Expression of Concern to inform readers of the unresolved issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote says the Editors issued the Expression of Concern about unresolved issues, matching claim 13."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "We take this knockdown result as the clearest indication that LSD1 is a driver, and not only a marker, of migration in lung cancer cells",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft calls the H460 knockdown result the clearest indication that LSD1 drives migration, matching claim 14's core."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "the figure does not report data for an LSD1 siRNA experiment and so the following result statement is not supported",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote says Fig. 7 does not report LSD1 siRNA data and the result statement is not supported, matching claim 15."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "the number and rate of migrated cells was gradually reduced after transfection with LSD1 siRNA plasmid in the H460 cell lines.",
+      "backs": true,
+      "pass": true,
+      "reason": "Tracked paper reports reduced H460 migration after LSD1 siRNA transfection, matching claim 16."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "In surgically resected samples from 80 NSCLC patients, Lv et al. found LSD1 expression higher in lung cancer tissue than in normal lung tissue",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft attributes to Lv et al. higher LSD1 in lung cancer tissue than normal tissue, matching claim 17's core."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "Similarities were noted between this article [1] and work by other research groups which call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote says similarities with other groups' work call into question validity and provenance, matching claim 18."
+    },
+    {
+      "claim_id": "action-5",
+      "quote": "The PLOS ONE Editors issue this Expression of Concern to inform readers of the unresolved issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote says the Editors issued the Expression of Concern about unresolved issues, matching claim 19."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "PLOS ONE issued an expression of concern on this paper.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The authors did not respond or could not be reached.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Fig. 7 does not report LSD1 siRNA data.",
+      "covered_by": [
+        "change-1",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper states that LSD1 siRNA reduced H460 migration.",
+      "covered_by": [
+        "change-4",
+        "impact-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "There is a possible discontinuity in the Fig. 4 LSD1 panel.",
+      "covered_by": [
+        "change-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Control detail is insufficient for replication.",
+      "covered_by": [
+        "change-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Similarities with other groups' work call into question the validity and provenance of the reported results.",
+      "covered_by": [
+        "change-2",
+        "impact-5",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "In Section 3, the draft cites [12] for the H460 knockdown migration result and treats it as the clearest sign that LSD1 drives migration.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper reports the H460 knockdown migration result.",
+      "covered_by": [
+        "change-4",
+        "impact-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice says Fig. 7 does not report LSD1 siRNA data.",
+      "covered_by": [
+        "change-1",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The result the Section 3 rationale rests on is not supported.",
+      "covered_by": [
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "In Section 2, the draft cites [12] for higher LSD1 in lung cancer tissue.",
+      "covered_by": [
+        "impact-3",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper reports higher LSD1 in lung cancer tissue than in normal lung tissue.",
+      "covered_by": [
+        "impact-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice questions the validity and provenance of the reported results.",
+      "covered_by": [
+        "change-2",
+        "impact-5",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice names nothing specific about the lung cancer tissue finding.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "PLOS ONE issued an expression of concern about unresolved issues.",
+      "covered_by": [
+        "impact-6",
+        "action-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "PLOS ONE issued an expression of concern about unresolved issues.",
+      "covered_by": [
+        "impact-6",
+        "action-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "In Section 3, the draft cites [12] for the H460 knockdown migration result and calls it the clearest indication that LSD1 is a driver of migration.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice says the Fig. 7 figure does not report data for an LSD1 siRNA experiment, so the result statement is not supported.",
+      "covered_by": [
+        "change-1",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "In Section 2, the draft cites [12] for higher LSD1 in lung cancer tissue than in normal lung tissue.",
+      "covered_by": [
+        "impact-3",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice says similarities with other groups' work call into question the validity and provenance of the reported results.",
+      "covered_by": [
+        "change-2",
+        "impact-5",
+        "action-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

@@ -1,0 +1,130 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the alert's retraction notice is the paper's own DOI, so following it leads back to the paper itself rather than to a separate retraction notice",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Alert 241 reports a retraction whose notice DOI is 10.9999/fake.2020.024, which is the tracked paper's own DOI.\""
+    },
+    {
+      "fact": "says the alert's date (1 July 2020) is the paper's own issue publication date, not the date of a retraction",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": "\"The paper's version of record dates from July 2020, while the alert was detected in October 2026, so the dates do not match.\""
+    },
+    {
+      "fact": "says nothing else shows a retraction: the current copy has no retraction banner or watermark and its title has no RETRACTED prefix",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The current copy shows no retraction watermark or banner, no notice text was provided, and its content shows no difference from the stored paper.\" (The answer does not mention the title or a RETRACTED prefix.)"
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"Alert 241 reports a retraction...\" but the answer does not state that the paper was retracted; its dates and missing banner point the other way."
+    },
+    {
+      "fact": "states a reason for a retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing or replacing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The recommendation field is null and the answer does not mention removing or replacing the citation."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, notice 10.9999/fake.2020.024",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line names a retraction with notice DOI 10.9999/fake.2020.024, which matches the claim."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "doi:10.9999/fake.2020.024",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's text gives its DOI as 10.9999/fake.2020.024, which matches the claim."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Version of record published in the July 2020 issue: Volume 56, Issue 1, 1 July 2020, pages 41\u201358.",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper's text gives the version of record as July 2020. This supplies the first date in the claim, but not the October 2026 detection date, which passage 4 provides."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "detected 2026-10-01",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line gives the detection date as 2026-10-01, which is October 2026 and supplies the second date in the claim."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "Alert 241 reports a retraction whose notice DOI is 10.9999/fake.2020.024",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice DOI 10.9999/fake.2020.024 is the tracked paper's own DOI",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy shows no retraction watermark or banner, and no notice text was provided",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy's content shows no difference from the stored paper",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's version of record dates from July 2020, while the alert was detected in October 2026",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The dates in the version of record and the alert detection do not match",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-2"
+  ]
+}

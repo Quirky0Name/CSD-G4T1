@@ -1,0 +1,205 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the retraction is based only on a metadata flag, with no notice or reason available",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The alert records a retraction for this paper but no notice exists.\" and \"no current copy was provided to check for a retraction watermark or banner.\" The answer does not use the words \"metadata flag\", but it treats the alert as the only basis and says no notice exists. It does not explicitly say that no reason is available."
+    },
+    {
+      "fact": "advises the researcher to check the journal or publisher's page to confirm the retraction",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"First check the journal's or publisher's page to confirm whether the paper is retracted.\""
+    },
+    {
+      "fact": "states a reason for the retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "quotes a retraction notice",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line reads 'retraction, no notice, detected 2026-10-01, alert severity high', which matches claim 1 that the alert records a retraction with no notice."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper describes a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results, which matches claim 3."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says it measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes, which matches claim 4."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's sensor description (under 20 USD, nitrate in river water, within 5% of lab results) matches claim 5."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line records a retraction with no notice, which matches claim 6 about the tracked paper."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line records a retraction with no notice, which matches claim 8."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's sentence cites [2] (Novak and Silva) for the sensor and says their calibration protocol was used without changes, which matches claim 10."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The alert records a retraction for this paper but no notice exists.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No current copy was provided, so no retraction watermark or banner could be checked.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction is unconfirmed.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's main claim is a sub-20 USD nitrate sensor accurate to within 5% of lab results.",
+      "covered_by": [
+        "change-2",
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's main claim cannot be assessed as reliable or not from the material provided.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's Methods section cites [2] for the sensor and says the draft used its calibration protocol without changes.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper describes a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results.",
+      "covered_by": [
+        "change-2",
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert records a retraction for this paper with no notice.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No current copy of the paper was provided to check for a retraction watermark or banner.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's method rests on the paper that was tracked.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert records a retraction for this paper with no notice.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No current copy of the paper was provided, so no retraction watermark or banner could be checked.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft's Methods section cites [2] for the sensor and says the draft used its calibration protocol without changes.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-1",
+    "impact-3",
+    "action-1"
+  ]
+}
