@@ -274,9 +274,9 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
 - **Blocked by:** none.
 - **Branch:** `feat/rag-embedding`.
 - **Order on branch:** 1.
-- **Files:** `backend/src/research_evaluation/embedding.py` (new), `backend/src/research_evaluation/config.py` (`embed_model`, default `gemini-embedding-001`), `backend/tests/research_evaluation/test_embedding.py`.
+- **Files:** `backend/src/research_evaluation/embedding.py` (new), `backend/src/research_evaluation/config.py` (`embed_model`, default `gemini-embedding-001`), `backend/tests/research_evaluation/test_embedding.py`. `backend/tests/conftest.py` and `backend/tests/research_evaluation/test_config.py` (`EMBED_MODEL`).
 - **Seams:**
-  - `async def embed(texts: list[str], task: Literal["document", "query"]) -> list[list[float]]`: catches the request sent (model, `task_type`, `output_dimensionality`) and normalising, with the client mocked; misses the real Gemini response shape and quotas (human check S5).
+  - `async def embed(texts: list[str], task: Literal["document", "query"]) -> list[list[float]]`, a method of `GeminiEmbedder(client, model)` behind an `Embedder` protocol (as `Llm` is for the model), so callers get it from their context and tests can fake it: catches the request sent (model, `task_type`, `output_dimensionality`) and normalising, with the client mocked; misses the real Gemini response shape and quotas (human check S5).
   - `def chunk_text(text: str, size: int = 3200, overlap: int = 400) -> list[str]`: catches chunk sizes, overlap and the empty and short cases; misses nothing, it is pure.
 - **Decisions:**
   - Gemini `gemini-embedding-001`, through the existing `google-genai` client and `GEMINI_API_KEY`, at `output_dimensionality=1536`. Source: user ("use gemini").
@@ -285,19 +285,23 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - Vectors are L2-normalised before they are returned, because Gemini normalises only at 3072 dimensions. Source: user (confirmed).
   - Gemini is mocked in tests. Source: `code: backend/tests`.
 - **Acceptance criteria:**
-  - [ ] `embed` returns vectors of length 1536 with L2 norm 1 (within 1e-6), with the client mocked: `test_embedding.py::test_normalised`.
-  - [ ] `embed` sends the right `task_type` and `output_dimensionality` 1536: `test_embedding.py::test_request`.
-  - [ ] `chunk_text`:
+  - [x] `embed` returns vectors of length 1536 with L2 norm 1 (within 1e-6), with the client mocked: `test_embedding.py::test_normalised`.
+  - [x] `embed` sends the right `task_type` and `output_dimensionality` 1536: `test_embedding.py::test_request`.
+  - [x] `chunk_text`:
     - gives chunks of at most `size` characters, each overlapping the previous by `overlap`;
     - gives one chunk for text shorter than `size`;
     - gives none for empty text.
 
     Test: `test_embedding.py::test_chunk_text`.
-  - [ ] `uv run pytest` and `uv run ruff check` pass.
+  - [x] `uv run pytest` and `uv run ruff check` pass.
 - **Doc deltas:**
   - EVALUATION.md: an "Embeddings" section (model, dimensions, normalising, task types, chunk size and overlap).
   - SETUP.md: the env var table gains `EMBED_MODEL`.
   - DECISIONS.md: "Chunks are embedded with Gemini `gemini-embedding-001` at 1536 dimensions", with the rejected local model and why.
+  - EVALUATION.md, "Embeddings": `embed` is `GeminiEmbedder.embed` behind an `Embedder` protocol, like `Llm`, so impact's context carries it and tests fake it (the spec named a bare function, which would have no client).
+  - EVALUATION.md, "Embeddings": texts are sent 100 to a request, Gemini's batch limit, and come back in order; no texts makes no call.
+  - EVALUATION.md, "Embeddings": an answer with the wrong number of vectors, a vector that isn't 1536 numbers, or an all-zero vector raises `ValueError`, so nothing unnormalised is ever stored.
+  - EVALUATION.md, "Embeddings": `chunk_text` cuts at character positions, not words or sentences; the 400-character overlap keeps a sentence cut at one edge whole in the next chunk. Blank text gives no chunks.
 
 ### S5. Research Evaluation stores chunks for alerts, reports and documents
 
