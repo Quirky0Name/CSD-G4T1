@@ -1,8 +1,10 @@
 """Research Evaluation's client for User Management: reading the researcher's profile, which
-impact gives to steps 2 and 3 (docs/CONTRACTS.md, "Research Evaluation ↔ User Management").
+impact gives to steps 2 and 3, and posting the events User Management tells the researcher about
+(docs/CONTRACTS.md, "Research Evaluation ↔ User Management").
 The client carries Research Evaluation's service token; User Management's /internal is reachable
 only on the compose network."""
 
+from typing import Any
 from uuid import UUID
 
 import httpx
@@ -32,3 +34,15 @@ async def researcher_profile(http: httpx.AsyncClient, user_id: UUID) -> Research
     response.raise_for_status()
     profile = ResearcherProfile.model_validate(response.json())
     return profile if any(profile.model_dump().values()) else None  # every answer cleared
+
+
+# User Management sends the message before it answers, and an email can be slow
+NOTIFY_TIMEOUT_SECONDS = 30
+
+
+async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -> None:
+    """Posts one event; raises on any non-2xx answer or transport error."""
+    response = await http.post(
+        f"/internal/users/{user_id}/notifications", json=body, timeout=NOTIFY_TIMEOUT_SECONDS
+    )
+    response.raise_for_status()
