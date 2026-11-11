@@ -15,6 +15,9 @@ from research_evaluation.storage import PaperDetails, _detail
 
 log = logging.getLogger(__name__)
 
+# User Management sends the message before it answers, and an email can be slow
+NOTIFY_TIMEOUT_SECONDS = 30
+
 
 class ResearcherProfile(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -37,10 +40,6 @@ async def researcher_profile(http: httpx.AsyncClient, user_id: UUID) -> Research
     response.raise_for_status()
     profile = ResearcherProfile.model_validate(response.json())
     return profile if any(profile.model_dump().values()) else None  # every answer cleared
-
-
-# User Management sends the message before it answers, and an email can be slow
-NOTIFY_TIMEOUT_SECONDS = 30
 
 
 async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -> None:
