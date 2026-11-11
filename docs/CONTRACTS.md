@@ -540,7 +540,7 @@ be in `GET /papers/{id}/alerts` a moment before it's in a report.
 |---|---|
 | `status` | `investigating` (its documents are being fetched, or fetching stopped midway; nothing resumes it yet), `investigated` (fetching finished) or `assessed` (impact wrote its evaluation) |
 | `created_at`, `investigated_at` | when the report was opened, and when fetching finished (null until then) |
-| `context_chunks` | the chunks impact added to the prompt, so a frontend can show them: an array of `{"source_type", "source_id", "page"}` in prompt order, as `PUT /internal/reports/{id}/evaluation` stored it. A `document` item opens with `GET /documents/{id}/pdf` at `page`; an `alert` or `report` item is found in the same paper's report list by its id. `[]` when impact found no past; null for a report assessed before V14 or not yet assessed. Returned only here, not by `GET /internal/reports/{id}`, since only a frontend shows it |
+| `context_chunks` | the chunks impact added to the prompt, so a frontend can show them: an array of items in prompt order, as `PUT /internal/reports/{id}/evaluation` stored it, e.g. `{"source_type": "document", "source_id": "7", "page": null, "start": 2800, "end": 6000}`. `source_type` is `document`, `alert` or `report`; `source_id` is the document's, alert's or report's own id (not the report it belongs to); `page` is the PDF page the chunk came from, null when it isn't from a PDF page; `start` and `end` (ints, both or neither) are only on a `document` item with `page` null whose `text` was cut into more than one chunk: the chunk's character range in the document's `text`, `text.slice(start, end)`, and absent otherwise. How to show an item: an `alert` or `report` item is the alert or report with that id in this paper's report list (one chunk is the whole alert or report); a `document` item with `page` opens `GET /documents/{id}/pdf` at `page`; a `document` item without `page` (a notice or other Europe PMC text) is the document with that `id` in any report's `documents` (a document's `id` is unique across reports), its `text` shown whole, or with `start`/`end` `text.slice(start, end)` marked, like the highlighting `TextPane`. `text_truncated` true means the stored text was cut at 60,000 characters and only that part was chunked. The chunk's text is not stored on the report. A PDF page over 8,000 characters is split and gets no `start`/`end`: the frontend opens the page without marking the part. Items of reports assessed before `start`/`end` existed have none; they aren't backfilled. `[]` when impact found no past; null for a report assessed before V14 or not yet assessed. Returned only here, not by `GET /internal/reports/{id}`, since only a frontend shows it |
 | `evaluation`, `recommendation`, `evaluated_at` | impact's evaluation of the report's alerts together, what the researcher should do, and when it was written. Null until the report is `assessed`, and also null on an assessed report whose change impact rated `none` (not meaningful) |
 | `change_summary`, `change_severity`, `impact_level` | impact's summary of what changed, how serious the change is for anyone relying on the paper, and how much the researcher's draft is affected (`none`, `low`, `medium` or `high`), as in `GET /internal/papers/{id}/reports/{reportId}`. Null until the report is `assessed`; `impact_level` is also null when `change_severity` is `none` |
 | `claims` | the evaluation's claims, an array of `Claim` (below); null until `assessed` and on reports assessed before claims existed (they aren't backfilled) |
@@ -568,6 +568,11 @@ alert carries only one): show it with the report.
 `file_key`, `sha256` and `report_id` are stored but not returned. A
 document's stored PDF is `GET /documents/{id}/pdf` (below). The response
 never carries `assessment`.
+
+Errors, as problem details: `400` an id that isn't a UUID; `401` missing
+or bad token; `403` a service token; `404` no paper with that id **or** a
+paper that belongs to another user (both `No paper <id>`, as for
+`GET /papers/{id}/alerts`).
 
 #### `Claim`
 
@@ -629,11 +634,6 @@ isn't a UUID; `401` missing or bad token; `403` a service token; `404`, as on
 the internal endpoints, also for a paper with no stored PDF, a document with
 none (a notice, `pending`, `not_found`) and a file missing from disk, each
 with its own `detail`.
-
-Errors, as problem details: `400` an id that isn't a UUID; `401` missing
-or bad token; `403` a service token; `404` no paper with that id **or** a
-paper that belongs to another user (both `No paper <id>`, as for
-`GET /papers/{id}/alerts`).
 
 ### `POST /papers` (track by DOI)
 
@@ -1244,6 +1244,7 @@ marks the report `assessed`.
   "claims": [{"id": "change-0", "kind": "change", "...": "see Claim"}],
   "context_chunks": [
     {"source_type": "document", "source_id": "7", "page": 3},
+    {"source_type": "document", "source_id": "8", "page": null, "start": 2800, "end": 6000},
     {"source_type": "alert", "source_id": "42", "page": null}
   ]
 }
@@ -1257,7 +1258,7 @@ marks the report `assessed`.
 | `evaluation`, `recommendation` | not blank: required unless `change_severity` is `none`, and must be null (or left out) when it is |
 | `assessment` | optional JSON, stored and returned exactly as sent; Storage Management never looks inside |
 | `claims` | optional JSON array of `Claim`, stored in its own column and returned exactly as sent (any JSON value is accepted; left out or `null` stores null). Kept apart from `assessment` so that stays unread. Null for reports assessed before V15 |
-| `context_chunks` | optional JSON array, stored as sent and never looked inside: the chunks impact added to its prompt, in prompt order, each `source_type`, `source_id` and `page` (null when the chunk has none). Absent or `null` stores null; an empty `[]` is kept as `[]`, so a report that found no past is told apart from one assessed before V14 |
+| `context_chunks` | optional JSON array, stored as sent and never looked inside: the chunks impact added to its prompt, in prompt order, each `source_type`, `source_id` and `page` (null when the chunk has none), plus `start` and `end` (both or neither) on a page-less `document` item whose text was cut into more than one chunk; the item is described under `GET /papers/{id}/reports`. Absent or `null` stores null; an empty `[]` is kept as `[]`, so a report that found no past is told apart from one assessed before V14 |
 
 **Response `200`:** the report, as `GET` returns it, with `status`
 `assessed`, `evaluated_at` set and the fields as sent (the unsent ones

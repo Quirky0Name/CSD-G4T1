@@ -176,7 +176,9 @@ investigation fetched (documents) and impact's evaluation. Status:
   `recommendation`, `evaluated_at`, `change_summary`, `change_severity`,
   `impact_level`, `claims` and `context_chunks`, but **never** `assessment`.
 - **`context_chunks`** (V14, `reports.context_chunks` text): the chunks
-  impact added to its prompt (`source_type`, `source_id`, `page` each), stored
+  impact added to its prompt (`source_type`, `source_id`, `page` each, plus
+  `start` and `end`, both or neither, on a page-less `document` item whose
+  text was cut into more than one chunk), stored
   as sent and returned as a JSON array in `GET /papers/{id}/reports`, like
   `claims` and `assessment`; Storage Management never looks inside. Absent or
   `null` in the evaluation `PUT` stores null, and reports assessed before V14

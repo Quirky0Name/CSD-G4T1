@@ -56,7 +56,9 @@ most needed first within each.
 - [ ] **Retrieved chunks in place of whole PDFs.** Step 1 still attaches the
   current report's PDFs; the past is added beside them.
 - [ ] **A frontend view of a report's `context_chunks`**: open the alert,
-  report, or document PDF at `page`. Nothing shows retrieved chunks to the
+  report, or document PDF at `page`; for a document without `page`, show
+  its `text` whole, with `text.slice(start, end)` marked (like `TextPane`)
+  when the item has `start`/`end`. Nothing shows retrieved chunks to the
   researcher yet.
 - [ ] **Search across a researcher's papers.** Search is per paper.
 - [ ] **Backfill** of rows stored before V13 (they have no chunks), and
