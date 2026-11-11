@@ -27,14 +27,17 @@ public class NotificationSender {
     private final MessageBuilder messages;
     private final EmailChannel email;
     private final TelegramChannel telegram;
+    private final TestCooldown testCooldown;
 
     public NotificationSender(NotificationPreferencesRepository preferences, UserRepository users,
-                              MessageBuilder messages, EmailChannel email, TelegramChannel telegram) {
+                              MessageBuilder messages, EmailChannel email, TelegramChannel telegram,
+                              TestCooldown testCooldown) {
         this.preferences = preferences;
         this.users = users;
         this.messages = messages;
         this.email = email;
         this.telegram = telegram;
+        this.testCooldown = testCooldown;
     }
 
     public NotificationOutcomes send(UUID userId, NotificationEvent event) {
@@ -48,6 +51,9 @@ public class NotificationSender {
     public NotificationOutcomes sendTest(UUID userId) {
         User user = users.findById(userId).orElseThrow(AccountGoneException::new);
         NotificationPreferences prefs = preferences.findById(userId).orElseThrow(() -> noUser(userId));
+        if (!testCooldown.start(userId)) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Wait 60 seconds between test messages");
+        }
         return deliver(user, prefs, (alert, change, impact) -> Optional.of(messages.test()));
     }
 

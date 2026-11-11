@@ -18,6 +18,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.MediaType;
@@ -26,6 +29,11 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +70,42 @@ class SendNotificationTest {
         telegram.stop();
         mail.stop();
     }
+
+    // the clock the cooldown reads, moved by hand so no test sleeps
+    @TestConfiguration
+    static class ClockConfig {
+        @Bean
+        @Primary
+        MutableClock testClock() {
+            return new MutableClock();
+        }
+    }
+
+    static class MutableClock extends Clock {
+        private Instant now = Instant.parse("2026-11-12T09:00:00Z");
+
+        void advance(Duration by) {
+            now = now.plus(by);
+        }
+
+        @Override
+        public Instant instant() {
+            return now;
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneOffset.UTC;
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            return this;
+        }
+    }
+
+    @Autowired
+    private MutableClock clock;
 
     @LocalServerPort
     private int port;
@@ -363,6 +407,47 @@ class SendNotificationTest {
         assertThat(telegram.requests()).hasSize(1);
         assertThat(JsonPath.<String>read(telegram.requests().get(0).body(), "$.text"))
                 .isEqualTo("This is a test message from Research Assistant. If you can read it, this channel works.");
+    }
+
+    @Test
+    void aSecondTestMessageWithinAMinuteIs429AndSendsNothing() throws Exception {
+        Account account = registered();
+        putEmail(account, Map.of("enabled", true));
+
+        postTest(account.token()).expectStatus().isOk();
+        mail.purgeEmailFromAllMailboxes();
+        postTest(account.token())
+                .expectStatus().isEqualTo(429)
+                .expectBody().jsonPath("$.detail").isEqualTo("Wait 60 seconds between test messages");
+
+        assertThat(mail.getReceivedMessages()).isEmpty();
+    }
+
+    @Test
+    void aTestMessageAMinuteAfterTheLastIsSentAgain() throws Exception {
+        Account account = registered();
+        putEmail(account, Map.of("enabled", true));
+
+        postTest(account.token()).expectStatus().isOk();
+        clock.advance(Duration.ofSeconds(59));
+        postTest(account.token()).expectStatus().isEqualTo(429);
+        clock.advance(Duration.ofSeconds(1));
+        postTest(account.token()).expectStatus().isOk();
+
+        assertThat(mail.getReceivedMessages()).hasSize(2);
+    }
+
+    @Test
+    void twoAccountsDoNotShareTheTestCooldown() throws Exception {
+        Account first = registered();
+        Account second = registered();
+        putEmail(first, Map.of("enabled", true));
+        putEmail(second, Map.of("enabled", true));
+
+        postTest(first.token()).expectStatus().isOk();
+        postTest(second.token()).expectStatus().isOk();
+
+        assertThat(mail.getReceivedMessages()).hasSize(2);
     }
 
     @Test
