@@ -1,0 +1,144 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the draft does not cite the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The draft doesn't cite this paper. Its reference list has no entry for it.\""
+    },
+    {
+      "fact": "says no action is needed for the draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No action is needed: the draft doesn't cite the tracked paper and its reference list has no entry for it, so the retraction does not touch the draft and the alert can be dismissed.\""
+    },
+    {
+      "fact": "says the draft cites the retracted paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing the 2021 review from the reference list",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "This article has been retracted because",
+      "backs": true,
+      "pass": true,
+      "reason": "The passage states that the article has been retracted, which is what claim 1 says. The quote is cut off before the reason, but the retraction itself is stated."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice text says the reported yields could not be reproduced and the raw data were found to have been altered, matching claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper says a single ethanol extraction recovered 94% of the curcumin, which matches claim 3's statement about the abstract's 94% recovery from a single ethanol extraction."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "This article has been retracted because",
+      "backs": true,
+      "pass": true,
+      "reason": "The passage is the same retraction statement as passage 1 and states that the article has been retracted, matching claim 6. The quote is cut off before the reason."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper has been retracted.",
+      "covered_by": [
+        "change-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's abstract reports a 94% curcumin recovery from a single ethanol extraction.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The 94% curcumin recovery is the kind of yield result the notice says could not be reproduced.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft doesn't cite this paper.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's reference list has no entry for this paper.",
+      "covered_by": [
+        "impact-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft doesn't cite the tracked paper.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft's reference list has no entry for the tracked paper.",
+      "covered_by": [
+        "impact-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The retraction does not touch the draft.",
+      "covered_by": [],
+      "pass": false
+    }
+  ],
+  "absent_claims": [
+    "impact-0",
+    "impact-1",
+    "action-1",
+    "action-2"
+  ]
+}

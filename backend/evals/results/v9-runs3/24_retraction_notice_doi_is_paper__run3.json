@@ -1,0 +1,155 @@
+{
+  "change_summary": "The alert reports a retraction notice that carries the paper's own DOI. No notice text was available. The downloaded current copy has the same content as the stored paper and shows no retraction banner or watermark. Nothing given confirms a change to the paper's content, so the retraction flag is unconfirmed.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 9,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "pdfs": {
+      "attached": [
+        "stored paper",
+        "current copy"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 241,
+          "about_this_paper": "no",
+          "what_changed": "The alert records a retraction notice carrying the paper's own DOI. No notice text was given, and the current copy's text matches the stored paper with no retraction banner or watermark.",
+          "scope": "unclear",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "The notice has the paper's own DOI and nothing else shows a change: the current copy matches the stored one and has no retraction mark. The alert date (2026-10-01) is far from the July 2020 publication date, so this is not simply the original publication being recorded, and the retraction flag is unconfirmed.",
+          "evidence": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01, alert severity high"
+            },
+            {
+              "source": "stored paper",
+              "quote": "Version of record published in the July 2020 issue: Volume 56, Issue 1, 1 July 2020, pages 41\u201358."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "none",
+      "summary": "The alert reports a retraction notice that carries the paper's own DOI. No notice text was available. The downloaded current copy has the same content as the stored paper and shows no retraction banner or watermark. Nothing given confirms a change to the paper's content, so the retraction flag is unconfirmed.",
+      "claims": [
+        {
+          "text": "The alert reports a retraction with a notice whose DOI is 10.9999/fake.2020.024, the same DOI as the tracked paper.",
+          "passages": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01, alert severity high"
+            },
+            {
+              "source": "stored paper",
+              "quote": "doi:10.9999/fake.2020.024"
+            }
+          ]
+        },
+        {
+          "text": "No notice text was provided.",
+          "passages": []
+        },
+        {
+          "text": "The current copy shows no retraction banner or watermark and its content matches the stored paper.",
+          "passages": []
+        },
+        {
+          "text": "The paper's version of record was published in July 2020, long before the alert was detected on 2026-10-01.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Version of record published in the July 2020 issue: Volume 56, Issue 1, 1 July 2020, pages 41\u201358."
+            },
+            {
+              "source": "alert 241",
+              "quote": "detected 2026-10-01"
+            }
+          ]
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The alert reports a retraction with a notice whose DOI is 10.9999/fake.2020.024, the same DOI as the tracked paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 241,
+          "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01, alert severity high",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "doi:10.9999/fake.2020.024",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "No notice text was provided.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The current copy shows no retraction banner or watermark and its content matches the stored paper.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The paper's version of record was published in July 2020, long before the alert was detected on 2026-10-01.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Version of record published in the July 2020 issue: Volume 56, Issue 1, 1 July 2020, pages 41\u201358.",
+          "page": 4,
+          "verified": "verbatim"
+        },
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 241,
+          "quote": "detected 2026-10-01",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

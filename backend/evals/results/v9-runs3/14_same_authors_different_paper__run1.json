@@ -1,0 +1,204 @@
+{
+  "change_summary": "The paper \"High-yield ethanol extraction of curcumin from turmeric\" has been retracted. The notice says the reported yields could not be reproduced and the raw data were found to have been altered. The paper's abstract reports a 94% recovery of curcumin.",
+  "change_severity": "high",
+  "impact_level": "none",
+  "evaluation": "The draft doesn't cite this paper.",
+  "recommendation": "The paper has been retracted, but the draft doesn't cite it in its reference list or in its text, so no change is needed and the alert can be dismissed.",
+  "assessment": {
+    "prompt_version": 9,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 141,
+          "about_this_paper": "yes",
+          "what_changed": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "The retraction is for unreproducible yields and altered raw data, so the findings, including the headline 94% recovery, cannot be relied on.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered."
+            },
+            {
+              "source": "stored paper",
+              "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "summary": "The paper \"High-yield ethanol extraction of curcumin from turmeric\" has been retracted. The notice says the reported yields could not be reproduced and the raw data were found to have been altered. The paper's abstract reports a 94% recovery of curcumin.",
+      "claims": [
+        {
+          "text": "The paper has been retracted.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric"
+            }
+          ]
+        },
+        {
+          "text": "The notice says the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "the reported yields could not be reproduced and the raw data were found to have been altered."
+            }
+          ]
+        },
+        {
+          "text": "The paper's abstract reports a 94% recovery of curcumin.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder."
+            }
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": false,
+      "reference_entry": null,
+      "uses": [],
+      "impact_level": "none",
+      "explanation": "The draft doesn't cite this paper.",
+      "claims": [
+        {
+          "text": "The draft doesn't cite the tracked paper, in its reference list or in its text.",
+          "passages": []
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "No action needed; the alert can be dismissed because the draft doesn't cite the retracted paper.",
+          "where": null
+        }
+      ],
+      "recommendation": "The paper has been retracted, but the draft doesn't cite it in its reference list or in its text, so no change is needed and the alert can be dismissed.",
+      "claims": [
+        {
+          "text": "The paper has been retracted.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric"
+            }
+          ]
+        },
+        {
+          "text": "The draft doesn't cite the tracked paper, in its reference list or in its text.",
+          "passages": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The paper has been retracted.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The notice says the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The paper's abstract reports a 94% recovery of curcumin.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft doesn't cite the tracked paper, in its reference list or in its text.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The paper has been retracted.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The draft doesn't cite the tracked paper, in its reference list or in its text.",
+      "supported": false,
+      "passages": []
+    }
+  ]
+}

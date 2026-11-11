@@ -1,0 +1,205 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the retraction is based only on a metadata flag, with no notice or reason available",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The metadata flags the paper as retracted, but no retraction notice was found and no current copy was available to check for a watermark or banner. The flag is therefore unconfirmed, and nothing shows the reason or which parts are affected.\" Also: \"The alert records a retraction with no notice, and no reason or affected parts are given anywhere in the material.\""
+    },
+    {
+      "fact": "advises the researcher to check the journal or publisher's page to confirm the retraction",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"first check the journal's or publisher's page to confirm it.\""
+    },
+    {
+      "fact": "states a reason for the retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"nothing shows the reason or which parts are affected\" and \"no reason or affected parts are given anywhere in the material.\" The answer states that no reason is available, not a reason."
+    },
+    {
+      "fact": "quotes a retraction notice",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"no retraction notice was found\" and \"The alert records a retraction with no notice.\" No notice text is quoted."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line records a retraction with no notice, matching claim 1."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Methods says nitrate was measured with the Novak and Silva [2] sensor using their calibration protocol without changes, matching claim 4."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results.",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper describes a sensor costing under 20 USD that measures nitrate in river water, matching the first part of claim 5. It does not show the Section 2 calibration point."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "The calibration protocol is given in Section 2.",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper says the calibration protocol is in Section 2, matching the second part of claim 5. It does not show the sensor cost or river-water point."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line records a retraction with no notice, matching claim 6."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line records a retraction with no notice, matching claim 8."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Methods says nitrate was measured with the Novak and Silva [2] sensor using their calibration protocol without changes, matching claim 9."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The metadata flags the paper as retracted",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "no retraction notice was found",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "no current copy was available to check for a watermark or banner",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The flag is therefore unconfirmed",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "change_summary",
+      "statement": "nothing shows the reason or which parts are affected",
+      "covered_by": [
+        "change-2",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your Methods section measures nitrate with the sensor of Novak and Silva [2] and uses their calibration protocol without changes.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert records a retraction with no notice",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "no reason or affected parts are given anywhere in the material",
+      "covered_by": [
+        "change-2",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "it is uncertain whether this use is touched",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "I counted it as affected",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "your measurements depend on this method",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert records a retraction with no notice",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Your Methods measures nitrate with the sensor of Novak and Silva [2] and uses their calibration protocol without changes",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-1",
+    "change-2",
+    "impact-3",
+    "action-2"
+  ]
+}

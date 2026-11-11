@@ -1,0 +1,439 @@
+{
+  "change_summary": "The journal published an expression of concern for this paper. It says the editors have been made aware of concerns about some of the data reported, and that the matter is being looked into. The notice does not say which data are in question, and no later notice resolves it.",
+  "change_severity": "medium",
+  "impact_level": "medium",
+  "evaluation": "Your Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice, and says your own proposal builds on this finding. The journal has issued an expression of concern saying the editors have been made aware of concerns regarding some of the data, and that the matter is being looked into. The notice does not say which data are involved, so it is uncertain whether the transplant result you rely on is touched. If it is, the effect on your Discussion would be moderate.",
+  "recommendation": "Hedge the Discussion's use of Lopez and Chen [8] and cite the notice, because the editors have been made aware of concerns regarding some of the data and the notice does not say which data are in question. Don't build your proposal on this finding while the matter is being looked into.",
+  "assessment": {
+    "prompt_version": 9,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 51,
+          "about_this_paper": "yes",
+          "what_changed": "The journal issued an expression of concern saying the editors have been made aware of concerns about some of the data reported in the article. The matter is being looked into and no outcome is given yet.",
+          "scope": "unclear",
+          "affected_parts": [],
+          "severity": "medium",
+          "reason": "An expression of concern about data puts the findings in doubt. The notice does not say which data are involved, so the affected parts can't be identified, and no later notice resolves it.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The editors have been made aware of concerns regarding some of the data reported in this article."
+            },
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The matter is being looked into and we will update readers when more information is available."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "medium",
+      "summary": "The journal published an expression of concern for this paper. It says the editors have been made aware of concerns about some of the data reported, and that the matter is being looked into. The notice does not say which data are in question, and no later notice resolves it.",
+      "claims": [
+        {
+          "text": "The journal published an expression of concern for the paper.",
+          "passages": [
+            {
+              "source": "alert 51",
+              "quote": "expression_of_concern, notice 10.9999/fake.2022.005e"
+            }
+          ]
+        },
+        {
+          "text": "The editors have been made aware of concerns regarding some of the data reported in the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The editors have been made aware of concerns regarding some of the data reported in this article."
+            }
+          ]
+        },
+        {
+          "text": "The matter is being looked into.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The matter is being looked into and we will update readers when more information is available."
+            }
+          ]
+        },
+        {
+          "text": "The notice does not say which data are in question.",
+          "passages": []
+        },
+        {
+          "text": "No later notice resolves the concern.",
+          "passages": []
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[8] Lopez, D., Chen, W. (2022). Gut bacteria and mood in mice. J. Fake Microbiology.",
+      "uses": [
+        {
+          "section": "Discussion",
+          "quote": "The causal role of gut bacteria in depressive behaviour is supported by transplant studies, notably Lopez and Chen [8], who showed reduced activity in recipient mice.",
+          "role": "key_evidence",
+          "claim_relied_on": "that transplanting gut bacteria caused reduced activity in recipient mice, supporting a causal role of gut bacteria in depressive behaviour",
+          "affected": "unclear",
+          "reason": "The expression of concern concerns unspecified 'some of the data', so it is unclear whether the transplant finding is among them."
+        }
+      ],
+      "impact_level": "medium",
+      "explanation": "Your Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice, and says your own proposal builds on this finding. The journal has issued an expression of concern saying the editors have been made aware of concerns regarding some of the data, and that the matter is being looked into. The notice does not say which data are involved, so it is uncertain whether the transplant result you rely on is touched. If it is, the effect on your Discussion would be moderate.",
+      "claims": [
+        {
+          "text": "The Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice."
+            }
+          ]
+        },
+        {
+          "text": "The draft says its own proposal builds on this finding.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Our own proposal builds on this finding."
+            }
+          ]
+        },
+        {
+          "text": "The stored paper reports that transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test (Figure 3).",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test (Figure 3)."
+            }
+          ]
+        },
+        {
+          "text": "The notice says the editors have been made aware of concerns regarding some of the data reported in the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The editors have been made aware of concerns regarding some of the data reported in this article."
+            }
+          ]
+        },
+        {
+          "text": "The notice says the matter is being looked into.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The matter is being looked into and we will update readers when more information is available."
+            }
+          ]
+        },
+        {
+          "text": "The notice does not say which data are in question.",
+          "passages": []
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Hedge the wording of the sentence that presents Lopez and Chen [8] as showing reduced activity in recipient mice (e.g. say the finding is under an expression of concern), and cite the notice alongside [8].",
+          "where": "Discussion, 'The causal role of gut bacteria in depressive behaviour is supported by transplant studies, notably Lopez and Chen [8]...'"
+        },
+        {
+          "action": "Do not build new work on this finding: revisit 'Our own proposal builds on this finding' and avoid making the proposal depend on the transplant result until the journal resolves the matter. Tracking continues, so a retraction would raise a new alert.",
+          "where": "Discussion, 'Our own proposal builds on this finding.'"
+        }
+      ],
+      "recommendation": "Hedge the Discussion's use of Lopez and Chen [8] and cite the notice, because the editors have been made aware of concerns regarding some of the data and the notice does not say which data are in question. Don't build your proposal on this finding while the matter is being looked into.",
+      "claims": [
+        {
+          "text": "The Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice."
+            }
+          ]
+        },
+        {
+          "text": "The draft says its own proposal builds on this finding.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Our own proposal builds on this finding."
+            }
+          ]
+        },
+        {
+          "text": "The editors have been made aware of concerns regarding some of the data reported in the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The editors have been made aware of concerns regarding some of the data reported in this article."
+            }
+          ]
+        },
+        {
+          "text": "The notice does not say which data are in question.",
+          "passages": []
+        },
+        {
+          "text": "The matter is being looked into.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The matter is being looked into and we will update readers when more information is available."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The journal published an expression of concern for the paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 51,
+          "quote": "expression_of_concern, notice 10.9999/fake.2022.005e",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The editors have been made aware of concerns regarding some of the data reported in the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The matter is being looked into.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The matter is being looked into and we will update readers when more information is available.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The notice does not say which data are in question.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "No later notice resolves the concern.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The draft says its own proposal builds on this finding.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Our own proposal builds on this finding.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The stored paper reports that transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test (Figure 3).",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test (Figure 3).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The notice says the editors have been made aware of concerns regarding some of the data reported in the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The notice says the matter is being looked into.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The matter is being looked into and we will update readers when more information is available.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "The notice does not say which data are in question.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The draft says its own proposal builds on this finding.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Our own proposal builds on this finding.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The editors have been made aware of concerns regarding some of the data reported in the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "The notice does not say which data are in question.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-4",
+      "kind": "action",
+      "text": "The matter is being looked into.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The matter is being looked into and we will update readers when more information is available.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,256 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the notice does not say which data or findings are in question",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "change_summary: \"The notice does not say which data are in question\"; evaluation: \"The notice does not say which data are involved, so it is uncertain whether the transplant result you rely on is touched.\""
+    },
+    {
+      "fact": "advises hedging the wording or not building new work on the finding",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "recommendation: \"Hedge the Discussion's use of Lopez and Chen [8] and cite the notice\" and \"Don't build your proposal on this finding while the matter is being looked into.\""
+    },
+    {
+      "fact": "notes that the outcome of the investigation is not yet known",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "change_summary: \"the matter is being looked into\" and \"no later notice resolves it\"; evaluation: \"it is uncertain whether the transplant result you rely on is touched.\""
+    },
+    {
+      "fact": "says the paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "names a specific figure or table as the problem",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "expression_of_concern, notice 10.9999/fake.2022.005e",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line names an expression_of_concern notice for the paper, which matches the claim that the journal published one."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the editors have been made aware of concerns regarding some of the data reported in the article."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The matter is being looked into and we will update readers when more information is available.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the matter is being looked into."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says Lopez and Chen [8] showed reduced activity in recipient mice, which is what the claim attributes to the Discussion's citation."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Our own proposal builds on this finding.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says its own proposal builds on this finding."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test (Figure 3).",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper reports that transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test (Figure 3), matching the claim."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the editors have been made aware of concerns regarding some of the data reported in the article."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "The matter is being looked into and we will update readers when more information is available.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the matter is being looked into."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says Lopez and Chen [8] showed reduced activity in recipient mice, matching the claim about the Discussion's citation."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Our own proposal builds on this finding.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says its own proposal builds on this finding."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the editors have been made aware of concerns regarding some of the data reported in the article."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "The matter is being looked into and we will update readers when more information is available.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the matter is being looked into."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The journal published an expression of concern for this paper.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The editors have been made aware of concerns about some of the data reported.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The matter is being looked into.",
+      "covered_by": [
+        "change-2",
+        "impact-4",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice does not say which data are in question.",
+      "covered_by": [
+        "change-3",
+        "impact-5",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No later notice resolves the concern.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's proposal builds on this finding.",
+      "covered_by": [
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The journal has issued an expression of concern for the paper.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The editors have been made aware of concerns regarding some of the data.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The matter is being looked into.",
+      "covered_by": [
+        "change-2",
+        "impact-4",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice does not say which data are involved.",
+      "covered_by": [
+        "change-3",
+        "impact-5",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The editors have been made aware of concerns regarding some of the data.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice does not say which data are in question.",
+      "covered_by": [
+        "change-3",
+        "impact-5",
+        "action-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-3",
+    "change-4",
+    "impact-5",
+    "action-3"
+  ]
+}
