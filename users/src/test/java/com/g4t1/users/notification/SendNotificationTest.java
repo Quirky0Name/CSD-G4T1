@@ -190,6 +190,39 @@ class SendNotificationTest {
                 "What to do:", "Cite the correction instead.");
     }
 
+    @Test
+    void telegramRefusingTheMessageIsFailedAndEmailIsStillSent() throws Exception {
+        Account account = registered();
+        putEmail(account, Map.of("enabled", true, "min_alert_severity", "low"));
+        putTelegram(account, Map.of("enabled", true, "chat_id", 42, "min_alert_severity", "low"));
+        telegram.answerWith(403);
+
+        postEvent(account.id(), alertsEvent(alert(7, "retraction", "high", "The journal retracted the paper.")))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.channels.email").isEqualTo("sent")
+                .jsonPath("$.channels.telegram").isEqualTo("failed");
+
+        assertThat(mail.getReceivedMessages()).hasSize(1);
+        assertThat(telegram.requests()).hasSize(1);
+    }
+
+    @Test
+    void aChannelTurnedOffIsDisabledAndSendsNothing() throws Exception {
+        Account account = registered();
+        putEmail(account, Map.of("enabled", false, "min_alert_severity", "low"));
+        putTelegram(account, Map.of("enabled", false, "chat_id", 42, "min_alert_severity", "low"));
+
+        postEvent(account.id(), alertsEvent(alert(7, "retraction", "high", "The journal retracted the paper.")))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.channels.email").isEqualTo("disabled")
+                .jsonPath("$.channels.telegram").isEqualTo("disabled");
+
+        assertThat(mail.getReceivedMessages()).isEmpty();
+        assertThat(telegram.requests()).isEmpty();
+    }
+
     private static Map<String, Object> alert(int id, String changeType, String severity, String description) {
         return Map.of("id", id, "change_type", changeType, "alert_severity", severity, "description", description);
     }
