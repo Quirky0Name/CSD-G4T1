@@ -46,6 +46,13 @@ public class NotificationPreferences {
         this.telegramMinImpactLevel = "medium";
     }
 
+    public void replaceEmail(EmailRequest channel) {
+        this.emailEnabled = channel.enabled();
+        this.emailMinAlertSeverity = channel.minAlertSeverity();
+        this.emailMinChangeSeverity = channel.minChangeSeverity();
+        this.emailMinImpactLevel = channel.minImpactLevel();
+    }
+
     public UUID getUserId() {
         return userId;
     }

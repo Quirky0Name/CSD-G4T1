@@ -25,4 +25,12 @@ public class NotificationService {
         User user = users.findById(userId).orElseThrow(AccountGoneException::new);
         return NotificationPreferencesResponse.from(preferences.findById(userId).orElseThrow(), user.getEmail());
     }
+
+    @Transactional
+    public NotificationPreferencesResponse replaceEmail(UUID userId, EmailRequest request) {
+        User user = users.findById(userId).orElseThrow(AccountGoneException::new);
+        NotificationPreferences prefs = preferences.findById(userId).orElseThrow();
+        prefs.replaceEmail(request);
+        return NotificationPreferencesResponse.from(preferences.save(prefs), user.getEmail());
+    }
 }
