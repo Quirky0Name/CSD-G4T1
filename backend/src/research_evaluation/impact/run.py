@@ -85,7 +85,11 @@ async def notify_assessed(
     tell them. A placeholder has no real content to send, so it isn't posted."""
     if context.um is None or report.owner_id is None or stored["assessment"].get("placeholder"):
         return
-    details = await paper_details(sm, report.paper_id)
+    try:
+        details = await paper_details(sm, report.paper_id)
+    except Exception as exc:  # noqa: BLE001 the report is assessed whatever happens to its notification
+        log.warning("reading report %s for its notification failed: %s", report.id, _cause(exc))
+        return
     await notify_quietly(
         context.um,
         report.owner_id,

@@ -457,3 +457,54 @@ async def test_a_failed_store_posts_nothing(sm, um):
     assert await assess_reports(sm.client, context, [report_id]) == []
 
     assert um.notifications == []
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [500, httpx.ReadTimeout("slow"), httpx.ConnectError("down")],
+    ids=["500", "timeout", "unreachable"],
+)
+async def test_user_management_failing_still_assesses_the_report(sm, um, failure, caplog):
+    context = ImpactContext(FakeLlm("high"), um=um.client)
+    report_id = await investigated_report(sm)
+    um.failure = failure
+
+    with caplog.at_level(logging.WARNING, logger="research_evaluation.users"):
+        assert await assess_reports(sm.client, context, [report_id]) == [report_id]
+
+    stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    assert stored["status"] == "assessed"
+    assert f"about report {report_id} failed" in caplog.text
+
+
+class FailingSecondPaperRead(httpx.AsyncBaseTransport):
+    """Storage Management as it is, except its second read of the paper's snapshots fails: impact
+    reads them once for its inputs, and the notification reads them again."""
+
+    def __init__(self, inner: httpx.AsyncBaseTransport) -> None:
+        self._inner = inner
+        self.reads = 0
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        if request.method == "GET" and request.url.path.endswith("/snapshots"):
+            self.reads += 1
+            if self.reads == 2:
+                return httpx.Response(500, json={"detail": "injected"}, request=request)
+        return await self._inner.handle_async_request(request)
+
+
+async def test_storage_management_failing_on_the_notifications_paper_read_still_assesses_the_report(
+    sm, um, caplog
+):
+    context = ImpactContext(FakeLlm("high"), um=um.client)
+    report_id = await investigated_report(sm)
+    transport = FailingSecondPaperRead(sm.transport)
+    flaky = httpx.AsyncClient(transport=transport, base_url="http://stub", auth=sm.client.auth)
+
+    with caplog.at_level(logging.WARNING, logger="research_evaluation.impact.run"):
+        assert await assess_reports(flaky, context, [report_id]) == [report_id]
+
+    assert transport.reads == 2
+    assert um.notifications == []
+    assert f"reading report {report_id} for its notification failed" in caplog.text
+    await flaky.aclose()
