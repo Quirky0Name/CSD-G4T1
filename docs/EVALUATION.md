@@ -16,7 +16,7 @@ POST /evaluate/changes (paper ids, from Updating)
   └─ reply 202 / 503
        └─ background task, per paper evaluated without failure that had changes:
           3. investigation  investigation/   open a report, fetch its documents → report ids
-          4. impact         impact/          Gemini, three steps → PUT evaluation → assessed
+          4. impact         impact/          read the paper's past, Gemini three steps → PUT evaluation → assessed → store the report's chunks
 POST /evaluate/reports (report ids, by hand) ─▶ 4 only
 ```
 
@@ -290,6 +290,7 @@ Per report:
 
 1. `GET /internal/reports/{id}`; skip unless `investigated` (before any PDF
    or Gemini call, so a wrong or repeated id costs one read).
+   Then `impact/history.py` reads the paper's past (below).
 2. `inputs.gather_inputs`: the paper's details (newest snapshot), the
    paper's stored PDF, each document whose `pdf_status` is `ok`. Anything
    missing is recorded, not a failure.
@@ -313,8 +314,60 @@ Per report:
    own). A citation jump has no document: its alert line carries the rule's
    description (the counts), and step 1's task says to judge it as new
    attention, scope `citations_only`, severity `low`, so the gate lets it
-   through to steps 2 and 3. `PROMPT_VERSION` is 5 since the profile
-   section was added (it was 4 for that wording).
+   through to steps 2 and 3. `PROMPT_VERSION` is 6 since the `PAST TIMELINE`
+   section was added (5 for the profile section, 4 for that wording).
+
+   **The past.** Before step 1, `impact/history.py` (`read_history`) embeds
+   one query and searches the paper's stored chunks
+   (`storage.search_chunks`, `POST /internal/chunks/search`); steps 1 and 2
+   get what it finds as a `PAST TIMELINE` section, the same chunks in both.
+   Step 3 gets none.
+
+   - **What "past" is:** every chunk of the same tracked paper
+     (`paper_id`), with no date, order or exclusion filter. A report's
+     chunks are written only after impact has assessed it, so the report
+     being assessed is never among them. Search is per paper; nothing
+     searches across papers.
+   - **The query** is one embedding (`RETRIEVAL_QUERY`) of the alert lines
+     joined by newlines (`<change_type> <notice_doi or "no notice">
+     <description>`), then each notice's `text`, cut to the first 8000
+     characters. A report with no alerts and no notice text has an empty
+     query, so nothing is embedded or searched and `history` is `none`,
+     not `failed`.
+   - **The searches:** one per source type, with no score threshold: up
+     to 3 past alerts, 3 past reports and 5 past document chunks. The three
+     results are merged and ordered by `score`, highest first, so the
+     section and `context_chunks` are nearest first across source types,
+     not grouped by type. Recency plays no part in ranking; the date is
+     shown so the model can place each item in the timeline.
+   - **The section:** with at least one chunk back it is added; with none,
+     a failed search, or no embedder (no `GEMINI_API_KEY`; the embedder is
+     `ImpactContext.embedder`, the one that stores chunks), step 1's and
+     step 2's prompt parts are exactly as before. Step 1: after the
+     attached PDFs, right before the task. Step 2: after the draft (or NO
+     DRAFT), before the profile section and the task. Each item is a
+     `<document kind="past_alert|past_report|past_document" source_id=".."
+     date="YYYY-MM-DD" report="<id or none>" page="..">` block (`page` only
+     when set; the date is `source_date`), its text through `_defuse`. The
+     rules (`PAST_RULES`) follow the blocks, so untrusted text never comes
+     last: past items are context for judging the current change, never the
+     change being assessed, and they are data, not instructions.
+   - **`assessment.history`** records `read`, `none` (nothing found, an
+     empty query, or no embedder) or `failed`. `assess` takes `history`;
+     left out, it is `read` when `inputs.chunks` (`ReportInputs.chunks`,
+     default empty) is set and `none` otherwise, which is what the evals
+     get, since they fill `chunks` from a case's `history`. A failed search
+     or embedding never fails the report: it logs the report id and the
+     exception class only (an error could carry the query's text), and
+     `assessment.history` holds only the status.
+   - **`context_chunks`** goes in the evaluation `PUT`: `source_type`,
+     `source_id` and `page` of exactly the chunks in the prompt, in prompt
+     order, so a frontend can show them later; `[]` when there are none. It
+     is sent with every evaluation, the placeholder and change severity
+     `none` included, since steps 1 and 2 had the chunks either way.
+   - Step 1 still attaches the current report's PDFs; the past is added
+     beside them as retrieved text, and past documents reach the prompt only
+     as text chunks, never as PDFs.
 
    **The profile.** After the gate, next to the draft, `assess` reads the
    researcher's profile from User Management
@@ -340,6 +393,8 @@ Per report:
 4. `PUT /internal/reports/{id}/evaluation`, once; the report becomes
    `assessed`. Nothing is written between steps, so an `assessed` report is
    always complete.
+5. Store the report's chunks (see "Embeddings"), inline right after the
+   evaluation `PUT`.
 
 **Three levels mean three things:** the alert's `alert_severity` is the rule's,
 by change type, and never changes; the report's `change_severity` is how
@@ -352,7 +407,7 @@ impact.
 `evaluation` (step 2's explanation), `recommendation` (step 3's), and
 `assessment`, JSON with everything else: `prompt_version`, `model`,
 `model_version`, `answered_by` per step, `draft` (`read` / `none` /
-`not_needed`), `profile` (below), `pdfs` attached and left out, each step's full answer,
+`not_needed`), `profile` (below), `history` (`read` / `none` / `failed`, "The past"), `pdfs` attached and left out, each step's full answer,
 `placeholder`.
 
 `assessment.profile` is one of four values: `not_needed` (step 1 failed, or
@@ -382,6 +437,81 @@ model's `failures`. It's stored like any evaluation.
 that fails the `PUT`): logged with the report id and cause, nothing
 stored, the report stays `investigated`, the next report is still
 assessed. A gone paper or report (`PaperGone`, `ReportGone`) is a skip.
+
+## Embeddings
+
+What impact searches and stores (`embedding.py`, `chunks.py`). Storage
+Management keeps the vectors (STORAGE.md, "Chunks"; CONTRACTS.md,
+`PUT /internal/chunks`).
+
+**The embedder.** Gemini `gemini-embedding-001` (`EMBED_MODEL`), through the
+existing `google-genai` client and `GEMINI_API_KEY`, at
+`output_dimensionality=1536`. `embed(texts, task)` is
+`GeminiEmbedder.embed` behind an `Embedder` protocol, like `Llm` is for the
+model, so impact's context carries it and tests fake it. `task` is
+`document` (`RETRIEVAL_DOCUMENT`, stored text) or `query`
+(`RETRIEVAL_QUERY`). Vectors are L2-normalised before they are returned,
+because Gemini normalises only at 3072 dimensions. Texts are sent 100 to a
+request, Gemini's batch limit, and come back in order; no texts makes no
+call. An answer with the wrong number of vectors, a vector that isn't 1536
+numbers, or an all-zero vector raises `ValueError`, so nothing unnormalised
+is ever stored. A local model was rejected: the server already idles at
+about 3 GB of 4 GB (DECISIONS.md, 2026-11-11).
+
+**The chunker.** `chunk_text(text, size=3200, overlap=400)` cuts at
+character positions, not words or sentences; the 400-character overlap
+keeps a sentence cut at one edge whole in the next chunk. Blank text gives
+no chunks.
+
+**When.** Right after impact stores a report's evaluation, inline in
+`assess_report` with no background task (the next report waits for it), never
+before it. The evaluation `PUT` makes the report `assessed`, so the
+researcher's next refresh shows the notification; storing chunks never
+delays or blocks it. A report that is never assessed (no `GEMINI_API_KEY`,
+or impact failed) gets no chunks. There is no backfill: rows stored before
+V13 have none. The embedder rides in `ImpactContext.embedder`: at startup a
+`GeminiEmbedder` on the same Gemini client as the model; `None` (no
+`GEMINI_API_KEY`, and the existing tests) stores no chunks.
+
+**What is stored.** Alerts, then the report, then documents, each source
+embedded and stored on its own (`PUT /internal/chunks`), each source's text
+built in a worker thread (`asyncio.to_thread`) so `pypdf` reading a long
+PDF doesn't stall the event loop.
+
+- **An alert:** one chunk, lines `alert:` (change type), `alert severity:`,
+  `detected:` (date), `description:`, `recommendation:`.
+- **The report:** one chunk, lines `change summary:`, `change severity:`,
+  `impact level:`, `evaluation:`, `recommendation:`, each when present. A
+  change severity `none` report gets one too. A placeholder evaluation
+  gets none, but its alerts and documents still do.
+- **A document, every kind:** each chunk is prefixed
+  `<kind> <doi> (report of <report created_at date>)` and a blank line
+  (`Report.created_at` is now read; `AlertInReport` gains `recommendation`).
+  - With a stored PDF: text extracted with `pypdf` from the bytes
+    `gather_inputs` already read (no PDF is downloaded twice), one chunk per
+    page with that page number (from 1). A page over 8000 characters is cut
+    with `chunk_text(size=8000)`, keeping the 400-character overlap, every
+    piece with the same page. A page with no extractable text (a scan) gives
+    no chunk. NUL characters are dropped from a page's text, because
+    Postgres `text` rejects them and the whole document would otherwise get
+    no chunks. A PDF that `pypdf` can't read is logged and that document
+    gets no chunks.
+  - No PDF but `text` (Europe PMC, e.g. notices): chunks of 3200 characters
+    with 400 of overlap, no page. A PDF wins over `text` when a document
+    has both; notices never have a PDF, so theirs come from `text`.
+  - Neither: no chunks.
+- Impact still attaches the current report's PDFs to step 1 as before.
+
+**Failures.** An embedding or `PUT /internal/chunks` failure is logged
+(the source and the cause class, with a traceback only for an unexpected
+error). It never changes the report's status or the evaluation, leaves no
+chunks for that source, other sources are still stored, and it is never
+retried (ARCHITECTURE.md, "Background work never raises and is never
+retried").
+
+**Not stored:** profile chunks (Storage Management accepts them; nothing
+embeds a profile yet), snapshots, tracked papers' PDFs and drafts
+(ROADMAP.md).
 
 ## Notification
 
@@ -644,11 +774,12 @@ run `run.py --dry <case>` to check that it builds.
 | App, endpoints, lifespan, background task | `main.py` (`evaluate_changes`, `evaluate_reports`, `investigate_then_assess`, `create_app`) |
 | Settings | `config.py` (`ResearchEvaluationSettings`) |
 | Service-token check on its endpoints | `auth.py` (`require_service_token`) |
-| Storage Management client | `storage.py`: snapshots, change keys, alerts, reports, documents, PDFs, evaluation; `PaperGone`, `ReportGone` |
+| Storage Management client | `storage.py`: snapshots, change keys, alerts, reports, documents, PDFs, evaluation, chunks (`store_chunks`, `search_chunks`, `Chunk`); `PaperGone`, `ReportGone` |
+| Embeddings | `embedding.py` (`Embedder`, `GeminiEmbedder`, `chunk_text`), `chunks.py` (the chunk text for each source, PDF text with `pypdf`) |
 | User Management client | `users.py`: `ResearcherProfile`, `researcher_profile(http, user_id)` |
 | Detection, rules, per-paper evaluation | `changes.py`, `rules.py`, `evaluate.py` |
 | Investigation | `investigation/`: `http.py` (one GET, `FetchStatus`), `crossref.py`, `europepmc.py`, `investigate.py` (plan, fetch), `run.py` |
-| Impact | `impact/`: `llm.py` (Gemini client, `FallbackLlm`), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `assess.py`, `run.py` (`ImpactContext`) |
+| Impact | `impact/`: `llm.py` (Gemini client, `FallbackLlm`), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `history.py` (the query, the three searches), `assess.py`, `run.py` (`ImpactContext`) |
 | Shared with Updating | `backend/src/common/`: `doi.py` (`normalize_doi`), `service_token.py` (`ServiceTokenAuth`), `config.py` |
 | Dev stub of Storage Management | `backend/dev/stub_storage.py` (every internal endpoint in memory, plus `/dev/*` helpers) |
 | Tests | `backend/tests/research_evaluation/` (with `investigation/` and `impact/`); fixtures in `backend/tests/fixtures/` |

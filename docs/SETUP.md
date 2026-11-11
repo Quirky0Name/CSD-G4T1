@@ -49,6 +49,7 @@ comments into the value.
 | `INVESTIGATION_PDF_TIMEOUT_SECONDS` | RE | `120`: how long investigation waits for Storage Management to store a document (it downloads the PDF first) |
 | `GEMINI_API_KEY` | RE | aistudio.google.com. Optional: the service starts without it, impact doesn't run |
 | `GEMINI_MODEL` | RE | `gemini-flash-latest` |
+| `EMBED_MODEL` | RE | `gemini-embedding-001`: the Gemini model chunks and queries are embedded with, at 1536 dimensions; uses `GEMINI_API_KEY` |
 | `GEMINI_FALLBACK_MODELS` | RE | `gemini-flash-lite-latest`: comma-separated models tried in order when a call fails; empty for none |
 | `IMPACT_LLM_TIMEOUT_SECONDS` | RE | `120`, per Gemini call |
 | `JUDGE_API_KEY` | `evals/judge.py` only | a second aistudio.google.com key (ideally another Google project) for the eval judge; empty falls back to `GEMINI_API_KEY` |
@@ -133,7 +134,9 @@ cd ../storage && docker compose up -d --build
 - `storage/docker-compose.yml`: Storage Management and its Postgres (host
   port 5433). It uses the backend's GROBID on 8070 (`docker compose up
   grobid` in `backend/` for just that); without GROBID, uploads save
-  without a DOI. PDFs and the database are Docker volumes.
+  without a DOI. PDFs and the database are Docker volumes. Its Postgres
+  image is `pgvector/pgvector:pg17` (the chunks migration needs the `vector`
+  extension); it reads an existing `postgres:17` volume unchanged.
 - `down` stops and keeps the data; `down -v` also wipes the databases and
   the stored PDFs (also the fix for any migration error).
 
@@ -153,8 +156,11 @@ Cloudflare check), so tracking those by DOI fails with `422`; PLOS works.
 ## Storage Management without Docker
 
 ```
-docker run -d --name storage-db -p 5432:5432 -e POSTGRES_DB=storage -e POSTGRES_USER=storage -e POSTGRES_PASSWORD=storage postgres:17
+docker run -d --name storage-db -p 5432:5432 -e POSTGRES_DB=storage -e POSTGRES_USER=storage -e POSTGRES_PASSWORD=storage pgvector/pgvector:pg17
 ```
+
+It must be the pgvector image (not `postgres:17`): V13 runs `create extension
+vector` and fails without it.
 
 Set `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/storage`,
 `SPRING_DATASOURCE_USERNAME=storage`, `SPRING_DATASOURCE_PASSWORD=storage`
@@ -318,7 +324,7 @@ uv run pytest tests/updating/test_scenarios.py   # the mock harness on recorded 
 uv run --with fpdf2 --with rich python evals/all.py   # impact evals: real Gemini calls, needs GEMINI_API_KEY (EVALUATION.md, "Evals")
 
 cd storage
-./mvnw test                   # H2, network mocked
+./mvnw test                   # H2, network mocked; also the *IT classes (surefire `includes` in pom.xml)
 
 cd users
 ./mvnw test                   # H2, even with SPRING_DATASOURCE_* set; real HTTP on a random port
@@ -326,3 +332,9 @@ cd users
 cd frontend/csd-frontend-vite
 npm run build && npm run lint
 ```
+
+Storage Management's Postgres-only tests (the chunk tests: `ChunkPostgresIT`,
+`ChunkSearchPostgresIT`) run in Testcontainers on `pgvector/pgvector:pg17`, so
+they need Docker and are skipped without it. `./mvnw test` runs the `*IT`
+classes too (surefire `includes` in `pom.xml`), so they run with the rest when
+Docker is up.
