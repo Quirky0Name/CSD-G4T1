@@ -826,3 +826,20 @@ async def test_user_management_failing_still_finishes_the_report(
     assert record.getMessage() == (
         f"notifying user {report['owner_id']} about report {report_id} failed: {cause}"
     )
+
+
+async def test_a_report_with_no_owner_posts_nothing_and_is_still_finished(
+    client, sm, um, external, caplog
+):
+    external.crossref[RETRACTION_NOTICE] = "ijaa_notice"
+    paper = await changed_paper(sm, **retraction_and_correction())
+    no_owner = {"id": 1, "paper_id": str(paper), "status": "investigating", "alerts": [], "documents": []}
+    sm.transport.faults[("GET", "/internal/reports/1")] = httpx.Response(200, json=no_owner)
+
+    with caplog.at_level(logging.INFO, logger="research_evaluation.investigation.run"):
+        await nudge(client, [paper])
+
+    assert um.requests == []
+    assert "report 1 has no owner" in caplog.text
+    del sm.transport.faults[("GET", "/internal/reports/1")]
+    assert (await read_report(sm, paper, 1))["status"] == "investigated"

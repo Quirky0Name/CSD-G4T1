@@ -126,6 +126,9 @@ async def notify_alerts(
     if context.um is None:
         return
     opened = await read_report(sm, report.id)
+    if opened.owner_id is None:
+        log.info("report %s has no owner: its alerts are not posted", report.id)
+        return
     details = await paper_details(sm, paper.paper_id)
     await notify_quietly(
         context.um,
