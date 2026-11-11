@@ -24,7 +24,7 @@ from research_evaluation.storage import (
     read_report,
     store_evaluation,
 )
-from research_evaluation.users import notify_quietly
+from research_evaluation.users import notify_quietly, paper_body
 
 log = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ async def notify_assessed(
         details = await paper_details(sm, report.paper_id)
         body = {
             "event": "report_assessed",
-            "paper": {"id": str(report.paper_id), "title": details.title, "doi": details.doi},
+            "paper": paper_body(report.paper_id, details),
             "report_id": report.id,
             "change_severity": stored["change_severity"],
             "change_summary": stored["change_summary"],

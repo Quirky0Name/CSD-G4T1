@@ -11,7 +11,7 @@ from uuid import UUID
 import httpx
 from pydantic import BaseModel, ConfigDict
 
-from research_evaluation.storage import _detail
+from research_evaluation.storage import PaperDetails, _detail
 
 log = logging.getLogger(__name__)
 
@@ -51,6 +51,11 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
     response.raise_for_status()
 
 
+def paper_body(paper_id: UUID, details: PaperDetails) -> dict[str, Any]:
+    """The `paper` object every event carries."""
+    return {"id": str(paper_id), "title": details.title, "doi": details.doi}
+
+
 async def notify_quietly(
     http: httpx.AsyncClient, user_id: UUID, report_id: int, body: dict[str, Any]
 ) -> None:
@@ -60,9 +65,13 @@ async def notify_quietly(
     try:
         await notify(http, user_id, body)
     except Exception as exc:  # noqa: BLE001
-        cause = (
-            f"User Management answered {exc.response.status_code}"
-            if isinstance(exc, httpx.HTTPStatusError)
-            else type(exc).__name__
-        )
-        log.warning("notifying user %s about report %s failed: %s", user_id, report_id, cause)
+        log.warning("notifying user %s about report %s failed: %s", user_id, report_id, _cause(exc))
+
+
+def _cause(exc: Exception) -> str:
+    """The status code or the exception class only, never a response body."""
+    match exc:
+        case httpx.HTTPStatusError():
+            return f"User Management answered {exc.response.status_code}"
+        case _:
+            return type(exc).__name__
