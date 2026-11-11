@@ -99,15 +99,16 @@ REPORT_JSON = {
 class FakeLlm:
     model = "fake-gemini"
 
-    def __init__(self, fail: bool = False):
+    def __init__(self, fail: bool = False, severity: str = "high"):
         self.fail = fail
+        self.severity = severity
 
     async def generate(self, *, system, parts, schema):
         if self.fail:
             raise AllModelsFailed([ModelFailure("fake-gemini", "Gemini answered 503 (UNAVAILABLE)")])
         answers = {
             ChangeAssessment: ChangeAssessment(
-                alerts=[], relations=None, severity="high", summary="Table 2 was corrected."
+                alerts=[], relations=None, severity=self.severity, summary="Table 2 was corrected."
             ),
             ImpactAssessment: ImpactAssessment(
                 cited=True, reference_entry=None, uses=[], impact_level="medium",
@@ -265,6 +266,45 @@ async def test_unreadable_pdf_gets_no_chunks_and_the_rest_are_stored(sm, mock_sm
     assert ("document", "102") not in sources
     assert {("alert", "41"), ("alert", "42"), ("document", "101"), ("report", "7")} <= sources
     assert any("document 102" in record.getMessage() for record in caplog.records)
+
+
+async def test_change_severity_none_gets_a_report_chunk(sm, mock_sm, events):
+    llm = FakeLlm(severity="none")
+
+    assert await assess_report(sm, ImpactContext(llm, embedder=FakeEmbedder(events)), REPORT)
+
+    [report_chunk] = by_source(chunk_calls(mock_sm))[("report", "7")]["chunks"]
+    assert "change summary: Table 2 was corrected." in report_chunk["content"]
+    assert "change severity: none" in report_chunk["content"]
+
+
+async def test_a_pdf_page_over_8000_characters_is_split_with_its_page(sm, mock_sm, events):
+    long_page = "".join(chr(ord("a") + i % 26) for i in range(9000))
+    mock_sm.get("/internal/documents/102/pdf").respond(
+        200, content=text_pdf([long_page, "Discussion."])
+    )
+
+    await assess_report(sm, ImpactContext(FakeLlm(), embedder=FakeEmbedder(events)), REPORT)
+
+    pdf_chunks = by_source(chunk_calls(mock_sm))[("document", "102")]["chunks"]
+    prefix = "new version 10.1/version (report of 2026-10-02)\n\n"
+    assert [chunk["page"] for chunk in pdf_chunks] == [1, 1, 2]
+    assert all(len(chunk["content"]) <= len(prefix) + 8000 for chunk in pdf_chunks)
+    assert pdf_chunks[0]["content"] == prefix + long_page[:8000]
+
+
+async def test_nul_characters_are_dropped_from_pdf_text(sm, mock_sm, events):
+    # \000 in a PDF string is a NUL character, which Postgres text rejects
+    mock_sm.get("/internal/documents/102/pdf").respond(
+        200, content=text_pdf([r"Table\0002 was corrected."])
+    )
+
+    await assess_report(sm, ImpactContext(FakeLlm(), embedder=FakeEmbedder(events)), REPORT)
+
+    [chunk] = by_source(chunk_calls(mock_sm))[("document", "102")]["chunks"]
+    assert chunk["page"] == 1
+    assert "Table2 was corrected." in chunk["content"]
+    assert chr(0) not in chunk["content"]
 
 
 @pytest.mark.parametrize("failure", ["embedding", "storage"])

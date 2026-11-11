@@ -13,6 +13,7 @@ its documents is cut into chunks, embedded and stored in Storage Management, one
 Storing never raises and is never retried: a failure (embedding, Storage Management, a PDF pypdf
 can't read) is logged and leaves that source without chunks, and the others are still stored."""
 
+import asyncio
 import io
 import logging
 from collections.abc import Callable
@@ -88,9 +89,13 @@ def document_pieces(
 
 
 def pdf_pages(pdf: bytes) -> list[tuple[int, str]]:
-    """Each page's text with its number from 1; pages with no text (a scan) are left out."""
+    """Each page's text with its number from 1; pages with no text (a scan) are left out. NUL
+    characters, which pypdf can return and Postgres text rejects, are dropped."""
     reader = PdfReader(io.BytesIO(pdf))
-    pages = [(number, page.extract_text() or "") for number, page in enumerate(reader.pages, 1)]
+    pages = [
+        (number, (page.extract_text() or "").replace("\x00", ""))
+        for number, page in enumerate(reader.pages, 1)
+    ]
     return [(number, text) for number, text in pages if text.strip()]
 
 
@@ -119,7 +124,8 @@ async def store_report_chunks(
     ]
     for source_type, source_id, pieces_of in sources:
         try:
-            pieces = pieces_of()
+            # off the event loop: pypdf reading a long PDF would stall every other request
+            pieces = await asyncio.to_thread(pieces_of)
             if not pieces:
                 continue
             vectors = await embedder.embed([piece.content for piece in pieces], "document")
