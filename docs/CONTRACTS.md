@@ -254,6 +254,26 @@ is `400`. `enabled` true with `chat_id` null is `400` `chat_id is required to
 enable Telegram`. A body that isn't JSON is Spring's generic `400`. Nothing
 changes on a `400`. The chat id is never logged. `401` and `403` as for `GET`.
 
+### `POST /auth/me/notifications/test`
+
+User token only. No body. Sends a fixed test message to every enabled channel,
+ignoring the thresholds: subject `Research Assistant: Test notification`,
+body `This is a test message from Research Assistant. If you can read it,
+this channel works.` (the same body goes to Telegram), with no link.
+**Response `200`:** `{"channels": {"email": "sent", "telegram": "disabled"}}`,
+each outcome `sent`, `failed`, `disabled` (the channel is off) or
+`not_configured` (the server has no SMTP host or bot token); outcomes as for
+the internal endpoint in "Research Evaluation ↔ User Management".
+
+Errors: `401` `Your account no longer exists` for a deleted account, `404`
+`No user <id>` for an account with no preferences row, `403` an admin or
+service token, and `429` `Wait 60 seconds between test messages` for a second
+call from the same account within 60 s of its last accepted one, which sends
+nothing. A `401` or `404` is answered before the window and doesn't start it.
+Why: the address is unverified, so an unthrottled test endpoint could be
+looped to spam a third party and get the SMTP account suspended. The window
+is kept in memory, keyed by account id, so a restart resets it.
+
 ### `DELETE /auth/me`
 
 User JWT required. Deletes the caller's account. **Request:**
@@ -384,7 +404,7 @@ bad token, `403` a user token.
 
 Owned by: User Management. Consumed by: Research Evaluation, with its
 service token (`sub=svc:research-evaluation`), for impact's steps 2 and 3
-(EVALUATION.md). Reachable only on the compose network: Caddy and the Vite
+(EVALUATION.md) and to post the events outside notifications are sent for. Reachable only on the compose network: Caddy and the Vite
 proxy forward `/auth/*` and `/projects*`, never `/internal`.
 
 ### `GET /internal/users/{id}/profile`
@@ -401,6 +421,113 @@ other `detail` is a failed read, not "no profile".
 Research Evaluation learns whose profile to read from `owner_id` on the
 report (see `GET /internal/papers/{id}/reports/{reportId}`), since it only
 has a `paper_id`.
+
+### `POST /internal/users/{id}/notifications`
+
+Owned by User Management. Service token only (`/internal/**` takes only
+`ROLE_SERVICE`). Research Evaluation posts one event per call, and User
+Management applies each channel's thresholds, builds the message and sends
+it. **Request**, one of:
+
+```json
+{
+  "event": "alerts",
+  "paper": {"id": "uuid", "title": "string or null", "doi": "string or null"},
+  "report_id": 3,
+  "alerts": [
+    {"id": 7, "change_type": "retraction", "alert_severity": "high", "description": "..."}
+  ]
+}
+```
+
+```json
+{
+  "event": "report_assessed",
+  "paper": {"id": "uuid", "title": "string or null", "doi": "string or null"},
+  "report_id": 3,
+  "change_severity": "high",
+  "change_summary": "...",
+  "impact_level": "medium",
+  "evaluation": "string or null",
+  "recommendation": "string or null"
+}
+```
+
+- `event` is `alerts` or `report_assessed`; anything else is `400`.
+- `alerts`: at least one; each `alert_severity` is `low`, `medium` or `high`.
+- `report_assessed`: the fields as stored by `PUT
+  /internal/reports/{reportId}/evaluation`; `impact_level`, `evaluation` and
+  `recommendation` are null when `change_severity` is `none`, and a `none`
+  report with any of them set is `400`.
+
+**Response `200`:**
+
+```json
+{"channels": {"email": "sent", "telegram": "no_match"}}
+```
+
+Each channel's outcome is one of `sent`, `failed`, `disabled` (the user
+turned it off), `no_match` (the event is below its thresholds) and
+`not_configured` (the server has no `MAIL_HOST` or `TELEGRAM_BOT_TOKEN`; a
+channel can still be saved enabled without them).
+
+Errors: `400` a body that breaks the rules; `401`/`403` as for every
+`/internal` call; `404` `No user <id>` (no account, or no preferences row: a
+dev mode admin created after V6). The body is checked before the user is
+looked up, so a bad body for an unknown user is `400`, not `404`. `400`
+details start with the field: `event must be alerts or report_assessed`,
+`paper is required` (`paper` needs an `id`), `alerts must have at least one
+alert`, `alerts must not contain null`, `alert_severity must be low, medium or
+high`, `change_type and description are required` (each alert),
+`change_severity must be none, low, medium or high`, `change_summary is
+required`, `impact_level must be low, medium, high or null`, and
+`impact_level must be null when change_severity is none` (likewise
+`evaluation` and `recommendation`). A body that isn't JSON, or whose
+`paper.id` isn't a uuid, is Spring's generic `400`.
+
+**Which events send.** Levels are ordered `low` < `medium` < `high`. An
+`alerts` event passes a channel when at least one alert's severity is at or
+above its `min_alert_severity`; the message lists only those alerts. A
+`report_assessed` event passes when `change_severity` is at or above
+`min_change_severity` or `impact_level` is at or above `min_impact_level`. A
+`null` threshold never passes, and a `change_severity` of `none` never passes,
+whatever its impact level.
+
+**Sending.** Synchronous: User Management sends during the request and
+answers only after trying both channels, one after another; Research
+Evaluation calls it with a 30 s timeout. Each channel has one overall 10 s
+deadline for its whole send (`CHANNEL_DEADLINE`, default `10s`, which the tests
+shorten); a channel still running at the deadline is `failed`, and the other
+channel is unaffected. The send is abandoned, not undone, so a message may
+still arrive after `failed`. Why: two channels at 10 s each have to fit inside
+Research Evaluation's 30 s wait, and the SMTP steps alone (connect, EHLO,
+STARTTLS, AUTH, DATA) can take an email 40 s or more. A failed channel logs the
+user id, channel and the status code or exception class only, never the text,
+address or chat id. There are no retries.
+
+- **Email:** to the account email, plain text, never cut. Subject
+  `Research Assistant: New alerts on "<title>"` or `Research Assistant: Report
+  ready on "<title>"`; a missing title is `a tracked paper` (in the message's
+  first line too). From `MAIL_FROM`, which has no default: with a `MAIL_HOST`
+  and no `MAIL_FROM` the mail has no From and the SMTP server or JavaMail
+  refuses it (`failed`, logged as `MailSendException`).
+- **Telegram:** `sendMessage` to the chat id, plain text (no `parse_mode`),
+  `disable_web_page_preview` true, cut to 4096 UTF-16 units ending `…`. The cut
+  keeps whole characters: when the 4095th unit would be the first half of an
+  emoji, the cut is one unit earlier, so a cut message can be 4095 units long.
+  It is `sent` on any `2xx` from the bot API (the `ok` field of its answer isn't
+  read); any other status, a refused connection or a timeout is `failed`.
+  A send with no chat id on an enabled channel is `failed`. The bot token is in
+  the URL, so neither the URL nor the text is logged.
+- **Message body.** `alerts`: the title, the DOI, then one line per passing alert,
+  `<ALERT SEVERITY> <change type>: <description>`, most severe first, equal
+  severities keeping the order posted; change types print as posted
+  (`citation_jump`). `report_assessed`: the title, the DOI, `Change:
+  <change_severity>`, the change summary, `Impact on your draft: <impact_level>`,
+  the evaluation, `What to do:` and the recommendation; the parts that are null
+  are left out. The DOI line is left out when `doi` is null. Then the link
+  `<APP_URL>/papers/<paper id>` (trailing slashes of `APP_URL` dropped), none
+  when `APP_URL` is not set.
 
 ## Frontend ↔ Storage Management
 
@@ -1628,6 +1755,7 @@ logged by Updating, not returned.
 | `SM_BASE_URL` | Research Evaluation, Updating, User Management | Storage Management's base URL (`http://localhost:8081` locally) |
 | `RE_BASE_URL` | Updating | Research Evaluation's base URL (Updating's nudge goes here). Storage Management never calls Research Evaluation |
 | `UM_BASE_URL` | Research Evaluation | User Management's base URL (`http://localhost:8080` locally, `http://users:8080` in the root compose stack) |
+| `APP_URL` | User Management | the site's address (e.g. `https://our-name.duckdns.org`), for the link `<APP_URL>/papers/<paper id>` in an outside notification; empty sends no link |
 | `REFRESH_COOKIE_SECURE` | User Management | `true` adds `Secure` to the refresh cookie; `false` by default, so it works over plain HTTP locally. Set `true` on the deployed server |
 
 See [SETUP.md](SETUP.md) for the full env var list including the

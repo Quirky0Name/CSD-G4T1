@@ -43,9 +43,17 @@ most needed first within each.
   only (SETUP.md, "Dev mode: triggering a change"). It gets its own spec.
 - [ ] **Rate limiting on login.** None, which matters most while dev mode's
   known admin password exists (DEPLOY.md).
-- [ ] A notification history (the toast has none, and no read state).
-- [ ] Notify about reports assessed while the researcher was signed out
-  (today only reports assessed while a tab is open notify).
+- [x] Notify about reports assessed while the researcher was signed out:
+  done by email or Telegram, when the researcher turns a channel on
+  (ARCHITECTURE.md, "Outside notifications").
+- [ ] A notification history (the toast has none, and no read state, and
+  outside notifications are not recorded either).
+- [ ] Retrying a failed outside notification, and digests or batching across
+  reports: a failed send is logged and not tried again.
+- [ ] Verifying the account email, or a second email address: email goes to
+  the unverified account email.
+- [ ] Linking Telegram without typing a chat id (a deep link, `getUpdates` or
+  a webhook).
 
 ## Frontend and the researcher's view
 

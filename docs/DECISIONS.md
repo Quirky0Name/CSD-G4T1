@@ -8,6 +8,39 @@ owned that story made.
 
 ---
 
+## 2026-11-11 — Outside notifications by email and Telegram, sent by User Management
+
+Reverses the 2026-09-28 rejection of email and the 2026-11-05 removal of the
+Telegram notification.
+
+- **The user's call: tell a researcher outside the app**, by email or
+  Telegram, so a report assessed while no tab is open still reaches them (the
+  in-app toast only does while a tab is open).
+- **User Management owns the preferences and the sending** (option A):
+  Research Evaluation posts an event, User Management applies the thresholds,
+  builds the message and sends it. Rejected (option B): Research Evaluation
+  getting the channels and sending itself, which would take the bot token, SMTP
+  password, email address and chat id out of User Management.
+- **Thresholds per channel.** Each channel has its own on/off and its own
+  `min_alert_severity`, `min_change_severity` and `min_impact_level`; a report
+  sends when its change severity or its impact level is at or above the
+  channel's threshold ("send if either exceeds", at or above), an alert when its
+  severity is.
+- **The researcher types the Telegram chat id**, from a bot such as
+  `@userinfobot`, after pressing Start on the bot. Linking through the bot (a
+  deep link, `getUpdates`, a webhook) was not built.
+- **Email goes to the account email, which isn't verified**, and there is no
+  second address. The test endpoint is throttled to one a minute per account
+  for that reason: looped, it could spam a third party.
+- **Opt-in defaults written at registration**: both channels off, one row per
+  account, with a backfill for existing accounts, so nothing handles a missing
+  row.
+- **Synchronous sending, no retries**: User Management sends during the request
+  and a failed send is logged and not tried again (ROADMAP.md).
+- **The in-app toast stays exactly as it is.**
+
+---
+
 ## 2026-11-10 — A 1-hour access token and a 1-week refresh token
 
 Supersedes "Tokens: 24 hours, no refresh token" in the 2026-10-24 entry, and

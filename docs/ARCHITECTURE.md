@@ -36,6 +36,7 @@ feature on their own.
   researcher's draft (change severity, impact level, evaluation,
   recommendation).
 - An in-app notification, on the frontend's 30 s refresh, when one of the signed-in researcher's reports is assessed.
+- Outside notifications: a researcher who turns on email or Telegram is told when a paper gets alerts and when its report is assessed, whether or not a tab is open.
 - The frontend: tracked papers, alerts (acknowledge, dismiss),
   reports, the draft upload, a manual poll, deleting a paper.
 - Demo tools in Storage Management to replay a change on a real paper
@@ -48,7 +49,7 @@ topic discovery) is in [ROADMAP.md](ROADMAP.md).
 
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
-| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users`, `projects`, `user_profiles`, `refresh_tokens` and `notification_preferences`: register, login, refresh and the JWTs, each researcher's projects, profile and notification preferences, and deleting an account | `users/` |
+| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users`, `projects`, `user_profiles`, `refresh_tokens` and `notification_preferences`: register, login, refresh and the JWTs, each researcher's projects, profile and notification preferences, sending their outside notifications, and deleting an account | `users/` |
 | Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls the services at `/api`, `/auth`, `/projects` and `/updating` on its own address (the Vite proxy in development, Caddy in the root stack) | `frontend/csd-frontend-vite/` |
 | Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts, reports and documents, drafts | `storage/` |
 | Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact); no database of its own; reads a researcher's profile from User Management | `backend/src/research_evaluation/` |
@@ -110,6 +111,22 @@ notify, and each open tab notifies once per report. There is no server
 push (WebSocket, SSE, browser notifications); the frontend finds assessed
 reports on its refresh.
 
+**Outside notifications** are an email or a Telegram message, sent by User
+Management when an alert or an assessed report passes a channel's
+thresholds.
+User Management reads
+the researcher's `notification_preferences`, applies each channel's
+thresholds, builds the message and sends it during the request, then answers
+each channel's outcome. Research Evaluation never holds the bot token, the
+SMTP password, an email address or a chat id. Email goes to the account email
+(unverified), over SMTP from `MAIL_HOST`; Telegram is `sendMessage` through
+the bot API to the chat id the researcher typed in. Each channel has its own
+on/off and its own thresholds, and a report sends when its change severity
+or its impact level is at or above that channel's threshold. Sending holds no
+database transaction: the account and the preferences row are read first,
+then the channels are tried one after another, so one failing doesn't stop the
+other. The in-app toast is separate and unchanged.
+
 Rules that hold across the flow:
 
 - **Updating and Research Evaluation share data only through Storage
@@ -119,6 +136,8 @@ Rules that hold across the flow:
   (`GET /internal/users/{id}/profile`, its service token), after the gate and
   only for impact's steps 2 and 3. Which user comes from `owner_id` on
   Storage Management's report. A failed read never fails a report.
+- **User Management calls Telegram and an SMTP server**, the only service
+  that does.
 - **Only Updating calls Research Evaluation** (the nudge), plus a manual
   `POST /evaluate/reports` with a service token. Storage Management and
   the frontend never call it.
@@ -246,12 +265,15 @@ chat id, every threshold `high`, `medium`, `medium`) in the same transaction as
 the account and its profile, in the `notification` package, and V6 inserts one
 for every account that already existed. So a row is always there, except for
 a dev mode admin created after V6 (it gets none); no code path handles a
-missing row. Each channel's `PUT`
+missing row except the internal endpoint's `404`. Each channel's `PUT`
 updates only that channel's columns (`@DynamicUpdate` on the entity) and
 loads the row with a pessimistic write lock inside its transaction, so
 overlapping `PUT`s queue on the row: two `PUT`s to different channels never
 write each other's columns, and each `PUT` to one channel stores a whole
-channel rather than a column by column mix of two requests.
+channel rather than a column by column mix of two requests. A Telegram send
+with no chat id on an enabled channel is `failed` without an error, logging
+the user id and "no chat id" only: the `PUT` refuses that state, but an older
+or hand edited row could hold it.
 
 ## Deployment
 

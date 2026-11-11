@@ -32,7 +32,9 @@ Learner Lab won't do: it limits IAM roles and stops instances after a few hours.
 
    Then any of the API keys and settings in `.env.example` the app should use (`GEMINI_API_KEY`,
    `OPENALEX_API_KEY`, `CROSSREF_MAILTO`,
-   `DEV_TOOLS`, ...). Leave out `WEB_PORT`, `HTTPS_PORT` and `SITE_ADDRESS`: the server sets those.
+   `DEV_TOOLS`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM`,
+   `TELEGRAM_BOT_TOKEN`, `APP_URL`, ...). Outside notifications by email need
+   an SMTP server on port 587: EC2 blocks outbound port 25 by default. Leave out `WEB_PORT`, `HTTPS_PORT` and `SITE_ADDRESS`: the server sets those.
    No value may contain a single quote.
 2. **CloudFront's prefix list.** In the VPC console, Managed prefix lists, find
    `com.amazonaws.global.cloudfront.origin-facing` and copy its ID (`pl-...`).
