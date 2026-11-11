@@ -35,6 +35,7 @@ from research_evaluation.impact.prompts import (
 from research_evaluation.impact.schemas import (
     PLACEHOLDER_TEXT,
     ChangeAssessment,
+    ContextChunk,
     Evaluation,
     ImpactAssessment,
     RecommendedActions,
@@ -46,9 +47,20 @@ log = logging.getLogger(__name__)
 
 
 async def assess(
-    llm: Llm, sm: httpx.AsyncClient, inputs: ReportInputs, um: httpx.AsyncClient | None = None
+    llm: Llm,
+    sm: httpx.AsyncClient,
+    inputs: ReportInputs,
+    um: httpx.AsyncClient | None = None,
+    history: str | None = None,
 ) -> Evaluation:
+    """`history` is how reading the paper's past went (impact.history: read, none or failed);
+    None works it out from `inputs.chunks`, as the evals do."""
     prompt = change_prompt(inputs)
+    # the past chunks steps 1 and 2 get, in prompt order, for the frontend to show (I5)
+    context = [
+        ContextChunk(source_type=c.source_type, source_id=c.source_id, page=c.page)
+        for c in inputs.chunks
+    ]
     assessment: dict[str, Any] = {
         "prompt_version": PROMPT_VERSION,
         "model": llm.model,
@@ -57,6 +69,7 @@ async def assess(
         "placeholder": False,
         "draft": "not_needed",
         "profile": "not_needed",
+        "history": history or ("read" if inputs.chunks else "none"),
         "pdfs": pdfs_record(prompt),
         "change": None,
         "impact": None,
@@ -70,7 +83,10 @@ async def assess(
         assessment["change"] = change.value.model_dump(mode="json")
         if change.value.severity == "none":
             return Evaluation(
-                change_summary=change.value.summary, change_severity="none", assessment=assessment
+                change_summary=change.value.summary,
+                change_severity="none",
+                assessment=assessment,
+                context_chunks=context,
             )
 
         # only now: a change that isn't meaningful never touches the researcher's draft
@@ -80,7 +96,7 @@ async def assess(
         step = "impact"
         impact = await llm.generate(
             system=SYSTEM,
-            parts=impact_prompt(inputs.paper, change.value, draft, profile),
+            parts=impact_prompt(inputs.paper, change.value, draft, profile, inputs.chunks),
             schema=ImpactAssessment,
         )
         assessment["answered_by"]["impact"] = impact.model
@@ -94,7 +110,7 @@ async def assess(
         assessment["answered_by"]["actions"] = actions.model
         assessment["actions"] = actions.value.model_dump(mode="json")
     except AllModelsFailed as exc:
-        return _placeholder(assessment, step, exc)
+        return _placeholder(assessment, step, exc, context)
     return Evaluation(
         change_summary=change.value.summary,
         change_severity=change.value.severity,
@@ -102,6 +118,7 @@ async def assess(
         evaluation=impact.value.explanation,
         recommendation=actions.value.recommendation,
         assessment=assessment,
+        context_chunks=context,
     )
 
 
@@ -126,7 +143,9 @@ async def _read_profile(
     return ("read", profile) if profile is not None else ("none", None)
 
 
-def _placeholder(assessment: dict[str, Any], step: str, exc: AllModelsFailed) -> Evaluation:
+def _placeholder(
+    assessment: dict[str, Any], step: str, exc: AllModelsFailed, context: list[ContextChunk]
+) -> Evaluation:
     """Every model failed `step`: the placeholder, with the steps that did finish kept."""
     assessment["placeholder"] = True
     assessment["failed_step"] = step
@@ -140,4 +159,5 @@ def _placeholder(assessment: dict[str, Any], step: str, exc: AllModelsFailed) ->
         evaluation=PLACEHOLDER_TEXT,
         recommendation=PLACEHOLDER_TEXT,
         assessment=assessment,
+        context_chunks=context,
     )

@@ -60,6 +60,10 @@ The first boot's log is `/var/log/research-assistant-bootstrap.log` on the insta
    Systems Manager. The server pulls that commit's images and restarts; nothing is built there.
    The workflow waits and fails if the server's update does.
 
+The root stack's Postgres image is `pgvector/pgvector:pg17` (Storage Management's chunks
+migration, V13, needs the `vector` extension). The server's first pull after that change reads the
+existing `postgres:17` volume unchanged.
+
 Runs never overlap: one waits for the other to finish, and GitHub keeps only the newest waiting
 run, so a rollback queued behind a deploy can be replaced by a merge that lands meanwhile. Each
 commit on `main` shows a tick or a cross for its deploy.

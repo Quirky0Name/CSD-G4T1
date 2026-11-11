@@ -8,6 +8,30 @@ owned that story made.
 
 ---
 
+## 2026-11-11 — Chunks are embedded with Gemini `gemini-embedding-001` at 1536 dimensions
+
+Impact searches a paper's past alerts, reports and report documents by
+vector. The chunks are embedded with Gemini `gemini-embedding-001`, through
+the existing `google-genai` client and `GEMINI_API_KEY`, at
+`output_dimensionality=1536` (the user's call: "use gemini"). They are
+L2-normalised after the call, because Gemini normalises only at 3072
+dimensions. Stored text uses `RETRIEVAL_DOCUMENT` and queries
+`RETRIEVAL_QUERY`.
+
+- **A local model was rejected** (`fastembed`, `bge-small-en-v1.5`): the
+  `t4g.medium` (4 GB) server already idles at about 3 GB (`deploy/stack.yml`).
+- **One `chunks` table in the same database**, as the same `app` role, with
+  the pgvector image replacing `postgres:17` in the root stack and
+  `storage/docker-compose.yml`; searched with `where` filters and then
+  cosine distance, per paper. Ranking is by similarity only, with no
+  recency (the user's call: similarity handles relevance, which matters
+  more).
+- **A report's chunks are written only after impact has stored its
+  evaluation**, so impact never retrieves the report it is assessing and
+  "the past" needs no date filter.
+
+---
+
 ## 2026-11-10 — A 1-hour access token and a 1-week refresh token
 
 Supersedes "Tokens: 24 hours, no refresh token" in the 2026-10-24 entry, and

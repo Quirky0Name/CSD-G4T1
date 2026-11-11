@@ -314,7 +314,8 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - `backend/src/research_evaluation/chunks.py` (new: the chunk text for each source, PDF text extraction with `pypdf`)
   - `backend/src/research_evaluation/impact/run.py` (after `store_evaluation`)
   - `backend/pyproject.toml`, `backend/uv.lock` (`pypdf` as a runtime dependency; today only `evals/real/extract.py` uses it, through `uv run --with`)
-  - tests under `backend/tests/research_evaluation/`
+  - `backend/src/research_evaluation/main.py` (`ImpactContext.embedder`, a `GeminiEmbedder` on impact's Gemini client)
+  - tests under `backend/tests/research_evaluation/` (`test_chunks_pipeline.py`; `test_config.py` for the embedder at startup)
 - **Seams:**
   - `assess_report(sm, context, report_id)`, with Storage Management (`respx`) and Gemini mocked: catches which `PUT /internal/chunks` calls are sent, their bodies, their order after the evaluation `PUT`, and the failure rule; misses real PDF layouts (tests use generated PDFs) and the real Storage Management.
   - `POST /evaluate/reports`, with the same mocks: catches that the request path reaches chunk storage; misses the same.
@@ -337,7 +338,7 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - PDF text comes from the bytes `gather_inputs` already read, so no PDF is downloaded twice. A PDF that `pypdf` can't read is logged, and that document gets no chunks. Source: user (confirmed).
   - Impact still attaches the current report's PDFs to step 1 as before. Past documents reach the prompt only as retrieved text chunks, never as PDFs. Source: user ("the pdf will still be attached to the prompt?").
 - **Acceptance criteria:**
-  - [ ] Assessing a report with 2 alerts, 1 document with 7000 characters of `text`, 1 document with no `text` but a stored PDF, and 1 document with neither makes, after the evaluation `PUT`:
+  - [x] Assessing a report with 2 alerts, 1 document with 7000 characters of `text`, 1 document with no `text` but a stored PDF, and 1 document with neither makes, after the evaluation `PUT`:
     - 2 `alert` calls, one chunk each, with the alert fields above;
     - 1 `document` call with 3 chunks, each with the document prefix above;
     - 1 `document` call whose chunks hold the PDF's extracted text, one per page, each with its `page`;
@@ -345,15 +346,23 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
     - 1 `report` call with one chunk.
 
     Test: `test_chunks_pipeline.py::test_report_chunks_after_evaluation`.
-  - [ ] No `PUT /internal/chunks` is sent before the evaluation `PUT`: `test_chunks_pipeline.py::test_chunks_after_evaluation_only`.
-  - [ ] When embedding raises, the evaluation `PUT` was still sent before any embedding call: `test_chunks_pipeline.py::test_evaluation_before_embedding`.
-  - [ ] A placeholder evaluation gives the alert and document calls but no `report` call: `test_chunks_pipeline.py::test_placeholder`.
-  - [ ] When embedding raises, or `PUT /internal/chunks` answers `500`: the report is still `assessed`, the other sources' chunks are still sent, and an error is logged. Test: `test_chunks_pipeline.py::test_failure_is_logged`.
-  - [ ] `uv run pytest` and `uv run ruff check` pass.
+  - [x] No `PUT /internal/chunks` is sent before the evaluation `PUT`: `test_chunks_pipeline.py::test_chunks_after_evaluation_only`.
+  - [x] When embedding raises, the evaluation `PUT` was still sent before any embedding call: `test_chunks_pipeline.py::test_evaluation_before_embedding`.
+  - [x] A placeholder evaluation gives the alert and document calls but no `report` call: `test_chunks_pipeline.py::test_placeholder`.
+  - [x] When embedding raises, or `PUT /internal/chunks` answers `500`: the report is still `assessed`, the other sources' chunks are still sent, and an error is logged. Test: `test_chunks_pipeline.py::test_failure_is_logged`.
+  - [x] `uv run pytest` and `uv run ruff check` pass.
 - **Doc deltas:**
   - ARCHITECTURE.md, "Data flow" step 4: after the evaluation is stored, the report's, its alerts' and its documents' chunks are embedded and stored.
   - EVALUATION.md, "Embeddings": what is stored for each source, when, and the failure rule.
   - ROADMAP.md: backfilling rows stored before V13; embedding snapshots, papers' PDFs and drafts.
+  - EVALUATION.md, "Embeddings": the embedder rides in `ImpactContext.embedder` (None, as with no `GEMINI_API_KEY` and in the existing tests, stores no chunks); at startup it is a `GeminiEmbedder` on the same Gemini client as the model.
+  - EVALUATION.md, "Embeddings": each source is embedded and stored on its own (alerts, then the report, then documents), so one failure leaves only that source without chunks; a failure logs the source and the cause class, with a traceback only for an unexpected error.
+  - EVALUATION.md, "Embeddings": the chunk texts. An alert: `alert:`, `alert severity:`, `detected:` (date), `description:`, `recommendation:` lines. The report: `change summary:`, `change severity:`, `impact level:`, `evaluation:`, `recommendation:` lines, each when present. A document: `<kind> <doi> (report of <report created_at date>)` then a blank line, then the text.
+  - EVALUATION.md, "Embeddings": "the report's date" in the document prefix is the report's `created_at`, now read into `Report.created_at`; `AlertInReport` gains `recommendation` (already in Storage Management's response) for the alert chunk.
+  - EVALUATION.md, "Embeddings": a PDF page with no extractable text (a scan) gives no chunk; a page over 8000 characters is cut with `chunk_text(size=8000)`, keeping the 400-character overlap.
+  - EVALUATION.md, "Embeddings": a PDF wins over `text` when a document has both; notices never have a PDF, so theirs come from `text`.
+  - EVALUATION.md, "Embeddings": NUL characters are dropped from a PDF page's extracted text, because Postgres `text` rejects them and the whole document would otherwise get no chunks (code review).
+  - EVALUATION.md, "Embeddings": each source's chunk text is built in a worker thread (`asyncio.to_thread`), so `pypdf` reading a long PDF doesn't stall the event loop (code review).
 
 ### S7. Storage Management keeps a report's context chunks
 
@@ -361,7 +370,7 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
 - **Blocked by:** none.
 - **Branch:** `feat/rag-report-context-chunks`.
 - **Order on branch:** 1.
-- **Files:** `storage/src/main/resources/db/migration/V14__add_report_context_chunks.sql`, `storage/src/main/java/com/g4t1/storage/report/` (evaluation request, `ReportService.recordEvaluation`, `UserReportResponse`), `storage/src/test/java/com/g4t1/storage/report/`.
+- **Files:** `storage/src/main/resources/db/migration/V14__add_report_context_chunks.sql`, `storage/src/main/java/com/g4t1/storage/report/` (evaluation request, `ReportService.recordEvaluation`, `UserReportResponse`, `Report`, `ReportRepository.recordEvaluation`), `storage/src/test/java/com/g4t1/storage/report/` (`ReportControllerTest` new; `ReportServiceRaceTest`'s mock takes the new argument).
 - **Seams:**
   - `PUT /internal/reports/{id}/evaluation`: catches that `context_chunks` is accepted, and stored as null when absent; misses what the frontend does with it (out of scope).
   - `GET /papers/{id}/reports`: catches the round trip, returned as a JSON array; misses nothing this subtask adds.
@@ -370,13 +379,15 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - Absent or `null` in the `PUT` stores null; reports assessed before V14 return null. Source: user (confirmed).
   - V14, not V13: V13 is the chunks migration in the vendor folders. `transient`.
 - **Acceptance criteria:**
-  - [ ] An evaluation `PUT` with `context_chunks` of 2 items, then `GET /papers/{id}/reports`, returns the same 2 items: `ReportControllerTest#contextChunksRoundTrip`.
-  - [ ] A `PUT` without `context_chunks` returns `null` for it: `ReportControllerTest#contextChunksAbsent`.
-  - [ ] `./mvnw test` passes.
+  - [x] An evaluation `PUT` with `context_chunks` of 2 items, then `GET /papers/{id}/reports`, returns the same 2 items: `ReportControllerTest#contextChunksRoundTrip`.
+  - [x] A `PUT` without `context_chunks` returns `null` for it: `ReportControllerTest#contextChunksAbsent`.
+  - [x] `./mvnw test` passes.
 - **Doc deltas:**
   - CONTRACTS.md: `context_chunks` in `PUT /internal/reports/{id}/evaluation` and `GET /papers/{id}/reports` (I5).
   - STORAGE.md, "Reports and documents": `context_chunks` (V14), stored as sent.
   - ARCHITECTURE.md, Data model: `reports` row gains V14.
+  - STORAGE.md, "Reports and documents": an empty `context_chunks` list is kept as `[]` (only absent or `null` stores null), so a report that found no past is told apart from one assessed before V14.
+  - CONTRACTS.md: `context_chunks` is returned only in `GET /papers/{id}/reports`, not in `GET /internal/reports/{id}`, since only a frontend shows it.
 
 ### S6. Impact adds the paper's past to steps 1 and 2
 
@@ -392,7 +403,9 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - `backend/src/research_evaluation/impact/run.py`
   - `backend/src/research_evaluation/impact/prompts.py` (`history_block`, the rules, `PROMPT_VERSION` 6)
   - `backend/src/research_evaluation/impact/assess.py` (`assessment["history"]`)
-  - `backend/tests/research_evaluation/impact/`
+  - `backend/tests/research_evaluation/impact/` (`test_history.py`; `test_assess.py`'s prompt version)
+  - `backend/tests/impact_prompt_support.py` and `backend/tests/fixtures/impact/step{1,2}_prompt_parts.json` (the fixed prompts `test_no_history_unchanged` compares with, saved from the code before this subtask)
+  - `backend/tests/research_evaluation/test_chunks_pipeline.py` (the search route, and its fake embedder counts only stored text)
 - **Seams:**
   - `assess_report(sm, context, report_id)`, with Storage Management and Gemini mocked: catches the query text, the three search calls and their limits, the failure rule, `assessment["history"]` and `context_chunks` in the evaluation `PUT`; misses real retrieval quality.
   - `change_prompt(inputs)`: catches the section's place, order, labels and defusing in step 1, and unchanged parts with no history; misses how the model reads it (evals spec).
@@ -411,14 +424,14 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - The chunks added to the prompt go in the evaluation body as `context_chunks` (I5): `source_type`, `source_id` and `page` of each, in prompt order, so they can be shown later. Source: user ("i want the fetched chunks to be able to show. so just need the id and the page number").
   - `PROMPT_VERSION` goes from 5 to 6. Source: `code: impact/prompts.py` (bumped on every prompt change).
 - **Acceptance criteria:**
-  - [ ] With past chunks of all three types returned, step 1's parts and step 2's parts each contain one `PAST TIMELINE` section, before the task, listing them nearest first, with source, date and report id: `test_history.py::test_section_in_steps_1_and_2`.
-  - [ ] With no past chunks, step 1's and step 2's parts equal those `change_prompt` and `impact_prompt` built before this subtask (fixed fixtures): `test_history.py::test_no_history_unchanged`.
-  - [ ] The search makes one call per source type with limits 3, 3 and 5, and a query embedded with `RETRIEVAL_QUERY` from the query text above: `test_history.py::test_search_calls`.
-  - [ ] When the search answers `500`, or embedding raises: the report is still assessed, `assessment["history"]` is `failed`, and step 1's and step 2's parts have no section. Test: `test_history.py::test_search_failure`.
-  - [ ] The evaluation `PUT` carries `context_chunks` with the `source_type`, `source_id` and `page` of exactly the chunks in the prompt, in prompt order; with none, `context_chunks` is `[]`: `test_history.py::test_context_chunks_sent`.
-  - [ ] A past chunk containing `</document>` can't close its block: `test_history.py::test_defused`.
-  - [ ] Step 3's parts don't contain the section: `test_history.py::test_not_in_step_3`.
-  - [ ] `uv run pytest` and `uv run ruff check` pass.
+  - [x] With past chunks of all three types returned, step 1's parts and step 2's parts each contain one `PAST TIMELINE` section, before the task, listing them nearest first, with source, date and report id: `test_history.py::test_section_in_steps_1_and_2`.
+  - [x] With no past chunks, step 1's and step 2's parts equal those `change_prompt` and `impact_prompt` built before this subtask (fixed fixtures): `test_history.py::test_no_history_unchanged`.
+  - [x] The search makes one call per source type with limits 3, 3 and 5, and a query embedded with `RETRIEVAL_QUERY` from the query text above: `test_history.py::test_search_calls`.
+  - [x] When the search answers `500`, or embedding raises: the report is still assessed, `assessment["history"]` is `failed`, and step 1's and step 2's parts have no section. Test: `test_history.py::test_search_failure`.
+  - [x] The evaluation `PUT` carries `context_chunks` with the `source_type`, `source_id` and `page` of exactly the chunks in the prompt, in prompt order; with none, `context_chunks` is `[]`: `test_history.py::test_context_chunks_sent`.
+  - [x] A past chunk containing `</document>` can't close its block: `test_history.py::test_defused`.
+  - [x] Step 3's parts don't contain the section: `test_history.py::test_not_in_step_3`.
+  - [x] `uv run pytest` and `uv run ruff check` pass.
 - **Doc deltas:**
   - EVALUATION.md, "Impact":
     - the history read before step 1, and given to steps 1 and 2;
@@ -430,9 +443,56 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - ARCHITECTURE.md, "Data flow" step 4: impact reads the paper's past chunks from Storage Management.
   - GLOSSARY.md: **Past timeline**: a tracked paper's earlier alerts, reports and report documents, found by vector search, that impact's steps 1 and 2 read beside the current report.
   - ROADMAP.md: retrieved chunks in place of whole PDFs; a frontend view of a report's `context_chunks` (open the alert, report, or document PDF at `page`).
+  - EVALUATION.md, "Impact": the three searches are merged and ordered by `score`, highest first, so the section and `context_chunks` are nearest first across source types, not grouped by type.
+  - EVALUATION.md, "Impact": the section's place. Step 1: after the attached PDFs, right before the task. Step 2: after the draft (or NO DRAFT), before the profile section and the task. Its rules (`PAST_RULES`) follow its blocks, so untrusted text never comes last.
+  - EVALUATION.md, "Impact": each item is `<document kind="past_<type>" source_id=".." date="YYYY-MM-DD" report="<id or none>" page="..">` (page only when set); the date is `source_date`.
+  - EVALUATION.md, "Impact": `assess` takes `history` (`read`/`none`/`failed`); left out, it is `read` when `inputs.chunks` is set and `none` otherwise, which is what the evals get. A failure logs the report id and exception class only, since an error could carry the query's text; `assessment.history` holds only the status.
+  - EVALUATION.md, "Impact": the query is the alert lines joined by newlines (`<change_type> <notice_doi or "no notice"> <description>`), then each notice's `text`, cut to the first 8000 characters.
+  - EVALUATION.md, "Impact": `context_chunks` is sent with every evaluation, the placeholder and change severity `none` included, since steps 1 and 2 had the chunks either way.
+  - EVALUATION.md, "Impact": the embedder that stores a report's chunks also embeds the query (`ImpactContext.embedder`); with none, no history is read.
+  - EVALUATION.md, "Impact": a report with no alerts and no notice text has an empty query, so nothing is embedded or searched and `history` is `none`, not `failed` (code review).
 
 ## Human checks
 
 - [ ] **S1:** run `docker compose up` on an existing volume, then `docker compose exec db psql -U app -d research_assistant -c "create extension if not exists vector; select extversion from pg_extension where extname='vector';"`. Expected: one version row, with the old tables still present.
 - [ ] **S5:** with a real `GEMINI_API_KEY`, replay a change on a paper with the demo tools until its report is `assessed`. Expected: `select source_type, count(*) from chunks group by 1;` shows `alert`, `document` and `report` rows.
 - [ ] **S6:** on a paper with a second report set up in dev mode, get that report assessed. Expected: the second report's `assessment.history` is `read` and lists the first report's chunks.
+
+## PR commands
+
+Run in order, in Git Bash, from the repo root. Each PR targets the branch before it, so merge them in this order.
+
+```bash
+git push -u origin feat/rag-storage
+gh pr create --base main --head feat/rag-storage --title "feat(storage): store and search embedded chunks on pgvector" --body "Read/merge feat/rag-vector-store first.
+
+Runs Postgres as pgvector/pgvector:pg17 and adds a chunks table (V13) with PUT /internal/chunks to replace a source's chunks and POST /internal/chunks/search to return a paper's nearest chunks of one source type, so Research Evaluation can store and retrieve a paper's past alerts, reports and documents."
+```
+
+```bash
+git push -u origin feat/rag-embedding
+gh pr create --base feat/rag-storage --head feat/rag-embedding --title "feat(eval): embed text with gemini and chunk document text" --body "Read/merge feat/rag-storage first.
+
+Adds GeminiEmbedder (gemini-embedding-001 at 1536 dimensions, L2-normalised) behind an Embedder protocol, and chunk_text for document text, which Research Evaluation needs to store and search chunks."
+```
+
+```bash
+git push -u origin feat/rag-store-report-chunks
+gh pr create --base feat/rag-embedding --head feat/rag-store-report-chunks --title "feat(eval): store a report's chunks after impact stores its evaluation" --body "Read/merge feat/rag-embedding first.
+
+Right after impact submits a report's evaluation, embeds and stores the chunks of the report, its alerts and its documents (PDF text per page, or Europe PMC text), so later reports on the same paper can retrieve them. A failure is logged and never changes the report."
+```
+
+```bash
+git push -u origin feat/rag-report-context-chunks
+gh pr create --base feat/rag-store-report-chunks --head feat/rag-report-context-chunks --title "feat(storage): keep the context chunks impact sends with a report's evaluation" --body "Read/merge feat/rag-store-report-chunks first.
+
+Stores context_chunks (V14) from the evaluation PUT on the report and returns it in GET /papers/{id}/reports, so a frontend can later show which past chunks impact read."
+```
+
+```bash
+git push -u origin feat/rag-augment
+gh pr create --base feat/rag-report-context-chunks --head feat/rag-augment --title "feat(eval): give impact's first two steps the paper's past as a timeline" --body "Read/merge feat/rag-report-context-chunks first.
+
+Before step 1, impact searches the paper's past alerts, reports and document chunks and adds them to steps 1 and 2 as a PAST TIMELINE section (PROMPT_VERSION 6), sending the chunks used as context_chunks. Also carries the code-review fixes and the docs for the whole feature."
+```

@@ -65,12 +65,38 @@ async def test_no_texts_makes_no_call():
 
 
 async def test_many_texts_are_sent_in_batches_in_order():
-    models = FakeModels()
+    class NumberedModels(FakeModels):
+        """Answers "text <n>" with a vector whose first value is n + 1 and the rest 1, so each
+        text's vector is distinct after normalising."""
+
+        async def embed_content(self, **kwargs):
+            self.calls.append(kwargs)
+            return SimpleNamespace(
+                embeddings=[
+                    SimpleNamespace(
+                        values=[float(int(text.split()[1]) + 1)] + [1.0] * (EMBED_DIMENSIONS - 1)
+                    )
+                    for text in kwargs["contents"]
+                ]
+            )
+
+    models = NumberedModels()
 
     vectors = await embedder(models).embed([f"text {i}" for i in range(250)], "document")
 
     assert [len(call["contents"]) for call in models.calls] == [100, 100, 50]
-    assert len(vectors) == 250
+    assert [call["contents"][0] for call in models.calls] == ["text 0", "text 100", "text 200"]
+    # normalising keeps the ratio of the first value to the second
+    assert [round(vector[0] / vector[1]) for vector in vectors] == list(range(1, 251))
+
+
+async def test_an_all_zero_vector_raises():
+    class ZeroModels(FakeModels):
+        async def embed_content(self, **kwargs):
+            return SimpleNamespace(embeddings=[SimpleNamespace(values=[0.0] * EMBED_DIMENSIONS)])
+
+    with pytest.raises(ValueError):
+        await embedder(ZeroModels()).embed(["text"], "document")
 
 
 async def test_an_answer_of_the_wrong_size_raises():

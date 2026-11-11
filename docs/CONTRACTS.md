@@ -320,7 +320,8 @@ no `owner_id`; `401` missing or bad token, `403` a user token.
 
 Deletes everything the user owns: their papers in every project, the
 default one included, each with everything that refers to it (as above),
-then all their drafts and their PDFs. **Response `204`**, also when there's
+then all their drafts and their PDFs, and the user's `profile` chunks (see
+`PUT /internal/chunks`; they have no foreign key to cascade from). **Response `204`**, also when there's
 nothing to delete, so an account delete User Management retries still
 goes through.
 
@@ -537,6 +538,7 @@ be in `GET /papers/{id}/alerts` a moment before it's in a report.
 |---|---|
 | `status` | `investigating` (its documents are being fetched, or fetching stopped midway; nothing resumes it yet), `investigated` (fetching finished) or `assessed` (impact wrote its evaluation) |
 | `created_at`, `investigated_at` | when the report was opened, and when fetching finished (null until then) |
+| `context_chunks` | the chunks impact added to the prompt, so a frontend can show them: an array of `{"source_type", "source_id", "page"}` in prompt order, as `PUT /internal/reports/{id}/evaluation` stored it. A `document` item opens with `GET /documents/{id}/pdf` at `page`; an `alert` or `report` item is found in the same paper's report list by its id. `[]` when impact found no past; null for a report assessed before V14 or not yet assessed. Returned only here, not by `GET /internal/reports/{id}`, since only a frontend shows it |
 | `evaluation`, `recommendation`, `evaluated_at` | impact's evaluation of the report's alerts together, what the researcher should do, and when it was written. Null until the report is `assessed`, and also null on an assessed report whose change impact rated `none` (not meaningful) |
 | `alerts` | the report's alerts, in the same shape and order as `GET /papers/{id}/alerts` (newest first, then most severe), **dismissed ones included**, with their status. They're the same alerts, acted on with `PATCH /alerts/{id}`. Can be empty: when a retraction notice arrives after a retraction alert that had none, the alert moves to the paper's next report (see `POST /internal/papers/{id}/alerts`), and the earlier report keeps its documents |
 | `documents` | what investigation fetched, oldest first (the order it stored them) |
@@ -1168,7 +1170,11 @@ marks the report `assessed`.
   "impact_level": "medium",
   "evaluation": "Your Discussion cites it as …",
   "recommendation": "Replace the citation in the Discussion.",
-  "assessment": {"prompt_version": 1, "...": "impact's full answer"}
+  "assessment": {"prompt_version": 1, "...": "impact's full answer"},
+  "context_chunks": [
+    {"source_type": "document", "source_id": "7", "page": 3},
+    {"source_type": "alert", "source_id": "42", "page": null}
+  ]
 }
 ```
 
@@ -1179,6 +1185,7 @@ marks the report `assessed`.
 | `impact_level` | `none`, `low`, `medium` or `high`: required unless `change_severity` is `none`, and must be null (or left out) when it is |
 | `evaluation`, `recommendation` | not blank: required unless `change_severity` is `none`, and must be null (or left out) when it is |
 | `assessment` | optional JSON, stored and returned exactly as sent; Storage Management never looks inside |
+| `context_chunks` | optional JSON array, stored as sent and never looked inside: the chunks impact added to its prompt, in prompt order, each `source_type`, `source_id` and `page` (null when the chunk has none). Absent or `null` stores null; an empty `[]` is kept as `[]`, so a report that found no past is told apart from one assessed before V14 |
 
 **Response `200`:** the report, as `GET` returns it, with `status`
 `assessed`, `evaluated_at` set and the fields as sent (the unsent ones
@@ -1296,6 +1303,61 @@ missing or bad token; `403` a user token; `404` with one of:
 
 It isn't keyed by DOI: one DOI can have several stored copies (one per
 report for the current copy, and one per user tracking the paper).
+
+### `PUT /internal/chunks`
+
+Service-JWT only. Replaces every chunk of one source, in one transaction.
+Research Evaluation calls it after impact has stored a report's evaluation.
+
+```json
+{
+  "source_type": "alert | report | document | profile",
+  "source_id": "42",
+  "embed_model": "gemini-embedding-001",
+  "chunks": [{"content": "text that was embedded", "page": 3, "embedding": [0.0123, -0.0456]}]
+}
+```
+
+- `source_id` is a string: the alert, report or document id in decimal, or the user's uuid for `profile`.
+- `page` is optional (null or absent: no page); when present, at least 1.
+- Storage Management never looks inside `content`. A profile's chunks are whatever the caller sends, for example one per field (`expertise: ...`).
+- `chunks` may be empty, which deletes the source's chunks.
+- `chunk_index` is the position in `chunks`, from 0.
+- Every `embedding` has exactly 1536 numbers. `embed_model` is at most 64 characters.
+- Storage Management copies `paper_id` from the source row, never from the request.
+
+**Response `204`:** stored. Errors, as problem details: `400` a missing field, an unknown `source_type`, a `source_id` that doesn't parse for its type, an embedding that isn't 1536 numbers, empty `content`, a `page` below 1, or an `embed_model` over 64 characters; `401` missing or bad token, `403` a user token; `404` the alert, report or document doesn't exist. A `profile` is never `404`: users live in User Management, and Storage Management holds bare user ids, as it does with `project_id`.
+
+### `POST /internal/chunks/search`
+
+Service-JWT only. A paper's chunks of one source type, nearest first.
+Impact's steps 1 and 2 call it.
+
+```json
+{
+  "paper_id": "uuid",
+  "embedding": [0.0123, -0.0456],
+  "source_type": "alert | report | document | profile",
+  "limit": 3
+}
+```
+
+- Every chunk of the paper of that `source_type` is a candidate, with no date, order or exclusion filter. Search is per paper, never across papers.
+- With `profile`, the candidates are the profile chunks of the paper's owner (`papers.owner_id`).
+- `limit`: 1 to 20.
+
+**Response `200`**, nearest first:
+
+```json
+[{"source_type": "document", "source_id": "7", "chunk_index": 2, "page": 3, "report_id": 12,
+  "source_date": "2026-10-02T08:00:00Z", "content": "...", "score": 0.83}]
+```
+
+- `score` is `1 - cosine distance`.
+- `source_date`: the alert's `detected_at`, the report's `evaluated_at`, the document's `created_at`, or the profile chunk's `created_at`.
+- `report_id` is null for `profile`.
+
+Errors, as problem details: `400` a missing field (including `paper_id`), an unknown `source_type`, an embedding that isn't 1536 numbers, or `limit` out of range; `401` missing or bad token, `403` a user token; `404` no such paper.
 
 ### Snapshot fields
 

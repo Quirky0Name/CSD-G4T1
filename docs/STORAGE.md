@@ -20,7 +20,8 @@ Spring Data repository, the entity, and response records.
 |---|---|
 | `paper/` | tracked papers: upload, track by DOI, list, delete (`PaperService`), the internal list and PDF read, deleting a paper with everything that refers to it (`PaperDeletion`) |
 | `project/` | clearing a project User Management deleted: its papers and its draft (`ProjectService`, `DELETE /internal/projects/{id}`) |
-| `user/` | clearing an account User Management deleted: the user's papers and drafts in every project (`UserService`, `DELETE /internal/users/{id}`) |
+| `user/` | clearing an account User Management deleted: the user's papers and drafts in every project, and the user's profile chunks (`UserService`, `DELETE /internal/users/{id}`) |
+| `chunk/` | embedded chunks: store a source's chunks, search a paper's (`InternalChunkController`, `ChunkService`, `ChunkRepository` on `JdbcTemplate`) |
 | `snapshot/` | `snapshots`: store a snapshot, read the snapshot history (`after_id`, `last`, `limit`) |
 | `alert/` | alerts (internal store, change keys; user list, status); `LowercaseEnumConverter` |
 | `report/` | reports and documents: open, read, mark investigated, store the evaluation (`ReportService`), store a document and download its PDF (`ReportDocumentService`), the user's report list |
@@ -34,7 +35,8 @@ Spring Data repository, the entity, and response records.
 
 Config: `src/main/resources/application.yml` (snake_case JSON, problem
 details on, `ddl-auto: validate`, 25 MB PDF limit). Migrations:
-`src/main/resources/db/migration/`. Tests: `src/test/java/.../<package>/`.
+`src/main/resources/db/migration/`, and V13 (chunks) per database in
+`db/vendor/postgresql` and `db/vendor/h2` (`spring.flyway.locations`). Tests: `src/test/java/.../<package>/`.
 
 ## Papers and their PDFs
 
@@ -152,13 +154,82 @@ investigation fetched (documents) and impact's evaluation. Status:
   oldest first), each report with every alert it grouped, dismissed ones
   included, in the alert API's shape. Documents leave out `file_key`,
   `sha256` and `report_id`. `UserReportResponse` has `evaluation`,
-  `recommendation` and `evaluated_at` but **not** `change_summary`,
+  `recommendation`, `evaluated_at` and `context_chunks` but **not** `change_summary`,
   `change_severity`, `impact_level` or `assessment` (ROADMAP.md).
+- **`context_chunks`** (V14, `reports.context_chunks` text): the chunks
+  impact added to its prompt (`source_type`, `source_id`, `page` each), stored
+  as sent and returned as a JSON array in `GET /papers/{id}/reports`, like
+  `claims` and `assessment`; Storage Management never looks inside. Absent or
+  `null` in the evaluation `PUT` stores null, and reports assessed before V14
+  return null. An empty list is kept as `[]` (only absent or `null` stores
+  null), so a report that found no past is told apart from one assessed
+  before V14. `GET /internal/reports/{id}` doesn't return it.
 - Documents aren't linked to alerts: a `notice` or `new_version` belongs
   to the report's alert whose `notice_doi` is its `doi`; the
   `current_version` is for the whole report. A report can end up with no
   alerts (its retraction moved to a later report), and a document can
   match no alert (two retraction notices in one window).
+
+## Chunks (`chunks`)
+
+A chunk is a piece of an alert's, report's, report document's or profile's
+text stored with its embedding (1536 numbers) for similarity search.
+Research Evaluation embeds; Storage Management stores and searches
+(`chunk/`). It never looks inside `content`, and knows only that a `profile`
+chunk is a profile's and whose (`user_id`), never what fields it holds.
+Nothing writes profile chunks yet (ROADMAP.md).
+
+- **One table for every source**, filtered with `where` and then ordered by
+  cosine distance. Columns: `id`; nullable `alert_id`, `report_id`,
+  `document_id` (each a foreign key `on delete cascade`) and `user_id`
+  (a uuid, no FK: users live in User Management), exactly one set;
+  `paper_id` (FK `on delete cascade`), set for alert, report and document
+  chunks and null for profile chunks (a check ties it to `source_type`);
+  `source_type` (`alert`, `report`, `document`, `profile`, checked);
+  `chunk_index`, `content`, `page`, `embedding vector(1536)`, `embed_model`,
+  `created_at`. `page` is null or at least 1 (a check). Every chunk from a
+  PDF has a `page`, so what went into a prompt can be shown by opening the
+  document's PDF at that page; chunks from Europe PMC text, alerts, reports
+  and profiles have none. `embed_model` is at most 64 characters (a `400`
+  above that), the column's size.
+- **Replace, not append:** `PUT /internal/chunks` deletes the source's
+  chunks and inserts the new ones in one transaction; an empty list only
+  deletes.
+- **`paper_id` is copied from the source row**, never from the request. The
+  owner and project are read from `papers` by join, so `chunks` stores
+  neither.
+- **Constraints and indexes:** unique on (`source_type`, source id,
+  `chunk_index`), declared `nulls not distinct` because only one of the four
+  source ids is ever set and plain `unique` would let duplicates through;
+  an HNSW index with `vector_cosine_ops`; indexes on (`paper_id`,
+  `source_type`) and `user_id`, for search's filters and the user delete.
+- **The cascade:** deleting an alert, report, document or paper deletes its
+  chunks. `DELETE /internal/users/{id}` deletes that user's profile chunks
+  in `UserService`, since there is no FK.
+- **Search** (`POST /internal/chunks/search`) is per paper and source type,
+  ranked by similarity only: no date, order or exclusion filter, no recency.
+  Every chunk of the paper is a candidate because a report's chunks are
+  written only after impact has assessed it. With `profile`, the candidates
+  are the profile chunks of the paper's owner (`papers.owner_id`). Search
+  sets `hnsw.iterative_scan = strict_order` for its transaction, because the
+  HNSW index with a `where` filter otherwise stops at `ef_search`
+  candidates and can return fewer than `limit` matches. `report_id` and
+  `source_date` are picked by `source_type` with a `case` over the joined
+  source row; a profile chunk has a null `report_id` and its own
+  `created_at`. An unknown `source_type` and a user token are `400` and
+  `403` on search too, like the store endpoint.
+- **`JdbcTemplate`, no JPA entity,** because tests run the real Flyway
+  migrations on H2, which has no `vector` type: the pgvector migration is
+  in `db/vendor/postgresql` and an H2 stand-in (`embedding real array`) in
+  `db/vendor/h2`, and with no entity `ddl-auto: validate` never checks
+  `chunks`. `ChunkRepository` binds a vector as `cast(? as vector)` from its
+  text form on Postgres and as a Java array on H2, picked from the JDBC
+  driver's product name, so one repository serves both.
+- **Tests:** store-endpoint and validation tests run on H2
+  (`ChunkControllerTest`), which can't rank. Ranking, `score`, scoping and
+  the real column run on Postgres in Testcontainers
+  (`pgvector/pgvector:pg17`: `ChunkPostgresIT`, `ChunkSearchPostgresIT`),
+  skipped when Docker is missing.
 
 ## Demo tools (`/dev/papers/{id}/...`)
 
@@ -277,7 +348,14 @@ anything.
 - **Enum parameters in JPQL updates go through the lowercase converters**;
   binding a raw enum name matches nothing.
 - **Timestamps are truncated to microseconds when set**, so a response
-  matches later reads from Postgres.
+  matches later reads from Postgres. A chunk's `created_at` too.
+- **The chunks migration exists in both vendor folders** (V13 in
+  `db/vendor/postgresql` and `db/vendor/h2`); both copies change together.
+  Never edit it once on `main`, like any migration.
+- **The Postgres test classes share one container**, started once in
+  `PgvectorContainer`'s static block: Spring caches the application context
+  across classes, so a per-class container would leave it pointing at a
+  stopped database.
 - **Errors are problem details even when the request asks for
   `Accept: application/pdf`**, so the `detail` is always readable. Callers
   tell "gone" from "no file" by the exact `detail`.
@@ -292,7 +370,7 @@ anything.
   text, never HTML.
 - **Race safety relies on Postgres** re-checking the `where` after the row
   lock (READ COMMITTED). Tests run on H2 with scripted repositories for
-  the races; nothing runs on real Postgres.
+  the races; only the chunk tests run on real Postgres (Testcontainers).
 - **Tests mock the network:** GROBID, Crossref and the open-access
   download are mocked (`@MockitoBean`); PDF bytes are a few bytes starting
   with `%PDF-`.
