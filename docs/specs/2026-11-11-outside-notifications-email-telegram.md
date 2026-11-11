@@ -295,11 +295,16 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
 - **Files:** `users/pom.xml` (`spring-boot-starter-mail`; GreenMail as a
   test dependency), `users/src/main/java/com/g4t1/users/notification/`
   (`InternalNotificationController`, `NotificationSender`, `EmailChannel`,
-  `TelegramChannel`, the message builder),
+  `TelegramChannel`, `MessageBuilder`, `EventValidator`, and the small
+  `NotificationEvent`, `NotificationOutcomes`, `Message`, `Outcome` and
+  `Levels` types; the test endpoint is in `NotificationController`),
   `users/src/main/resources/application.yml`,
   `users/src/test/java/com/g4t1/users/TelegramStub.java` (an `HttpServer`
   stub like `StorageStub`),
   `users/src/test/java/com/g4t1/users/notification/SendNotificationTest.java`,
+  `users/src/test/java/com/g4t1/users/notification/SendNotificationNotConfiguredTest.java`
+  (its own context with no `MAIL_HOST` and no bot token: one Spring context
+  can't have both),
   `users/src/test/resources/application-test.yml`, `docker-compose.yml`,
   `.env.example`, `docs/CONTRACTS.md`, `docs/ARCHITECTURE.md`,
   `docs/SETUP.md`, `docs/DEPLOY.md`, `docs/DECISIONS.md`,
@@ -364,35 +369,89 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
     `users`; listed in `.env.example`.
   - The in-app toast is unchanged (user: frontend out of scope).
 - **Acceptance criteria:**
-  - [ ] `SendNotificationTest`: email `min_alert_severity` `high`, Telegram
+  - [x] `SendNotificationTest`: email `min_alert_severity` `high`, Telegram
         `min_alert_severity` `low`, both on: an `alerts` event with one `high`
         and one `low` alert sends both; GreenMail received one mail to the
         account email with the `high` line and not the `low` line; the
         stub got one `sendMessage` to the chat id with both lines, `high`
         first (`./mvnw test -Dtest=SendNotificationTest`).
-  - [ ] `SendNotificationTest`: an event below both channels' thresholds,
+  - [x] `SendNotificationTest`: an event below both channels' thresholds,
         or with `null` thresholds, gives `no_match` for both and sends
         nothing.
-  - [ ] `SendNotificationTest`: with `min_change_severity` `high` and
+  - [x] `SendNotificationTest`: with `min_change_severity` `high` and
         `min_impact_level` `high`: change `high` / impact `low` sends;
         change `medium` / impact `high` sends; change `medium` / impact
         `medium` doesn't; change `none` never sends.
-  - [ ] `SendNotificationTest`: the `report_assessed` mail contains the
+  - [x] `SendNotificationTest`: the `report_assessed` mail contains the
         change summary, the evaluation and the recommendation.
-  - [ ] `SendNotificationTest`: the stub answering `403` gives
+  - [x] `SendNotificationTest`: the stub answering `403` gives
         `telegram: failed` and `email: sent`.
-  - [ ] `SendNotificationTest`: a channel turned off is `disabled`; no
+  - [x] `SendNotificationTest`: a channel turned off is `disabled`; no
         `MAIL_HOST` gives `email: not_configured`.
-  - [ ] `SendNotificationTest`: a Telegram message over 4096 units is cut
+  - [x] `SendNotificationTest`: a Telegram message over 4096 units is cut
         and ends with `…`.
-  - [ ] `SendNotificationTest`: `400` for an unknown event or an empty
+  - [x] `SendNotificationTest`: `400` for an unknown event or an empty
         `alerts`; `404` `No user <id>`; `403` for a user token.
-  - [ ] `SendNotificationTest`: the test endpoint sends to each enabled
+  - [x] `SendNotificationTest`: the test endpoint sends to each enabled
         channel whatever its thresholds.
-  - [ ] `./mvnw test` passes.
-  - [ ] `docker compose config` succeeds with `.env.example` copied to
+  - [x] `./mvnw test` passes.
+  - [x] `docker compose config` succeeds with `.env.example` copied to
         `.env` and `JWT_SECRET`, `POSTGRES_PASSWORD` filled.
 - **Doc deltas:**
+  - `docs/CONTRACTS.md`: an event's `400` details start with the field:
+    `event must be alerts or report_assessed`, `paper is required` (`paper`
+    needs an `id`), `alerts must have at least one alert`, `alert_severity
+    must be low, medium or high`, `change_type and description are
+    required` (each alert), `change_severity must be none, low, medium or
+    high`, `change_summary is required`, `impact_level must be low, medium,
+    high or null`. Why: the spec fixed only the rules, not the wording. A
+    body that isn't JSON, or whose `paper.id` isn't a uuid, is Spring's
+    generic `400`. The body is checked before the user is looked up, so a
+    bad body for an unknown user is `400`, not `404`.
+  - `docs/CONTRACTS.md`: the test endpoint answers `401` `Your account no
+    longer exists` for a deleted account (like the other `/auth/me`
+    handlers) and `404` `No user <id>` for an account with no preferences
+    row. Why: the spec only listed the outcomes.
+  - `docs/CONTRACTS.md`: Telegram counts as `sent` on any `2xx` from the bot
+    API; the `ok` field of its answer isn't read, unlike the removed
+    `notify.py`. Any other status, a refused connection or a timeout is
+    `failed`.
+  - `docs/CONTRACTS.md` and `docs/SETUP.md`: `MAIL_FROM` has no default, so with
+    a `MAIL_HOST` and no `MAIL_FROM` the mail has no From and the SMTP server
+    or JavaMail refuses it (`failed`, logged as `MailSendException`). Why:
+    the spec's "From `MAIL_FROM`"; falling back to `MAIL_USERNAME` would be
+    a guess. `not_configured` still means only "no `MAIL_HOST`".
+  - `docs/SETUP.md`: SMTP authentication happens whenever `MAIL_USERNAME` and
+    `MAIL_PASSWORD` are both set (JavaMail's rule), so there's no separate
+    auth setting; STARTTLS is used when the server offers it (`enable`, not
+    `required`), and the connect, read and write timeouts are 10 s each.
+    Why: the spec said "STARTTLS on" and "10 s timeout" per channel.
+  - `docs/SETUP.md`: `TELEGRAM_API_URL` exists for the tests (default
+    `https://api.telegram.org`) and isn't in `.env.example` or the compose
+    file, as the spec's list of seven settings leaves it out. `MAIL_PORT` is
+    `587` in `.env.example` and the compose file, so an empty value in `.env`
+    never reaches Spring as an empty port.
+  - `docs/CONTRACTS.md`: the paper link in a message is `<APP_URL>/papers/<paper
+    id>` with trailing slashes of `APP_URL` dropped. A missing title is `a
+    tracked paper` in the message's first line as well as the subject; the
+    DOI line is left out when `doi` is null. The report message leaves out the
+    `Impact on your draft`, evaluation and `What to do:` parts that are null,
+    and an `alerts` message's alerts are sorted most severe first, equal
+    severities keeping the order they were posted in. Change types print as
+    posted (`citation_jump`, not "citation jump").
+  - `docs/CONTRACTS.md`: the test message is a fixed text: subject `Research
+    Assistant: Test notification`, body `This is a test message from
+    Research Assistant. If you can read it, this channel works.`; the same
+    body goes to Telegram. It has no link.
+  - `docs/CONTRACTS.md`: Telegram's cut keeps whole characters: when the 4095th
+    unit would be the first half of an emoji, the cut is one unit earlier, so
+    a cut message can be 4095 units long. Email is never cut.
+  - `docs/ARCHITECTURE.md`: sending holds no database transaction; the account
+    and the preferences row are read first, then the channels are tried.
+  - `docs/SETUP.md`: `MAIL_PASSWORD`, like every setting in `.env`, also reaches
+    Research Evaluation and Updating, which load `.env` whole (`env_file`);
+    only User Management reads it. Why: the compose file's existing
+    pattern, left alone.
   - `docs/CONTRACTS.md`: the Interface (new section under "Research
     Evaluation ↔ User Management"), the test endpoint, `APP_URL` in "Env
     vars every service needs to agree on".
