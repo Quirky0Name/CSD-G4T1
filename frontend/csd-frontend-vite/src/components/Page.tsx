@@ -2,7 +2,7 @@ import { Fragment, type ComponentType, type ReactNode, type SVGProps } from 'rea
 import { Link } from 'react-router-dom'
 import { ArrowLeftIcon } from '@heroicons/react/20/solid'
 import Mascot, { type MascotPose } from './Mascot'
-import { ghostPill, riseDelay } from '../ui'
+import { ghostPill, pageColumn, riseDelay } from '../ui'
 
 // The signed-in pages. Working pages (projects, a project, a paper, alerts, reports) open with a plain
 // header: a back link, the title over a short indigo rule, and one line of metadata set like a
@@ -16,7 +16,7 @@ export function Page({ hero, children }: { hero?: ReactNode; children: ReactNode
   return (
     <main className="pb-12">
       {hero}
-      <div className={`mx-auto w-full max-w-5xl px-4 sm:px-6 ${hero ? 'mt-8 sm:mt-10' : 'pt-6 sm:pt-10 short:sm:pt-5'}`}>
+      <div className={`${pageColumn} ${hero ? 'mt-8 sm:mt-10' : 'pt-6 sm:pt-10 short:sm:pt-5'}`}>
         {children}
       </div>
     </main>
@@ -104,7 +104,7 @@ export function PageHero({
         <LibraryBanner />
       </div>
 
-      <div className="relative mx-auto -mt-16 max-w-5xl px-4 sm:-mt-24 sm:px-6 short:-mt-10">
+      <div className={`relative -mt-16 sm:-mt-24 short:-mt-10 ${pageColumn}`}>
         <div className="animate-rise relative rounded-3xl bg-gray-900 pt-16 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.8)] outline-1 -outline-offset-1 outline-white/10 sm:pt-20 short:pt-12">
           <Portrait initial={initial} />
           {tag && (

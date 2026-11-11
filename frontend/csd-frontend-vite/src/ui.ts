@@ -22,6 +22,10 @@ export const signalLink =
   'rounded font-semibold text-indigo-400 underline-offset-4 hover:text-indigo-300 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400'
 
 // a raised surface on the page: the sign-up card's slate and hairline, at a list's scale
+// The column every signed-in page sits in, the report included, so a page's edges never jump. 6xl
+// leaves the report's quote pane room for a PDF page at a readable size beside its claim list.
+export const pageColumn = 'mx-auto w-full max-w-6xl px-4 sm:px-6'
+
 export const card = 'rounded-2xl bg-gray-900 outline-1 -outline-offset-1 outline-white/10'
 
 // the same card when the whole of it opens something

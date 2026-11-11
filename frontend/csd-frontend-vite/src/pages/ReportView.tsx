@@ -13,8 +13,8 @@ import PdfPane, { type PaneResult } from '../highlight/PdfPane'
 import { sourceFor } from '../highlight/sources'
 import TextPane from '../highlight/TextPane'
 import { useTracking } from '../tracking'
-import { NotFound } from '../components/Page'
-import { badge, errorPanel } from '../ui'
+import { NotFound, Page } from '../components/Page'
+import { badge, errorPanel, pageColumn } from '../ui'
 
 const KIND_ORDER: ClaimKind[] = ['change', 'impact', 'action']
 const KIND_TAB: Record<ClaimKind, string> = {
@@ -36,16 +36,16 @@ export default function ReportView() {
 
   if (state.status === 'loading') {
     return (
-      <Shell>
+      <Page>
         <p role="status" className="text-sm/6 text-gray-400">Loading the report…</p>
-      </Shell>
+      </Page>
     )
   }
   if (state.status === 'error') {
     return (
-      <Shell>
+      <Page>
         <p className={errorPanel}>{state.message}</p>
-      </Shell>
+      </Page>
     )
   }
 
@@ -59,15 +59,12 @@ export default function ReportView() {
   return <ReportBody key={report.id} report={report} paper={paper} />
 }
 
-function Shell({ children }: { children: ReactNode }) {
-  return <main className="px-4 py-10 text-gray-100 sm:px-6 lg:px-8">{children}</main>
-}
 
 function BackLink({ to }: { to: string }) {
   return (
     <Link
       to={to}
-      className="inline-flex items-center gap-1.5 rounded-full py-1 pr-3 pl-2 text-sm font-semibold text-gray-400 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-400"
+      className="-ml-2 inline-flex items-center gap-1.5 rounded-full py-1 pr-3 pl-2 text-sm font-semibold text-gray-400 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-400"
     >
       <ArrowLeftIcon aria-hidden="true" className="size-4" />
       Reports
@@ -122,8 +119,10 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
   const showClaims = report.status === 'assessed' && report.claims !== null
 
   return (
+    // the same column as every other page; on a wide screen the claims and quotes fill the window's
+    // height below the top bar, so each pane scrolls on its own
     <main
-      className={`flex flex-col px-4 pt-6 pb-4 text-gray-100 sm:px-6 lg:px-6 ${showClaims ? 'lg:h-[calc(100dvh-4rem)] lg:pt-3 lg:pb-3' : ''}`}
+      className={`${pageColumn} flex flex-col pt-6 pb-12 text-gray-100 sm:pt-10 ${showClaims ? 'lg:h-[calc(100dvh-4rem)] lg:pt-6 lg:pb-4' : ''}`}
     >
       <header className="animate-rise flex flex-col gap-x-4 gap-y-2 lg:flex-row lg:items-center">
         <div className="shrink-0">

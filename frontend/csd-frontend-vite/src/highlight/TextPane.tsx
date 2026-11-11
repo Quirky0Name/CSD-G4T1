@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { scrollMotion } from './motion'
 import { findQuote } from './normalise'
+import './pdf.css'
 
 export default function TextPane({ text, quote, seq = 0 }: { text: string; quote: string | null; seq?: number }) {
   const mark = useRef<HTMLElement>(null)
@@ -24,19 +25,21 @@ export default function TextPane({ text, quote, seq = 0 }: { text: string; quote
       aria-label="Source text"
       className="pdf-pane h-full overflow-y-auto overscroll-contain bg-gray-950/60 p-3 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-500 sm:p-4"
     >
-      <p className="mx-auto max-w-prose whitespace-pre-line rounded-md bg-white px-5 py-4 text-sm/6 text-gray-800 shadow-md shadow-black/40">
-        {match ? (
-          <>
-            {text.slice(0, match.start)}
-            <mark ref={mark} className="rounded-sm bg-yellow-300/70 px-0.5 text-gray-900">
-              {text.slice(match.start, match.end)}
-            </mark>
-            {text.slice(match.end)}
-          </>
-        ) : (
-          text
-        )}
-      </p>
+      <div className="paper-column rounded-md bg-white px-5 py-4 shadow-md shadow-black/40 sm:px-8 sm:py-6">
+        <p className="mx-auto max-w-[75ch] whitespace-pre-line text-sm/6 text-gray-800">
+          {match ? (
+            <>
+              {text.slice(0, match.start)}
+              <mark ref={mark} className="rounded-sm bg-yellow-300/70 px-0.5 text-gray-900">
+                {text.slice(match.start, match.end)}
+              </mark>
+              {text.slice(match.end)}
+            </>
+          ) : (
+            text
+          )}
+        </p>
+      </div>
     </div>
   )
 }
