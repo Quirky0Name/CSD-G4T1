@@ -3,10 +3,13 @@ package com.g4t1.users.notification;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.UUID;
 
 // One researcher's outside notification preferences; the account's id is the key, so there's one per account
+// only the changed columns are updated, so a PUT on one channel can't write back the other channel's old values
+@DynamicUpdate
 @Entity
 @Table(name = "notification_preferences")
 public class NotificationPreferences {
