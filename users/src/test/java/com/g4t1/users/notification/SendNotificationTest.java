@@ -223,6 +223,33 @@ class SendNotificationTest {
         assertThat(telegram.requests()).isEmpty();
     }
 
+    @Test
+    void aTelegramMessageOverTheLimitIsCutToItAndEndsWithAnEllipsis() throws Exception {
+        Account account = registered();
+        putTelegram(account, Map.of("enabled", true, "chat_id", 42, "min_alert_severity", "low"));
+
+        postEvent(account.id(), alertsEvent(alert(7, "retraction", "high", "x".repeat(5000))))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.channels.telegram").isEqualTo("sent");
+
+        String text = JsonPath.read(telegram.requests().get(0).body(), "$.text");
+        assertThat(text).hasSize(4096).endsWith("x\u2026").startsWith("Quantum Widgets\nDOI: 10.1234/qw");
+    }
+
+    // an emoji is two UTF-16 units: a cut between them would leave half of one before the ellipsis
+    @Test
+    void aTelegramCutNeverSplitsACharacterInTwo() throws Exception {
+        Account account = registered();
+        putTelegram(account, Map.of("enabled", true, "chat_id", 42, "min_alert_severity", "low"));
+
+        postEvent(account.id(), alertsEvent(alert(7, "retraction", "high", "\uD83D\uDE00".repeat(3000))))
+                .expectStatus().isOk();
+
+        String text = JsonPath.read(telegram.requests().get(0).body(), "$.text");
+        assertThat(text).endsWith("\uD83D\uDE00\u2026").hasSizeLessThanOrEqualTo(4096);
+    }
+
     private static Map<String, Object> alert(int id, String changeType, String severity, String description) {
         return Map.of("id", id, "change_type", changeType, "alert_severity", severity, "description", description);
     }

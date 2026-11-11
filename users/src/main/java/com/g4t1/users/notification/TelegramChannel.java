@@ -24,6 +24,9 @@ public class TelegramChannel {
 
     private static final Logger log = LoggerFactory.getLogger(TelegramChannel.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
+    // Telegram refuses longer messages; it counts UTF-16 code units, which is what a Java String's length is
+    private static final int MAX_LENGTH = 4096;
+    private static final String ELLIPSIS = "…";
 
     private final RestClient rest;
     private final String botToken;
@@ -45,7 +48,7 @@ public class TelegramChannel {
             rest.post()
                     .uri("/bot{token}/sendMessage", botToken)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("chat_id", chatId, "text", text, "disable_web_page_preview", true))
+                    .body(Map.of("chat_id", chatId, "text", cut(text), "disable_web_page_preview", true))
                     .retrieve()
                     .toBodilessEntity();
             return Outcome.SENT;
@@ -55,5 +58,17 @@ public class TelegramChannel {
             log.warn("telegram message to user {} failed: {}", userId, e.getClass().getSimpleName());
         }
         return Outcome.FAILED;
+    }
+
+    // ends with an ellipsis when cut, and never leaves half of an emoji (two units) before it
+    private static String cut(String text) {
+        if (text.length() <= MAX_LENGTH) {
+            return text;
+        }
+        int end = MAX_LENGTH - ELLIPSIS.length();
+        if (Character.isHighSurrogate(text.charAt(end - 1))) {
+            end--;
+        }
+        return text.substring(0, end) + ELLIPSIS;
     }
 }
