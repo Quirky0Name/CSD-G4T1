@@ -23,6 +23,7 @@ from typing import Any
 import httpx
 
 from research_evaluation.impact.claims import build_claims
+from research_evaluation.impact.history import context_chunk
 from research_evaluation.impact.inputs import ReportInputs
 from research_evaluation.impact.llm import AllModelsFailed, Llm
 from research_evaluation.impact.prompts import (
@@ -58,10 +59,7 @@ async def assess(
     None works it out from `inputs.chunks`, as the evals do."""
     prompt = change_prompt(inputs)
     # the past chunks steps 1 and 2 get, in prompt order, for the frontend to show (I5)
-    context = [
-        ContextChunk(source_type=c.source_type, source_id=c.source_id, page=c.page)
-        for c in inputs.chunks
-    ]
+    context = [context_chunk(c) for c in inputs.chunks]
     assessment: dict[str, Any] = {
         "prompt_version": PROMPT_VERSION,
         "model": llm.model,

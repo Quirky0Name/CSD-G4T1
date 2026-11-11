@@ -35,6 +35,7 @@ class ReportControllerTest {
 
     private static final List<Map<String, Object>> CONTEXT_CHUNKS = List.of(
             chunk("document", "7", 3),
+            textChunk("8", 2800, 6000),
             chunk("alert", "42", null));
 
     @Autowired
@@ -146,6 +147,13 @@ class ReportControllerTest {
         chunk.put("source_type", sourceType);
         chunk.put("source_id", sourceId);
         chunk.put("page", page);
+        return chunk;
+    }
+
+    private static Map<String, Object> textChunk(String sourceId, int start, int end) {
+        Map<String, Object> chunk = chunk("document", sourceId, null);
+        chunk.put("start", start);
+        chunk.put("end", end);
         return chunk;
     }
 }

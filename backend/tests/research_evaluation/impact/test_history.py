@@ -11,7 +11,10 @@ import pytest
 import respx
 from impact_prompt_support import CHANGE, DRAFT, PAPER_PDF, sample_inputs, saved, serialise
 
+from research_evaluation.chunks import document_pieces
+from research_evaluation.embedding import chunk_text
 from research_evaluation.impact.assess import assess
+from research_evaluation.impact.history import context_chunk
 from research_evaluation.impact.llm import Answer
 from research_evaluation.impact.prompts import change_prompt, impact_prompt
 from research_evaluation.impact.run import ImpactContext, assess_report
@@ -264,7 +267,24 @@ async def test_no_embedder_reads_no_history(sm, mock_sm):
     assert sent_evaluation(mock_sm)["assessment"]["history"] == "none"
 
 
+HEADER = "notice 10.1/x (report of 2026-05-04)\n\n"
+# chunk 2 of a 9,000-character notice: its characters 5,600 to 8,800
+CUT = chunk("document", "12", 0.88, HEADER + "y" * 3200, report_id=2).model_copy(
+    update={"chunk_index": 2}
+)
+# a notice short enough to be one chunk
+WHOLE = chunk("document", "13", 0.5, HEADER + NOTICE_TEXT, report_id=2)
+
+
 async def test_context_chunks_sent(sm, mock_sm):
+    found = [*PAST, CUT, WHOLE]
+
+    def search(request):
+        source_type = json.loads(request.content)["source_type"]
+        hits = [c for c in found if c.source_type == source_type]
+        return httpx.Response(200, json=[c.model_dump(mode="json") for c in hits])
+
+    mock_sm.routes["search"].mock(side_effect=search)
     llm = RecordingLlm()
 
     await assess_report(sm, ImpactContext(llm, embedder=FakeEmbedder()), REPORT)
@@ -272,8 +292,10 @@ async def test_context_chunks_sent(sm, mock_sm):
     body = sent_evaluation(mock_sm)
     assert body["context_chunks"] == [
         {"source_type": "document", "source_id": "11", "page": 3},
+        {"source_type": "document", "source_id": "12", "page": None, "start": 5600, "end": 8800},
         {"source_type": "alert", "source_id": "21", "page": None},
         {"source_type": "report", "source_id": "1", "page": None},
+        {"source_type": "document", "source_id": "13", "page": None},
     ]
     # the same chunks, in the same order, as the prompt
     [past] = section(llm.parts[ChangeAssessment])
@@ -307,3 +329,21 @@ async def test_not_in_step_3(sm):
 
     assert section(llm.parts[RecommendedActions]) == []
     assert all(c.content not in "\n".join(texts(llm.parts[RecommendedActions])) for c in PAST)
+
+
+def test_context_chunk_range_matches_text():
+    # 12,000 characters that differ along the text, so a range off by one doesn't match
+    text = "".join(f"{n:05d} " for n in range(2000))
+    notice = sample_inputs().report.documents[0].model_copy(update={"id": 14, "text": text})
+    pieces = document_pieces(notice, datetime(2026, 5, 4, 8, tzinfo=UTC), None)
+    expected = chunk_text(text)
+    assert len(pieces) == len(expected) > 3
+
+    for index, piece in enumerate(pieces):
+        stored = chunk("document", "14", 0.5, piece.content).model_copy(
+            update={"chunk_index": index}
+        )
+        found = context_chunk(stored)
+        assert (found.source_type, found.source_id, found.page) == ("document", "14", None)
+        assert found.start is not None and found.end is not None
+        assert text[found.start : found.end] == expected[index]
