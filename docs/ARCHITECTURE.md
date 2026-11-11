@@ -48,7 +48,7 @@ topic discovery) is in [ROADMAP.md](ROADMAP.md).
 
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
-| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users`, `projects`, `user_profiles` and `refresh_tokens`: register, login, refresh and the JWTs, each researcher's projects and profile, and deleting an account | `users/` |
+| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users`, `projects`, `user_profiles`, `refresh_tokens` and `notification_preferences`: register, login, refresh and the JWTs, each researcher's projects, profile and notification preferences, and deleting an account | `users/` |
 | Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls the services at `/api`, `/auth`, `/projects` and `/updating` on its own address (the Vite proxy in development, Caddy in the root stack) | `frontend/csd-frontend-vite/` |
 | Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts, reports and documents, drafts | `storage/` |
 | Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact); no database of its own; reads a researcher's profile from User Management | `backend/src/research_evaluation/` |
@@ -221,7 +221,7 @@ User Management's own schema (`users`, Flyway, `users/src/main/resources/db/migr
 `password_hash`; `created_at`; the dev mode admin is the row with email
 `admin`, see Auth), `projects` (`id`; `owner_id`, the user's
 id, deleted with the user; `name`, one of each per owner; `created_at`),
-`user_profiles` and `refresh_tokens`.
+`user_profiles`, `refresh_tokens` and `notification_preferences`.
 
 `user_profiles` (V4): one row per account at most (`user_id` is the primary
 key), holding the researcher's profile. No row means no profile: accounts
@@ -234,6 +234,24 @@ small row, nothing reads old ones, and they go when the account is deleted.
 Both tables have `on delete cascade` to `users`, which is how both of
 `UserRepository`'s bulk deletes (`DELETE /auth/me`, and the admin removal
 with dev mode off) clear them.
+
+`notification_preferences` (V6): one row per account (`user_id` is the primary
+key, `on delete cascade` to `users`), holding each channel's `enabled`, the
+Telegram `telegram_chat_id` and each channel's three thresholds
+(`<channel>_min_alert_severity`, `_min_change_severity`, `_min_impact_level`,
+each `low`, `medium`, `high` or null for never). Every column is `not null`
+except the chat id and the six thresholds. It is account data, deleted with
+the account. Register writes the default row (email off, Telegram off with no
+chat id, every threshold `high`, `medium`, `medium`) in the same transaction as
+the account and its profile, in the `notification` package, and V6 inserts one
+for every account that already existed. So a row is always there, except for
+a dev mode admin created after V6 (it gets none); no code path handles a
+missing row. Each channel's `PUT`
+updates only that channel's columns (`@DynamicUpdate` on the entity) and
+loads the row with a pessimistic write lock inside its transaction, so
+overlapping `PUT`s queue on the row: two `PUT`s to different channels never
+write each other's columns, and each `PUT` to one channel stores a whole
+channel rather than a column by column mix of two requests.
 
 ## Deployment
 

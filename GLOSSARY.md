@@ -63,6 +63,23 @@ _Avoid_: Preferences (for the whole), user settings, questionnaire (for the save
 The `<document kind="researcher_profile">` block that gives a profile to impact's steps 2 and 3.
 _Avoid_: Profile prompt, user context
 
+### Notifications
+
+**Outside notification**:
+A message sent to a researcher by email or Telegram when an alert or an assessed report passes that channel's thresholds. The in-app toast is not one.
+_Avoid_: External notif, push notification
+
+**Notification channel**:
+Email or Telegram.
+
+**Notification preferences**:
+A researcher's per-channel on/off, Telegram chat id and thresholds.
+_Avoid_: Preferences (on its own, which is easily taken for the profile)
+
+**Notification threshold**:
+The lowest alert severity, change severity or impact level that sends on one channel. A report sends when either of its levels reaches its threshold.
+_Avoid_: Rule, filter
+
 ### Dev mode
 
 **Dev mode**:

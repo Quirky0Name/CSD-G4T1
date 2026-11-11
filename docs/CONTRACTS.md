@@ -60,7 +60,7 @@ Owned by: User Management (`users/`). Consumed by: the frontend, at `/auth`
 and `/projects` on its own address, since User Management sends no CORS
 headers: the Vite proxy in development, Caddy in the root stack. Register,
 login, refresh and logout need no `Authorization` header; the project
-calls, deleting the account and `GET`/`PUT /auth/me/profile` need the
+calls, deleting the account, `GET`/`PUT /auth/me/profile` and the `/auth/me/notifications` calls need the
 user's token, as Storage Management's do. Register, login and refresh
 answer with the same shape, so the frontend handles them alike:
 
@@ -201,13 +201,66 @@ value is the displayed text. The lists live in
 `users/src/main/resources/profile/options.json` and are duplicated in the
 frontend (frontend `README.md`).
 
+### `GET /auth/me/notifications`
+
+User token only. The researcher's outside notification preferences: whether
+each channel is on, Telegram's chat id and each channel's thresholds. Every
+account has them from registration on (defaults below). **Response `200`:**
+
+```json
+{
+  "email": {"enabled": false, "address": "a@b.c",
+            "min_alert_severity": "high", "min_change_severity": "medium", "min_impact_level": "medium"},
+  "telegram": {"enabled": false, "chat_id": null,
+               "min_alert_severity": "high", "min_change_severity": "medium", "min_impact_level": "medium"}
+}
+```
+
+`address` is the account email, read-only: email goes to the account email,
+which is not verified, and there is no second address. Each threshold is
+`low`, `medium`, `high` or `null` (never). A report sends on a channel when
+its change severity **or** its impact level is at or above that channel's
+`min_change_severity` / `min_impact_level`; an alert sends when its
+`alert_severity` is at or above `min_alert_severity`. "At or above" means
+`high` sends `high`. Defaults, written at registration: both channels off,
+Telegram with no chat id, and both channels' `min_alert_severity` `high`,
+`min_change_severity` `medium`, `min_impact_level` `medium`.
+
+Errors, as problem details: `401` missing or bad token, or `Your account no
+longer exists` (the account was deleted); `403` an admin or service token.
+
+### `PUT /auth/me/notifications/email`, `PUT /auth/me/notifications/telegram`
+
+User token only. Each replaces that channel and leaves the other unchanged.
+**Request** for email: `{"enabled", "min_alert_severity", "min_change_severity",
+"min_impact_level"}`; for Telegram the same plus `chat_id`. **Response
+`200`:** the `GET` body. A `PUT` stores the whole channel, with no partial
+update: a left-out threshold or `chat_id` is `null`; a left-out or `null`
+`enabled` is `400`. Saving doesn't contact Telegram or the SMTP server.
+
+The researcher types the Telegram chat id themselves (from a bot such as
+`@userinfobot`) and must press Start on the project's bot first, since a bot
+can't message a chat that hasn't started it. Linking through the bot (a deep
+link, `getUpdates`, a webhook) is not built.
+
+Rules, with a `400` whose `detail` starts with the field name: a threshold is
+exactly `low`, `medium`, `high` or `null` (`<field> must be low, medium, high
+or null`; `High` and `none` are refused). `enabled` is required (`enabled is
+required`); it may be a string Jackson coerces to a boolean (`"true"`), and
+only a missing or null one is `400`. `chat_id` is a JSON integer, not `0`, or
+`null` (`chat_id must be a non-zero integer or null`): it may be negative
+(group and channel ids are) and is stored as a bigint; a string or a fraction
+is `400`. `enabled` true with `chat_id` null is `400` `chat_id is required to
+enable Telegram`. A body that isn't JSON is Spring's generic `400`. Nothing
+changes on a `400`. The chat id is never logged. `401` and `403` as for `GET`.
+
 ### `DELETE /auth/me`
 
 User JWT required. Deletes the caller's account. **Request:**
 `{"password": "..."}`, the account's password. First asks Storage
 Management to clear everything the user owns (`DELETE /internal/users/{id}`,
-below), then deletes the account, its projects, its profile and its refresh
-tokens (database cascade). **Response `204`.**
+below), then deletes the account, its projects, its profile, its refresh
+tokens and its notification preferences (database cascade). **Response `204`.**
 
 Errors, as problem details: `400` a missing or blank password; `401`
 missing or bad token, or `Your account no longer exists` for an account
