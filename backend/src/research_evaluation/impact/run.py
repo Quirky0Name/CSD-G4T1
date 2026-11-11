@@ -82,8 +82,8 @@ async def notify_assessed(
     sm: httpx.AsyncClient, context: ImpactContext, report: Report, stored: dict[str, Any]
 ) -> None:
     """Posts the evaluation just stored to the report's owner; User Management decides how to
-    tell them."""
-    if context.um is None or report.owner_id is None:
+    tell them. A placeholder has no real content to send, so it isn't posted."""
+    if context.um is None or report.owner_id is None or stored["assessment"].get("placeholder"):
         return
     details = await paper_details(sm, report.paper_id)
     await notify_quietly(

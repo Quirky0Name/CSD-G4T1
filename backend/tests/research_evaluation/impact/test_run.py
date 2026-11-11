@@ -436,3 +436,24 @@ async def test_an_assessed_report_posts_the_stored_evaluation_to_the_owner(sm, u
         "recommendation": "Replace it.",
     }
     assert body["change_severity"] == stored["change_severity"]
+
+
+async def test_a_placeholder_evaluation_posts_nothing(sm, um):
+    context = ImpactContext(FakeLlm("high", fail_on=1, failure=every_model_failed()), um=um.client)
+    report_id = await investigated_report(sm)
+
+    assert await assess_reports(sm.client, context, [report_id]) == [report_id]
+
+    stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    assert stored["assessment"]["placeholder"] is True
+    assert um.notifications == []
+
+
+async def test_a_failed_store_posts_nothing(sm, um):
+    context = ImpactContext(FakeLlm("high"), um=um.client)
+    report_id = await investigated_report(sm)
+    sm.transport.faults[("PUT", "/evaluation")] = 500
+
+    assert await assess_reports(sm.client, context, [report_id]) == []
+
+    assert um.notifications == []
