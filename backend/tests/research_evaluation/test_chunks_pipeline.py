@@ -119,7 +119,8 @@ class FakeLlm:
 
 
 class FakeEmbedder:
-    """One vector per text; `fail_on` makes that call (1-based) raise."""
+    """One vector per text; `fail_on` makes that call (1-based) of stored text raise. The search
+    query impact embeds before step 1 (impact.history) is answered but not counted."""
 
     model = "gemini-embedding-001"
 
@@ -129,6 +130,8 @@ class FakeEmbedder:
         self.calls: list[tuple[list[str], str]] = []
 
     async def embed(self, texts, task):
+        if task == "query":
+            return [[0.5] * 1536 for _ in texts]
         self.events.append("embed")
         self.calls.append((texts, task))
         if len(self.calls) == self.fail_on:
@@ -160,6 +163,8 @@ def mock_sm(events):
 
         mock.put(f"/internal/reports/{REPORT}/evaluation").mock(side_effect=evaluation)
         mock.route(method="PUT", path="/internal/chunks", name="chunks").mock(side_effect=chunks)
+        # the paper has no past yet
+        mock.post("/internal/chunks/search").respond(200, json=[])
         yield mock
 
 
