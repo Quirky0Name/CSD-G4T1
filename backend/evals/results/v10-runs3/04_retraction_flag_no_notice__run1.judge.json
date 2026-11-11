@@ -1,0 +1,187 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the retraction is based only on a metadata flag, with no notice or reason available",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The alert reports a retraction with no notice\"; \"The retraction flag is therefore unconfirmed\"; \"No notice or current copy was provided, so the retraction is unconfirmed\""
+    },
+    {
+      "fact": "advises the researcher to check the journal or publisher's page to confirm the retraction",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Check the journal's or publisher's page to confirm the retraction before changing the draft.\""
+    },
+    {
+      "fact": "states a reason for the retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "quotes a retraction notice",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line states a retraction with no notice, detected 2026-10-01, which is what claim 1 says."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft quote says the Methods use the Novak and Silva [2] sensor with their calibration protocol unchanged, which matches claim 4."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "The calibration protocol is given in Section 2.",
+      "backs": false,
+      "pass": false,
+      "reason": "The passage says the calibration protocol is in Section 2, which matches the second half of claim 5. It says nothing about the sensor costing under 20 USD, so the claim as a whole is not backed."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line states a retraction with no notice, detected 2026-10-01, which is what claim 6 says."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line states a retraction with no notice, detected 2026-10-01, which is what claim 9 says."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft quote says the Methods use the Novak and Silva [2] sensor with their calibration protocol unchanged, which matches claim 11."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The alert reports a retraction with no notice, detected 2026-10-01.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No current copy of the paper was provided, so no retraction watermark or banner could be checked.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction flag is therefore unconfirmed, but may be a real retraction.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's Methods cite Novak and Silva [2] for the sensor and say the draft used its calibration protocol without changes.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert reports a retraction with no notice, detected 2026-10-01.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No notice or current copy was provided, so the retraction is unconfirmed and it is unclear which parts of the paper are affected.",
+      "covered_by": [
+        "impact-3",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert is rated medium severity.",
+      "covered_by": [
+        "impact-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's use of the Novak and Silva sensor is as its method.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert reports a retraction with no notice, detected 2026-10-01.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No retraction notice or current copy was provided, so the retraction is unconfirmed and it is unclear which parts of the paper are affected.",
+      "covered_by": [
+        "impact-3",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft's Methods cite Novak and Silva [2] for the sensor and say they used its calibration protocol without changes.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The researcher's methods depend on this sensor.",
+      "covered_by": [],
+      "pass": false
+    }
+  ],
+  "absent_claims": [
+    "change-1"
+  ]
+}

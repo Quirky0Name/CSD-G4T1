@@ -1,0 +1,221 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the retraction is for duplicate publication, not for errors or misconduct in the data",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier.\" and \"the editors found no problem with the data themselves.\""
+    },
+    {
+      "fact": "says the findings still stand in the original publication",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The data and findings are the same as in the earlier paper, which remains in the literature.\""
+    },
+    {
+      "fact": "advises keeping the citation and citing the retraction notice or the original paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Keep the citation, add the retraction notice to it, and cite the original 2019 paper as well.\""
+    },
+    {
+      "fact": "says the data were fabricated or unreliable",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"the editors found no problem with the data themselves.\""
+    },
+    {
+      "fact": "recommends deleting the sentence or the claim it supports",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"Keep the citation, add the retraction notice to it, and cite the original 2019 paper as well.\""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130).",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice states the retraction was at the authors' request because the article substantially duplicates an earlier paper by them (Nguyen and Cole, 2019). This matches claim 1."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched text states the data and findings are the same as in the earlier paper, which remains in the literature. This matches claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The editors found no problem with the data themselves.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched text states the editors found no problem with the data themselves. This matches claim 3."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults (Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021).",
+      "backs": true,
+      "pass": true,
+      "reason": "The researcher's draft sentence cites Alvarez et al., 2018, Nguyen and Cole, 2020, and Farouk, 2021 for wrist-worn sensors estimating heart rate to within about 5 bpm in older adults. The quote does not label the section as Introduction, but it comes from the draft as the claim says."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8 beats per minute of ECG.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's sentence reports wrist-worn optical sensors estimating heart rate in 200 adults aged 70 or over to within 4.8 bpm of ECG. This matches claim 5."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the retraction was at the authors' request because the article substantially duplicates an earlier paper they published. This matches claim 6."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched text says the data and findings are the same as in the earlier paper, which remains in the literature. This is the first half of claim 7, and the quote supports it."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "The editors found no problem with the data themselves.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched text says the editors found no problem with the data themselves. This is the second half of claim 7, and the quote supports it."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults (Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021).",
+      "backs": true,
+      "pass": true,
+      "reason": "The researcher's draft sentence cites Alvarez et al., 2018, Nguyen and Cole, 2020, and Farouk, 2021 for wrist-worn sensors estimating heart rate to within about 5 bpm in older adults. This matches claim 8."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130).",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the retraction was at the authors' request because the article substantially duplicates an earlier paper (Nguyen and Cole, 2019). This matches claim 9."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched text says the data and findings are the same as in the earlier paper, which remains in the literature. This matches claim 10."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "The editors found no problem with the data themselves.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched text says the editors found no problem with the data themselves. This matches claim 11."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019).",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The editors found no problem with the data themselves.",
+      "covered_by": [
+        "change-2",
+        "impact-3",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's Introduction cites Nguyen and Cole, 2020 together with Alvarez et al., 2018 and Farouk, 2021 for wrist-worn sensors estimating heart rate to within about 5 beats per minute in older adults.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper reports that wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8 beats per minute of ECG.",
+      "covered_by": [
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice says the data and findings are the same as in the earlier paper, which remains in the literature, and that the editors found no problem with the data themselves.",
+      "covered_by": [
+        "impact-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Your Introduction cites Nguyen and Cole, 2020 together with Alvarez et al., 2018 and Farouk, 2021 for wrist-worn sensors estimating heart rate to within about 5 beats per minute in older adults.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019).",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The data and findings are the same as in the earlier paper, which remains in the literature, and the editors found no problem with the data themselves.",
+      "covered_by": [
+        "impact-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

@@ -1,0 +1,83 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the change is only to the author's affiliation",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education.\" The answer describes no other change."
+    },
+    {
+      "fact": "says the results and conclusions are unaffected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The notice says the correction does not affect the results or conclusions of the article.\""
+    },
+    {
+      "fact": "recommends changing the draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"recommendation\": null. The answer gives no recommendation about changing the draft."
+    },
+    {
+      "fact": "describes a change to any result or number",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "No result or number change is described. The only change mentioned is the first author's affiliation, and the answer says the results are not affected."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice states the first author's affiliation was given as University of Northfield and the correct one is Northfield Institute of Education, which is what claim 1 says."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This does not affect the results or conclusions of the article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice says the correction does not affect the results or conclusions of the article, matching claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Garcia, M. (University of Northfield), Okafor, T.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's author line reads 'Garcia, M. (University of Northfield), Okafor, T.', so it lists the first author's affiliation as University of Northfield, as claim 3 states."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The stored paper lists the old affiliation, University of Northfield.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the correction does not affect the results or conclusions of the article.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

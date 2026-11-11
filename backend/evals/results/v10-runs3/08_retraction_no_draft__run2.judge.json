@@ -1,0 +1,214 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the paper was retracted because of an analysis error that invalidates the main result",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The paper has been retracted after the authors found a coding error in the analysis that invalidates the main result.\""
+    },
+    {
+      "fact": "says the impact judgment is general because there is no draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No draft was uploaded, so this judgment is general, for a typical researcher who cites the paper as key evidence.\""
+    },
+    {
+      "fact": "recommends uploading the draft so future changes can be judged against it",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Upload your draft for this project so the next change can be judged against it.\""
+    },
+    {
+      "fact": "names a section of the researcher's draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the draft cites the paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted fetched-document text states the retraction after the authors found a coding error in the analysis, which is what claim 1 says."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text says the coding error invalidates the main result, matching claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text says the reported 2.1% increase in bone density was not reproducible, matching claim 3."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's quoted sentence gives the 1000 IU daily vitamin D result as a 2.1% hip bone density increase over a year, matching claim 4."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text states the retraction and the coding error that invalidates the main result, matching claim 6."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text says the 2.1% increase was not reproducible, matching claim 7."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's quoted sentence gives the 1000 IU daily, 2.1% hip bone density result, matching claim 8."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text states the retraction after a coding error that invalidates the main result, matching claim 10."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text says the 2.1% increase was not reproducible, matching claim 11."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's quoted sentence gives the 1000 IU daily, 2.1% hip bone density result, matching claim 12."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper has been retracted after the authors found a coding error in the analysis.",
+      "covered_by": [
+        "change-0",
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The coding error invalidates the main result.",
+      "covered_by": [
+        "change-1",
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The reported 2.1% increase in bone density was not reproducible.",
+      "covered_by": [
+        "change-2",
+        "impact-2",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The stored paper's abstract reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "covered_by": [
+        "change-3",
+        "impact-3",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No draft was uploaded.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "covered_by": [
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The reported 2.1% increase in bone density was not reproducible.",
+      "covered_by": [
+        "change-2",
+        "impact-2",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "covered_by": [
+        "change-3",
+        "impact-3",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No draft was uploaded.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "covered_by": [
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "impact-0",
+    "action-0"
+  ]
+}

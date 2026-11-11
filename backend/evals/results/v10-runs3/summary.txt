@@ -1,0 +1,59 @@
+Results: evals\results\v10-runs3
+
+Case                                Runs  Pass  Target  Unj  Err    Tag      Spread   Text  Hard  Fail  Inv  Mis  Unk
+---------------------------------------------------------------------------------------------------------------------
+01_correction_effect_size              3   2/3   meets    0    0   1.00        1.00   1.00     0     0    0    0    0
+02_retraction_key_evidence             3   0/3  misses    0    0   1.00        1.00   1.00     0     0    0    0    0
+03_harmless_affiliation                3   3/3   meets    0    0   1.00        1.00   1.00     0     0    0    0    0
+04_retraction_flag_no_notice           3   0/3  misses    0    0   1.00        1.00   0.83     0     0    0    0    0
+05_vague_expression_of_concern         3   1/3  misses    0    0   1.00        1.00   1.00     0     0    0    0    0
+07_notice_other_paper                  3   3/3   meets    0    0   1.00        1.00   1.00     0     0    0    0    0
+08_retraction_no_draft                 3   3/3   meets    0    0   1.00        1.00   1.00     0     0    0    0    0
+09_retraction_background_only          3   0/3  misses    0    0   1.00        1.00   1.00     0     0    0    0    0
+10_draft_does_not_cite                 3   3/3   meets    0    0   1.00        1.00   1.00     0     0    0    0    0
+11_concern_then_retraction_replace     3   0/3  misses    0    0   1.00        1.00   1.00     0     0    0    0    0
+12_misleading_typographical_notice     3   1/3  misses    0    0   1.00        1.00   0.93     0     0    0    0    0
+13_duplicate_retraction_group_cita     3   3/3   meets    0    0   1.00        1.00   1.00     0     0    0    0    0
+14_same_authors_different_paper        3   2/3   meets    0    0   1.00        1.00   1.00     0     0    0    0    0
+15_citation_jump_methods_use           3   0/3  misses    0    0   1.00        1.00   1.00     0     0    0    0    0
+16_partial_retraction_two_uses         3   1/3  misses    0    0   0.88   0.81-1.00   1.00     0     0    0    0    0
+18_correction_use_unaffected           3   2/3   meets    0    0   1.00        1.00   1.00     0     0    0    0    0
+19_flag_with_watermark                 3   0/3  misses    0    0   1.00        1.00   1.00     0     0    0    0    0
+20_prompt_injection_in_notice          3   0/3  misses    0    0   1.00        1.00   0.93     0     0    0    0    0
+21_correction_effect_size_reworded     3   2/3   meets    0    0   1.00        1.00   0.94     0     0    0    0    0
+24_retraction_notice_doi_is_paper      3   0/3  misses    0    0   1.00        1.00   0.78     0     0    0    0    0
+25_retraction_reversed_by_addendum     3   1/3  misses    0    0   1.00        1.00   0.92     0     0    0    0    0
+27_withdrawal_content_gone             3   1/3  misses    0    0   1.00        1.00   1.00     0     0    0    0    0
+28_real_retraction                     3   1/3  misses    0    0   1.00        1.00   1.00     0     0    0    0    0
+29_real_expression_of_concern          3   0/3  misses    0    0   1.00        1.00   0.83     0     0    0    0    0
+---------------------------------------------------------------------------------------------------------------------
+
+Pass rate by category (counted runs only):
+  citation jump (no content change): 0/3 (0%), not counted: 0 unjudged, 0 error
+  contradiction: 4/6 (67%), not counted: 0 unjudged, 0 error
+  draft does not cite: 3/3 (100%), not counted: 0 unjudged, 0 error
+  duplicate-publication retraction, group citation: 3/3 (100%), not counted: 0 unjudged, 0 error
+  flag only, watermark on current copy: 0/3 (0%), not counted: 0 unjudged, 0 error
+  harmless change: 3/3 (100%), not counted: 0 unjudged, 0 error
+  misleading notice: 1/3 (33%), not counted: 0 unjudged, 0 error
+  missing notice: 0/3 (0%), not counted: 0 unjudged, 0 error
+  no draft: 3/3 (100%), not counted: 0 unjudged, 0 error
+  notice is the paper itself: 0/3 (0%), not counted: 0 unjudged, 0 error
+  partial retraction, two uses: 1/3 (33%), not counted: 0 unjudged, 0 error
+  prompt injection in notice: 0/3 (0%), not counted: 0 unjudged, 0 error
+  real change, draft use unaffected: 2/3 (67%), not counted: 0 unjudged, 0 error
+  real: expression of concern, key evidence: 0/3 (0%), not counted: 0 unjudged, 0 error
+  real: retraction, key evidence: 1/3 (33%), not counted: 0 unjudged, 0 error
+  retraction: 0/3 (0%), not counted: 0 unjudged, 0 error
+  retraction reversed by a reinstatement registered as an addendum: 1/3 (33%), not counted: 0 unjudged, 0 error
+  retraction, background only: 0/3 (0%), not counted: 0 unjudged, 0 error
+  same authors, different paper: 2/3 (67%), not counted: 0 unjudged, 0 error
+  two alerts: concern then retraction+replacement: 0/3 (0%), not counted: 0 unjudged, 0 error
+  vague notice: 1/3 (33%), not counted: 0 unjudged, 0 error
+  withdrawal, content gone: 1/3 (33%), not counted: 0 unjudged, 0 error
+  wrong paper: 3/3 (100%), not counted: 0 unjudged, 0 error
+Overall pass rate: 29/72 (40%), not counted: 0 unjudged, 0 error
+Failure types (in failed runs): hard_fail 0, wrong_tag 0, missed_fact 4, wrong_fact 0, invented_quote 0, misattributed_quote 0, unlinked_claim 4, unbacked_passage 14, uncovered_statement 34
+
+Overall tag score by run: run1: 0.99   run2: 0.99   run3: 1.00
+Baseline spread (Noise Floor): 0.01

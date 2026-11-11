@@ -1,0 +1,254 @@
+{
+  "change_summary": "The notice is titled as a retraction of the tracked paper, High-yield ethanol extraction of curcumin from turmeric. The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered. The paper's abstract reports that a single ethanol extraction recovered 94% of the curcumin in turmeric powder, a yield result.",
+  "change_severity": "high",
+  "impact_level": "none",
+  "evaluation": "The draft does not cite the tracked paper, High-yield ethanol extraction of curcumin from turmeric, in its reference list or in its text.",
+  "recommendation": "The draft does not cite the tracked paper, High-yield ethanol extraction of curcumin from turmeric, in its reference list or in its text. No action is needed for this draft, and you can dismiss the alert. The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered. If you later add this paper to the draft, don't use it as evidence.",
+  "assessment": {
+    "prompt_version": 10,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 141,
+          "about_this_paper": "yes",
+          "what_changed": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "Retraction for irreproducible yields and altered raw data means the findings, including the 94% recovery in the abstract, can't be relied on.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered."
+            },
+            {
+              "source": "stored paper",
+              "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "claims": [
+        {
+          "text": "The notice is titled as a retraction of the tracked paper, High-yield ethanol extraction of curcumin from turmeric.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric"
+            }
+          ]
+        },
+        {
+          "text": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered."
+            }
+          ]
+        },
+        {
+          "text": "The paper's abstract reports that a single ethanol extraction recovered 94% of the curcumin in turmeric powder, a yield result.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder."
+            }
+          ]
+        }
+      ],
+      "summary": [
+        {
+          "text": "The notice is titled as a retraction of the tracked paper, High-yield ethanol extraction of curcumin from turmeric.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "The paper's abstract reports that a single ethanol extraction recovered 94% of the curcumin in turmeric powder, a yield result.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": false,
+      "reference_entry": null,
+      "uses": [],
+      "impact_level": "none",
+      "claims": [
+        {
+          "text": "The draft does not cite the tracked paper, High-yield ethanol extraction of curcumin from turmeric, in its reference list or in its text.",
+          "passages": []
+        }
+      ],
+      "explanation": [
+        {
+          "text": "The draft does not cite the tracked paper, High-yield ethanol extraction of curcumin from turmeric, in its reference list or in its text.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [],
+      "claims": [
+        {
+          "text": "The draft does not cite the tracked paper, High-yield ethanol extraction of curcumin from turmeric, in its reference list or in its text.",
+          "passages": []
+        },
+        {
+          "text": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered."
+            }
+          ]
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "The draft does not cite the tracked paper, High-yield ethanol extraction of curcumin from turmeric, in its reference list or in its text.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "No action is needed for this draft, and you can dismiss the alert.",
+          "kind": "advice",
+          "claims": []
+        },
+        {
+          "text": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "If you later add this paper to the draft, don't use it as evidence.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The notice is titled as a retraction of the tracked paper, High-yield ethanol extraction of curcumin from turmeric.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The paper's abstract reports that a single ethanol extraction recovered 94% of the curcumin in turmeric powder, a yield result.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft does not cite the tracked paper, High-yield ethanol extraction of curcumin from turmeric, in its reference list or in its text.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The draft does not cite the tracked paper, High-yield ethanol extraction of curcumin from turmeric, in its reference list or in its text.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

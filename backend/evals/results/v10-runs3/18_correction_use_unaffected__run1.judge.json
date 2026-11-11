@@ -1,0 +1,224 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the correction concerns the opioid dose in the Table 4 sensitivity analysis",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The correction changes the nerve-block group's mean opioid dose in Table 4 from 12 mg to 19 mg.\" The answer also says the original paper's sensitivity analysis was descriptive, which ties Table 4 to the sensitivity analysis."
+    },
+    {
+      "fact": "says the draft's use of the pain scores is not affected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"so the figure you quote is not touched and the impact on your draft is none.\""
+    },
+    {
+      "fact": "says no change to the draft is needed",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No change to the draft is needed, and you can dismiss this alert.\""
+    },
+    {
+      "fact": "recommends changing the pain-score claim",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the primary outcome is affected",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"The notice says the primary outcome in Table 2 and all other results are unchanged.\""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the nerve-block group's mean opioid dose was reported as 12 mg and should read 19 mg, which is the correction the claim states."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The primary outcome in Table 2 and all other results are unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice states that the primary outcome in Table 2 and all other results are unchanged."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "This analysis was descriptive and was not powered for formal comparison.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper says the analysis was descriptive and was not powered for formal comparison, matching the claim about the sensitivity analysis."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "the mean opioid dose in the nerve-block group was 12 mg.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper gives the nerve-block group's mean opioid dose as 12 mg. The quote does not name Section 3.4, but it comes from the paper's text and matches the figure the claim attributes to that text."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population.",
+      "backs": true,
+      "pass": true,
+      "reason": "The researcher's draft cites Oyelaran et al. [15] for ultrasound-guided nerve blocks lowering pain at 24 hours after knee replacement, 3.1 versus 5.2, which is what the claim says."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "The mean pain score at 24 hours was 3.1 with the block and 5.2 without (p < 0.001).",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper reports a 24-hour mean pain score of 3.1 with the block and 5.2 without, matching the claim."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the nerve-block group's mean opioid dose was reported as 12 mg and should read 19 mg, which matches the claimed correction."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "The primary outcome in Table 2 and all other results are unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice states that the primary outcome in Table 2 and all other results are unchanged."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population.",
+      "backs": true,
+      "pass": true,
+      "reason": "The researcher's draft cites [15] for the 24-hour pain finding, 3.1 versus 5.2, as the claim states."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the nerve-block group's mean opioid dose was reported as 12 mg and should read 19 mg, which matches the claimed correction."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The primary outcome in Table 2 and all other results are unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice states that the primary outcome in Table 2 and all other results are unchanged."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The correction changes the nerve-block group's mean opioid dose in Table 4 from 12 mg to 19 mg.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's Section 3.4 text also gives the 12 mg figure for the nerve-block group.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the primary outcome in Table 2 and all other results are unchanged.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The original paper states the sensitivity analysis was descriptive and not powered for formal comparison.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft cites [15] for the finding that an ultrasound-guided nerve block lowered 24-hour pain, 3.1 versus 5.2.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The original paper reports those same figures, a mean pain score of 3.1 with the block and 5.2 without.",
+      "covered_by": [
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The correction changes the nerve-block group's mean opioid dose from 12 mg to 19 mg.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice says the primary outcome in Table 2 and all other results are unchanged, so the figure you quote is not touched and the impact on your draft is none.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft cites [15] for the finding that ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement, 3.1 versus 5.2.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The correction changes the nerve-block group's mean opioid dose from 12 mg to 19 mg.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice says the primary outcome in Table 2 and all other results are unchanged.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}
