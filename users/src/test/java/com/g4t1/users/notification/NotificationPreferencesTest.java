@@ -25,6 +25,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -307,6 +308,49 @@ class NotificationPreferencesTest {
         assertThat(saved.getEmailMinAlertSeverity()).isEqualTo("low");
         assertThat(saved.isTelegramEnabled()).isTrue();
         assertThat(saved.getTelegramChatId()).isEqualTo(42L);
+    }
+
+    // a held row lock makes both PUTs read the row before either can write; without a lock on the read they
+    // then each write only the columns they changed, and the row ends up half of one request and half of the other
+    @Test
+    void twoPutsAtOnceOnTheSameChannelLeaveOneWholeRequest() throws Exception {
+        Account account = registered();
+        putTelegram(account.token(), Map.of("enabled", false, "chat_id", 42)).expectStatus().isOk();
+        Map<String, Object> turnOn = Map.of("enabled", true, "chat_id", 42);
+        Map<String, Object> clear = new HashMap<>();
+        clear.put("enabled", false);
+        clear.put("chat_id", null);
+        TransactionTemplate holder = new TransactionTemplate(transactions);
+        List<Future<?>> requests = new ArrayList<>();
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            holder.executeWithoutResult(status -> {
+                jdbc.queryForList("select user_id from users.notification_preferences where user_id = ? for update",
+                        UUID.fromString(account.id()));
+                requests.add(pool.submit(() -> putTelegram(account.token(), turnOn).expectStatus().isOk()));
+                requests.add(pool.submit(() -> putTelegram(account.token(), clear).expectStatus().isOk()));
+                pause();
+            });
+            for (Future<?> request : requests) {
+                request.get();
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+
+        NotificationPreferences saved = preferences.findById(UUID.fromString(account.id())).orElseThrow();
+        boolean turnedOn = saved.isTelegramEnabled() && Long.valueOf(42).equals(saved.getTelegramChatId());
+        boolean cleared = !saved.isTelegramEnabled() && saved.getTelegramChatId() == null;
+        assertThat(turnedOn || cleared).as("enabled=%s chat_id=%s", saved.isTelegramEnabled(),
+                saved.getTelegramChatId()).isTrue();
+    }
+
+    private static void pause() {
+        try {
+            Thread.sleep(700);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Test

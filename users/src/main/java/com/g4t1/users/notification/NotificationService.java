@@ -39,7 +39,7 @@ public class NotificationService {
         String alert = level("min_alert_severity", request.minAlertSeverity());
         String change = level("min_change_severity", request.minChangeSeverity());
         String impact = level("min_impact_level", request.minImpactLevel());
-        NotificationPreferences prefs = preferences.findById(userId).orElseThrow();
+        NotificationPreferences prefs = preferences.findForUpdate(userId).orElseThrow();
         prefs.replaceEmail(enabled, alert, change, impact);
         return NotificationPreferencesResponse.from(preferences.save(prefs), user.getEmail());
     }
@@ -55,7 +55,7 @@ public class NotificationService {
         if (enabled && chatId == null) {
             throw badRequest("chat_id is required to enable Telegram");
         }
-        NotificationPreferences prefs = preferences.findById(userId).orElseThrow();
+        NotificationPreferences prefs = preferences.findForUpdate(userId).orElseThrow();
         prefs.replaceTelegram(enabled, chatId, alert, change, impact);
         return NotificationPreferencesResponse.from(preferences.save(prefs), user.getEmail());
     }
