@@ -253,16 +253,20 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - `report_id` and `source_date` in the response come from joining the source row. Source: user (confirmed).
   - Search tests run on Postgres in Testcontainers (`pgvector/pgvector:pg17`), skipped when Docker is missing; validation tests run on H2 (see S2). Source: `code: storage/src/test/resources/application-test.yml`.
 - **Acceptance criteria:**
-  - [ ] Results are ordered by cosine distance, with `score` = `1 - distance`: `ChunkSearchPostgresIT#nearestFirst`.
-  - [ ] Only chunks of the given paper come back: `ChunkSearchPostgresIT#paperScoped`.
-  - [ ] Only chunks of the given `source_type` come back: `ChunkSearchPostgresIT#sourceTypeFilter`.
-  - [ ] With `profile`, only the paper owner's profile chunks come back, never another user's: `ChunkSearchPostgresIT#profileOfOwner`.
-  - [ ] `report_id` and `source_date` are as I2 defines them, for each source type: `ChunkSearchPostgresIT#reportIdAndDate`.
-  - [ ] The `400`s and the `404`: `ChunkControllerTest#searchValidation` on H2.
+  - [x] Results are ordered by cosine distance, with `score` = `1 - distance`: `ChunkSearchPostgresIT#nearestFirst`.
+  - [x] Only chunks of the given paper come back: `ChunkSearchPostgresIT#paperScoped`.
+  - [x] Only chunks of the given `source_type` come back: `ChunkSearchPostgresIT#sourceTypeFilter`.
+  - [x] With `profile`, only the paper owner's profile chunks come back, never another user's: `ChunkSearchPostgresIT#profileOfOwner`.
+  - [x] `report_id` and `source_date` are as I2 defines them, for each source type: `ChunkSearchPostgresIT#reportIdAndDate`.
+  - [x] The `400`s and the `404`: `ChunkControllerTest#searchValidation` on H2.
 - **Doc deltas:**
   - CONTRACTS.md: I2.
   - STORAGE.md, "Chunks": search is per paper and source type, ranked by similarity only.
   - ROADMAP.md: search across a researcher's papers, not built.
+  - STORAGE.md, "Chunks": search sets `hnsw.iterative_scan = strict_order` for its transaction, because the HNSW index with a `where` filter otherwise stops at `ef_search` candidates and can return fewer than `limit` matches.
+  - STORAGE.md, "Chunks": `report_id` and `source_date` are picked by `source_type` with a `case` over the joined source row; a profile chunk has a null `report_id` and its own `created_at`.
+  - STORAGE.md, "Chunks": an unknown `source_type` and a user token are also `400` and `403` on search, like the store endpoint (tested in `ChunkControllerTest#searchValidation`).
+  - STORAGE.md, "Gotchas": the Postgres test classes share one container, started once in `PgvectorContainer`'s static block, because Spring caches the application context across classes and a per-class container would leave it pointing at a stopped database.
 
 ### S4. Research Evaluation embedding client and chunker
 
