@@ -22,7 +22,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
@@ -30,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -287,31 +285,9 @@ class NotificationPreferencesTest {
                         "chat_id is required to enable Telegram"));
     }
 
-    // the second commit must not write back the other channel's old values, whichever order they land in
-    @Test
-    void aChannelSavedWhileTheOtherIsBeingSavedKeepsTheOthersNewValues() {
-        Account account = registered();
-        UUID id = UUID.fromString(account.id());
-        TransactionTemplate outer = new TransactionTemplate(transactions);
-        TransactionTemplate inner = new TransactionTemplate(transactions);
-        inner.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-
-        outer.executeWithoutResult(status -> {
-            NotificationPreferences stale = preferences.findById(id).orElseThrow();
-            inner.executeWithoutResult(other ->
-                    preferences.findById(id).orElseThrow().replaceEmail(true, "low", "low", "low"));
-            stale.replaceTelegram(true, 42L, "medium", "medium", "medium");
-        });
-
-        NotificationPreferences saved = preferences.findById(id).orElseThrow();
-        assertThat(saved.isEmailEnabled()).isTrue();
-        assertThat(saved.getEmailMinAlertSeverity()).isEqualTo("low");
-        assertThat(saved.isTelegramEnabled()).isTrue();
-        assertThat(saved.getTelegramChatId()).isEqualTo(42L);
-    }
-
-    // a held row lock makes both PUTs read the row before either can write; without a lock on the read they
-    // then each write only the columns they changed, and the row ends up half of one request and half of the other
+    // each request gets a whole channel because the PUTs queue on the row's lock: the held lock makes both
+    // requests reach it before either can write, and without a lock on the read they would each write only
+    // the columns they changed, leaving the row half of one request and half of the other
     @Test
     void twoPutsAtOnceOnTheSameChannelLeaveOneWholeRequest() throws Exception {
         Account account = registered();
@@ -320,23 +296,10 @@ class NotificationPreferencesTest {
         Map<String, Object> clear = new HashMap<>();
         clear.put("enabled", false);
         clear.put("chat_id", null);
-        TransactionTemplate holder = new TransactionTemplate(transactions);
-        List<Future<?>> requests = new ArrayList<>();
-        ExecutorService pool = Executors.newFixedThreadPool(2);
-        try {
-            holder.executeWithoutResult(status -> {
-                jdbc.queryForList("select user_id from users.notification_preferences where user_id = ? for update",
-                        UUID.fromString(account.id()));
-                requests.add(pool.submit(() -> putTelegram(account.token(), turnOn).expectStatus().isOk()));
-                requests.add(pool.submit(() -> putTelegram(account.token(), clear).expectStatus().isOk()));
-                pause();
-            });
-            for (Future<?> request : requests) {
-                request.get();
-            }
-        } finally {
-            pool.shutdownNow();
-        }
+
+        whileTheRowIsLocked(account,
+                () -> putTelegram(account.token(), turnOn).expectStatus().isOk(),
+                () -> putTelegram(account.token(), clear).expectStatus().isOk());
 
         NotificationPreferences saved = preferences.findById(UUID.fromString(account.id())).orElseThrow();
         boolean turnedOn = saved.isTelegramEnabled() && Long.valueOf(42).equals(saved.getTelegramChatId());
@@ -345,42 +308,45 @@ class NotificationPreferencesTest {
                 saved.getTelegramChatId()).isTrue();
     }
 
-    private static void pause() {
-        try {
-            Thread.sleep(700);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
+    // the same held lock for two channels: each PUT must keep the other's new values, whichever goes first
     @Test
     void twoPutsAtOnceOnDifferentChannelsBothStick() throws Exception {
-        ExecutorService pool = Executors.newFixedThreadPool(2);
-        try {
-            for (int round = 0; round < 50; round++) {
-                Account account = registered();
-                CountDownLatch go = new CountDownLatch(1);
-                Future<?> email = pool.submit(() -> {
-                    go.await();
-                    return putEmail(account.token(), Map.of("enabled", true, "min_alert_severity", "low"))
-                            .expectStatus().isOk();
-                });
-                Future<?> telegram = pool.submit(() -> {
-                    go.await();
-                    return putTelegram(account.token(), Map.of("enabled", true, "chat_id", 42, "min_alert_severity", "low"))
-                            .expectStatus().isOk();
-                });
-                go.countDown();
-                email.get();
-                telegram.get();
+        Account account = registered();
 
-                get(account.token())
-                        .expectStatus().isOk()
-                        .expectBody()
-                        .jsonPath("$.email.enabled").isEqualTo(true)
-                        .jsonPath("$.email.min_alert_severity").isEqualTo("low")
-                        .jsonPath("$.telegram.enabled").isEqualTo(true)
-                        .jsonPath("$.telegram.chat_id").isEqualTo(42);
+        whileTheRowIsLocked(account,
+                () -> putEmail(account.token(), Map.of("enabled", true, "min_alert_severity", "low"))
+                        .expectStatus().isOk(),
+                () -> putTelegram(account.token(), Map.of("enabled", true, "chat_id", 42, "min_alert_severity", "low"))
+                        .expectStatus().isOk());
+
+        get(account.token())
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.email.enabled").isEqualTo(true)
+                .jsonPath("$.email.min_alert_severity").isEqualTo("low")
+                .jsonPath("$.telegram.enabled").isEqualTo(true)
+                .jsonPath("$.telegram.chat_id").isEqualTo(42);
+    }
+
+    // starts the requests while another transaction holds the account's row, lets them pile up, then releases it
+    private void whileTheRowIsLocked(Account account, Runnable... requests) throws Exception {
+        List<Future<?>> running = new ArrayList<>();
+        ExecutorService pool = Executors.newFixedThreadPool(requests.length);
+        try {
+            new TransactionTemplate(transactions).executeWithoutResult(status -> {
+                jdbc.queryForList("select user_id from users.notification_preferences where user_id = ? for update",
+                        UUID.fromString(account.id()));
+                for (Runnable request : requests) {
+                    running.add(pool.submit(request));
+                }
+                try {
+                    Thread.sleep(700);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            });
+            for (Future<?> request : running) {
+                request.get();
             }
         } finally {
             pool.shutdownNow();
