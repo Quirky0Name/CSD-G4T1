@@ -25,6 +25,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -270,12 +271,21 @@ class SendNotificationTest {
         noEvent.remove("event");
         Map<String, Object> noPaper = new HashMap<>(alertsEvent(alert(7, "retraction", "high", "Retracted.")));
         noPaper.remove("paper");
+        Map<String, Object> nullAlert = new HashMap<>(alertsEvent());
+        nullAlert.put("alerts", Arrays.asList(new Object[]{null}));
+        Map<String, Object> noPaperId = new HashMap<>(alertsEvent(alert(7, "retraction", "high", "Retracted.")));
+        noPaperId.put("paper", Map.of("title", "Quantum Widgets", "doi", "10.1234/qw"));
+        Map<String, Object> noChangeType = alertsEvent(
+                Map.of("id", 7, "alert_severity", "high", "description", "Retracted."));
         Map<String, Object> noSummary = reportEvent("high", null, "low", null, null);
         return Stream.of(
                 Arguments.of("an unknown event", Map.of("event", "digest", "paper", paper()),
                         "event must be alerts or report_assessed"),
                 Arguments.of("no event", noEvent, "event must be alerts or report_assessed"),
                 Arguments.of("no paper", noPaper, "paper is required"),
+                Arguments.of("a paper with no id", noPaperId, "paper is required"),
+                Arguments.of("a null alert", nullAlert, "alerts must not contain null"),
+                Arguments.of("an alert with no change type", noChangeType, "change_type and description are required"),
                 Arguments.of("no alerts", alertsEvent(), "alerts must have at least one alert"),
                 Arguments.of("an unknown alert severity", alertsEvent(alert(7, "retraction", "critical", "Retracted.")),
                         "alert_severity must be low, medium or high"),

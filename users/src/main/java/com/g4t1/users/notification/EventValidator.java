@@ -33,6 +33,9 @@ final class EventValidator {
             throw badRequest("alerts must have at least one alert");
         }
         for (NotificationEvent.Alert alert : event.alerts()) {
+            if (alert == null) {
+                throw badRequest("alerts must not contain null");
+            }
             if (alert.alertSeverity() == null || !LEVELS.contains(alert.alertSeverity())) {
                 throw badRequest("alert_severity must be low, medium or high");
             }
