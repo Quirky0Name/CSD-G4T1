@@ -95,6 +95,10 @@ Good to know:
 
 - `POSTGRES_PASSWORD` is set when the database is first created; to
   change it later, `down -v` (losing the data) and start again.
+- The database image is `pgvector/pgvector:pg17`, not `postgres:17`:
+  Storage Management's chunks migration (V13) needs the `vector`
+  extension. A database volume made by the old `postgres:17` image starts
+  unchanged on it, so no `down -v` is needed.
 - Only the website is reachable; it passes `/api`, `/auth`, `/projects`
   and `/updating` on to the services. Swagger doesn't work through it, so
   use the development stacks below for that.

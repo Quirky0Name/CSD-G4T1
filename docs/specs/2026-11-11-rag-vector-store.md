@@ -457,3 +457,42 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
 - [ ] **S1:** run `docker compose up` on an existing volume, then `docker compose exec db psql -U app -d research_assistant -c "create extension if not exists vector; select extversion from pg_extension where extname='vector';"`. Expected: one version row, with the old tables still present.
 - [ ] **S5:** with a real `GEMINI_API_KEY`, replay a change on a paper with the demo tools until its report is `assessed`. Expected: `select source_type, count(*) from chunks group by 1;` shows `alert`, `document` and `report` rows.
 - [ ] **S6:** on a paper with a second report set up in dev mode, get that report assessed. Expected: the second report's `assessment.history` is `read` and lists the first report's chunks.
+
+## PR commands
+
+Run in order, in Git Bash, from the repo root. Each PR targets the branch before it, so merge them in this order.
+
+```bash
+git push -u origin feat/rag-storage
+gh pr create --base main --head feat/rag-storage --title "feat(storage): store and search embedded chunks on pgvector" --body "Read/merge feat/rag-vector-store first.
+
+Runs Postgres as pgvector/pgvector:pg17 and adds a chunks table (V13) with PUT /internal/chunks to replace a source's chunks and POST /internal/chunks/search to return a paper's nearest chunks of one source type, so Research Evaluation can store and retrieve a paper's past alerts, reports and documents."
+```
+
+```bash
+git push -u origin feat/rag-embedding
+gh pr create --base feat/rag-storage --head feat/rag-embedding --title "feat(eval): embed text with gemini and chunk document text" --body "Read/merge feat/rag-storage first.
+
+Adds GeminiEmbedder (gemini-embedding-001 at 1536 dimensions, L2-normalised) behind an Embedder protocol, and chunk_text for document text, which Research Evaluation needs to store and search chunks."
+```
+
+```bash
+git push -u origin feat/rag-store-report-chunks
+gh pr create --base feat/rag-embedding --head feat/rag-store-report-chunks --title "feat(eval): store a report's chunks after impact stores its evaluation" --body "Read/merge feat/rag-embedding first.
+
+Right after impact submits a report's evaluation, embeds and stores the chunks of the report, its alerts and its documents (PDF text per page, or Europe PMC text), so later reports on the same paper can retrieve them. A failure is logged and never changes the report."
+```
+
+```bash
+git push -u origin feat/rag-report-context-chunks
+gh pr create --base feat/rag-store-report-chunks --head feat/rag-report-context-chunks --title "feat(storage): keep the context chunks impact sends with a report's evaluation" --body "Read/merge feat/rag-store-report-chunks first.
+
+Stores context_chunks (V14) from the evaluation PUT on the report and returns it in GET /papers/{id}/reports, so a frontend can later show which past chunks impact read."
+```
+
+```bash
+git push -u origin feat/rag-augment
+gh pr create --base feat/rag-report-context-chunks --head feat/rag-augment --title "feat(eval): give impact's first two steps the paper's past as a timeline" --body "Read/merge feat/rag-report-context-chunks first.
+
+Before step 1, impact searches the paper's past alerts, reports and document chunks and adds them to steps 1 and 2 as a PAST TIMELINE section (PROMPT_VERSION 6), sending the chunks used as context_chunks. Also carries the code-review fixes and the docs for the whole feature."
+```
