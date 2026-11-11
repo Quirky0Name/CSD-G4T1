@@ -277,6 +277,29 @@ def an_absence_on_a_claim_with_passages_or_no_such_claim_counts_for_nothing():
 
 
 @check
+def a_claim_the_model_marks_an_absence_is_not_unlinked():
+    ev = without_passages(run(), "change", 0)
+    ev["assessment"]["change"]["claims"][0]["absence"] = True
+    assert scored(ev, all_pass_grade(ev))["unlinked"] == 0
+    assert scored(ev)["unlinked"] == 0
+
+
+@check
+def the_judge_sees_the_kept_sentences_marked_fact_or_advice():
+    ev = run()
+    ev["assessment"]["actions"]["recommendation"] = [
+        {"text": "The dose was corrected.", "kind": "fact", "claims": [1]},
+        {"text": "The whole paper is wrong.", "kind": "fact", "claims": []},
+        {"text": "Re-check the dose.", "kind": "advice", "claims": []},
+    ]
+    shown = judge.answer(ev)
+    assert "recommendation: \n  - [fact] The dose was corrected.\n  - [advice] Re-check the dose." in shown, shown
+    assert "The whole paper is wrong." not in shown, shown
+    # a step without a sentence list (before PROMPT_VERSION 11) shows its stored text
+    assert "evaluation: The draft relies on the dose." in shown, shown
+
+
+@check
 def a_quote_of_a_notices_update_to_line_is_not_invented():
     case = copy.deepcopy(CASE)
     case["notice"]["update_to_includes_paper"] = True

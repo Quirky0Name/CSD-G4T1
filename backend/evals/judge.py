@@ -51,6 +51,7 @@ import claude_llm
 from claude_llm import ApiStopped, ClaudeLimitReached, NotOnSubscription
 
 from research_evaluation.impact.llm import AllModelsFailed
+from research_evaluation.impact.schemas import Claim, Sentence, kept
 
 PROVIDERS = ("gemini", "claude-code", "claude-api")
 DEFAULT_MODELS = {
@@ -107,7 +108,9 @@ or contradict it). A quote from the researcher's draft can show what the draft s
 each factual statement in the ANSWER's change_summary, evaluation and recommendation, with its \
 field, and `covered_by`: the numbers of the CLAIMS that state it (empty if no claim does). A \
 factual statement is one the source documents could show true or false. Advice, instructions and \
-opinions on what to do are not factual statements: do not list them. A field shown as (none) \
+opinions on what to do are not factual statements: do not list them. A field given as a list of \
+sentences marks each one [fact] or [advice]: list statements only from its [fact] sentences, and \
+skip its [advice] sentences whole. A field shown as (none) \
 has no statements. Then give `absences`: the numbers of the CLAIMS marked (no passages) that \
 state only that something is missing from the material (a notice, its text, a banner); a claim \
 stating anything else is not one. You are only reporting, not judging whether the answer is right. Do not \
@@ -172,12 +175,31 @@ def prompt(case: dict, ev: dict) -> str:
     )
 
 
+# each free-text field, the step it comes from and that step's sentence list (PROMPT_VERSION 11 on)
+FIELD_SENTENCES = (
+    ("change_summary", "change", "summary"),
+    ("evaluation", "impact", "explanation"),
+    ("recommendation", "actions", "recommendation"),
+)
+
+
+def field_text(ev: dict, field: str, step: str, key: str) -> str:
+    """One free-text field as the judge sees it: the sentences the stored text kept, each marked
+    [fact] or [advice], when the run has its step's sentence list; else the stored text."""
+    if not ev[field]:
+        return "(none)"
+    answer = ev["assessment"].get(step) or {}
+    if not isinstance(answer.get(key), list):
+        return ev[field]
+    sentences = [Sentence.model_validate(s) for s in answer[key]]
+    claims = [Claim.model_validate(c) for c in answer.get("claims") or []]
+    return "".join(f"\n  - [{s.kind}] {s.text.strip()}" for s in kept(sentences, claims))
+
+
 def answer(ev: dict) -> str:
     """The run's three free-text fields, as the judge sees them."""
-    return (
-        f"change_summary: {ev['change_summary']}\n"
-        f"evaluation: {ev['evaluation'] or '(none)'}\n"
-        f"recommendation: {ev['recommendation'] or '(none)'}"
+    return "\n".join(
+        f"{field}: {field_text(ev, field, step, key)}" for field, step, key in FIELD_SENTENCES
     )
 
 

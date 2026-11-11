@@ -1,4 +1,4 @@
-from research_evaluation.impact.schemas import Claim, Sentence, prose
+from research_evaluation.impact.schemas import Claim, Sentence, kept, prose
 
 CLAIMS = [
     Claim(text="The paper was retracted.", passages=[]),
@@ -47,3 +47,15 @@ def test_spacing_around_sentences_is_tidied():
     sentences = [fact("  The paper was retracted. ", 1), fact("\nIts data were fabricated.", 2)]
 
     assert prose(sentences, CLAIMS) == "The paper was retracted. Its data were fabricated."
+
+
+def test_kept_gives_the_sentences_the_stored_text_keeps():
+    advice = Sentence(text="Upload your draft.", kind="advice", claims=[])
+    sentences = [fact("The paper was retracted.", 1), fact("Your draft is not affected."), advice]
+
+    assert kept(sentences, CLAIMS) == [sentences[0], advice]
+
+
+def test_a_claim_states_no_absence_unless_the_model_says_so():
+    assert Claim(text="The paper was retracted.", passages=[]).absence is False
+    assert Claim.model_validate({"text": "No notice was given.", "passages": [], "absence": True}).absence

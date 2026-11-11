@@ -316,9 +316,11 @@ Per report:
    own). A citation jump has no document: its alert line carries the rule's
    description (the counts), and step 1's task says to judge it as new
    attention, scope `citations_only`, severity `low`, so the gate lets it
-   through to steps 2 and 3. `PROMPT_VERSION` is 7 since conclusions, widening words and absences
-   get their own claims, and step 3 adds no fact of its own (6: each claim states one fact that each
-   of its quotes shows on its own; 5 added claims and step 2's stored paper).
+   through to steps 2 and 3. `PROMPT_VERSION` is 12 since each claim says whether it states only
+   an absence, `absence` (11: free text as sentences that name their claims; 7: conclusions,
+   widening words and absences get their own claims, and step 3 adds no fact of its own; 6: each
+   claim states one fact that each of its quotes shows on its own; 5 added claims and step 2's
+   stored paper).
 4. `PUT /internal/reports/{id}/evaluation`, once; the report becomes
    `assessed`. Nothing is written between steps, so an `assessed` report is
    always complete.
@@ -682,16 +684,20 @@ ones.
   grading of them (`check_passages(ev, grade=None)`):
   - **unlinked claim**: a claim with no passage. An `impact` claim on a run
     whose `assessment.draft` isn't `read` is exempt: a general judgment has
-    nothing to quote. So is a claim the judge lists in `absences`: it states
+    nothing to quote. So is a claim the model marked `absence: true`
+    (`PROMPT_VERSION` 12 on) or the judge lists in `absences`: it states
     only that something is missing from the material (a notice, its text, a
-    banner), and nothing can be quoted for that. `unlinked_claim` counts the
+    banner), and nothing can be quoted for that. The model's flag is taken
+    as given; the judge's list covers runs from before the flag. `unlinked_claim` counts the
     evaluation's `claims`.
   - **unbacked passage**: the judge says the passage doesn't back its claim.
   - **uncovered statement**: the judge finds a factual statement in
     `change_summary`, `evaluation` or `recommendation` that no claim covers.
     Code can't prove coverage, so it is measured this way. A factual statement
     is one the sources could show true or false: the judge doesn't list advice,
-    which no quote can prove.
+    which no quote can prove. For a run with sentence lists (`PROMPT_VERSION`
+    11 on), the judge sees each field as the sentences the stored text kept,
+    each marked `[fact]` or `[advice]`, and skips the `[advice]` ones whole.
 
   The claims grading shows the judge each passage's source (its stored
   `target`), so it can tell a quote of the draft from a quote of the paper.

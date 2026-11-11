@@ -18,7 +18,7 @@ from research_evaluation.impact.llm import Part, Pdf
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 11
+PROMPT_VERSION = 12
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -70,10 +70,10 @@ Rules:
   fill passages.
 - A statement that something is missing (no notice, no banner, no reason
   given, no current copy, no draft, no other citation in the draft, no entry
-  in the reference list) is a claim of its own with empty passages, saying
-  only that. A consequence of it is another claim. Never quote what is there
-  to show what isn't: a reference list's entries don't show another is
-  missing.
+  in the reference list) is a claim of its own with empty passages and
+  absence true, saying only that. A consequence of it is another claim.
+  Never quote what is there to show what isn't: a reference list's entries
+  don't show another is missing. Every other claim has absence false.
 - A comparison between two documents (a notice's DOI and the paper's) is one
   claim per side, each with its quote.
 - Each step's answer gives its claims first, then its free text as a list

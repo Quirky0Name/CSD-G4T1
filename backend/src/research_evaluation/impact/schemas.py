@@ -36,10 +36,12 @@ class Evidence(_Answer):
 class Claim(_Answer):
     """One factual statement of a step's answer and the quotes behind it (docs/EVALUATION.md,
     "Impact"). A claim is about anything the step says, not tied to an alert, use or action;
-    a statement with nothing to quote has no passages."""
+    a statement with nothing to quote has no passages. `absence` is the model saying the claim
+    states only that something is missing from the material, so it has nothing to quote."""
 
     text: str
     passages: list[Evidence]
+    absence: bool = False
 
 
 # every step states at least one thing, so an empty list is an answer that doesn't fit
@@ -58,14 +60,19 @@ class Sentence(_Answer):
 Sentences = Annotated[list[Sentence], Field(min_length=1)]
 
 
-def prose(sentences: list[Sentence], claims: list[Claim]) -> str:
-    """The free text as stored: the sentences in order, leaving out a fact that names no existing
+def kept(sentences: list[Sentence], claims: list[Claim]) -> list[Sentence]:
+    """The sentences the stored text keeps, in order, leaving out a fact that names no existing
     claim, since nothing backs it. If that would leave nothing, every sentence is kept."""
     backed = [
         s for s in sentences
         if s.kind == "advice" or any(1 <= n <= len(claims) for n in s.claims)
     ]
-    return " ".join(s.text.strip() for s in backed or sentences)
+    return backed or sentences
+
+
+def prose(sentences: list[Sentence], claims: list[Claim]) -> str:
+    """The free text as stored: the kept sentences joined."""
+    return " ".join(s.text.strip() for s in kept(sentences, claims))
 
 
 class AlertJudgment(_Answer):

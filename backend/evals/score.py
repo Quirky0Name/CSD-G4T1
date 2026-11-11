@@ -153,10 +153,25 @@ def check_quotes(ev: dict, case: dict) -> dict[str, int]:
     return found
 
 
+# each stored claim kind and the assessment step its claims come from
+CLAIM_STEPS = (("change", "change"), ("impact", "impact"), ("action", "actions"))
+
+
+def flagged_absences(ev: dict) -> list[str]:
+    """The ids of the claims the model marked `absence` (PROMPT_VERSION 12 on): it says each
+    states only that something is missing, so it has nothing to quote."""
+    return [
+        f"{kind}-{i}"
+        for kind, step in CLAIM_STEPS
+        for i, claim in enumerate((ev["assessment"].get(step) or {}).get("claims") or [])
+        if claim.get("absence")
+    ]
+
+
 def check_passages(ev: dict, grade: dict | None = None) -> dict[str, int | None]:
     """A run's claims: unlinked (a claim with no passage; an impact claim on a run whose draft
     wasn't read is exempt, since a general judgment has nothing to quote, and so is a claim the
-    judge says states only an absence), and, from the judge's grading (`grade`, the .judge.json), unbacked (a passage the judge says doesn't back its claim)
+    model marked `absence` or the judge says states only an absence), and, from the judge's grading (`grade`, the .judge.json), unbacked (a passage the judge says doesn't back its claim)
     and uncovered (a statement of the three free-text fields no claim covers). A count is None
     when it can't be scored: every count for a run with no `claims` (saved before
     PROMPT_VERSION 5), unbacked and uncovered for a run the judge hasn't graded for claims."""
@@ -164,7 +179,7 @@ def check_passages(ev: dict, grade: dict | None = None) -> dict[str, int | None]
     if claims is None:
         return {"unlinked": None, "unbacked": None, "uncovered": None}
     draft_read = ev["assessment"].get("draft") == "read"
-    absent = (grade or {}).get("absent_claims", [])
+    absent = [*(grade or {}).get("absent_claims", []), *flagged_absences(ev)]
     unlinked = sum(
         1
         for c in claims
