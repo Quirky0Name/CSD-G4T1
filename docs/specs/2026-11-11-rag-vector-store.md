@@ -167,10 +167,11 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - `users/docker-compose.yml` and `backend/docker-compose.dev.yml` stay as they are. `transient`.
   - The vectors live in the same database (`research_assistant`), as the same `app` role. Source: user ("is it just another schema in the same db?").
 - **Acceptance criteria:**
-  - [ ] `docker compose config` in the repo root and in `storage/` shows `pgvector/pgvector:pg17` for the Postgres service.
+  - [x] `docker compose config` in the repo root and in `storage/` shows `pgvector/pgvector:pg17` for the Postgres service.
 - **Doc deltas:**
   - SETUP.md: Storage Management's Postgres image is `pgvector/pgvector:pg17`. It reads an existing `postgres:17` volume unchanged.
   - DEPLOY.md: the same note for the server's first pull.
+  - SETUP.md: the `docker run ... postgres:17` command for `storage-db` becomes `pgvector/pgvector:pg17`, or V13 fails on it.
 
 ### S2. Storage Management stores chunks
 
