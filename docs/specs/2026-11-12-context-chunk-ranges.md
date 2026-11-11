@@ -4,7 +4,7 @@
 
 **Base commit:** `6ce00b0`
 
-**Repo:** `D:\SMU\CS203\project\CSD-G4T1`
+**Repo:** `D:\SMU\CS203\project\chunk-monkey` (a worktree of CSD-G4T1)
 
 **Commands:**
 
@@ -91,17 +91,24 @@ Doc delta: CONTRACTS.md, both endpoints (S1).
   - `start = chunk_index × 2,800`, `end = start + length of the chunk's text after its header`. The header is `"<kind> <doi> (report of <date>)\n\n"`, added by `chunks.document_pieces`. Source: `code: chunks.document_pieces`. The range is computed when impact reads the chunk, so later changes to the chunk size don't move stored ranges.
   - A document's `id` is unique across reports, so no `report_id` is sent; the frontend finds the document in any report's `documents`. Source: user (agreed it isn't needed).
 - **Acceptance criteria:**
-  - [ ] A cut page-less document chunk (`chunk_index` 2 of a long text) gets `start` 5600 and the right `end`; a whole short notice, a paged document chunk, an alert and a report chunk have neither key: `test_history.py::test_context_chunks_sent` (updated).
-  - [ ] For a text longer than 3 chunks, every chunk's computed range gives back exactly that chunk's text without its header: `test_history.py::test_context_chunk_range_matches_text` (new).
-  - [ ] No history: `context_chunks` is still `[]`: `test_history.py::test_context_chunks_empty_without_history`.
-  - [ ] An item with `start`/`end` round-trips through Storage Management unchanged: `ReportControllerTest#contextChunksRoundTrip` (updated).
-  - [ ] `cd backend && uv run pytest` and `cd storage && ./mvnw test` pass.
+  - [x] A cut page-less document chunk (`chunk_index` 2 of a long text) gets `start` 5600 and the right `end`; a whole short notice, a paged document chunk, an alert and a report chunk have neither key: `test_history.py::test_context_chunks_sent` (updated).
+  - [x] For a text longer than 3 chunks, every chunk's computed range gives back exactly that chunk's text without its header: `test_history.py::test_context_chunk_range_matches_text` (new).
+  - [x] No history: `context_chunks` is still `[]`: `test_history.py::test_context_chunks_empty_without_history`.
+  - [x] An item with `start`/`end` round-trips through Storage Management unchanged: `ReportControllerTest#contextChunksRoundTrip` (updated).
+  - [x] `cd backend && uv run pytest` and `cd storage && ./mvnw test` pass.
 - **Doc deltas:**
   - CONTRACTS.md, `GET /papers/{id}/reports`, `context_chunks` row: I1's fields and display rule; a split PDF page has no range; items of reports assessed before this change have no `start`/`end`.
   - CONTRACTS.md, `PUT /internal/reports/{id}/evaluation`: the example and the `context_chunks` row gain the optional `start`/`end`.
   - CONTRACTS.md: move the errors paragraph that the `20431ac` merge left after "User PDFs" (`404` ... `No paper <id>`, as for `GET /papers/{id}/alerts`) back to the end of `GET /papers/{id}/reports`, before `#### Claim`.
   - EVALUATION.md, the `context_chunks` bullet: `start`/`end` for a cut text chunk, and how they're computed.
   - ROADMAP.md, "A frontend view of a report's `context_chunks`": I1's display rule.
+  - New: `impact.history.context_chunk(chunk)` builds each `context_chunks` item from a search hit, and `assess` calls it; why: the range depends on the hit's `chunk_index` and content, which only the search hit has. Needs no doc beyond EVALUATION.md's `context_chunks` bullet.
+  - New: the header is everything up to and including the content's first blank line (`"
+
+"`); why: `document_pieces`' header is one line ending in a blank line, and a kind or DOI has no newline. Recorded in `context_chunk`'s docstring.
+  - New: `ContextChunk` leaves `start`/`end` out of its JSON when unset (a wrap `model_serializer`), while `page` stays `null`; why: I1 says "both or neither" and "absent otherwise". Recorded in `ContextChunk`'s docstring.
+  - New: `embedding.CHUNK_SIZE` (3,200) and `CHUNK_OVERLAP` (400) are `chunk_text`'s defaults, read by `context_chunk`; why: one source for the step. Needs no doc beyond EVALUATION.md.
+  - Spec change: **Repo** is now the `chunk-monkey` worktree (was `D:\SMU\CS203\project\CSD-G4T1`, which has `feat/claim-passages-backend` checked out); why: the run works on `feat/context-chunk-ranges` there. Needs no doc.
 
 ## Human checks
 
