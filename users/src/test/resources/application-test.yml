@@ -13,3 +13,4 @@ users:
   # JWT library would pick HS512 on its own instead of the contract's HS256
   jwt-secret: dXNlcnMtdGVzdC1zZWNyZXQtbm90LWZvci1wcm9kLWxvbmctZW5vdWdoLXRvLXRlbXB0LWhzNTEyLXNpZ25pbg==
   mail-from: notifications@research-assistant.test
+  telegram-bot-token: test-bot-token

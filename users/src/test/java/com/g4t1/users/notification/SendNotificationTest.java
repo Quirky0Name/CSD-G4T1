@@ -1,6 +1,7 @@
 package com.g4t1.users.notification;
 
 import com.g4t1.users.StorageStub;
+import com.g4t1.users.TelegramStub;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.GreenMailUtil;
 import com.icegreen.greenmail.util.ServerSetupTest;
@@ -33,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SendNotificationTest {
 
     private static final StorageStub storage = new StorageStub();
+    private static final TelegramStub telegram = new TelegramStub();
     private static final GreenMail mail = new GreenMail(ServerSetupTest.SMTP.dynamicPort());
 
     static {
@@ -42,12 +44,14 @@ class SendNotificationTest {
     @DynamicPropertySource
     static void pointAtTheStubs(DynamicPropertyRegistry registry) {
         registry.add("users.storage-url", storage::url);
+        registry.add("users.telegram-api-url", telegram::url);
         registry.add("spring.mail.port", () -> mail.getSmtp().getPort());
     }
 
     @AfterAll
     static void stopServers() {
         storage.stop();
+        telegram.stop();
         mail.stop();
     }
 
@@ -63,6 +67,7 @@ class SendNotificationTest {
     void setUp() throws Exception {
         client = RestTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
         mail.purgeEmailFromAllMailboxes();
+        telegram.reset();
     }
 
     @Test
@@ -85,6 +90,37 @@ class SendNotificationTest {
         String body = GreenMailUtil.getBody(received[0]);
         assertThat(body).contains("HIGH retraction: The journal retracted the paper.");
         assertThat(body).doesNotContain("citation_jump");
+    }
+
+    @Test
+    void eachChannelGetsTheAlertsAtOrAboveItsOwnThreshold() throws Exception {
+        Account account = registered();
+        putEmail(account, Map.of("enabled", true, "min_alert_severity", "high"));
+        putTelegram(account, Map.of("enabled", true, "chat_id", 5000000000L, "min_alert_severity", "low"));
+
+        postEvent(account.id(), alertsEvent(
+                alert(8, "citation_jump", "low", "Cited 12 more times."),
+                alert(7, "retraction", "high", "The journal retracted the paper.")))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.channels.email").isEqualTo("sent")
+                .jsonPath("$.channels.telegram").isEqualTo("sent");
+
+        MimeMessage[] received = mail.getReceivedMessages();
+        assertThat(received).hasSize(1);
+        assertThat(GreenMailUtil.getBody(received[0]))
+                .contains("HIGH retraction: The journal retracted the paper.")
+                .doesNotContain("citation_jump");
+        assertThat(telegram.requests()).hasSize(1);
+        TelegramStub.Request sent = telegram.requests().get(0);
+        assertThat(sent.method()).isEqualTo("POST");
+        assertThat(sent.path()).isEqualTo("/bottest-bot-token/sendMessage");
+        assertThat((Number) JsonPath.read(sent.body(), "$.chat_id")).isEqualTo(5000000000L);
+        assertThat((Boolean) JsonPath.read(sent.body(), "$.disable_web_page_preview")).isTrue();
+        assertThat(JsonPath.<Map<String, Object>>read(sent.body(), "$")).doesNotContainKey("parse_mode");
+        assertThat(JsonPath.<String>read(sent.body(), "$.text"))
+                .contains("HIGH retraction: The journal retracted the paper.", "LOW citation_jump: Cited 12 more times.")
+                .satisfies(text -> assertThat(text.indexOf("HIGH retraction")).isLessThan(text.indexOf("LOW citation_jump")));
     }
 
     private static Map<String, Object> alert(int id, String changeType, String severity, String description) {
@@ -115,6 +151,15 @@ class SendNotificationTest {
 
     private void putEmail(Account account, Map<String, ?> body) {
         client.put().uri("/auth/me/notifications/email")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + account.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    private void putTelegram(Account account, Map<String, ?> body) {
+        client.put().uri("/auth/me/notifications/telegram")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + account.token())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)

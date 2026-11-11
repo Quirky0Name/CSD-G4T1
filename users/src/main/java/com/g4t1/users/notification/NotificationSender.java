@@ -19,13 +19,15 @@ public class NotificationSender {
     private final UserRepository users;
     private final MessageBuilder messages;
     private final EmailChannel email;
+    private final TelegramChannel telegram;
 
     public NotificationSender(NotificationPreferencesRepository preferences, UserRepository users,
-                              MessageBuilder messages, EmailChannel email) {
+                              MessageBuilder messages, EmailChannel email, TelegramChannel telegram) {
         this.preferences = preferences;
         this.users = users;
         this.messages = messages;
         this.email = email;
+        this.telegram = telegram;
     }
 
     public NotificationOutcomes send(UUID userId, NotificationEvent event) {
@@ -33,7 +35,7 @@ public class NotificationSender {
         NotificationPreferences prefs = preferences.findById(userId).orElseThrow(() -> noUser(userId));
         Map<String, Outcome> channels = new LinkedHashMap<>();
         channels.put("email", sendEmail(user, prefs, event));
-        channels.put("telegram", Outcome.DISABLED);
+        channels.put("telegram", sendTelegram(prefs, event));
         return new NotificationOutcomes(channels);
     }
 
@@ -41,13 +43,28 @@ public class NotificationSender {
         if (!prefs.isEmailEnabled()) {
             return Outcome.DISABLED;
         }
-        List<NotificationEvent.Alert> passing = event.alerts().stream()
-                .filter(alert -> Levels.reaches(alert.alertSeverity(), prefs.getEmailMinAlertSeverity()))
-                .toList();
+        List<NotificationEvent.Alert> passing = passingAlerts(event, prefs.getEmailMinAlertSeverity());
         if (passing.isEmpty()) {
             return Outcome.NO_MATCH;
         }
         return email.send(user.getId(), user.getEmail(), messages.alerts(event, passing));
+    }
+
+    private Outcome sendTelegram(NotificationPreferences prefs, NotificationEvent event) {
+        if (!prefs.isTelegramEnabled()) {
+            return Outcome.DISABLED;
+        }
+        List<NotificationEvent.Alert> passing = passingAlerts(event, prefs.getTelegramMinAlertSeverity());
+        if (passing.isEmpty()) {
+            return Outcome.NO_MATCH;
+        }
+        return telegram.send(prefs.getUserId(), prefs.getTelegramChatId(), messages.alerts(event, passing).text());
+    }
+
+    private static List<NotificationEvent.Alert> passingAlerts(NotificationEvent event, String minAlertSeverity) {
+        return event.alerts().stream()
+                .filter(alert -> Levels.reaches(alert.alertSeverity(), minAlertSeverity))
+                .toList();
     }
 
     private static ResponseStatusException noUser(UUID userId) {
