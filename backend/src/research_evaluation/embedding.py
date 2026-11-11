@@ -15,6 +15,9 @@ from google.genai import types
 EMBED_DIMENSIONS = 1536
 # the most texts Gemini embeds in one request
 BATCH_SIZE = 100
+# chunk_text's default chunk length and how much each chunk repeats of the one before
+CHUNK_SIZE = 3200
+CHUNK_OVERLAP = 400
 
 type EmbedTask = Literal["document", "query"]
 
@@ -64,7 +67,7 @@ def normalise(values: list[float]) -> list[float]:
     return [value / norm for value in values]
 
 
-def chunk_text(text: str, size: int = 3200, overlap: int = 400) -> list[str]:
+def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
     """Pieces of at most `size` characters, each starting `overlap` characters before the previous
     one ends, so a sentence cut at one edge is whole in the next; none for blank text."""
     if not text.strip():
