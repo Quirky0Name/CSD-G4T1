@@ -1,6 +1,6 @@
 # Report feedback: a verdict and note on each report, embedded as one chunk, retrieved into impact
 
-**Status:** draft
+**Status:** approved
 
 **Base commit:** not set
 
@@ -17,13 +17,9 @@
 | Research Evaluation, full | `cd backend && uv run pytest tests/research_evaluation` |
 | Research Evaluation, single | `cd backend && uv run pytest <path>` |
 | Python lint | `cd backend && uv run ruff check` |
-| Frontend unit tests, full | `cd frontend/csd-frontend-vite && npm test` |
-| Frontend unit tests, single | `cd frontend/csd-frontend-vite && npx vitest run <path>` |
-| Frontend typecheck and build | `cd frontend/csd-frontend-vite && npm run build` |
-| Frontend lint | `cd frontend/csd-frontend-vite && npm run lint` |
 | Java typecheck | none separate: `./mvnw test` compiles |
 
-**Goal of the task:** a researcher can rate an assessed report `Fair`, `Overstated` or `Understated`, add an optional note, and save it. Saving embeds the report's evaluation together with the verdict and note as **one** `feedback` chunk. `feedback` replaces the unused `profile` source type. When impact assesses a later report of any of the same researcher's papers, it searches their feedback chunks and gives the nearest to steps 2 and 3 as `<document kind="researcher_feedback">` blocks. Each feedback item in `context_chunks` carries enough (paper id, paper title, report id, date, verdict) for the frontend to show and link "Shaped by your feedback on `<title>`".
+**Goal of the task:** a researcher can rate an assessed report `Fair`, `Overstated` or `Understated`, add an optional note, and save it. The verdict and note are stored on the report itself (S1); the chunk is a derived, searchable copy. Saving embeds the report's evaluation together with the verdict and note as **one** `feedback` chunk. `feedback` replaces the unused `profile` source type. When impact assesses a later report of any of the same researcher's papers, it searches their feedback chunks and gives the nearest to steps 2 and 3 as `<document kind="researcher_feedback">` blocks. Each feedback item in `context_chunks` carries enough (paper id, paper title, report id, date, verdict) for a client to show and link "Shaped by your feedback on `<title>`". The frontend is out of scope.
 
 No test calls Gemini: embedding and the model are stubbed, as in the existing tests.
 
@@ -36,9 +32,8 @@ No test calls Gemini: embedding and the model are stubbed, as in the existing te
 | S3 Feedback chunk and its embed endpoint (Research Evaluation) | S1, S2 |
 | S4 Save and delete nudge the embedder (Storage) | S1, S3 |
 | S5 Feedback in impact's prompt (Research Evaluation) | S2, S3 |
-| S6 Feedback form and "shaped by" links (frontend) | S1, S5 |
 
-Run order: S1, S2, S3, S4, S5, S6.
+Run order: S1, S2, S3, S4, S5.
 
 **External blockers:** none.
 
@@ -56,7 +51,7 @@ Starting branch: `main`
 
 | Order | Branch | Based on | Subtasks |
 |---|---|---|---|
-| 1 | `feat/report-feedback` | `main` | S1, S2, S3, S4, S5, S6 |
+| 1 | `feat/report-feedback` | `main` | S1, S2, S3, S4, S5 |
 
 ## Out of scope
 
@@ -68,11 +63,11 @@ Starting branch: `main`
 | Embedding the profile, or any profile chunks | S2 doc delta |
 | Backfilling feedback chunks for feedback saved while embedding failed; saving again re-embeds | S4 doc delta |
 | Draft chunks, cross-project draft search | transient |
-| A DOM test environment for the frontend | transient |
+| Frontend: the feedback form and "shaped by your feedback" links (user: "frontend is out of scope") | transient |
 
 ## Interfaces
 
-### I1: `PUT /papers/{paperId}/reports/{reportId}/feedback` (S1, S6)
+### I1: `PUT /papers/{paperId}/reports/{reportId}/feedback` (S1, S4)
 
 User JWT, the paper's owner only.
 
@@ -84,11 +79,11 @@ User JWT, the paper's owner only.
 - **`200`:** the stored feedback, `{"verdict": "overstated", "note": "...", "updated_at": "2026-11-12T08:00:00Z"}`.
 - Errors as problem details: `400` bad body or a note over 500 characters; `401`; `403` a service token; `404` no such paper, another user's paper, or a report not of that paper; `409` a report that isn't `assessed`.
 
-### I1b: `DELETE /papers/{paperId}/reports/{reportId}/feedback` (S1, S4, S6)
+### I1b: `DELETE /papers/{paperId}/reports/{reportId}/feedback` (S1, S4)
 
 User JWT, the paper's owner only. Clears the report's feedback. **`204`**, also when the report has none. Errors: `401`; `403` a service token; `404` as I1.
 
-### I2: `feedback` on report responses (S1, S3, S6)
+### I2: `feedback` on report responses (S1, S3)
 
 `GET /papers/{id}/reports` and `GET /internal/reports/{reportId}` gain `feedback`: the I1 response object, or `null` when none was saved. `GET /internal/reports/{reportId}` also gains the evaluation fields Research Evaluation needs for the chunk if it lacks them: `change_summary`, `change_severity`, `impact_level`, `evaluation`, `recommendation`, `evaluated_at` (S1 checks which are missing and adds those).
 
@@ -102,7 +97,7 @@ User JWT, the paper's owner only. Clears the report's feedback. **`204`**, also 
 
 Research Evaluation, service JWT only (`401`/`403` as `POST /evaluate/reports`). Body `{"report_id": 12}`, an integer. **`202`** `{"report_id": 12}`; the chunk is built and stored in the background. A report with no feedback stores an empty chunk list (deletes). `503` `Gemini isn't configured` when there is no embedder.
 
-### I5: feedback in `context_chunks` (S5, S6)
+### I5: feedback in `context_chunks` (S5)
 
 A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "page": null, "paper_id": "<uuid>", "paper_title": "<title or null>", "source_date": "<ISO-8601>", "verdict": "overstated"}`. Other items keep their three fields. Storage Management stores the array as sent (unchanged).
 
@@ -216,7 +211,7 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
 
 ### S5: Feedback in impact's prompt (Research Evaluation)
 
-- **Goal:** steps 2 and 3 get the researcher's nearest past feedback, and the report's `context_chunks` lists it with what the frontend needs to link it.
+- **Goal:** steps 2 and 3 get the researcher's nearest past feedback, and the report's `context_chunks` lists it with what a client needs to link it.
 - **Blocked by:** S2, S3
 - **Branch:** `feat/report-feedback`
 - **Order on branch:** 5
@@ -240,32 +235,10 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
   - [ ] `uv run pytest tests/research_evaluation` and `uv run ruff check` pass.
 - **Doc deltas:** EVALUATION.md "Impact": feedback in steps 2 and 3, `FEEDBACK_RULES`, the status. CONTRACTS.md: `context_chunks` I5 in `GET /papers/{id}/reports`. Out of scope: re-assessing earlier reports; feedback changing ratings.
 
-### S6: Feedback form and "shaped by" links (frontend)
-
-- **Goal:** the report view lets the researcher rate, note and save, and lists the feedback that shaped the report with links.
-- **Blocked by:** S1, S5
-- **Branch:** `feat/report-feedback`
-- **Order on branch:** 6
-- **Files:** `src/api.ts` (`Feedback`, `saveFeedback`, `deleteFeedback`, `UserReport.feedback`, `context_chunks` type), new `src/feedback/feedback.ts` (+ `.test.ts`), `src/pages/ReportView.tsx`, `src/components/ReportList.tsx` if it shows the verdict.
-- **Seams:**
-  - `src/feedback/feedback.ts` pure functions: `validateNote(note)`, `feedbackLinks(contextChunks)` (to `{href: "/reports/<paper_id>/<report_id>", title, date, verdict}`): catches limits, link building, a null title falling back; misses rendering.
-- **Decisions:**
-  - Three choices `Fair` / `Overstated` / `Understated`, optional note box (max 500), a **Save** button; Save is disabled until a verdict is picked (user). Doc delta not needed (CONTRACTS covers it).
-  - A **Delete** button when feedback is saved, which clears the form (user: "can delete").
-  - Shown only on `assessed` reports (user: "ok to rest assumed").
-  - "Shaped by your feedback" list: paper title (fallback "an earlier report"), report date, verdict, linking to `/reports/:paperId/:reportId` (user: "enuf information to build something pretty to link").
-  - Notes and titles rendered as text, never HTML (docs: CONTRACTS.md, model and publisher text rule).
-- **Acceptance criteria:**
-  - [ ] `validateNote` accepts 500 characters after trimming and rejects 501 (`feedback.test.ts`).
-  - [ ] `feedbackLinks` keeps only `feedback` items, in order, builds the href, falls back when `paper_title` is null (`feedback.test.ts`).
-  - [ ] `npm test`, `npm run build`, `npm run lint` pass.
-- **Doc deltas:** none.
-
 ## Human checks
 
-- [ ] **S6** Open an assessed report, pick `Overstated`, type a note, Save. Expected: "Saved", and reloading shows the verdict and note.
-- [ ] **S4/S3** After Save, `chunks` has one `feedback` row for that report (`select source_type, report_id, left(content, 120) from chunks where source_type = 'feedback';`). Expected: one row starting `feedback on report of`.
-- [ ] **S5/S6** In dev mode, make a similar change on another of the same researcher's papers and let impact assess it. Expected: the report's view shows "Shaped by your feedback on `<first paper's title>`", the link opens the first report, and the explanation or actions reflect the note.
+- [ ] **S1** `PUT /papers/{paperId}/reports/{reportId}/feedback` on an assessed report with `{"verdict": "overstated", "note": "only use their dataset"}`, then `GET /papers/{paperId}/reports`. Expected: `200`, and the report's `feedback` holds the verdict and note.
+- [ ] **S4/S3** After that `PUT`, `chunks` has one `feedback` row for that report (`select source_type, report_id, left(content, 120) from chunks where source_type = 'feedback';`). Expected: one row starting `feedback on report of`.
+- [ ] **S5** In dev mode, make a similar change on another of the same researcher's papers and let impact assess it. Expected: that report's `context_chunks` has a `feedback` item with the first paper's id, title, report id and verdict, and the explanation or actions reflect the note.
 - [ ] **S5** For that report, compare `impact_level` with and without the feedback row (delete it, re-run on a copy via `POST /evaluate/reports`). Expected: the same level.
-- [ ] **S6/S4** Delete the feedback in the report view. Expected: the form clears, and the `select` above returns no row for that report.
-- [ ] **S6** The form and the list look right in light and dark mode at phone width.
+- [ ] **S1/S4** `DELETE /papers/{paperId}/reports/{reportId}/feedback`. Expected: `204`, `feedback` is `null` on `GET /papers/{paperId}/reports`, and the `select` above returns no row for that report.
