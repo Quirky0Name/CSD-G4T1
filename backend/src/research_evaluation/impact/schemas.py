@@ -150,7 +150,8 @@ class ContextChunk(BaseModel):
     def _drop_unset_range(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
         data = handler(self)
         if self.start is None:
-            del data["start"], data["end"]
+            data.pop("start", None)
+            data.pop("end", None)
         return data
 
 
