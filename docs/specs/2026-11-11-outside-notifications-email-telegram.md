@@ -148,6 +148,8 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
   `users/src/main/java/com/g4t1/users/auth/AuthService.java` (register
   writes the row),
   `users/src/test/java/com/g4t1/users/notification/NotificationPreferencesTest.java`,
+  `users/src/test/java/com/g4t1/users/notification/NotificationPreferencesMigrationTest.java`
+  (V6 backfill: its own H2 database migrated to V5, then V6),
   `docs/CONTRACTS.md`, `docs/ARCHITECTURE.md`, `GLOSSARY.md`.
 - **Seams:**
   - `GET /auth/me/notifications` and `PUT /auth/me/notifications/{email,telegram}`
@@ -227,27 +229,41 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
     Doc delta (SETUP.md and CONTRACTS.md).
   - The chat id is never logged.
 - **Acceptance criteria:**
-  - [ ] `NotificationPreferencesTest`: a newly registered account's `GET`
+  - [x] `NotificationPreferencesTest`: a newly registered account's `GET`
         returns the defaults with `address` its email
         (`./mvnw test -Dtest=NotificationPreferencesTest`).
-  - [ ] `NotificationPreferencesTest`: `PUT .../email` and `PUT
+  - [x] `NotificationPreferencesTest`: `PUT .../email` and `PUT
         .../telegram` round-trip, each leaving the other channel
         unchanged; a `null` threshold round-trips as `null`.
-  - [ ] `NotificationPreferencesTest`: `400` for an unknown level (`High`,
+  - [x] `NotificationPreferencesTest`: `400` for an unknown level (`High`,
         `none`), a missing `enabled`, `chat_id` `0` or a string, and
         Telegram enabled with no chat id; nothing changes on a `400`.
-  - [ ] `NotificationPreferencesTest`: admin and service tokens get `403`;
+  - [x] `NotificationPreferencesTest`: admin and service tokens get `403`;
         a bad token `401`; a deleted account's token `401`.
-  - [ ] `NotificationPreferencesTest`: after `DELETE /auth/me` the row is
+  - [x] `NotificationPreferencesTest`: after `DELETE /auth/me` the row is
         gone (read through the repository, as `AdminAccountTest` reads the
         database).
-  - [ ] A test shows V6 gives an account created before it the default
+  - [x] A test shows V6 gives an account created before it the default
         row (Flyway migrate to V5, insert a user, migrate to V6), or, if
         the test setup can't stop at V5, `grep -n "insert into
         notification_preferences" users/src/main/resources/db/migration/V6__create_notification_preferences.sql`
         finds the backfill.
-  - [ ] `./mvnw test` passes.
+  - [x] `./mvnw test` passes.
 - **Doc deltas:**
+  - `docs/CONTRACTS.md`, errors: a malformed body (not JSON) is Spring's
+    generic `400`; field errors say `<field> is required` (`enabled`) or
+    `<field> must be low, medium, high or null` /
+    `chat_id must be a non-zero integer or null`. Why: the spec fixed only
+    that detail starts with the field name.
+  - `docs/CONTRACTS.md`: `chat_id` may be negative (group and channel ids
+    are) and is stored as a bigint; anything but a JSON integer (a string,
+    a fraction) is `400`. Why: the spec said "JSON integer, not 0".
+  - `docs/CONTRACTS.md`: a PUT's `enabled` may be the strings Jackson
+    coerces to a boolean ("true"); only a missing or null one is `400`. Why:
+    Jackson's default; not tightened.
+  - `docs/ARCHITECTURE.md`: register saves the default row in the same
+    transaction as the account (and profile); the row is in the new
+    `notification` package. Why: matches the spec's decision, names the package.
   - `docs/CONTRACTS.md` ("Frontend ↔ User Management"): the three
     endpoints, shapes, defaults, validation, errors, and that the user
     types the chat id after pressing Start on the bot.
