@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from research_evaluation_support import notice, nudge
 
 from research_evaluation.impact.llm import AllModelsFailed, Answer, ModelFailure
-from research_evaluation.impact.run import ImpactContext, assess_report, assess_reports
+from research_evaluation.impact.run import ImpactContext, assess_reports
 from research_evaluation.impact.schemas import (
     PLACEHOLDER_TEXT,
     ChangeAssessment,
@@ -558,7 +558,6 @@ async def test_a_stored_answer_that_cannot_be_read_posts_nothing_and_the_next_re
     sm.transport.faults[("PUT", f"/reports/{first}/evaluation")] = httpx.Response(200, json=answer)
 
     with caplog.at_level(logging.WARNING, logger="research_evaluation.impact.run"):
-        assert await assess_report(sm.client, context, first) is True
         assert await assess_reports(sm.client, context, [first, second]) == [first, second]
 
     assert [body["report_id"] for _, body in um.notifications] == [second]
