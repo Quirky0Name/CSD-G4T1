@@ -100,7 +100,7 @@ async def notify_assessed(
             "report_id": report.id,
             "change_severity": stored["change_severity"],
             "change_summary": stored["change_summary"],
-            "impact_level": stored["impact_level"],
+            "impact_level": None if stored["impact_level"] == "none" else stored["impact_level"],
             "evaluation": stored["evaluation"],
             "recommendation": stored["recommendation"],
         },

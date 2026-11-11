@@ -438,6 +438,20 @@ async def test_an_assessed_report_posts_the_stored_evaluation_to_the_owner(sm, u
     assert body["change_severity"] == stored["change_severity"]
 
 
+async def test_an_impact_level_of_none_is_posted_as_null(sm, um):
+    llm = FakeLlm("high")
+    llm.answers[ImpactAssessment] = IMPACT.model_copy(update={"impact_level": "none"})
+    report_id = await investigated_report(sm)
+
+    assert await assess_reports(sm.client, ImpactContext(llm, um=um.client), [report_id]) == [report_id]
+
+    stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    assert stored["impact_level"] == "none"
+    [(_, body)] = um.notifications
+    assert body["impact_level"] is None
+    assert body["change_severity"] == "high"
+
+
 async def test_a_placeholder_evaluation_posts_nothing(sm, um):
     context = ImpactContext(FakeLlm("high", fail_on=1, failure=every_model_failed()), um=um.client)
     report_id = await investigated_report(sm)
