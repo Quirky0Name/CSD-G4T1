@@ -16,6 +16,18 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  # the SMTP server for outside notifications; with no MAIL_HOST, email isn't sent. 10 s a step, so one
+  # unreachable server can't hold a request. STARTTLS is used when the server offers it
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
 
 users:
   # the same base64 secret every service shares; it signs the tokens they check
@@ -26,3 +38,7 @@ users:
   dev-mode: ${DEV_MODE:false}
   # the refresh token's cookie is Secure (HTTPS only) when true: true on the deployed server
   refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:false}
+  # the From address of outside notification emails
+  mail-from: ${MAIL_FROM:}
+  # the site's address, for the link to the paper in a notification; no link when empty
+  app-url: ${APP_URL:}
