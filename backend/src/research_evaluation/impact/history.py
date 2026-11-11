@@ -78,11 +78,11 @@ def context_chunk(chunk: Chunk) -> ContextChunk:
     document's `text`: chunk_text's chunk `chunk_index` starts at chunk_index × (CHUNK_SIZE −
     CHUNK_OVERLAP). Its content is research_evaluation.chunks' header, ending in a blank line,
     then that text. A split PDF page gets no range."""
-    found = ContextChunk(source_type=chunk.source_type, source_id=chunk.source_id, page=chunk.page)
+    item = ContextChunk(source_type=chunk.source_type, source_id=chunk.source_id, page=chunk.page)
     if chunk.source_type != "document" or chunk.page is not None:
-        return found
+        return item
     _, _, text = chunk.content.partition("\n\n")
     if chunk.chunk_index == 0 and len(text) < CHUNK_SIZE:
-        return found
+        return item
     start = chunk.chunk_index * (CHUNK_SIZE - CHUNK_OVERLAP)
-    return found.model_copy(update={"start": start, "end": start + len(text)})
+    return item.model_copy(update={"start": start, "end": start + len(text)})
