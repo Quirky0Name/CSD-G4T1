@@ -46,19 +46,22 @@ public class NotificationPreferences {
         this.telegramMinImpactLevel = "medium";
     }
 
-    public void replaceEmail(EmailRequest channel) {
-        this.emailEnabled = channel.enabled();
-        this.emailMinAlertSeverity = channel.minAlertSeverity();
-        this.emailMinChangeSeverity = channel.minChangeSeverity();
-        this.emailMinImpactLevel = channel.minImpactLevel();
+    // the channel's values, already checked by NotificationService
+    public void replaceEmail(boolean enabled, String minAlertSeverity, String minChangeSeverity,
+                             String minImpactLevel) {
+        this.emailEnabled = enabled;
+        this.emailMinAlertSeverity = minAlertSeverity;
+        this.emailMinChangeSeverity = minChangeSeverity;
+        this.emailMinImpactLevel = minImpactLevel;
     }
 
-    public void replaceTelegram(TelegramRequest channel) {
-        this.telegramEnabled = channel.enabled();
-        this.telegramChatId = channel.chatId();
-        this.telegramMinAlertSeverity = channel.minAlertSeverity();
-        this.telegramMinChangeSeverity = channel.minChangeSeverity();
-        this.telegramMinImpactLevel = channel.minImpactLevel();
+    public void replaceTelegram(boolean enabled, Long chatId, String minAlertSeverity, String minChangeSeverity,
+                                String minImpactLevel) {
+        this.telegramEnabled = enabled;
+        this.telegramChatId = chatId;
+        this.telegramMinAlertSeverity = minAlertSeverity;
+        this.telegramMinChangeSeverity = minChangeSeverity;
+        this.telegramMinImpactLevel = minImpactLevel;
     }
 
     public UUID getUserId() {

@@ -3,6 +3,9 @@ package com.g4t1.users.notification;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -15,6 +18,9 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 // GET and PUT /auth/me/notifications: a researcher reading and replacing their own notification preferences
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -143,6 +149,47 @@ class NotificationPreferencesTest {
                 .jsonPath("$.telegram.chat_id").isEqualTo(null);
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("invalid")
+    void aBadChannelIsABadRequestNamingTheFieldAndChangesNothing(String name, String channel, Map<String, Object> body,
+                                                                 String detail) {
+        Account account = registered();
+        put(account.token(), "email", Map.of("enabled", true, "min_alert_severity", "low")).expectStatus().isOk();
+        put(account.token(), "telegram", Map.of("enabled", true, "chat_id", 42, "min_impact_level", "low"))
+                .expectStatus().isOk();
+        String before = get(account.token()).expectBody(String.class).returnResult().getResponseBody();
+
+        put(account.token(), channel, body)
+                .expectStatus().isBadRequest()
+                .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.detail").value(String.class, d -> assertThat(d).startsWith(detail));
+
+        assertThat(get(account.token()).expectBody(String.class).returnResult().getResponseBody()).isEqualTo(before);
+    }
+
+    static Stream<Arguments> invalid() {
+        Map<String, Object> noEnabled = Map.of("min_alert_severity", "high");
+        return Stream.of(
+                Arguments.of("email level in the wrong case", "email",
+                        Map.of("enabled", true, "min_alert_severity", "High"), "min_alert_severity"),
+                Arguments.of("email level none", "email",
+                        Map.of("enabled", true, "min_change_severity", "none"), "min_change_severity"),
+                Arguments.of("email level that is a number", "email",
+                        Map.of("enabled", true, "min_impact_level", 3), "min_impact_level"),
+                Arguments.of("email with no enabled", "email", noEnabled, "enabled"),
+                Arguments.of("telegram level in the wrong case", "telegram",
+                        Map.of("enabled", false, "min_impact_level", "MEDIUM"), "min_impact_level"),
+                Arguments.of("telegram level none", "telegram",
+                        Map.of("enabled", false, "min_alert_severity", "none"), "min_alert_severity"),
+                Arguments.of("telegram with no enabled", "telegram", Map.of("chat_id", 7), "enabled"),
+                Arguments.of("chat id 0", "telegram", Map.of("enabled", false, "chat_id", 0), "chat_id"),
+                Arguments.of("chat id as a string", "telegram", Map.of("enabled", false, "chat_id", "12345"), "chat_id"),
+                Arguments.of("chat id with a fraction", "telegram", Map.of("enabled", false, "chat_id", 1.5), "chat_id"),
+                Arguments.of("telegram enabled with no chat id", "telegram", Map.of("enabled", true),
+                        "chat_id is required to enable Telegram"));
+    }
+
     private record Account(String token, String id, String email) {
     }
 
@@ -164,7 +211,11 @@ class NotificationPreferencesTest {
     }
 
     private RestTestClient.ResponseSpec putEmail(String token, Map<String, ?> body) {
-        return client.put().uri("/auth/me/notifications/email")
+        return put(token, "email", body);
+    }
+
+    private RestTestClient.ResponseSpec put(String token, String channel, Map<String, ?> body) {
+        return client.put().uri("/auth/me/notifications/" + channel)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
@@ -172,10 +223,6 @@ class NotificationPreferencesTest {
     }
 
     private RestTestClient.ResponseSpec putTelegram(String token, Map<String, ?> body) {
-        return client.put().uri("/auth/me/notifications/telegram")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(body)
-                .exchange();
+        return put(token, "telegram", body);
     }
 }
