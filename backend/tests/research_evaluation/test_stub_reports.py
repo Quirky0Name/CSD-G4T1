@@ -140,6 +140,20 @@ async def test_reading_a_report_gives_its_alerts_and_documents(client):
         assert field in read.json() and read.json()[field] is None
 
 
+async def test_a_report_carries_its_papers_owner_id(client):
+    paper = await add_paper(client)
+    owner = next(p["owner_id"] for p in (await client.get("/internal/papers")).json() if p["id"] == paper)
+    await add_alert(client, paper, "retraction")
+    report = await open_report(client, paper)
+
+    by_paper = await client.get(f"/internal/papers/{paper}/reports/{report['id']}")
+    by_id = await client.get(f"/internal/reports/{report['id']}")
+
+    assert report["owner_id"] == owner
+    assert by_paper.json()["owner_id"] == owner
+    assert by_id.json()["owner_id"] == owner
+
+
 async def test_an_unknown_report_or_another_papers_report_is_no_report_404(client):
     paper = await add_paper(client)
     other = await add_paper(client)

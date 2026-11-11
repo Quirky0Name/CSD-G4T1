@@ -5,8 +5,18 @@ This is the single source of truth for every interface between services.
 
 ## Auth
 
-- JWT: HS256, `sub` = user id, plus `exp`. Issued by User Management at
-  register and login (below), valid 24 hours.
+- JWT (the access token): HS256, `sub` = user id, plus `exp`. Issued by User
+  Management at register, login and refresh (below), valid 1 hour.
+- **Refresh token:** 32 random bytes as unpadded base64url (43 characters),
+  sent only as a cookie: name `refresh_token`, `HttpOnly`,
+  `SameSite=Strict`, `Path=/auth`, `Max-Age=604800`, and `Secure` when
+  `REFRESH_COOKIE_SECURE` is `true`. Valid 7 days from issue, sliding, and
+  it works once: refreshing marks it used and issues a new one. Only its
+  SHA-256 hash (lowercase hex) is stored, in `refresh_tokens`, never the
+  token. Register and login set it; `POST /auth/refresh` and `POST
+  /auth/logout` read it. The admin gets refresh tokens like a researcher.
+  Services other than User Management never see it, and service tokens have
+  no refresh token.
 - `JWT_SECRET` is shared as base64 of 32+ random bytes (`openssl rand -base64 32`;
   Storage Management's JWT library rejects shorter keys, and Updating checks at
   startup). **Every service
@@ -15,7 +25,9 @@ This is the single source of truth for every interface between services.
   across a language boundary.
 - Every downstream service (Storage Management, Research Evaluation,
   Updating) validates the JWT signature itself. No service calls back to
-  User Management per request.
+  User Management to validate a token. The one call to User Management is
+  Research Evaluation reading a researcher's profile with its service token
+  (see "Research Evaluation ↔ User Management").
 - **Service tokens:** Updating and Research Evaluation each mint their own
   short-lived JWTs to call Storage Management, with `sub=svc:updating` /
   `sub=svc:research-evaluation` and `role=service`. Storage Management must
@@ -26,10 +38,19 @@ This is the single source of truth for every interface between services.
   Management treats `/internal/**`. User Management mints one too
   (`sub=svc:users`, five minutes) to clear a deleted project or account in
   Storage Management.
+- **Admin token** (dev mode only, `DEV_MODE=true`): the usual JWT plus a
+  claim: HS256, `sub` = the admin's user id, `role` = `admin`, 1 hour.
+  Storage Management and User Management read it as an admin
+  (`ROLE_ADMIN`, not `ROLE_USER`): researcher endpoints and `/internal/**`
+  answer it `403`. Updating doesn't look at the claim, so on `POST
+  /run-poll` it is a user with no papers. Research Evaluation already
+  answers it `403`. Researchers' tokens have no `role` claim.
 - **For now** everything runs locally with a shared throwaway `JWT_SECRET`
   (base64 of 32+ bytes like the real one, the same in every service's local
   config). The frontend signs in through User Management, keeps the token
-  in `localStorage` and sends it to Storage Management and Updating.
+  in `localStorage` and sends it to Storage Management and Updating; when
+  one answers `401` it refreshes the token once (`POST /auth/refresh`) and
+  retries the request.
   Updating's `POST /run-poll` checks the user's JWT and polls only that
   user's papers.
 
@@ -37,35 +58,50 @@ This is the single source of truth for every interface between services.
 
 Owned by: User Management (`users/`). Consumed by: the frontend, at `/auth`
 and `/projects` on its own address, since User Management sends no CORS
-headers: the Vite proxy in development, Caddy in the root stack. Register
-and login need no token; the project calls and deleting the account need
-the user's token, as Storage Management's do. Register and login answer
-with the same shape, so the frontend handles them alike:
+headers: the Vite proxy in development, Caddy in the root stack. Register,
+login, refresh and logout need no `Authorization` header; the project
+calls, deleting the account and `GET`/`PUT /auth/me/profile` need the
+user's token, as Storage Management's do. Register, login and refresh
+answer with the same shape, so the frontend handles them alike:
 
 ```json
-{"token": "eyJ...", "user": {"id": "uuid", "email": "someone@example.com", "created_at": "2026-10-24T08:00:00Z"}}
+{"token": "eyJ...", "user": {"id": "uuid", "email": "someone@example.com", "role": "user", "created_at": "2026-10-24T08:00:00Z"}}
 ```
 
-`token` is the user JWT above; send it as `Authorization: Bearer <token>`
+`user.role` is `user` or `admin`. A researcher's is always `user`.
+
+`token` is the access token above; send it as `Authorization: Bearer <token>`
 to Storage Management. `user.id` is its `sub`. Emails are stored and
 returned in lowercase, and are one account whatever their letter case.
 
 ### `POST /auth/register`
 
 Creates an account and logs it straight in. **Request:**
-`{"email": "...", "password": "..."}`.
+`{"email": "...", "password": "...", "profile": {...}}`. `profile` is
+optional: the profile body (see `GET /auth/me/profile`), validated by the
+rules there and saved with the account in one transaction. Absent or
+`null` means the account has no profile; `{}` is present, so it saves a
+profile with every answer empty. The sign-up page always sends it.
 
-**Response `201`:** the shape above.
+```json
+{"email": "a@b.c", "password": "correct horse", "profile": {"occupation": "PhD student", "research_fields": ["Medicine"]}}
+```
+
+**Response `201`:** the shape above, which doesn't echo the profile, plus
+a `Set-Cookie` with a new refresh token.
 
 Errors, as problem details: `400` an email that isn't an address, a
-password under 8 characters or over 72 bytes (BCrypt's limit), or a
-missing or blank field; `409` an account with this email already exists
-(any letter case).
+password under 8 characters or over 72 bytes (BCrypt's limit), a
+missing or blank field, or a `profile` that breaks the profile rules; `409`
+an account with this email already exists (any letter case). A `400` is
+decided before the email is checked, so an invalid profile is a `400` even
+on a taken email. A `409` writes nothing, and the existing account's
+profile is untouched. A failed profile save leaves no account.
 
 ### `POST /auth/login`
 
 **Request:** `{"email": "...", "password": "..."}`. **Response `200`:** the
-shape above.
+shape above, plus a `Set-Cookie` with a new refresh token.
 
 Errors, as problem details: `400` a missing or blank field; `401` with
 `detail` `Wrong email or password` for an unknown email and a wrong
@@ -73,12 +109,105 @@ password alike, answered in about the same time, so login doesn't show
 which emails have accounts. Register's `409` does, which is accepted:
 sign-up has to say the email is taken.
 
+With dev mode on, the admin signs in here with `{"email": "admin",
+"password": "12345679"}` (same request and errors) and gets `user.role`
+`admin` and an admin token (see Auth). With dev mode off the account does
+not exist, so that login gets the usual `401`. Register with the email
+`admin` answers `400`.
+
+### `POST /auth/refresh`
+
+No body and no `Authorization`: the `refresh_token` cookie is the
+credential. **Response `200`:** the shape above, with a new access token
+(the admin's has `role=admin`) and a `Set-Cookie` with a new refresh token;
+the old one is marked used. Marking used is one conditional update (`used_at
+is null`), so of two refreshes with the same token, exactly one gets `200`.
+
+Errors, as problem details: `401` with `detail` `Please sign in again` for a
+missing, unknown, expired or already used token, or an account that no
+longer exists (its tokens went with it by cascade, so it is an unknown
+token). The `401` carries a `Set-Cookie` that clears the cookie:
+`refresh_token=` with `Max-Age=0` and the same `Path`, `HttpOnly`,
+`SameSite` and `Secure` as the real one, so the browser replaces it.
+
+### `POST /auth/logout`
+
+No `Authorization`; reads the cookie. **Response `204`**, always: marks the
+token used if it exists, and clears the cookie as above. With no cookie it
+is still `204`.
+
+### `GET /auth/me/profile`
+
+User token only. **Response `200`:** the profile body, all JSON snake_case:
+
+```json
+{
+  "occupation": "PhD student",
+  "occupation_other": null,
+  "research_fields": ["Medicine", "Psychology"],
+  "research_interests": ["vaccine safety"],
+  "work_types": ["Clinical"],
+  "response_preferences": "Keep it brief and tell me what to do first."
+}
+```
+
+`research_fields`, `research_interests` and `work_types` are always arrays;
+`occupation`, `occupation_other` and `response_preferences` are each a
+string or `null`.
+
+Errors, as problem details: `401` missing or bad token, or `Your account no
+longer exists` (the account was deleted); `403` an admin or service token;
+`404` with `detail` `No profile <user id>`, which the profile page treats as
+an empty form. An account has a profile only if it registered with one or
+has saved one with `PUT`: accounts made before the migration, and the dev
+mode admin, have none.
+
+### `PUT /auth/me/profile`
+
+User token only. **Request:** the full profile, in the same shape. A
+left-out or `null` field is cleared, including `occupation` and
+`research_fields`; `{}` clears every answer and keeps the profile. It
+creates the profile when there is none. **Response `200`:** the saved
+profile, normalised as stored. Two first saves at once both succeed and
+leave one profile. Errors: `400` as under the rules below; `401` and `403`
+as for `GET`.
+
+**Profile rules**, applied on register and on `PUT`, and mirrored by the
+frontend for immediate feedback. Every answer is optional. A `400` is a
+problem detail whose `detail` starts with the field's snake_case name (for
+example `research_interests must have at most 5 interests`); the first
+broken rule in field order is the one reported. A `null` element in any
+list is `400`.
+
+| Field | Rule |
+|---|---|
+| `occupation` | Absent or `null` means no occupation, and on `PUT` clears it. A value must be exactly one listed occupation |
+| `occupation_other` | Trimmed; blank becomes `null`. Non-null is allowed only when `occupation` is `Other`, otherwise `400`; 1 to 60 characters with no control characters. `Other` with no `occupation_other` is fine |
+| `research_fields` | Absent or `null` means `[]`. Each value exactly one listed field (letter case counts). No duplicates |
+| `research_interests` | Absent or `null` means `[]`. At most 5. Each is trimmed, then 1 to 60 characters with no control characters. No duplicates, ignoring letter case. Any text is accepted: the suggestions are frontend only |
+| `work_types` | Absent or `null` means `[]`. Each exactly one listed work type. No duplicates |
+| `response_preferences` | Trimmed, then at most 500 characters, counted in UTF-16 code units (Java `String.length()`, a browser's `maxLength`; an emoji is 2). Newlines and tabs are allowed; other control characters, including U+0000, are `400`. Blank becomes `null` |
+
+A control character is anything Java's `Character.isISOControl` accepts
+(U+0000-U+001F, U+007F-U+009F); `response_preferences` allows `\n`, `\r` and
+`\t`. Listed values: occupations `Undergraduate student`, `Master's
+student`, `PhD student`, `Postdoctoral researcher`, `Faculty or principal
+investigator`, `Research staff`, `Clinician`, `Industry researcher`,
+`Other`; work types `Experimental or laboratory`, `Clinical`,
+`Computational or modelling`, `Theoretical`, `Survey or qualitative`,
+`Systematic review or meta-analysis`, `Data or software`, `Other`;
+research fields are the 26 OpenAlex field `display_name` values. The stored
+value is the displayed text. The lists live in
+`users/src/main/resources/profile/options.json` and are duplicated in the
+frontend (frontend `README.md`).
+
 ### `DELETE /auth/me`
 
 User JWT required. Deletes the caller's account. **Request:**
 `{"password": "..."}`, the account's password. First asks Storage
 Management to clear everything the user owns (`DELETE /internal/users/{id}`,
-below), then deletes the account and its projects. **Response `204`.**
+below), then deletes the account, its projects, its profile and its refresh
+tokens (database cascade). **Response `204`.**
 
 Errors, as problem details: `400` a missing or blank password; `401`
 missing or bad token, or `Your account no longer exists` for an account
@@ -87,10 +216,21 @@ the token is fine and the frontend signs out on any `401`), or a service
 token; `502` with `detail` `Storage Management couldn't clear your account,
 so it wasn't deleted`. Nothing was deleted, so it can simply be tried again.
 
-Tokens aren't revoked: a deleted account's token stays valid for up to 24
-hours. User Management then lists no projects for it, answers `PUT` and
+Access tokens aren't revoked, in any service: a deleted account's token
+stays valid for up to 1 hour. Its refresh tokens go with it, so it can't be
+renewed. User Management then lists no projects for it, answers `PUT` and
 `DELETE /projects/{id}` with `404`, and `POST /projects` with `401` `Your
 account no longer exists`.
+
+### `GET /auth/admin/users`
+
+Dev mode only. Under `/auth` so the Vite proxy and Caddy already route it.
+Admin token only. **`200`:** `{"users": [{"id": "uuid", "email": "a@b.c",
+"role": "user", "created_at": "..."}]}`, newest first, without the admin
+account.
+
+Errors: `401` missing or bad token; `403` a user or service token; `404`
+dev mode off.
 
 ### `POST /projects`
 
@@ -180,12 +320,35 @@ no `owner_id`; `401` missing or bad token, `403` a user token.
 
 Deletes everything the user owns: their papers in every project, the
 default one included, each with everything that refers to it (as above),
-then all their drafts and their PDFs. **Response `204`**, also when there's
+then all their drafts and their PDFs, and the user's `profile` chunks (see
+`PUT /internal/chunks`; they have no foreign key to cascade from). **Response `204`**, also when there's
 nothing to delete, so an account delete User Management retries still
 goes through.
 
 Errors, as problem details: `400` an id that isn't a UUID; `401` missing or
 bad token, `403` a user token.
+
+## Research Evaluation ↔ User Management
+
+Owned by: User Management. Consumed by: Research Evaluation, with its
+service token (`sub=svc:research-evaluation`), for impact's steps 2 and 3
+(EVALUATION.md). Reachable only on the compose network: Caddy and the Vite
+proxy forward `/auth/*` and `/projects*`, never `/internal`.
+
+### `GET /internal/users/{id}/profile`
+
+Service token only. **Response `200`:** the profile body (see `GET
+/auth/me/profile`).
+
+Errors, as problem details: `400` an id that isn't a UUID (Spring's own
+`400`, with no custom `detail`); `401` missing or bad token; `403` a user
+or admin token; `404` with `detail` `No profile <id>`, also for an unknown
+user. Research Evaluation matches that `detail` exactly, so a `404` with any
+other `detail` is a failed read, not "no profile".
+
+Research Evaluation learns whose profile to read from `owner_id` on the
+report (see `GET /internal/papers/{id}/reports/{reportId}`), since it only
+has a `paper_id`.
 
 ## Frontend ↔ Storage Management
 
@@ -198,7 +361,8 @@ SETUP.md), with the user's token.
 | List tracked papers | `GET /papers` |
 | Track a paper | `POST /papers`, multipart PDF or JSON `{"doi"}` |
 | Delete a paper | `DELETE /papers/{id}` |
-| Poll a paper now | Updating's `POST /run-poll?paper_id=` (`/updating/...`) |
+| Poll now | Updating's `POST /run-poll` (`/updating/...`), every paper the user tracks |
+| A paper's page (`/papers/{id}`) | no call of its own: the paper from `GET /papers`, its most recent report (and alerts in no report) from the two calls below. A paper not in `GET /papers` shows as not found |
 | A paper's alerts | `GET /papers/{id}/alerts` (one call per paper; no cross-paper list yet) |
 | Acknowledge / dismiss | `PATCH /alerts/{id}` |
 | A paper's reports (alerts, documents, evaluation) | `GET /papers/{id}/reports` |
@@ -376,6 +540,7 @@ be in `GET /papers/{id}/alerts` a moment before it's in a report.
 |---|---|
 | `status` | `investigating` (its documents are being fetched, or fetching stopped midway; nothing resumes it yet), `investigated` (fetching finished) or `assessed` (impact wrote its evaluation) |
 | `created_at`, `investigated_at` | when the report was opened, and when fetching finished (null until then) |
+| `context_chunks` | the chunks impact added to the prompt, so a frontend can show them: an array of `{"source_type", "source_id", "page"}` in prompt order, as `PUT /internal/reports/{id}/evaluation` stored it. A `document` item opens with `GET /documents/{id}/pdf` at `page`; an `alert` or `report` item is found in the same paper's report list by its id. `[]` when impact found no past; null for a report assessed before V14 or not yet assessed. Returned only here, not by `GET /internal/reports/{id}`, since only a frontend shows it |
 | `evaluation`, `recommendation`, `evaluated_at` | impact's evaluation of the report's alerts together, what the researcher should do, and when it was written. Null until the report is `assessed`, and also null on an assessed report whose change impact rated `none` (not meaningful) |
 | `change_summary`, `change_severity`, `impact_level` | impact's summary of what changed, how serious the change is for anyone relying on the paper, and how much the researcher's draft is affected (`none`, `low`, `medium` or `high`), as in `GET /internal/papers/{id}/reports/{reportId}`. Null until the report is `assessed`; `impact_level` is also null when `change_severity` is `none` |
 | `claims` | the evaluation's claims, an array of `Claim` (below); null until `assessed` and on reports assessed before claims existed (they aren't backfilled) |
@@ -574,6 +739,170 @@ STORAGE.md, "Demo tools", and DEMO.md.
 
 Errors, as problem details: `401` missing or bad token; `403` a service
 token; `404` as above.
+
+## Admin endpoints (dev mode)
+
+Owned by: Storage Management (the `/admin/**` and `/public/fake-report/**`
+routes below; User Management's `GET /auth/admin/users` is above). Only with
+`DEV_MODE=true`; with it off every one answers `404`. Admin token only
+(see Auth), except the public PDF route, and they work on any user's
+paper. From the browser they are under `/api/...`. How to use them is in
+STORAGE.md, "Dev mode", and SETUP.md. JSON is snake_case.
+
+Snapshots can come from the admin as well as from Updating: the edit below
+stores one with `POST /admin/papers/{id}/snapshots`.
+
+### `POST /admin/papers/{id}/snapshots`
+
+Changes the paper's flags in its stored data: stores a new snapshot, a
+copy of the latest one with the given fields changed and `fetched_at` set
+to now (snapshots are insert-only). The next poll fetches the real values
+and compares them with this row, so setting a value to what it was before a
+real change makes that poll find the change.
+
+**Request**, at least one field:
+
+```json
+{
+  "is_retracted": false,
+  "in_doaj": true,
+  "cited_by_count": 0,
+  "removed_crossref_update_types": ["retraction", "correction"]
+}
+```
+
+| Field | Rules |
+|---|---|
+| `is_retracted`, `in_doaj` | boolean. Left out or null keeps the latest value |
+| `cited_by_count` | integer of 0 or more. Left out or null keeps the latest value |
+| `removed_crossref_update_types` | array of non-blank strings. Every entry of these types is left out of the new row's `crossref_updates`. An empty array counts as no field given |
+
+Request values are not coerced: `"false"` and `1.5` answer `400`.
+
+**`201`:** the new snapshot, in the shape `POST /internal/papers/{id}/snapshots`
+returns.
+
+Errors: `400` a body that breaks the rules, no field given, or an id that
+isn't a UUID; `401`; `403` a user or service token; `404` `No paper <id>`,
+or dev mode off; `409` the paper has no snapshot yet (`Paper <id> has no
+snapshot yet; poll it once first`), or the latest snapshot's source for a
+given field isn't `ok` (`source_status.openalex` for `is_retracted`,
+`source_status.crossref` for a removed type), since such a field is never
+compared.
+
+### Admin reads
+
+Errors: `400` an id that isn't a UUID; `401`; `403` a user or service
+token; `404` `No paper <id>` (paper routes), or dev mode off.
+
+| Call | `200` |
+|---|---|
+| `GET /admin/users/{ownerId}/papers` | `{"papers": [...]}`, newest first: each paper in the `GET /papers` shape plus `owner_id`, `latest_snapshot` (a snapshot row or null). An unknown owner gives `{"papers": []}` |
+| `GET /admin/papers/{id}/snapshots` | `{"snapshots": [...]}`, the full history, oldest first, in the `GET /internal/papers/{id}/snapshots` shape |
+| `GET /admin/papers/{id}/alerts` | the `GET /papers/{id}/alerts` body, dismissed alerts included |
+| `GET /admin/papers/{id}/reports` | the `GET /papers/{id}/reports` body |
+| `DELETE /admin/papers/{id}/history` | `204`. Deletes snapshots, alerts and reports, as `DELETE /dev/papers/{id}/history` does |
+
+### `POST /admin/users/{ownerId}/fake-paper`
+
+No body, no query parameters. Stores the example's `paper.pdf` (below) as a
+new paper of `ownerId` in their **default project** (`project_id` null; the
+admin can't list a researcher's projects, which User Management owns). The
+file is saved as an upload's is, so deleting the paper deletes it. No
+GROBID or metadata lookup runs, and the researcher's draft isn't touched.
+Each call adds another paper.
+
+| Field | Value |
+|---|---|
+| `title` | `Dose-response of iron supplementation on fatigue` (printed on the PDF) |
+| `journal`, `publication_year` | `J. Fake Nutrition`, `2019` |
+| `doi`, `openalex_id`, `issn` | null. The PDF prints a made-up DOI; with none stored, Updating's poll skips the paper |
+
+**`201`:** the paper, in the `GET /admin/users/{ownerId}/papers` entry
+shape, with `latest_snapshot` null. The owner isn't checked against User
+Management, as for the other admin calls on a user's papers.
+
+Errors: `400` an id that isn't a UUID; `401`; `403` a user or service
+token; `404` dev mode off.
+
+### `POST /admin/papers/{id}/fake-report?status=`
+
+No body. In one transaction, copies the one stored example
+(`storage/src/main/resources/dev/fake-report/`) onto the paper as new
+alerts, a new report grouping exactly those alerts, and that report's
+documents. The paper needs no DOI and no snapshot.
+
+`status` is optional: `investigating`, `investigated` or `assessed` (the
+default).
+
+| `status` | `investigated_at` | Evaluation fields |
+|---|---|---|
+| `investigating` | null | null |
+| `investigated` | set | null |
+| `assessed` | set | from the example, `evaluated_at` set |
+
+**`201`:** the report, in the shape of one entry of `GET /papers/{id}/reports`.
+
+Errors: `400` an unknown `status`, or an id that isn't a UUID; `401`; `403`
+a user or service token; `404` `No paper <id>`, or dev mode off.
+
+### `GET /public/fake-report/{file}`
+
+No token, because a link opened in a new tab can't send one. Serves only
+the example's made-up PDFs, `new-version.pdf`, `current-version.pdf`,
+`paper.pdf` and `draft.pdf`, as `application/pdf`; the report page reads
+all four through it for a fake report's highlights. **`200`** with the file. `404`
+for any other name, or dev mode off. A `..` path under this route is turned
+away by Spring's firewall before any controller; a `RequestRejectedHandler`
+scoped to the route gives its `404`.
+
+### Example files in `storage/src/main/resources/dev/fake-report/`
+
+`report.json`, `new-version.pdf`, `current-version.pdf`, `paper.pdf` and
+`draft.pdf`. All are made up. `paper.pdf` is what a fake paper stores;
+`draft.pdf` is the draft the example's claims quote, served but never
+stored as anyone's draft. The claims themselves aren't in `report.json`:
+this branch's Storage doesn't store claims, so the frontend supplies them
+for a fake report (`frontend/csd-frontend-vite/src/mocks/`).
+
+`report.json` (abridged: the real file has two alerts and four documents):
+
+```json
+{
+  "alerts": [
+    {"change_type": "retraction", "alert_severity": "high", "description": "...", "recommendation": "...", "notice_doi": "10.9999/fake.2019.011r"}
+  ],
+  "documents": [
+    {"kind": "notice", "doi": "10.9999/fake.2019.011r", "crossref_status": "ok", "crossref_record": {}, "update_to_includes_paper": true,
+     "text_status": "ok", "text": "...", "text_truncated": false, "links": [], "pdf_file": null},
+    {"kind": "new_version", "doi": "10.9999/fake.2019.011v2", "crossref_status": "ok", "crossref_record": {}, "update_to_includes_paper": null,
+     "text_status": "not_open_access", "text": null, "text_truncated": false, "links": [], "pdf_file": "new-version.pdf"}
+  ],
+  "evaluation": {
+    "change_summary": "...", "change_severity": "medium", "impact_level": "low",
+    "evaluation": "...", "recommendation": "...",
+    "assessment": {"fake": true, "prompt_version": 4, "...": "the rest of what impact stores"}
+  }
+}
+```
+
+What a call stores, beyond the example's text:
+
+- Each fake alert's `change_key` is `fake:<random uuid>`, so repeat calls
+  never collide and a fake alert can't stop a real change being stored
+  under its own key.
+- `snapshot_id` and `previous_snapshot_id` are `0` (both columns are not
+  null, have no foreign key, and are not returned to the frontend).
+- `detected_at`, `created_at`, `investigated_at` and `evaluated_at` are the
+  time of the call.
+- Each document's PDF is stored again per call through `LocalFileStore.save`
+  (`pdf_status` `ok`, `file_key`, `sha256`, `pdf_fetched_at`), so
+  `GET /internal/documents/{id}/pdf` and `DELETE /admin/papers/{id}/history`
+  work as for a real document. A notice stays `skipped`.
+  `pdf_source_url` is `/api/public/fake-report/<file>`, which the report UI
+  links in a new tab.
+- The report takes only its own alerts. The researcher's draft is never
+  added or replaced.
 
 ## Storage Management ↔ Research Evaluation / Updating
 
@@ -821,7 +1150,7 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
 
 ```json
 {
-  "id": 3, "paper_id": "uuid", "status": "investigating",
+  "id": 3, "paper_id": "uuid", "owner_id": "uuid", "status": "investigating",
   "created_at": "2026-09-27T08:00:00Z", "investigated_at": null,
   "evaluation": null, "recommendation": null, "evaluated_at": null,
   "change_summary": null, "change_severity": null, "impact_level": null, "assessment": null,
@@ -856,6 +1185,12 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
 
   Unlike the alerts' `alert_severity`, which is fixed by change type, these are
   impact's judgment.
+- `owner_id`: the id of the user who owns the report's paper. It is on
+  every endpoint that returns this record (this one,
+  `GET /internal/reports/{reportId}`, and the `PATCH` and evaluation `PUT`
+  responses). A paper deleted between reading the report and its owner is
+  the usual `No report <id>` `404`. The researchers' and admin report lists
+  (`GET /papers/{id}/reports`) don't have it.
 - `alerts`, oldest first, carry their `change_key` (unlike the frontend's
   alert API): Research Evaluation matches them to its detected changes by
   it.
@@ -906,7 +1241,11 @@ marks the report `assessed`.
   "evaluation": "Your Discussion cites it as …",
   "recommendation": "Replace the citation in the Discussion.",
   "assessment": {"prompt_version": 1, "...": "impact's full answer"},
-  "claims": [{"id": "change-0", "kind": "change", "...": "see Claim"}]
+  "claims": [{"id": "change-0", "kind": "change", "...": "see Claim"}],
+  "context_chunks": [
+    {"source_type": "document", "source_id": "7", "page": 3},
+    {"source_type": "alert", "source_id": "42", "page": null}
+  ]
 }
 ```
 
@@ -917,7 +1256,8 @@ marks the report `assessed`.
 | `impact_level` | `none`, `low`, `medium` or `high`: required unless `change_severity` is `none`, and must be null (or left out) when it is |
 | `evaluation`, `recommendation` | not blank: required unless `change_severity` is `none`, and must be null (or left out) when it is |
 | `assessment` | optional JSON, stored and returned exactly as sent; Storage Management never looks inside |
-| `claims` | optional JSON array of `Claim`, stored in its own column and returned exactly as sent (any JSON value is accepted; left out or `null` stores null). Kept apart from `assessment` so that stays unread |
+| `claims` | optional JSON array of `Claim`, stored in its own column and returned exactly as sent (any JSON value is accepted; left out or `null` stores null). Kept apart from `assessment` so that stays unread. Null for reports assessed before V15 |
+| `context_chunks` | optional JSON array, stored as sent and never looked inside: the chunks impact added to its prompt, in prompt order, each `source_type`, `source_id` and `page` (null when the chunk has none). Absent or `null` stores null; an empty `[]` is kept as `[]`, so a report that found no past is told apart from one assessed before V14 |
 
 **Response `200`:** the report, as `GET` returns it, with `status`
 `assessed`, `evaluated_at` set and the fields as sent (the unsent ones
@@ -1035,6 +1375,61 @@ missing or bad token; `403` a user token; `404` with one of:
 
 It isn't keyed by DOI: one DOI can have several stored copies (one per
 report for the current copy, and one per user tracking the paper).
+
+### `PUT /internal/chunks`
+
+Service-JWT only. Replaces every chunk of one source, in one transaction.
+Research Evaluation calls it after impact has stored a report's evaluation.
+
+```json
+{
+  "source_type": "alert | report | document | profile",
+  "source_id": "42",
+  "embed_model": "gemini-embedding-001",
+  "chunks": [{"content": "text that was embedded", "page": 3, "embedding": [0.0123, -0.0456]}]
+}
+```
+
+- `source_id` is a string: the alert, report or document id in decimal, or the user's uuid for `profile`.
+- `page` is optional (null or absent: no page); when present, at least 1.
+- Storage Management never looks inside `content`. A profile's chunks are whatever the caller sends, for example one per field (`expertise: ...`).
+- `chunks` may be empty, which deletes the source's chunks.
+- `chunk_index` is the position in `chunks`, from 0.
+- Every `embedding` has exactly 1536 numbers. `embed_model` is at most 64 characters.
+- Storage Management copies `paper_id` from the source row, never from the request.
+
+**Response `204`:** stored. Errors, as problem details: `400` a missing field, an unknown `source_type`, a `source_id` that doesn't parse for its type, an embedding that isn't 1536 numbers, empty `content`, a `page` below 1, or an `embed_model` over 64 characters; `401` missing or bad token, `403` a user token; `404` the alert, report or document doesn't exist. A `profile` is never `404`: users live in User Management, and Storage Management holds bare user ids, as it does with `project_id`.
+
+### `POST /internal/chunks/search`
+
+Service-JWT only. A paper's chunks of one source type, nearest first.
+Impact's steps 1 and 2 call it.
+
+```json
+{
+  "paper_id": "uuid",
+  "embedding": [0.0123, -0.0456],
+  "source_type": "alert | report | document | profile",
+  "limit": 3
+}
+```
+
+- Every chunk of the paper of that `source_type` is a candidate, with no date, order or exclusion filter. Search is per paper, never across papers.
+- With `profile`, the candidates are the profile chunks of the paper's owner (`papers.owner_id`).
+- `limit`: 1 to 20.
+
+**Response `200`**, nearest first:
+
+```json
+[{"source_type": "document", "source_id": "7", "chunk_index": 2, "page": 3, "report_id": 12,
+  "source_date": "2026-10-02T08:00:00Z", "content": "...", "score": 0.83}]
+```
+
+- `score` is `1 - cosine distance`.
+- `source_date`: the alert's `detected_at`, the report's `evaluated_at`, the document's `created_at`, or the profile chunk's `created_at`.
+- `report_id` is null for `profile`.
+
+Errors, as problem details: `400` a missing field (including `paper_id`), an unknown `source_type`, an embedding that isn't 1536 numbers, or `limit` out of range; `401` missing or bad token, `403` a user token; `404` no such paper.
 
 ### Snapshot fields
 
@@ -1313,6 +1708,8 @@ logged by Updating, not returned.
 | `JWT_SECRET` | all | base64-encoded, 32+ bytes (`openssl rand -base64 32`); every service decodes before use. For now: a shared throwaway value in that format |
 | `SM_BASE_URL` | Research Evaluation, Updating, User Management | Storage Management's base URL (`http://localhost:8081` locally) |
 | `RE_BASE_URL` | Updating | Research Evaluation's base URL (Updating's nudge goes here). Storage Management never calls Research Evaluation |
+| `UM_BASE_URL` | Research Evaluation | User Management's base URL (`http://localhost:8080` locally, `http://users:8080` in the root compose stack) |
+| `REFRESH_COOKIE_SECURE` | User Management | `true` adds `Secure` to the refresh cookie; `false` by default, so it works over plain HTTP locally. Set `true` on the deployed server |
 
 See [SETUP.md](SETUP.md) for the full env var list including the
 third-party API keys.

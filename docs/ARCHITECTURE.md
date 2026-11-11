@@ -48,10 +48,10 @@ topic discovery) is in [ROADMAP.md](ROADMAP.md).
 
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
-| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users` and `projects`: register, login and the JWTs, each researcher's projects, and deleting an account | `users/` |
+| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users`, `projects`, `user_profiles` and `refresh_tokens`: register, login, refresh and the JWTs, each researcher's projects and profile, and deleting an account | `users/` |
 | Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls the services at `/api`, `/auth`, `/projects` and `/updating` on its own address (the Vite proxy in development, Caddy in the root stack) | `frontend/csd-frontend-vite/` |
-| Storage Management | Java 25 + Spring Boot, Postgres, Flyway | all persistence: papers and their PDFs, snapshots, alerts, reports and documents, drafts | `storage/` |
-| Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact); no database of its own | `backend/src/research_evaluation/` |
+| Storage Management | Java 25 + Spring Boot, Postgres (pgvector), Flyway | all persistence: papers and their PDFs, snapshots, alerts, reports and documents, chunks and their embeddings, drafts | `storage/` |
+| Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact); no database of its own; reads a researcher's profile from User Management | `backend/src/research_evaluation/` |
 | Updating | Python 3.13, FastAPI, APScheduler | the polling job and its small state (`tracked_papers`, `polls`) in its own schema | `backend/src/updating/` |
 
 Research Evaluation and Updating share one Python project (`backend/`, one
@@ -72,6 +72,8 @@ Frontend ──/api──▶ Storage Management ◀──/internal── Researc
    │              Postgres + PDF folder                     │
    └──/updating──▶ Updating ──/internal (snapshots)──────────┘
                      └─▶ Crossref, OpenAlex
+
+Research Evaluation ──/internal/users/{id}/profile──▶ User Management (impact's steps 2 and 3)
 ```
 
 One poll, end to end:
@@ -88,9 +90,14 @@ One poll, end to end:
 4. After the reply, in the background: **investigation** opens a report
    grouping the paper's new alerts and stores what it fetched as the
    report's documents (Storage Management downloads their PDFs); then
-   **impact** asks Gemini about the report, checks each quote of the
-   answer's claims against the text it came from (`impact/claims.py`) and
-   stores its evaluation with those claims (the report becomes `assessed`). Research Evaluation sends no notification.
+   **impact** reads the paper's past chunks from Storage Management
+   (`POST /internal/chunks/search`), asks Gemini about the report, checks
+   each quote of the answer's claims against the text it came from
+   (`impact/claims.py`) and stores its evaluation with those claims (the
+   report becomes `assessed`). After the evaluation is stored, the report's,
+   its alerts' and its documents' chunks are embedded (Gemini) and stored
+   (`PUT /internal/chunks`), so a later report's impact finds them. Research
+   Evaluation sends no notification.
 5. The **frontend** reads alerts and reports from Storage Management; the
    researcher acknowledges or dismisses them. It reads the PDFs a report's
    claims point at (paper, draft, document) from Storage Management with the
@@ -101,7 +108,7 @@ One poll, end to end:
    researcher (see below).
 
 The **report-ready notification** is a toast (`Report ready on "<paper
-title>"`, with a `View` button to `/alerts?paper=<paper id>`), shown once
+title>"`, with a `View` button to `/reports?paper=<paper id>`), shown once
 per assessed report of the signed-in researcher's own papers. It has no
 history, badge, unread count or read state. The ids already notified are
 kept in memory per tab (`seenAssessedReportIds` in `tracking.tsx`); the
@@ -116,6 +123,10 @@ Rules that hold across the flow:
 - **Updating and Research Evaluation share data only through Storage
   Management.** Updating records snapshots, never changes; Research
   Evaluation works out the differences itself.
+- **Research Evaluation reads a researcher's profile from User Management**
+  (`GET /internal/users/{id}/profile`, its service token), after the gate and
+  only for impact's steps 2 and 3. Which user comes from `owner_id` on
+  Storage Management's report. A failed read never fails a report.
 - **Only Updating calls Research Evaluation** (the nudge), plus a manual
   `POST /evaluate/reports` with a service token. Storage Management and
   the frontend never call it.
@@ -132,23 +143,53 @@ Rules that hold across the flow:
 
 ## Auth
 
-- One JWT (HS256, `sub` = user id, `exp`), issued by User Management at
-  register and login. Every service validates the signature itself with
+- **Two tokens.** An access token: a JWT (HS256, `sub` = user id, `exp` 1 hour
+  after issue), issued by User Management at register, login and refresh.
+  A refresh token: 32 random bytes sent only as an `HttpOnly`,
+  `SameSite=Strict` cookie on `/auth` (`Secure` with `REFRESH_COOKIE_SECURE`),
+  valid 7 days from issue (sliding) and good once: `POST /auth/refresh`
+  marks it used and issues a new one, and `POST /auth/logout` marks it used.
+  Only its SHA-256 hash is stored (`refresh_tokens`). The frontend answers a
+  `401` by refreshing once and retrying (`navigator.locks` keeps tabs to one
+  refresh at a time). Why: DECISIONS.md, 2026-11-10. The access token is
+  the one every service checks: Every service validates the signature itself with
   the shared `JWT_SECRET` (base64 of 32+ bytes, decoded before use); none
-  calls back to User Management.
+  calls back to User Management to validate a token (Research Evaluation
+  does call it to read a profile, with its service token).
 - **Service tokens:** Updating (`svc:updating`) and Research Evaluation
   (`svc:research-evaluation`) mint short-lived tokens with `role=service`
   (`common/service_token.py`), and so does User Management (`svc:users`)
   to clear a deleted project or account. Storage Management's `/internal/**` takes
-  only service tokens; everything else takes only user tokens.
+  only service tokens; everything else takes only user tokens. User
+  Management's `/internal/**` takes only service tokens too, and
+  `/auth/me/**` only user tokens (`SecurityConfig`).
   `POST /evaluate/changes` and `/evaluate/reports` take any service token.
 - Updating's `POST /run-poll` takes the user's token and polls only that
   user's papers.
+- **Dev mode** (`DEV_MODE=true`, read only by Storage Management and User
+  Management; off unless set): User Management has an admin account, and
+  both services serve admin endpoints (`/auth/admin/**`, `/admin/**`,
+  `/public/fake-report/**`); with it off they answer `404`. The admin signs
+  in through `POST /auth/login` with email `admin` and gets a token with
+  `role=admin`. In both services' `JwtAuthFilter` that token gets
+  `ROLE_ADMIN` and not `ROLE_USER`, so researcher endpoints (and
+  Storage Management's `/internal/**`) answer it `403`; the admin has no
+  papers or projects. Updating doesn't read the claim, so on `POST
+  /run-poll` the admin is a user with no papers; Research Evaluation
+  already answers it `403`.
+- **The admin account** (`AdminAccount` in User Management) is the row
+  whose email is `admin` (Register can't create it: `@Email` refuses an
+  address with no `@`), so no migration or role column. A
+  `SmartInitializingSingleton` creates it if missing (only the BCrypt hash
+  stored) with dev mode on, or deletes it with dev mode off. That runs
+  before the server takes requests, so a restart with dev mode off never
+  answers the known password. Why: DECISIONS.md, 2026-11-06.
 - **Deleting an account** (`DELETE /auth/me`, with the password) has
   Storage Management delete everything the user owns first
   (`DELETE /internal/users/{id}`), then deletes the user and, through the
-  foreign key, their projects. Tokens aren't revoked, so one outlives its
-  account by up to 24 hours.
+  foreign key, their projects, profile and refresh tokens (database cascade).
+  Access tokens aren't revoked, in any service, so one outlives its
+  account by up to 1 hour; with its refresh tokens gone it can't be renewed.
 
 ## Projects
 
@@ -174,10 +215,12 @@ diagram, up to V9: [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html); V
 | `alerts` | detected change on a paper (type, `change_key`, rule-based alert severity and text, the researcher's status, `report_id`) | V3, V7, V9 |
 | `snapshots` | snapshot Updating sent (insert-only, the full snapshot history per paper) | V4, V9 |
 | `drafts` | project's draft PDF | V6, V9 |
-| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation, `claims`) | V7, V8, V12 |
+| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation, the `context_chunks` impact added to its prompt, `claims`) | V7, V8, V14, V15 |
 | `report_documents` | DOI fetched for a report (notice, new version, related document, current copy) | V7 |
+| `chunks` | embedded piece of an alert's, report's, document's or profile's text (`vector(1536)`, HNSW cosine index); `paper_id` null for profile chunks | V13 |
 
-Everything referring to a paper is deleted with it. PDFs are files in
+Everything referring to a paper is deleted with it (a profile's chunks, which
+have no paper, with their user). PDFs are files in
 `UPLOAD_DIR`, never in Postgres.
 
 Updating's own schema (`updating`, Alembic): `tracked_papers` (`paper_id`,
@@ -185,8 +228,22 @@ Updating's own schema (`updating`, Alembic): `tracked_papers` (`paper_id`,
 
 User Management's own schema (`users`, Flyway, `users/src/main/resources/db/migration/`):
 `users` (`id`, the JWT's `sub`; lowercase `email`, unique; BCrypt
-`password_hash`; `created_at`) and `projects` (`id`; `owner_id`, the user's
-id, deleted with the user; `name`, one of each per owner; `created_at`).
+`password_hash`; `created_at`; the dev mode admin is the row with email
+`admin`, see Auth), `projects` (`id`; `owner_id`, the user's
+id, deleted with the user; `name`, one of each per owner; `created_at`),
+`user_profiles` and `refresh_tokens`.
+
+`user_profiles` (V4): one row per account at most (`user_id` is the primary
+key), holding the researcher's profile. No row means no profile: accounts
+made before V4 and the dev mode admin have none until a `PUT`. Every answer
+is nullable, and the list answers are JSON text so the same migration runs
+on Postgres and on the tests' H2. `refresh_tokens` (V5): one row per
+refresh token issued (a token's SHA-256 hash, `expires_at`, `used_at`).
+Expired and used rows are never pruned: each sign-in or refresh adds one
+small row, nothing reads old ones, and they go when the account is deleted.
+Both tables have `on delete cascade` to `users`, which is how both of
+`UserRepository`'s bulk deletes (`DELETE /auth/me`, and the admin removal
+with dev mode off) clear them.
 
 ## Deployment
 

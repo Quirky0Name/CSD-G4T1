@@ -6,6 +6,10 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+  flyway:
+    # the shared migrations, then the ones that differ by database: chunks needs pgvector, which H2
+    # (the tests' database) doesn't have, so db/vendor/h2 holds an H2 stand-in
+    locations: classpath:db/migration,classpath:db/vendor/{vendor}
   jackson:
     property-naming-strategy: SNAKE_CASE
   mvc:
@@ -26,6 +30,8 @@ storage:
   upload-dir: ${UPLOAD_DIR:uploads}
   # the /dev demo tools and Swagger; on unless DEV_TOOLS=false
   dev-tools: ${DEV_TOOLS:true}
+  # what the admin can do to any researcher's data; off unless DEV_MODE=true
+  dev-mode: ${DEV_MODE:false}
   max-pdf-size: 25MB
 
 server:

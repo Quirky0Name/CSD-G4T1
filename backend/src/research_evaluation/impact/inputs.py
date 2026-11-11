@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 import httpx
 
 from research_evaluation.storage import (
+    Chunk,
     DocumentInReport,
     PaperDetails,
     Report,
@@ -33,6 +34,9 @@ class ReportInputs:
     # the report's order
     document_pdfs: list[tuple[DocumentInReport, bytes]] = field(default_factory=list)
     missing: list[MissingPdf] = field(default_factory=list)
+    # the paper's past (earlier alerts, reports and document chunks) that steps 1 and 2 read,
+    # nearest first (impact.history); empty when there is none or it couldn't be read
+    chunks: list[Chunk] = field(default_factory=list)
 
 
 def label(document: DocumentInReport) -> str:

@@ -3,7 +3,10 @@
 // the Vite dev proxy (vite.config.ts), which is also where their base URLs
 // live for real deployments.
 import axios from 'axios'
-import { getToken, notifyUnauthorized, type Session } from './session'
+import { withMockClaims } from './mocks/fakeReport'
+import { withAuth } from './authRetry'
+import { browserLock, createRefresher } from './refresh'
+import { getToken, notifyUnauthorized, saveSession, type Session } from './session'
 
 export type AlertSeverity = 'high' | 'medium' | 'low'
 export type AlertStatus = 'new' | 'acknowledged' | 'dismissed'
@@ -53,27 +56,77 @@ export type UserDocument = {
   links: DocumentLink[] | null
 }
 
-// a report comes with its alerts and documents, so this one call loads everything the details show
+// a report comes with its alerts and documents, so this one call loads everything the details show.
+// Each is normalised to the contract, and a dev mode fake report gets the example's claims
+// (src/mocks/fakeReport.ts), since this branch's Storage doesn't send claims yet.
 export async function listReports(paperId: string): Promise<UserReport[]> {
-  const res = await storage.get<{ reports: UserReport[] }>(`/papers/${paperId}/reports`)
-  return res.data.reports
+  const res = await storage.get<{ reports: RawReport[] }>(`/papers/${paperId}/reports`)
+  return res.data.reports.map((raw) => withMockClaims(toUserReport(raw)))
 }
 
+// The report as docs/CONTRACTS.md on feat/claim-passages-backend gives it ("GET /papers/{id}/reports")
 export type UserReport = {
   id: number
   paper_id: string
   status: ReportStatus
   created_at: string
   investigated_at: string | null
-  // not in GET /papers/{id}/reports today (only the internal report API has them), so often absent
-  change_summary?: string | null
-  change_severity?: AssessmentLevel | null
-  impact_level?: AssessmentLevel | null
   evaluation: string | null
   recommendation: string | null
   evaluated_at: string | null
+  change_summary: string | null
+  change_severity: AssessmentLevel | null
+  // null when change_severity is 'none'
+  impact_level: AssessmentLevel | null
+  // null until assessed, and on reports assessed before claims existed
+  claims: Claim[] | null
   alerts: Alert[]
   documents: UserDocument[]
+}
+
+// What this branch's Storage sends: the same, without the fields the claims work added
+export type RawReport = Omit<UserReport, 'change_summary' | 'change_severity' | 'impact_level' | 'claims'> &
+  Partial<Pick<UserReport, 'change_summary' | 'change_severity' | 'impact_level' | 'claims'>>
+
+// Fields the server leaves out become null, so nothing downstream checks for undefined
+export function toUserReport(raw: RawReport): UserReport {
+  return {
+    ...raw,
+    change_summary: raw.change_summary ?? null,
+    change_severity: raw.change_severity ?? null,
+    impact_level: raw.impact_level ?? null,
+    claims: raw.claims ?? null,
+  }
+}
+
+export type ClaimKind = 'change' | 'impact' | 'action'
+
+// One factual statement of the evaluation and the quotes behind it (docs/CONTRACTS.md, "Claim").
+// text and every quote are model output: render them as text, never as HTML.
+export type Claim = {
+  // `<kind>-<index in that kind>`, unique in the report
+  id: string
+  kind: ClaimKind
+  text: string
+  // true exactly when a passage is 'verbatim'
+  supported: boolean
+  passages: Passage[]
+}
+
+export type PassageTarget = 'paper' | 'draft' | 'document' | 'alert'
+export type PassageVerified = 'verbatim' | 'not_found' | 'no_text'
+
+export type Passage = {
+  // null: found nowhere, and its source named no text
+  target: PassageTarget | null
+  // set only when target is 'document'
+  document_id: number | null
+  // set only when target is 'alert'
+  alert_id: number | null
+  quote: string
+  // 1-based page the quote starts on, when found in a PDF
+  page: number | null
+  verified: PassageVerified
 }
 
 export type Paper = {
@@ -109,6 +162,17 @@ export type Draft = {
   uploaded_at: string
 }
 
+// a researcher's answers to the questionnaire (docs/CONTRACTS.md, the profile body); the lists are
+// always arrays, the rest a string or null
+export type Profile = {
+  occupation: string | null
+  occupation_other: string | null
+  research_fields: string[]
+  research_interests: string[]
+  work_types: string[]
+  response_preferences: string | null
+}
+
 export type PollSummary = {
   poll_id: number
   trigger: string
@@ -127,18 +191,31 @@ const storage = axios.create({ baseURL: '/api' })
 const updating = axios.create({ baseURL: '/updating' })
 // User Management; its register and login take no token
 const authApi = axios.create({ baseURL: '/auth' })
+// User Management's admin routes, which do take a token
+const adminAuth = axios.create({ baseURL: '/auth/admin' })
 
-// every call to Storage and Updating carries the signed-in user's token
-for (const client of [storage, updating]) {
-  client.interceptors.request.use((config) => {
-    const token = getToken()
-    if (token) config.headers.Authorization = `Bearer ${token}`
-    return config
-  })
-  client.interceptors.response.use(undefined, (err: unknown) => {
-    if (axios.isAxiosError(err) && err.response?.status === 401) notifyUnauthorized()
-    return Promise.reject(err)
-  })
+// User Management's projects
+const projectsApi = axios.create({ baseURL: '/projects' })
+// User Management's routes for the signed-in researcher's own account, which take a token
+const meApi = axios.create({ baseURL: '/auth/me' })
+
+// A new access token from the refresh token's cookie (POST /auth/refresh), saved as the session.
+// One at a time across tabs, and callers during one share it (refresh.ts).
+export const refreshSession = createRefresher(async (): Promise<Session> => {
+  const res = await authApi.post<Session>('/refresh')
+  saveSession(res.data)
+  return res.data
+}, browserLock)
+
+// Every call to Storage, Updating, the projects and the account carries the signed-in user's token.
+// A 401 renews it with one refresh and retries the request once; a failed refresh signs out.
+for (const client of [storage, updating, adminAuth, projectsApi, meApi]) {
+  withAuth(client, { getToken, refresh: refreshSession, onUnauthorized: notifyUnauthorized })
+}
+
+// sign out: the refresh token stops working and its cookie is cleared (always 204)
+export async function logout(): Promise<void> {
+  await authApi.post('/logout')
 }
 
 export async function login(email: string, password: string): Promise<Session> {
@@ -146,8 +223,26 @@ export async function login(email: string, password: string): Promise<Session> {
   return res.data
 }
 
-export async function register(email: string, password: string): Promise<Session> {
-  const res = await authApi.post<Session>('/register', { email, password })
+// one request makes the account and saves its questionnaire (docs/CONTRACTS.md, POST /auth/register)
+export async function register(email: string, password: string, profile: Profile): Promise<Session> {
+  const res = await authApi.post<Session>('/register', { email, password, profile })
+  return res.data
+}
+
+// the researcher's profile; null when they have none yet (404), as getDraft does for a draft
+export async function getProfile(): Promise<Profile | null> {
+  try {
+    const res = await meApi.get<Profile>('/profile')
+    return res.data
+  } catch (err) {
+    if (isNotFound(err)) return null
+    throw err
+  }
+}
+
+// replaces every answer, creating the profile when there is none; returns it as stored
+export async function saveProfile(profile: Profile): Promise<Profile> {
+  const res = await meApi.put<Profile>('/profile', profile)
   return res.data
 }
 
@@ -156,15 +251,44 @@ export async function listPapers(): Promise<Paper[]> {
   return res.data.papers
 }
 
-export async function uploadPaperPdf(file: File): Promise<Paper> {
+// A project from User Management (docs/CONTRACTS.md, POST /projects). The default project isn't one of
+// these: it has no row, can't be renamed or deleted, and papers show it as project_id null.
+export type Project = {
+  id: string
+  name: string
+  created_at: string
+}
+
+export async function listProjects(): Promise<Project[]> {
+  const res = await projectsApi.get<{ projects: Project[] }>('')
+  return res.data.projects
+}
+
+export async function createProject(name: string): Promise<Project> {
+  const res = await projectsApi.post<Project>('', { name })
+  return res.data
+}
+
+export async function renameProject(id: string, name: string): Promise<Project> {
+  const res = await projectsApi.put<Project>(`/${id}`, { name })
+  return res.data
+}
+
+// also deletes the project's papers, with their alerts and reports, and its draft
+export async function deleteProject(id: string): Promise<void> {
+  await projectsApi.delete(`/${id}`)
+}
+
+export async function uploadPaperPdf(file: File, projectId?: string): Promise<Paper> {
   const body = new FormData()
   body.append('file', file)
+  if (projectId) body.append('project_id', projectId)
   const res = await storage.post<Paper>('/papers', body)
   return res.data
 }
 
-export async function trackPaperByDoi(doi: string): Promise<Paper> {
-  const res = await storage.post<Paper>('/papers', { doi })
+export async function trackPaperByDoi(doi: string, projectId?: string): Promise<Paper> {
+  const res = await storage.post<Paper>('/papers', projectId ? { doi, project_id: projectId } : { doi })
   return res.data
 }
 
@@ -183,16 +307,14 @@ export async function setAlertStatus(
   return res.data
 }
 
-export async function runPoll(paperId?: string): Promise<PollSummary> {
-  const res = await updating.post<PollSummary>('/run-poll', null, {
-    params: paperId ? { paper_id: paperId } : undefined,
-  })
+export async function runPoll(): Promise<PollSummary> {
+  const res = await updating.post<PollSummary>('/run-poll')
   return res.data
 }
 
-export async function getDraft(): Promise<Draft | null> {
+export async function getDraft(projectId?: string): Promise<Draft | null> {
   try {
-    const res = await storage.get<Draft>('/draft')
+    const res = await storage.get<Draft>('/draft', { params: projectId ? { project_id: projectId } : undefined })
     return res.data
   } catch (err) {
     if (axios.isAxiosError(err) && err.response?.status === 404) return null
@@ -200,15 +322,16 @@ export async function getDraft(): Promise<Draft | null> {
   }
 }
 
-export async function uploadDraft(file: File): Promise<Draft> {
+export async function uploadDraft(file: File, projectId?: string): Promise<Draft> {
   const body = new FormData()
   body.append('file', file)
+  if (projectId) body.append('project_id', projectId)
   const res = await storage.post<Draft>('/draft', body)
   return res.data
 }
 
-export async function deleteDraft(): Promise<void> {
-  await storage.delete('/draft')
+export async function deleteDraft(projectId?: string): Promise<void> {
+  await storage.delete('/draft', { params: projectId ? { project_id: projectId } : undefined })
 }
 
 // Spring's ProblemDetail and FastAPI's HTTPException both put the reason in
@@ -226,4 +349,93 @@ export function errorMessage(err: unknown): string {
 
 export async function deletePaper(paperId: string): Promise<void> {
   await storage.delete(`/papers/${paperId}`)
+}
+// Dev mode (docs/specs/2026-11-06-dev-mode.md, "Interfaces"). Admin token only.
+export type Account = { id: string; email: string; role: 'user' | 'admin'; created_at: string }
+
+export type SourceStatus = 'ok' | 'not_found' | 'error'
+
+export type CrossrefUpdate = {
+  notice_doi: string | null
+  type: string | null
+  label: string | null
+  source: string | null
+  date: string | null
+  record_id: string | null
+}
+
+export type Snapshot = {
+  snapshot_id: number
+  paper_id: string
+  fetched_at: string
+  is_retracted: boolean | null
+  in_doaj: boolean | null
+  cited_by_count: number | null
+  crossref_updates: CrossrefUpdate[] | null
+  source_status: { crossref: SourceStatus; openalex: SourceStatus }
+}
+
+export type AdminPaper = Paper & { owner_id: string; latest_snapshot: Snapshot | null }
+
+export type SnapshotEdit = {
+  is_retracted?: boolean
+  in_doaj?: boolean
+  cited_by_count?: number
+  removed_crossref_update_types?: string[]
+}
+
+export async function listAccounts(): Promise<Account[]> {
+  const res = await adminAuth.get<{ users: Account[] }>('/users')
+  return res.data.users
+}
+
+export async function listOwnerPapers(ownerId: string): Promise<AdminPaper[]> {
+  const res = await storage.get<{ papers: AdminPaper[] }>(`/admin/users/${ownerId}/papers`)
+  return res.data.papers
+}
+
+export async function editSnapshot(paperId: string, edit: SnapshotEdit): Promise<Snapshot> {
+  const res = await storage.post<Snapshot>(`/admin/papers/${paperId}/snapshots`, edit)
+  return res.data
+}
+
+export async function listPaperSnapshots(paperId: string): Promise<Snapshot[]> {
+  const res = await storage.get<{ snapshots: Snapshot[] }>(`/admin/papers/${paperId}/snapshots`)
+  return res.data.snapshots
+}
+
+export async function listPaperAlerts(paperId: string): Promise<Alert[]> {
+  const res = await storage.get<{ alerts: Alert[] }>(`/admin/papers/${paperId}/alerts`)
+  return res.data.alerts
+}
+
+export async function listPaperReports(paperId: string): Promise<UserReport[]> {
+  const res = await storage.get<{ reports: RawReport[] }>(`/admin/papers/${paperId}/reports`)
+  return res.data.reports.map(toUserReport)
+}
+
+// dev mode: the example's paper.pdf as a new paper of the researcher, in their default project
+export async function addFakePaper(ownerId: string): Promise<AdminPaper> {
+  const res = await storage.post<AdminPaper>(`/admin/users/${ownerId}/fake-paper`)
+  return res.data
+}
+
+export async function clearPaperHistory(paperId: string): Promise<void> {
+  await storage.delete(`/admin/papers/${paperId}/history`)
+}
+
+export async function addFakeReport(paperId: string, status: ReportStatus): Promise<UserReport> {
+  const res = await storage.post<RawReport>(`/admin/papers/${paperId}/fake-report`, null, {
+    params: { status },
+  })
+  return toUserReport(res.data)
+}
+
+export function isNotFound(err: unknown): boolean {
+  return axios.isAxiosError(err) && err.response?.status === 404
+}
+
+// a 409: on register, an account with this email already exists
+export function isConflict(err: unknown): boolean {
+  return axios.isAxiosError(err) && err.response?.status === 409
 }

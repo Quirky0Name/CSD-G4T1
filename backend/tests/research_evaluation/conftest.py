@@ -84,6 +84,36 @@ class StubSm:
         return [query for m, path, query in self.transport.requests if m == method and path.endswith(suffix)]
 
 
+class StubUm:
+    """User Management's internal profile read as Research Evaluation reaches it, with no network:
+    `profiles` maps a user id to its profile body, and an unknown id is User Management's
+    `No profile <id>` 404. `failure` answers every request with that status (with `detail`) or
+    raises that exception. Every request is recorded."""
+
+    def __init__(self) -> None:
+        self.profiles: dict[UUID, dict] = {}
+        self.failure: int | httpx.Response | Exception | None = None
+        self.requests: list[httpx.Request] = []
+        self.client = httpx.AsyncClient(
+            transport=httpx.MockTransport(self._handle),
+            base_url="http://um",
+            auth=ServiceTokenAuth(TEST_JWT_KEY, SERVICE_SUBJECT),
+        )
+
+    def _handle(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        if isinstance(self.failure, Exception):
+            raise self.failure
+        if isinstance(self.failure, httpx.Response):
+            return self.failure
+        if self.failure is not None:
+            return httpx.Response(self.failure, json={"detail": "injected"})
+        user_id = UUID(request.url.path.removeprefix("/internal/users/").removesuffix("/profile"))
+        if user_id not in self.profiles:
+            return httpx.Response(404, json={"detail": f"No profile {user_id}"})
+        return httpx.Response(200, json=self.profiles[user_id])
+
+
 class ExternalApis:
     """Crossref and Europe PMC as investigation reaches them, with no network: Crossref knows
     only the DOIs given in `crossref` (DOI -> fixture name) or `records` (DOI -> a synthetic
@@ -133,6 +163,13 @@ class ExternalApis:
 @pytest.fixture
 async def sm():
     stub = StubSm()
+    yield stub
+    await stub.client.aclose()
+
+
+@pytest.fixture
+async def um():
+    stub = StubUm()
     yield stub
     await stub.client.aclose()
 

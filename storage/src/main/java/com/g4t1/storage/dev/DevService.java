@@ -77,8 +77,8 @@ public class DevService {
         }
 
         return snapshotService.store(paperId, copyOf(latest,
-                undoRetraction ? Boolean.FALSE : latest.getIsRetracted(), updates == null ? null : kept,
-                latest.getCitedByCount()));
+                undoRetraction ? Boolean.FALSE : latest.getIsRetracted(), latest.getInDoaj(),
+                updates == null ? null : kept, latest.getCitedByCount()));
     }
 
     private SnapshotResponse undoCitationJump(UUID paperId, Snapshot latest) {
@@ -88,15 +88,15 @@ public class DevService {
                     "Paper " + paperId + " has no " + CITATION_JUMP + " to undo");
         }
         return snapshotService.store(paperId,
-                copyOf(latest, latest.getIsRetracted(), toNode(latest.getCrossrefUpdates()), 0));
+                copyOf(latest, latest.getIsRetracted(), latest.getInDoaj(), toNode(latest.getCrossrefUpdates()), 0));
     }
 
     // the latest snapshot as a new one fetched now, with the fields a change lives in replaced
-    private SnapshotRequest copyOf(Snapshot latest, Boolean isRetracted, JsonNode crossrefUpdates,
+    public SnapshotRequest copyOf(Snapshot latest, Boolean isRetracted, Boolean inDoaj, JsonNode crossrefUpdates,
             Integer citedByCount) {
         return new SnapshotRequest(latest.getDoi(), Instant.now(), latest.getOpenalexId(),
                 latest.getTitle(), latest.getPublicationYear(), isRetracted, crossrefUpdates,
-                latest.getInDoaj(), latest.getJournalSourceId(), latest.getJournalSourceType(),
+                inDoaj, latest.getJournalSourceId(), latest.getJournalSourceType(),
                 latest.getJournal(), latest.getIssnL(), latest.getPublisher(),
                 toNode(latest.getAuthors()), citedByCount, toNode(latest.getSourceStatus()));
     }

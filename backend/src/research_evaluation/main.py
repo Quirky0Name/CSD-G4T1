@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field, StrictInt
 from common.service_token import ServiceTokenAuth
 from research_evaluation.auth import require_service_token
 from research_evaluation.config import ResearchEvaluationSettings
+from research_evaluation.embedding import GeminiEmbedder
 from research_evaluation.evaluate import EvaluationResult, evaluate_papers
 from research_evaluation.impact.llm import FallbackLlm, gemini_configured, make_client
 from research_evaluation.impact.run import ImpactContext, assess_reports
@@ -137,6 +138,20 @@ def configure_logging() -> None:
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
+def _impact_context(config: ResearchEvaluationSettings, um: httpx.AsyncClient) -> ImpactContext:
+    """Impact's model and embedder, on one Gemini client (GEMINI_API_KEY must be set)."""
+    gemini = make_client(config)
+    return ImpactContext(
+        FallbackLlm(
+            gemini,
+            # a name listed twice is tried once
+            tuple(dict.fromkeys((config.gemini_model, *config.gemini_fallback_models))),
+        ),
+        um=um,
+        embedder=GeminiEmbedder(gemini, config.embed_model),
+    )
+
+
 def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
     configure_logging()
 
@@ -152,6 +167,10 @@ def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
             ) as sm,
             # Crossref and Europe PMC only: no base URL, no auth, never the service token
             httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as external,
+            # User Management, for the researcher's profile impact reads
+            httpx.AsyncClient(
+                base_url=config.um_base_url, auth=ServiceTokenAuth(key, SERVICE_SUBJECT), timeout=HTTP_TIMEOUT_SECONDS
+            ) as um,
         ):
             app.state.jwt_key = key
             app.state.sm = sm
@@ -161,17 +180,7 @@ def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
                 crossref_mailto=config.crossref_mailto,
                 pdf_timeout=config.investigation_pdf_timeout_seconds,
             )
-            app.state.impact = (
-                ImpactContext(
-                    FallbackLlm(
-                        make_client(config),
-                        # a name listed twice is tried once
-                        tuple(dict.fromkeys((config.gemini_model, *config.gemini_fallback_models))),
-                    ),
-                )
-                if gemini_configured(config)
-                else None
-            )
+            app.state.impact = _impact_context(config, um) if gemini_configured(config) else None
             yield
 
     app = FastAPI(title="Research Evaluation", lifespan=lifespan)

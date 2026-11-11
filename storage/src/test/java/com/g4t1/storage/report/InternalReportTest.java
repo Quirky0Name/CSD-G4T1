@@ -40,6 +40,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -80,6 +81,7 @@ class InternalReportTest {
     @Autowired
     JdbcTemplate jdbc;
 
+    private final UUID owner = UUID.randomUUID();
     private UUID paperId;
 
     @BeforeEach
@@ -88,7 +90,29 @@ class InternalReportTest {
         alerts.deleteAll();
         reports.deleteAll();
         papers.deleteAll();
-        paperId = papers.save(new Paper(UUID.randomUUID())).getId();
+        paperId = papers.save(new Paper(owner)).getId();
+    }
+
+    @Test
+    void everyFullReportCarriesThePaperOwnersId() throws Exception {
+        alert(paperId, "retraction");
+        String opened = open(paperId)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.owner_id").value(owner.toString()))
+                .andReturn().getResponse().getContentAsString();
+        long reportId = json.readTree(opened).get("id").asLong();
+
+        read(paperId, reportId).andExpect(jsonPath("$.owner_id").value(owner.toString()));
+        changeStatus(paperId, reportId, Map.of("status", "investigated"))
+                .andExpect(jsonPath("$.owner_id").value(owner.toString()));
+        mvc.perform(service(get("/internal/reports/" + reportId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.owner_id").value(owner.toString()));
+        mvc.perform(service(put("/internal/reports/" + reportId + "/evaluation")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(Map.of("change_summary", "s", "change_severity", "none")))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.owner_id").value(owner.toString()));
     }
 
     @Test
