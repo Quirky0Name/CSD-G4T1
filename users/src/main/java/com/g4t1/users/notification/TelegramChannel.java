@@ -40,9 +40,14 @@ public class TelegramChannel {
         this.botToken = botToken;
     }
 
-    public Outcome send(UUID userId, long chatId, String text) {
+    public Outcome send(UUID userId, Long chatId, String text) {
         if (botToken.isBlank()) {
             return Outcome.NOT_CONFIGURED;
+        }
+        // the PUT refuses an enabled channel with no chat id, so this is only an older or hand edited row
+        if (chatId == null) {
+            log.warn("telegram message to user {} failed: no chat id", userId);
+            return Outcome.FAILED;
         }
         try {
             rest.post()

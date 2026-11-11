@@ -10,6 +10,7 @@ import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -19,6 +20,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -48,6 +51,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 // POST /internal/users/{id}/notifications: Research Evaluation's events becoming mail, with GreenMail as the SMTP server
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@ExtendWith(OutputCaptureExtension.class)
 class SendNotificationTest {
 
     private static final StorageStub storage = new StorageStub();
@@ -497,6 +501,25 @@ class SendNotificationTest {
                 .jsonPath("$.channels.telegram").isEqualTo("failed");
 
         assertThat(mail.getReceivedMessages()).isEmpty();
+    }
+
+    // the PUT refuses this state; it can only come from an older or hand edited row
+    @Test
+    void anEnabledTelegramChannelWithNoChatIdFailsWithoutAnError(CapturedOutput output) throws Exception {
+        Account account = registered();
+        putTelegram(account, Map.of("enabled", true, "chat_id", 42));
+        jdbc.update("update users.notification_preferences set telegram_chat_id = null where user_id = ?",
+                UUID.fromString(account.id()));
+
+        postTest(account.token())
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.channels.telegram").isEqualTo("failed");
+
+        assertThat(telegram.requests()).isEmpty();
+        assertThat(output.getAll())
+                .contains("telegram message to user " + account.id() + " failed: no chat id")
+                .doesNotContain("NullPointerException");
     }
 
     @Test
