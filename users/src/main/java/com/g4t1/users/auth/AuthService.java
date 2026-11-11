@@ -1,5 +1,7 @@
 package com.g4t1.users.auth;
 
+import com.g4t1.users.notification.NotificationPreferences;
+import com.g4t1.users.notification.NotificationPreferencesRepository;
 import com.g4t1.users.profile.ProfileOptions;
 import com.g4t1.users.profile.ProfileRequest;
 import com.g4t1.users.profile.UserProfile;
@@ -27,23 +29,26 @@ public class AuthService {
     private final UserProfileRepository profiles;
     private final ProfileOptions profileOptions;
     private final RefreshTokenService refreshTokens;
+    private final NotificationPreferencesRepository notificationPreferences;
     private final PasswordEncoder passwords = new BCryptPasswordEncoder();
     // checked when an email has no account, so that answer takes as long as a wrong password
     private final String hashForUnknownEmails = passwords.encode("no account has this password");
 
     public AuthService(UserRepository users, TokenService tokens, StorageClient storage,
                        UserProfileRepository profiles, ProfileOptions profileOptions,
-                       RefreshTokenService refreshTokens) {
+                       RefreshTokenService refreshTokens, NotificationPreferencesRepository notificationPreferences) {
         this.users = users;
         this.tokens = tokens;
         this.storage = storage;
         this.profiles = profiles;
         this.profileOptions = profileOptions;
         this.refreshTokens = refreshTokens;
+        this.notificationPreferences = notificationPreferences;
     }
 
     /**
-     * The account and its questionnaire in one transaction, so neither is saved without the other.
+     * The account, its default notification preferences and its questionnaire in one transaction, so
+     * none is saved without the others.
      * The questionnaire is checked first: a bad one is a 400 even on a taken email.
      */
     @Transactional
@@ -54,6 +59,7 @@ public class AuthService {
             throw emailTaken();
         }
         User user = saveNew(new User(email, passwords.encode(request.password())));
+        notificationPreferences.saveAndFlush(new NotificationPreferences(user.getId()));
         if (answers != null) {
             // straight to the repository: ProfileService.save's retry is for an account that already exists
             UserProfile profile = new UserProfile(user.getId());
