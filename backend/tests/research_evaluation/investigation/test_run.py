@@ -1,6 +1,7 @@
 """Investigation after a nudge, end to end: Research Evaluation against the stub Storage
 Management, with Crossref and Europe PMC faked (conftest.ExternalApis)."""
 
+import logging
 from datetime import UTC, datetime
 from urllib.parse import unquote
 from uuid import UUID
@@ -796,3 +797,32 @@ async def test_an_opened_report_posts_its_alerts_to_the_owner(client, sm, um, ex
         ],
     }
     assert len(body["alerts"]) == 2
+
+
+@pytest.mark.parametrize(
+    ("failure", "cause"),
+    [
+        (500, "User Management answered 500"),
+        (httpx.ReadTimeout("slow"), "ReadTimeout"),
+        (httpx.ConnectError("down"), "ConnectError"),
+    ],
+    ids=["500", "timeout", "unreachable"],
+)
+async def test_user_management_failing_still_finishes_the_report(
+    client, sm, um, external, caplog, failure, cause
+):
+    external.crossref[RETRACTION_NOTICE] = "ijaa_notice"
+    um.failure = failure
+    paper = await changed_paper(sm, **retraction_and_correction())
+
+    with caplog.at_level(logging.WARNING, logger="research_evaluation.users"):
+        response = await nudge(client, [paper])
+
+    assert response.status_code == 202
+    [report_id] = await report_ids(sm, paper)
+    report = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    assert report["status"] == "investigated"
+    [record] = caplog.records
+    assert record.getMessage() == (
+        f"notifying user {report['owner_id']} about report {report_id} failed: {cause}"
+    )

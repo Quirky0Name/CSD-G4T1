@@ -38,7 +38,7 @@ from research_evaluation.storage import (
     read_report,
     store_document,
 )
-from research_evaluation.users import notify
+from research_evaluation.users import notify_quietly
 
 log = logging.getLogger(__name__)
 
@@ -127,9 +127,10 @@ async def notify_alerts(
         return
     opened = await read_report(sm, report.id)
     details = await paper_details(sm, paper.paper_id)
-    await notify(
+    await notify_quietly(
         context.um,
         opened.owner_id,
+        report.id,
         {
             "event": "alerts",
             "paper": {"id": str(paper.paper_id), "title": details.title, "doi": details.doi},

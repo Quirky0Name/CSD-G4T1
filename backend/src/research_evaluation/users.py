@@ -4,6 +4,7 @@ impact gives to steps 2 and 3, and posting the events User Management tells the 
 The client carries Research Evaluation's service token; User Management's /internal is reachable
 only on the compose network."""
 
+import logging
 from typing import Any
 from uuid import UUID
 
@@ -11,6 +12,8 @@ import httpx
 from pydantic import BaseModel, ConfigDict
 
 from research_evaluation.storage import _detail
+
+log = logging.getLogger(__name__)
 
 
 class ResearcherProfile(BaseModel):
@@ -46,3 +49,20 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
         f"/internal/users/{user_id}/notifications", json=body, timeout=NOTIFY_TIMEOUT_SECONDS
     )
     response.raise_for_status()
+
+
+async def notify_quietly(
+    http: httpx.AsyncClient, user_id: UUID, report_id: int, body: dict[str, Any]
+) -> None:
+    """Posts one event for a report; a failure is logged, never raised: telling the researcher
+    must not change what investigation or impact did. The log names the status code or the
+    exception class only, never a response body."""
+    try:
+        await notify(http, user_id, body)
+    except Exception as exc:  # noqa: BLE001
+        cause = (
+            f"User Management answered {exc.response.status_code}"
+            if isinstance(exc, httpx.HTTPStatusError)
+            else type(exc).__name__
+        )
+        log.warning("notifying user %s about report %s failed: %s", user_id, report_id, cause)
