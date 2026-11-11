@@ -314,7 +314,8 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - `backend/src/research_evaluation/chunks.py` (new: the chunk text for each source, PDF text extraction with `pypdf`)
   - `backend/src/research_evaluation/impact/run.py` (after `store_evaluation`)
   - `backend/pyproject.toml`, `backend/uv.lock` (`pypdf` as a runtime dependency; today only `evals/real/extract.py` uses it, through `uv run --with`)
-  - tests under `backend/tests/research_evaluation/`
+  - `backend/src/research_evaluation/main.py` (`ImpactContext.embedder`, a `GeminiEmbedder` on impact's Gemini client)
+  - tests under `backend/tests/research_evaluation/` (`test_chunks_pipeline.py`; `test_config.py` for the embedder at startup)
 - **Seams:**
   - `assess_report(sm, context, report_id)`, with Storage Management (`respx`) and Gemini mocked: catches which `PUT /internal/chunks` calls are sent, their bodies, their order after the evaluation `PUT`, and the failure rule; misses real PDF layouts (tests use generated PDFs) and the real Storage Management.
   - `POST /evaluate/reports`, with the same mocks: catches that the request path reaches chunk storage; misses the same.
@@ -337,7 +338,7 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - PDF text comes from the bytes `gather_inputs` already read, so no PDF is downloaded twice. A PDF that `pypdf` can't read is logged, and that document gets no chunks. Source: user (confirmed).
   - Impact still attaches the current report's PDFs to step 1 as before. Past documents reach the prompt only as retrieved text chunks, never as PDFs. Source: user ("the pdf will still be attached to the prompt?").
 - **Acceptance criteria:**
-  - [ ] Assessing a report with 2 alerts, 1 document with 7000 characters of `text`, 1 document with no `text` but a stored PDF, and 1 document with neither makes, after the evaluation `PUT`:
+  - [x] Assessing a report with 2 alerts, 1 document with 7000 characters of `text`, 1 document with no `text` but a stored PDF, and 1 document with neither makes, after the evaluation `PUT`:
     - 2 `alert` calls, one chunk each, with the alert fields above;
     - 1 `document` call with 3 chunks, each with the document prefix above;
     - 1 `document` call whose chunks hold the PDF's extracted text, one per page, each with its `page`;
@@ -345,15 +346,21 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
     - 1 `report` call with one chunk.
 
     Test: `test_chunks_pipeline.py::test_report_chunks_after_evaluation`.
-  - [ ] No `PUT /internal/chunks` is sent before the evaluation `PUT`: `test_chunks_pipeline.py::test_chunks_after_evaluation_only`.
-  - [ ] When embedding raises, the evaluation `PUT` was still sent before any embedding call: `test_chunks_pipeline.py::test_evaluation_before_embedding`.
-  - [ ] A placeholder evaluation gives the alert and document calls but no `report` call: `test_chunks_pipeline.py::test_placeholder`.
-  - [ ] When embedding raises, or `PUT /internal/chunks` answers `500`: the report is still `assessed`, the other sources' chunks are still sent, and an error is logged. Test: `test_chunks_pipeline.py::test_failure_is_logged`.
-  - [ ] `uv run pytest` and `uv run ruff check` pass.
+  - [x] No `PUT /internal/chunks` is sent before the evaluation `PUT`: `test_chunks_pipeline.py::test_chunks_after_evaluation_only`.
+  - [x] When embedding raises, the evaluation `PUT` was still sent before any embedding call: `test_chunks_pipeline.py::test_evaluation_before_embedding`.
+  - [x] A placeholder evaluation gives the alert and document calls but no `report` call: `test_chunks_pipeline.py::test_placeholder`.
+  - [x] When embedding raises, or `PUT /internal/chunks` answers `500`: the report is still `assessed`, the other sources' chunks are still sent, and an error is logged. Test: `test_chunks_pipeline.py::test_failure_is_logged`.
+  - [x] `uv run pytest` and `uv run ruff check` pass.
 - **Doc deltas:**
   - ARCHITECTURE.md, "Data flow" step 4: after the evaluation is stored, the report's, its alerts' and its documents' chunks are embedded and stored.
   - EVALUATION.md, "Embeddings": what is stored for each source, when, and the failure rule.
   - ROADMAP.md: backfilling rows stored before V13; embedding snapshots, papers' PDFs and drafts.
+  - EVALUATION.md, "Embeddings": the embedder rides in `ImpactContext.embedder` (None, as with no `GEMINI_API_KEY` and in the existing tests, stores no chunks); at startup it is a `GeminiEmbedder` on the same Gemini client as the model.
+  - EVALUATION.md, "Embeddings": each source is embedded and stored on its own (alerts, then the report, then documents), so one failure leaves only that source without chunks; a failure logs the source and the cause class, with a traceback only for an unexpected error.
+  - EVALUATION.md, "Embeddings": the chunk texts. An alert: `alert:`, `alert severity:`, `detected:` (date), `description:`, `recommendation:` lines. The report: `change summary:`, `change severity:`, `impact level:`, `evaluation:`, `recommendation:` lines, each when present. A document: `<kind> <doi> (report of <report created_at date>)` then a blank line, then the text.
+  - EVALUATION.md, "Embeddings": "the report's date" in the document prefix is the report's `created_at`, now read into `Report.created_at`; `AlertInReport` gains `recommendation` (already in Storage Management's response) for the alert chunk.
+  - EVALUATION.md, "Embeddings": a PDF page with no extractable text (a scan) gives no chunk; a page over 8000 characters is cut with `chunk_text(size=8000)`, keeping the 400-character overlap.
+  - EVALUATION.md, "Embeddings": a PDF wins over `text` when a document has both; notices never have a PDF, so theirs come from `text`.
 
 ### S7. Storage Management keeps a report's context chunks
 
