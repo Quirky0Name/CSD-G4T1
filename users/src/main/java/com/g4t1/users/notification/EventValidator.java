@@ -8,7 +8,7 @@ import java.util.Set;
 // The rules of an event's body; a break is a 400 whose detail starts with the field's name
 final class EventValidator {
 
-    private static final Set<String> EVENTS = Set.of("alerts", "report_assessed");
+    private static final Set<String> EVENTS = Set.of(NotificationEvent.ALERTS, "report_assessed");
 
     private EventValidator() {
     }
@@ -20,7 +20,7 @@ final class EventValidator {
         if (event.paper() == null || event.paper().id() == null) {
             throw badRequest("paper is required");
         }
-        if (event.event().equals("alerts")) {
+        if (event.event().equals(NotificationEvent.ALERTS)) {
             checkAlerts(event);
         } else {
             checkReport(event);

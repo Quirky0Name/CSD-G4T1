@@ -11,6 +11,8 @@ public record NotificationEvent(String event, Paper paper, Long reportId, List<A
                                 String changeSeverity, String changeSummary, String impactLevel,
                                 String evaluation, String recommendation) {
 
+    static final String ALERTS = "alerts";
+
     public record Paper(UUID id, String title, String doi) {
     }
 

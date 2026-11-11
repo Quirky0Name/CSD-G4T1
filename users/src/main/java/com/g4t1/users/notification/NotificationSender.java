@@ -130,7 +130,7 @@ public class NotificationSender {
 
     private Optional<Message> match(NotificationEvent event, String minAlertSeverity, String minChangeSeverity,
                                     String minImpactLevel) {
-        if (event.event().equals("alerts")) {
+        if (event.event().equals(NotificationEvent.ALERTS)) {
             List<NotificationEvent.Alert> passing = event.alerts().stream()
                     .filter(alert -> Levels.reaches(alert.alertSeverity(), minAlertSeverity))
                     .toList();
