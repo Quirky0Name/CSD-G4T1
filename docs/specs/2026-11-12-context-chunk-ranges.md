@@ -1,8 +1,8 @@
 # A report says where a cut retrieved chunk sits in its document
 
-**Status:** draft
+**Status:** approved
 
-**Base commit:** not set
+**Base commit:** `6ce00b0`
 
 **Repo:** `D:\SMU\CS203\project\CSD-G4T1`
 
