@@ -13,17 +13,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -74,7 +75,7 @@ class SendNotificationTest {
 
     // the clock the cooldown reads, moved by hand so no test sleeps
     @TestConfiguration
-    static class ClockConfig {
+    static class TestClockConfig {
         @Bean
         @Primary
         MutableClock testClock() {
@@ -320,13 +321,15 @@ class SendNotificationTest {
         assertThat(text).hasSize(4096).endsWith("x\u2026").startsWith("Quantum Widgets\nDOI: 10.1234/qw");
     }
 
-    // an emoji is two UTF-16 units: a cut between them would leave half of one before the ellipsis
-    @Test
-    void aTelegramCutNeverSplitsACharacterInTwo() throws Exception {
+    // an emoji is two UTF-16 units: a cut between them would leave half of one before the ellipsis. The cut lands
+    // on a high surrogate with no prefix and on a low one with a one unit prefix, so neither depends on the header's length
+    @ParameterizedTest(name = "prefix \"{0}\"")
+    @ValueSource(strings = {"", "x"})
+    void aTelegramCutNeverSplitsACharacterInTwo(String prefix) throws Exception {
         Account account = registered();
         putTelegram(account, Map.of("enabled", true, "chat_id", 42, "min_alert_severity", "low"));
 
-        postEvent(account.id(), alertsEvent(alert(7, "retraction", "high", "\uD83D\uDE00".repeat(3000))))
+        postEvent(account.id(), alertsEvent(alert(7, "retraction", "high", prefix + "\uD83D\uDE00".repeat(3000))))
                 .expectStatus().isOk();
 
         String text = JsonPath.read(telegram.requests().get(0).body(), "$.text");
