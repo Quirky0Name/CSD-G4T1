@@ -86,8 +86,9 @@ public class NotificationSender {
                     .toList();
             return passing.isEmpty() ? Optional.empty() : Optional.of(messages.alerts(event, passing));
         }
-        boolean passes = Levels.reaches(event.changeSeverity(), minChangeSeverity)
-                || Levels.reaches(event.impactLevel(), minImpactLevel);
+        boolean passes = !event.changeSeverity().equals("none")
+                && (Levels.reaches(event.changeSeverity(), minChangeSeverity)
+                || Levels.reaches(event.impactLevel(), minImpactLevel));
         return passes ? Optional.of(messages.report(event)) : Optional.empty();
     }
 

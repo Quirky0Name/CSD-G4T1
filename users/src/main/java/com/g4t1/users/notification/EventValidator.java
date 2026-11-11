@@ -52,6 +52,17 @@ final class EventValidator {
         if (event.impactLevel() != null && !LEVELS.contains(event.impactLevel())) {
             throw badRequest("impact_level must be low, medium, high or null");
         }
+        if (event.changeSeverity().equals("none")) {
+            requireNull("impact_level", event.impactLevel());
+            requireNull("evaluation", event.evaluation());
+            requireNull("recommendation", event.recommendation());
+        }
+    }
+
+    private static void requireNull(String field, String value) {
+        if (value != null) {
+            throw badRequest(field + " must be null when change_severity is none");
+        }
     }
 
     private static ResponseStatusException badRequest(String detail) {

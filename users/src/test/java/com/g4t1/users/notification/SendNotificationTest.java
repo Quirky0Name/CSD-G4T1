@@ -283,7 +283,13 @@ class SendNotificationTest {
                         "change_severity must be none, low, medium or high"),
                 Arguments.of("an unknown impact level", reportEvent("high", "Changed.", "none", null, null),
                         "impact_level must be low, medium, high or null"),
-                Arguments.of("no change summary", noSummary, "change_summary is required"));
+                Arguments.of("no change summary", noSummary, "change_summary is required"),
+                Arguments.of("an impact level on a none change", reportEvent("none", "Nothing changed.", "high", null, null),
+                        "impact_level must be null when change_severity is none"),
+                Arguments.of("an evaluation on a none change", reportEvent("none", "Nothing changed.", null, "Fine.", null),
+                        "evaluation must be null when change_severity is none"),
+                Arguments.of("a recommendation on a none change", reportEvent("none", "Nothing changed.", null, null, "Do x."),
+                        "recommendation must be null when change_severity is none"));
     }
 
     @Test
