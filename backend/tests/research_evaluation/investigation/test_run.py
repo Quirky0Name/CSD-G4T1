@@ -783,6 +783,7 @@ async def test_an_opened_report_posts_its_alerts_to_the_owner(client, sm, um, ex
     assert request.extensions["timeout"]["read"] == 30
     [(user_id, body)] = um.notifications
     assert str(user_id) == report["owner_id"]
+    alerts = body.pop("alerts")
     assert body == {
         "event": "alerts",
         "paper": {
@@ -791,12 +792,14 @@ async def test_an_opened_report_posts_its_alerts_to_the_owner(client, sm, um, ex
             "doi": PAPER_DOI,
         },
         "report_id": report_id,
-        "alerts": [
-            {key: alert[key] for key in ("id", "change_type", "alert_severity", "description")}
-            for alert in report["alerts"]
-        ],
     }
-    assert len(body["alerts"]) == 2
+    assert {(alert["change_type"], alert["alert_severity"]) for alert in alerts} == {
+        ("retraction", "high"),
+        ("correction", "medium"),
+    }
+    assert len(alerts) == 2
+    stored = {alert["id"]: alert["description"] for alert in report["alerts"]}
+    assert {alert["id"]: alert["description"] for alert in alerts} == stored
 
 
 @pytest.mark.parametrize(
