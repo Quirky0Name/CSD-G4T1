@@ -1,8 +1,8 @@
 # RAG over a paper's past alerts, reports and report documents
 
-**Status:** draft
+**Status:** approved
 
-**Base commit:** not set
+**Base commit:** `f5e7ef8f66f69ab9a21ef8749e3cf9ee8945f941`
 
 **Repo:** `D:\SMU\CS203\project\CSD-G4T1`
 
