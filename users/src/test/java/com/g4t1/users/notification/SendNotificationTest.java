@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -65,6 +66,9 @@ class SendNotificationTest {
 
     @Value("${users.jwt-secret}")
     private String jwtSecret;
+
+    @Autowired
+    private NotificationPreferencesRepository preferences;
 
     private RestTestClient client;
 
@@ -248,6 +252,74 @@ class SendNotificationTest {
 
         String text = JsonPath.read(telegram.requests().get(0).body(), "$.text");
         assertThat(text).endsWith("\uD83D\uDE00\u2026").hasSizeLessThanOrEqualTo(4096);
+    }
+
+    @ParameterizedTest(name = "{0} is a 400")
+    @MethodSource("badEvents")
+    void anEventBreakingTheRulesIsABadRequestNamingTheField(String name, Map<String, Object> event, String detail) throws Exception {
+        Account account = registered();
+
+        postEvent(account.id(), event)
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.detail").isEqualTo(detail);
+    }
+
+    static Stream<Arguments> badEvents() {
+        Map<String, Object> noEvent = new HashMap<>(alertsEvent(alert(7, "retraction", "high", "Retracted.")));
+        noEvent.remove("event");
+        Map<String, Object> noPaper = new HashMap<>(alertsEvent(alert(7, "retraction", "high", "Retracted.")));
+        noPaper.remove("paper");
+        Map<String, Object> noSummary = reportEvent("high", null, "low", null, null);
+        return Stream.of(
+                Arguments.of("an unknown event", Map.of("event", "digest", "paper", paper()),
+                        "event must be alerts or report_assessed"),
+                Arguments.of("no event", noEvent, "event must be alerts or report_assessed"),
+                Arguments.of("no paper", noPaper, "paper is required"),
+                Arguments.of("no alerts", alertsEvent(), "alerts must have at least one alert"),
+                Arguments.of("an unknown alert severity", alertsEvent(alert(7, "retraction", "critical", "Retracted.")),
+                        "alert_severity must be low, medium or high"),
+                Arguments.of("an unknown change severity", reportEvent("severe", "Changed.", "low", null, null),
+                        "change_severity must be none, low, medium or high"),
+                Arguments.of("an unknown impact level", reportEvent("high", "Changed.", "none", null, null),
+                        "impact_level must be low, medium, high or null"),
+                Arguments.of("no change summary", noSummary, "change_summary is required"));
+    }
+
+    @Test
+    void anUnknownUserIs404() throws Exception {
+        UUID unknown = UUID.randomUUID();
+
+        postEvent(unknown.toString(), alertsEvent(alert(7, "retraction", "high", "Retracted.")))
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.detail").isEqualTo("No user " + unknown);
+    }
+
+    // the dev mode admin has an account and no preferences row once it was created after the migration
+    @Test
+    void anAccountWithNoPreferencesRowIs404() throws Exception {
+        Account account = registered();
+        preferences.deleteById(UUID.fromString(account.id()));
+
+        postEvent(account.id(), alertsEvent(alert(7, "retraction", "high", "Retracted.")))
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.detail").isEqualTo("No user " + account.id());
+    }
+
+    @Test
+    void aUserTokenCannotPostAnEvent() throws Exception {
+        Account account = registered();
+
+        client.post().uri("/internal/users/" + account.id() + "/notifications")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + account.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(alertsEvent(alert(7, "retraction", "high", "Retracted.")))
+                .exchange()
+                .expectStatus().isForbidden();
+
+        assertThat(mail.getReceivedMessages()).isEmpty();
     }
 
     private static Map<String, Object> alert(int id, String changeType, String severity, String description) {

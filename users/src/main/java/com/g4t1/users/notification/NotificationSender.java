@@ -32,6 +32,7 @@ public class NotificationSender {
     }
 
     public NotificationOutcomes send(UUID userId, NotificationEvent event) {
+        EventValidator.check(event);
         User user = users.findById(userId).orElseThrow(() -> noUser(userId));
         NotificationPreferences prefs = preferences.findById(userId).orElseThrow(() -> noUser(userId));
         Map<String, Outcome> channels = new LinkedHashMap<>();
