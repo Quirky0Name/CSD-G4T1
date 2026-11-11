@@ -1,25 +1,36 @@
 package com.g4t1.users.notification;
 
 import com.jayway.jsonpath.JsonPath;
+import com.g4t1.users.StorageStub;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static com.g4t1.users.TestTokens.adminToken;
+import static com.g4t1.users.TestTokens.badTokens;
+import static com.g4t1.users.TestTokens.serviceToken;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // GET and PUT /auth/me/notifications: a researcher reading and replacing their own notification preferences
@@ -27,11 +38,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 class NotificationPreferencesTest {
 
+    private static final StorageStub storage = new StorageStub();
+
+    @DynamicPropertySource
+    static void pointAtTheStub(DynamicPropertyRegistry registry) {
+        registry.add("users.storage-url", storage::url);
+    }
+
+    @AfterAll
+    static void stopStorage() {
+        storage.stop();
+    }
+
     @LocalServerPort
     private int port;
 
     @Value("${users.jwt-secret}")
     private String jwtSecret;
+
+    @Autowired
+    private NotificationPreferencesRepository preferences;
+
+    @Autowired
+    private JdbcTemplate jdbc;
 
     private RestTestClient client;
 
@@ -147,6 +176,63 @@ class NotificationPreferencesTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.telegram.chat_id").isEqualTo(null);
+    }
+
+    @Test
+    void aMissingOrBadTokenIsUnauthorizedOnEveryEndpoint() {
+        for (String channel : List.of("email", "telegram")) {
+            client.put().uri("/auth/me/notifications/" + channel).contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("enabled", false)).exchange().expectStatus().isUnauthorized();
+        }
+        client.get().uri("/auth/me/notifications").exchange().expectStatus().isUnauthorized();
+        for (String token : badTokens(jwtSecret)) {
+            get(token).expectStatus().isUnauthorized();
+            putEmail(token, Map.of("enabled", false)).expectStatus().isUnauthorized();
+            putTelegram(token, Map.of("enabled", false)).expectStatus().isUnauthorized();
+        }
+    }
+
+    @Test
+    void anAdminOrServiceTokenIsForbiddenOnEveryEndpoint() {
+        for (String token : List.of(adminToken(jwtSecret), serviceToken(jwtSecret))) {
+            get(token).expectStatus().isForbidden();
+            putEmail(token, Map.of("enabled", false)).expectStatus().isForbidden();
+            putTelegram(token, Map.of("enabled", false)).expectStatus().isForbidden();
+        }
+    }
+
+    // the token outlives the account by up to its lifetime; a 401 makes the frontend sign it out
+    @Test
+    void aTokenWhoseAccountWasDeletedIsUnauthorizedOnEveryEndpoint() {
+        Account account = registered();
+        jdbc.update("delete from users.users where id = ?", UUID.fromString(account.id()));
+
+        get(account.token())
+                .expectStatus().isUnauthorized()
+                .expectBody().jsonPath("$.detail").isEqualTo("Your account no longer exists");
+        putEmail(account.token(), Map.of("enabled", false))
+                .expectStatus().isUnauthorized()
+                .expectBody().jsonPath("$.detail").isEqualTo("Your account no longer exists");
+        putTelegram(account.token(), Map.of("enabled", false))
+                .expectStatus().isUnauthorized()
+                .expectBody().jsonPath("$.detail").isEqualTo("Your account no longer exists");
+    }
+
+    // read through the repository: no reply can show the row is gone
+    @Test
+    void deletingYourAccountDeletesYourPreferences() {
+        Account account = registered();
+        UUID id = UUID.fromString(account.id());
+        assertThat(preferences.existsById(id)).isTrue();
+
+        client.method(HttpMethod.DELETE).uri("/auth/me")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + account.token())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("password", "correct horse battery"))
+                .exchange()
+                .expectStatus().isNoContent();
+
+        assertThat(preferences.existsById(id)).isFalse();
     }
 
     @ParameterizedTest(name = "{0}")
