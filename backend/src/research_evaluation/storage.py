@@ -5,6 +5,7 @@ handle communitcation with SM
 - POST alerts
 - open a report, POST its documents, mark it investigated (investigation)
 - read a report by id, the paper's details and PDFs, the draft, and store the evaluation (impact)
+- store the embedded chunks of a report, its alerts and its documents (impact)
 
 handle HTTP codes
 """
@@ -68,6 +69,7 @@ class AlertInReport(BaseModel):
     change_key: str
     alert_severity: str
     description: str
+    recommendation: str | None = None
     notice_doi: str | None = None
     detected_at: datetime
 
@@ -105,6 +107,8 @@ class Report(BaseModel):
     paper_id: UUID
     owner_id: UUID | None = None
     status: str
+    # when the report was opened; optional, so an older response still reads
+    created_at: datetime | None = None
     alerts: list[AlertInReport]
     documents: list[DocumentInReport]
 
@@ -281,3 +285,24 @@ def _detail(response: httpx.Response) -> str | None:
     except ValueError:
         return None
     return body.get("detail") if isinstance(body, dict) else None
+
+
+async def store_chunks(
+    http: httpx.AsyncClient,
+    source_type: str,
+    source_id: str,
+    embed_model: str,
+    chunks: list[dict[str, Any]],
+) -> None:
+    """Replaces every stored chunk of one source (`PUT /internal/chunks`); each chunk is
+    `content`, `page` (or None) and its `embedding`. Raises on any error status."""
+    response = await http.put(
+        "/internal/chunks",
+        json={
+            "source_type": source_type,
+            "source_id": source_id,
+            "embed_model": embed_model,
+            "chunks": chunks,
+        },
+    )
+    response.raise_for_status()
