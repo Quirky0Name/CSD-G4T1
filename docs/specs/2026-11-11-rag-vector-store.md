@@ -368,7 +368,7 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
 - **Blocked by:** none.
 - **Branch:** `feat/rag-report-context-chunks`.
 - **Order on branch:** 1.
-- **Files:** `storage/src/main/resources/db/migration/V14__add_report_context_chunks.sql`, `storage/src/main/java/com/g4t1/storage/report/` (evaluation request, `ReportService.recordEvaluation`, `UserReportResponse`), `storage/src/test/java/com/g4t1/storage/report/`.
+- **Files:** `storage/src/main/resources/db/migration/V14__add_report_context_chunks.sql`, `storage/src/main/java/com/g4t1/storage/report/` (evaluation request, `ReportService.recordEvaluation`, `UserReportResponse`, `Report`, `ReportRepository.recordEvaluation`), `storage/src/test/java/com/g4t1/storage/report/` (`ReportControllerTest` new; `ReportServiceRaceTest`'s mock takes the new argument).
 - **Seams:**
   - `PUT /internal/reports/{id}/evaluation`: catches that `context_chunks` is accepted, and stored as null when absent; misses what the frontend does with it (out of scope).
   - `GET /papers/{id}/reports`: catches the round trip, returned as a JSON array; misses nothing this subtask adds.
@@ -377,13 +377,15 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - Absent or `null` in the `PUT` stores null; reports assessed before V14 return null. Source: user (confirmed).
   - V14, not V13: V13 is the chunks migration in the vendor folders. `transient`.
 - **Acceptance criteria:**
-  - [ ] An evaluation `PUT` with `context_chunks` of 2 items, then `GET /papers/{id}/reports`, returns the same 2 items: `ReportControllerTest#contextChunksRoundTrip`.
-  - [ ] A `PUT` without `context_chunks` returns `null` for it: `ReportControllerTest#contextChunksAbsent`.
-  - [ ] `./mvnw test` passes.
+  - [x] An evaluation `PUT` with `context_chunks` of 2 items, then `GET /papers/{id}/reports`, returns the same 2 items: `ReportControllerTest#contextChunksRoundTrip`.
+  - [x] A `PUT` without `context_chunks` returns `null` for it: `ReportControllerTest#contextChunksAbsent`.
+  - [x] `./mvnw test` passes.
 - **Doc deltas:**
   - CONTRACTS.md: `context_chunks` in `PUT /internal/reports/{id}/evaluation` and `GET /papers/{id}/reports` (I5).
   - STORAGE.md, "Reports and documents": `context_chunks` (V14), stored as sent.
   - ARCHITECTURE.md, Data model: `reports` row gains V14.
+  - STORAGE.md, "Reports and documents": an empty `context_chunks` list is kept as `[]` (only absent or `null` stores null), so a report that found no past is told apart from one assessed before V14.
+  - CONTRACTS.md: `context_chunks` is returned only in `GET /papers/{id}/reports`, not in `GET /internal/reports/{id}`, since only a frontend shows it.
 
 ### S6. Impact adds the paper's past to steps 1 and 2
 
