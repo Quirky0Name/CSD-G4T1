@@ -238,3 +238,15 @@ def test_a_dotenv_with_settings_the_service_no_longer_reads_still_loads(tmp_path
     settings = ResearchEvaluationSettings(_env_file=env_file)
 
     assert settings.jwt_secret.get_secret_value() == TEST_JWT_KEY
+
+
+def test_the_embed_model_defaults_to_gemini_embedding_001_and_comes_from_the_environment(
+    monkeypatch,
+):
+    default = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+    assert default.embed_model == "gemini-embedding-001"
+
+    monkeypatch.setenv("EMBED_MODEL", "gemini-embedding-002")
+
+    settings = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
+    assert settings.embed_model == "gemini-embedding-002"

@@ -18,6 +18,7 @@ DEFAULT_GEMINI_MODEL = "gemini-flash-latest"
 # not gemini-3.8-flash (what gemini-flash-latest resolves to) nor gemini-2.5-flash (gone for new
 # keys): docs/EVALUATION.md, "Impact"
 DEFAULT_GEMINI_FALLBACK_MODELS = ("gemini-flash-lite-latest",)
+DEFAULT_EMBED_MODEL = "gemini-embedding-001"
 
 
 class ResearchEvaluationSettings(BaseSettings):
@@ -47,6 +48,9 @@ class ResearchEvaluationSettings(BaseSettings):
     gemini_fallback_models: Annotated[list[str], NoDecode] = list(DEFAULT_GEMINI_FALLBACK_MODELS)
     # how long impact waits for one Gemini call; it runs after investigation, in the background
     impact_llm_timeout_seconds: float = Field(default=120, gt=0)
+    # the Gemini model past alerts, reports and documents are embedded with, at 1536 dimensions
+    # (docs/EVALUATION.md, "Embeddings"); uses GEMINI_API_KEY
+    embed_model: str = DEFAULT_EMBED_MODEL
 
     @field_validator("jwt_secret", mode="before")
     @classmethod
