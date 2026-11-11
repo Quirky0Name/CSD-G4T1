@@ -361,6 +361,8 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - EVALUATION.md, "Embeddings": "the report's date" in the document prefix is the report's `created_at`, now read into `Report.created_at`; `AlertInReport` gains `recommendation` (already in Storage Management's response) for the alert chunk.
   - EVALUATION.md, "Embeddings": a PDF page with no extractable text (a scan) gives no chunk; a page over 8000 characters is cut with `chunk_text(size=8000)`, keeping the 400-character overlap.
   - EVALUATION.md, "Embeddings": a PDF wins over `text` when a document has both; notices never have a PDF, so theirs come from `text`.
+  - EVALUATION.md, "Embeddings": NUL characters are dropped from a PDF page's extracted text, because Postgres `text` rejects them and the whole document would otherwise get no chunks (code review).
+  - EVALUATION.md, "Embeddings": each source's chunk text is built in a worker thread (`asyncio.to_thread`), so `pypdf` reading a long PDF doesn't stall the event loop (code review).
 
 ### S7. Storage Management keeps a report's context chunks
 
@@ -448,6 +450,7 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - EVALUATION.md, "Impact": the query is the alert lines joined by newlines (`<change_type> <notice_doi or "no notice"> <description>`), then each notice's `text`, cut to the first 8000 characters.
   - EVALUATION.md, "Impact": `context_chunks` is sent with every evaluation, the placeholder and change severity `none` included, since steps 1 and 2 had the chunks either way.
   - EVALUATION.md, "Impact": the embedder that stores a report's chunks also embeds the query (`ImpactContext.embedder`); with none, no history is read.
+  - EVALUATION.md, "Impact": a report with no alerts and no notice text has an empty query, so nothing is embedded or searched and `history` is `none`, not `failed` (code review).
 
 ## Human checks
 
