@@ -4,6 +4,7 @@ import { useState, type DragEvent, type ChangeEvent } from 'react'
 import { errorMessage, trackPaperByDoi, uploadPaperPdf } from '../api'
 import { useTracking } from '../tracking'
 import { useToast } from './Toasts'
+import { DIALOG_FRAME, DIALOG_PANEL, errorPanel, ghostPill, iconButton, inputClasses, labelClasses, primaryPill } from '../ui'
 
 type TrackPaperDialogProps = {
   open: boolean
@@ -78,20 +79,20 @@ function TrackPaperDialog({ open, onClose, projectId }: TrackPaperDialogProps) {
 
   return (
     <Dialog open={open} onClose={handleClose} className="relative z-50">
-      <DialogBackdrop className="fixed inset-0 bg-black/70" />
-      <div className="fixed inset-0 flex items-center justify-center p-4 sm:p-6">
-        <DialogPanel className="w-full max-w-xl rounded-lg border border-white/10 bg-gray-900 p-6 text-gray-100 shadow-lg sm:p-8">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <DialogTitle className="text-lg font-semibold text-white">Track a paper</DialogTitle>
-              <p className="mt-1 text-sm text-gray-400">
+      <DialogBackdrop transition className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-200 data-closed:opacity-0" />
+      <div className={DIALOG_FRAME}>
+        <DialogPanel className={`${DIALOG_PANEL} max-w-xl`}>
+          <div className="flex items-start gap-4">
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="text-xl/8 font-semibold tracking-tight text-white">Track a paper</DialogTitle>
+              <p className="mt-1 text-sm/6 text-gray-400">
                 Upload a paper's PDF or enter its DOI to track it for changes.
               </p>
             </div>
             <button
               type="button"
               onClick={handleClose}
-              className="rounded-md p-1 text-gray-400 hover:bg-white/5 hover:text-white"
+              className={`-mt-1 -mr-2 ${iconButton}`}
             >
               <span className="sr-only">Close upload dialog</span>
               <XMarkIcon aria-hidden="true" className="size-5" />
@@ -106,7 +107,7 @@ function TrackPaperDialog({ open, onClose, projectId }: TrackPaperDialogProps) {
             }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
-            className={`mt-8 flex min-h-56 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-6 py-8 text-center transition-colors ${
+            className={`mt-6 flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-8 text-center transition-colors focus-within:outline-2 focus-within:outline-indigo-400 sm:min-h-52 short:min-h-32 short:py-4 ${
               doi.trim().length > 0
                 ? 'cursor-not-allowed border-white/10 bg-gray-950/40 opacity-50'
                 : isDragging
@@ -132,7 +133,9 @@ function TrackPaperDialog({ open, onClose, projectId }: TrackPaperDialogProps) {
               </>
             ) : (
               <>
-                <ArrowUpTrayIcon aria-hidden="true" className="size-10 text-gray-300" />
+                <span className="grid size-12 place-items-center rounded-full bg-indigo-500/10 text-indigo-300">
+                  <ArrowUpTrayIcon aria-hidden="true" className="size-6" />
+                </span>
                 <p className="mt-4 text-sm font-medium text-white">
                   Drag and drop a PDF, or choose a file
                 </p>
@@ -148,8 +151,8 @@ function TrackPaperDialog({ open, onClose, projectId }: TrackPaperDialogProps) {
           </div>
 
           <div className="mt-6">
-            <label htmlFor="paper-doi" className="block text-sm font-medium text-white">
-              Upload by DOI
+            <label htmlFor="paper-doi" className={labelClasses}>
+              Track by DOI
             </label>
             <input
               id="paper-doi"
@@ -158,32 +161,22 @@ function TrackPaperDialog({ open, onClose, projectId }: TrackPaperDialogProps) {
               onChange={handleDoiChange}
               disabled={selectedFile !== null}
               placeholder="e.g. 10.1000/xyz123"
-              className="mt-2 block w-full rounded-md border border-white/15 bg-gray-950/60 px-3 py-2 text-sm text-white placeholder:text-gray-500 outline-none focus:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
+              className={`mt-1.5 ${inputClasses}`}
             />
           </div>
 
           {error && (
-            <p className="mt-4 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">
+            <p role="alert" className={`animate-reveal mt-4 ${errorPanel}`}>
               {error}
             </p>
           )}
 
-          <div className="mt-8 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={submitting}
-              className="rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-xs inset-ring inset-ring-white/10 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
-            >
+          <div className="mt-8 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3 short:mt-5">
+            <button type="button" onClick={handleClose} disabled={submitting} className={ghostPill}>
               Cancel
             </button>
-            <button
-              type="button"
-              disabled={!canImport}
-              onClick={() => void handleImport()}
-              className="rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {submitting ? 'Importing…' : 'Import'}
+            <button type="button" disabled={!canImport} onClick={() => void handleImport()} className={`${primaryPill} disabled:cursor-not-allowed`}>
+              {submitting ? 'Importing…' : 'Track paper'}
             </button>
           </div>
         </DialogPanel>

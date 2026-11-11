@@ -13,6 +13,8 @@ import PdfPane, { type PaneResult } from '../highlight/PdfPane'
 import { sourceFor } from '../highlight/sources'
 import TextPane from '../highlight/TextPane'
 import { useTracking } from '../tracking'
+import { NotFound } from '../components/Page'
+import { badge, errorPanel } from '../ui'
 
 const KIND_ORDER: ClaimKind[] = ['change', 'impact', 'action']
 const KIND_TAB: Record<ClaimKind, string> = {
@@ -42,7 +44,7 @@ export default function ReportView() {
   if (state.status === 'error') {
     return (
       <Shell>
-        <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">{state.message}</p>
+        <p className={errorPanel}>{state.message}</p>
       </Shell>
     )
   }
@@ -51,10 +53,7 @@ export default function ReportView() {
   const paper = state.papers.find((p) => p.id === paperId)
   if (!report || !paper) {
     return (
-      <Shell>
-        <p className="text-sm/6 text-gray-300">This report doesn't exist or isn't yours.</p>
-        <BackLink to="/reports" />
-      </Shell>
+      <NotFound message="This report doesn't exist or isn't yours." back={{ to: '/reports', label: 'Back to reports' }} />
     )
   }
   return <ReportBody key={report.id} report={report} paper={paper} />
@@ -66,7 +65,10 @@ function Shell({ children }: { children: ReactNode }) {
 
 function BackLink({ to }: { to: string }) {
   return (
-    <Link to={to} className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-400 hover:text-indigo-300">
+    <Link
+      to={to}
+      className="inline-flex items-center gap-1.5 rounded-full py-1 pr-3 pl-2 text-sm font-semibold text-gray-400 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-400"
+    >
       <ArrowLeftIcon aria-hidden="true" className="size-4" />
       Reports
     </Link>
@@ -121,9 +123,9 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
 
   return (
     <main
-      className={`flex flex-col px-4 pt-6 pb-4 text-gray-100 sm:px-6 lg:px-6 ${showClaims ? 'lg:h-dvh lg:pt-3 lg:pb-3' : ''}`}
+      className={`flex flex-col px-4 pt-6 pb-4 text-gray-100 sm:px-6 lg:px-6 ${showClaims ? 'lg:h-[calc(100dvh-4rem)] lg:pt-3 lg:pb-3' : ''}`}
     >
-      <header className="flex flex-col gap-x-4 gap-y-2 lg:flex-row lg:items-center">
+      <header className="animate-rise flex flex-col gap-x-4 gap-y-2 lg:flex-row lg:items-center">
         <div className="shrink-0">
           <BackLink to={`/reports?paper=${report.paper_id}`} />
         </div>
@@ -173,7 +175,7 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
                     type="button"
                     aria-pressed={tab === name}
                     onClick={() => setTab(name)}
-                    className="rounded-md px-3 py-1.5 text-gray-300 hover:text-white aria-pressed:bg-white/10 aria-pressed:text-white focus-visible:outline-2 focus-visible:outline-indigo-500"
+                    className="rounded-full px-4 py-1.5 text-gray-300 outline-1 -outline-offset-1 outline-white/15 transition-colors hover:text-white aria-pressed:bg-indigo-500 aria-pressed:text-white aria-pressed:outline-transparent focus-visible:outline-2 focus-visible:outline-indigo-400"
                   >
                     <span className="text-sm font-semibold">{name === 'draft' ? 'Your draft' : 'Cited source'}</span>
                   </button>
@@ -204,7 +206,7 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
                 />
               )}
               {selected && !draftPassage && !sourcePassage && (
-                <div className="rounded-md bg-gray-900 outline -outline-offset-1 outline-white/10">
+                <div className="rounded-2xl bg-gray-900 outline-1 -outline-offset-1 outline-white/10">
                   <Muted>No quote to show for this point.</Muted>
                 </div>
               )}
@@ -271,7 +273,7 @@ function samePassage(a: Passage, b: Passage | undefined): boolean {
 
 function Badge({ className, children }: { className: string; children: ReactNode }) {
   return (
-    <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-xs font-medium inset-ring ${className}`}>{children}</span>
+    <span className={`${badge} ${className}`}>{children}</span>
   )
 }
 
@@ -322,11 +324,11 @@ function ClaimList({
 
   return (
     <TabGroup selectedIndex={selected ? kinds.indexOf(selected.kind) : 0} onChange={selectTab}>
-      <TabList className="flex gap-1 rounded-lg bg-white/5 p-1">
+      <TabList className="flex gap-1 rounded-full bg-white/5 p-1 outline-1 -outline-offset-1 outline-white/10">
         {kinds.map((kind) => (
           <Tab
             key={kind}
-            className="flex-auto rounded-md px-2 py-1.5 whitespace-nowrap text-gray-400 hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-500 data-selected:bg-white/10 data-selected:text-white"
+            className="flex-auto rounded-full px-3 py-1.5 whitespace-nowrap text-gray-400 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-400 data-selected:bg-indigo-500 data-selected:text-white data-selected:shadow-[0_8px_20px_-8px_rgba(99,102,241,0.8)]"
           >
             <span className="text-sm/5 font-semibold">{KIND_TAB[kind]}</span>{' '}
             <span className="text-xs/5 tabular-nums opacity-70">{groupOf(kind).length}</span>
@@ -361,8 +363,8 @@ function ClaimItem({ claim, active, onClaim }: { claim: Claim; active: boolean; 
         type="button"
         aria-pressed={active}
         onClick={onClaim}
-        className={`w-full rounded-md px-3 py-2.5 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-500 ${
-          active ? 'bg-white/10 outline -outline-offset-1 outline-indigo-400/60' : 'hover:bg-white/5'
+        className={`w-full rounded-xl px-3.5 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-400 ${
+          active ? 'bg-indigo-500/12 outline-1 -outline-offset-1 outline-indigo-400' : 'outline-1 -outline-offset-1 outline-transparent hover:bg-white/5 hover:outline-white/15'
         }`}
       >
         <span className={`block text-sm/6 ${active ? 'text-white' : 'text-gray-300'}`}>{claim.text}</span>
@@ -408,7 +410,7 @@ function PassagePane({
 
   return (
     <div
-      className={`${hidden ? 'hidden lg:flex' : 'flex'} h-[70dvh] min-h-[26rem] flex-col overflow-hidden rounded-md bg-gray-900 outline -outline-offset-1 outline-white/10 lg:h-auto lg:min-h-40 lg:flex-1 lg:basis-0`}
+      className={`${hidden ? 'hidden lg:flex' : 'flex'} h-[70dvh] min-h-[26rem] flex-col overflow-hidden rounded-2xl bg-gray-900 outline-1 -outline-offset-1 outline-white/10 lg:h-auto lg:min-h-40 lg:flex-1 lg:basis-0`}
     >
       <div className="flex min-h-9 items-center justify-between gap-3 border-b border-white/10 px-4 py-0.5">
         <h2 title={heading} className="min-w-0 truncate text-sm/6 font-semibold text-white">
@@ -512,7 +514,7 @@ function Muted({ children, quote }: { children: ReactNode; quote?: string }) {
     <div className="p-4">
       {children && <p className="text-sm/6 text-gray-400">{children}</p>}
       {quote && (
-        <blockquote className="mt-3 rounded-md bg-white/5 px-3 py-2 text-sm/6 text-gray-300">“{quote}”</blockquote>
+        <blockquote className="mt-3 rounded-xl bg-white/5 px-3.5 py-2.5 text-sm/6 text-gray-300">“{quote}”</blockquote>
       )}
     </div>
   )

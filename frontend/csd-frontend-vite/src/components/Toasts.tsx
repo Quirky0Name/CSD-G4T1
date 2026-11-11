@@ -76,7 +76,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <div className="pointer-events-auto w-full max-w-sm rounded-lg bg-gray-800 shadow-lg outline outline-white/10">
+              <div className="pointer-events-auto w-full max-w-sm rounded-2xl bg-gray-800/95 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.8)] outline-1 -outline-offset-1 outline-white/10 backdrop-blur-md">
                 <div className="flex items-start gap-3 p-4">
                   <Icon
                     aria-hidden="true"
@@ -91,7 +91,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                           toast.action?.onClick()
                           dismiss(toast.id)
                         }}
-                        className="mt-1 block font-semibold text-indigo-400 hover:text-indigo-300"
+                        className="mt-1 block rounded font-semibold text-indigo-400 hover:text-indigo-300 focus-visible:outline-2 focus-visible:outline-indigo-400"
                       >
                         {toast.action.label}
                       </button>
@@ -100,7 +100,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   <button
                     type="button"
                     onClick={() => dismiss(toast.id)}
-                    className="flex-none text-gray-500 hover:text-white"
+                    className="-m-1 flex-none rounded-full p-1 text-gray-400 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-400"
                   >
                     <span className="sr-only">Dismiss</span>
                     <XMarkIcon aria-hidden="true" className="size-5" />

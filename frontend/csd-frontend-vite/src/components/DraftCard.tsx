@@ -4,6 +4,10 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { deleteDraft, errorMessage, getDraft, uploadDraft, type Draft } from '../api'
 import { formatDateTime } from '../format'
 import { useToast } from './Toasts'
+import { ActionButton } from './ActionButton'
+import { Loading, Section } from './Page'
+import { PencilSquareIcon } from '@heroicons/react/24/outline'
+import { errorPanel, iconButton } from '../ui'
 
 type LoadState = { status: 'loading' } | { status: 'ready'; draft: Draft | null }
 
@@ -69,10 +73,7 @@ const DraftCard = ({ projectId }: { projectId?: string }) => {
   const draft = state.status === 'ready' ? state.draft : null
 
   return (
-    <div className="mt-10">
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <h3 className="text-sm/6 font-semibold text-white">Draft</h3>
-      </div>
+    <Section id="draft-heading" title="Your draft" icon={PencilSquareIcon} index={1}>
 
       {/* Hidden input shared by both "Upload draft" and "Replace draft" */}
       <input
@@ -84,25 +85,22 @@ const DraftCard = ({ projectId }: { projectId?: string }) => {
       />
 
       {state.status === 'loading' ? (
-        <div className="flex min-h-32 items-center justify-center rounded-xl border border-dashed border-white/10 px-6 text-center">
-          <p className="text-sm/6 text-gray-400">Loading your draft…</p>
-        </div>
+        <Loading label="Loading your draft…" />
       ) : !draft ? (
-        <div className="flex min-h-32 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 px-6 text-center">
-          <DocumentArrowUpIcon aria-hidden="true" className="mx-auto size-8 text-gray-500" />
-          <h3 className="mt-3 text-sm/6 font-semibold text-white">No draft uploaded yet</h3>
-          <p className="mt-1 text-sm/6 text-gray-400">Upload your draft as a PDF so impact can be judged against it.</p>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={handleUploadClick}
-            className="mt-4 inline-flex items-center rounded-md bg-indigo-500 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-white/5 text-gray-400">
+            <DocumentArrowUpIcon aria-hidden="true" className="size-6" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm/6 font-semibold text-white">No draft uploaded yet</h3>
+            <p className="text-sm/6 text-gray-400">Upload your draft as a PDF so impact can be judged against it.</p>
+          </div>
+          <ActionButton disabled={busy} onClick={handleUploadClick}>
             {busy ? 'Uploading…' : 'Upload draft'}
-          </button>
+          </ActionButton>
         </div>
       ) : (
-        <div className="flex min-h-32 items-start gap-x-4 rounded-xl bg-gray-800/50 p-6 outline outline-white/10">
+        <div className="flex items-start gap-x-4">
           {/* Draft preview thumbnail */}
           <div className="flex h-20 w-16 flex-none flex-col gap-1 rounded-sm bg-white p-2 shadow-md">
             <div className="h-1 w-full rounded-full bg-gray-300" />
@@ -125,20 +123,19 @@ const DraftCard = ({ projectId }: { projectId?: string }) => {
           </div>
 
           <Menu as="div" className="relative ml-auto flex-none">
-            <MenuButton disabled={busy} className="relative block text-gray-400 hover:text-white disabled:opacity-50">
-              <span className="absolute -inset-2.5" />
+            <MenuButton disabled={busy} className={iconButton}>
               <span className="sr-only">Open options for {draft.filename}</span>
               <EllipsisHorizontalIcon aria-hidden="true" className="size-5" />
             </MenuButton>
             <MenuItems
               transition
-              className="absolute right-0 z-10 mt-0.5 w-36 origin-top-right rounded-md bg-gray-800 py-2 shadow-lg outline outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
+              className="absolute right-0 z-10 mt-1 w-40 origin-top-right rounded-2xl bg-gray-800 p-1.5 shadow-lg outline-1 -outline-offset-1 outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
             >
               <MenuItem>
                 <button
                   type="button"
                   onClick={handleUploadClick}
-                  className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
+                  className="block w-full rounded-xl px-3 py-2 text-left text-sm/6 text-white data-focus:bg-white/5"
                 >
                   Replace draft<span className="sr-only">, {draft.filename}</span>
                 </button>
@@ -147,7 +144,7 @@ const DraftCard = ({ projectId }: { projectId?: string }) => {
                 <button
                   type="button"
                   onClick={() => void handleRemove()}
-                  className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
+                  className="block w-full rounded-xl px-3 py-2 text-left text-sm/6 text-white data-focus:bg-white/5"
                 >
                   Remove<span className="sr-only">, {draft.filename}</span>
                 </button>
@@ -158,11 +155,9 @@ const DraftCard = ({ projectId }: { projectId?: string }) => {
       )}
 
       {error && (
-        <p className="mt-3 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">
-          {error}
-        </p>
+        <p className={`mt-3 ${errorPanel}`}>{error}</p>
       )}
-    </div>
+    </Section>
   )
 }
 

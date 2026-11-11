@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeftIcon, ArrowPathIcon, CalendarIcon, PlusIcon } from '@heroicons/react/20/solid'
+import { useParams } from 'react-router-dom'
+import { ArrowPathIcon, CalendarIcon, PlusIcon } from '@heroicons/react/20/solid'
 import { deletePaper, errorMessage, listProjects, runPoll, type PollSummary } from '../api'
 import { formatDateTime } from '../format'
 import { useTracking } from '../tracking'
@@ -8,6 +8,10 @@ import { useToast, type ToastTone } from '../components/Toasts'
 import TrackedPaperList from '../components/TrackedPaperList'
 import TrackPaperDialog from '../components/TrackPaperDialog'
 import DraftCard from '../components/DraftCard'
+import { ActionButton } from '../components/ActionButton'
+import { Loading, NotFound, Page, PageHeader } from '../components/Page'
+import { NewAlertsNote } from './Projects'
+import { errorPanel } from '../ui'
 
 function pollSummaryToast(summary: PollSummary): { tone: ToastTone; message: string } {
   const polled = summary.stored.length
@@ -24,7 +28,6 @@ const DEFAULT_PROJECT_NAME = 'Default project'
 
 function Project() {
   const { projectId } = useParams()
-  const navigate = useNavigate()
   const { state, refresh } = useTracking()
   const showToast = useToast()
   const [uploadOpen, setUploadOpen] = useState(false)
@@ -83,92 +86,64 @@ function Project() {
   }
 
   if (projectId && current && !current.name) {
-    return (
-      <main className="px-4 py-10 sm:px-6 lg:px-8">
-        <p className="text-sm/6 text-gray-300">{current.error ?? "This project doesn't exist or isn't yours."}</p>
-        <Link to="/" className="mt-2 inline-block text-sm font-semibold text-indigo-400 hover:text-indigo-300">
-          Back to projects
-        </Link>
-      </main>
-    )
+    return <NotFound message={current.error ?? "This project doesn't exist or isn't yours."} />
   }
 
+  const papers = state.status === 'ready' ? state.papers.filter((paper) => paper.project_id === (projectId ?? null)) : []
+  const paperIds = new Set(papers.map((paper) => paper.id))
+  const newAlerts = state.status === 'ready' ? state.alerts.filter((alert) => paperIds.has(alert.paper_id) && alert.status === 'new').length : 0
+
   return (
-    <main className="px-4 py-10 sm:px-6 lg:px-8">
-      <div className="lg:flex lg:items-center lg:justify-between">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-2xl/7 font-bold text-white sm:truncate sm:text-3xl sm:tracking-tight">
-            {name ?? '\u00a0'}
-          </h2>
-          {lastPoll && (
-            <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
-              <div className="mt-2 flex items-center text-sm text-gray-400">
-                <CalendarIcon aria-hidden="true" className="mr-1.5 size-5 shrink-0 text-gray-500" />
-                Last polled {formatDateTime(lastPoll.finished_at)}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-5 flex flex-wrap items-center gap-3 lg:mt-0 lg:ml-4">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="inline-flex items-center rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-xs inset-ring inset-ring-white/10 hover:bg-white/20"
-          >
-            <ArrowLeftIcon aria-hidden="true" className="mr-1.5 -ml-0.5 size-5 text-gray-300" />
-            Back to projects
-          </button>
-
-          <button
-            type="button"
-            disabled
-            title="Set on the server (POLL_INTERVAL_HOURS)"
-            className="inline-flex items-center rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-xs inset-ring inset-ring-white/10 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Schedule polls
-          </button>
-
-          <button
-            type="button"
-            disabled={polling}
-            onClick={() => void poll()}
-            className="inline-flex items-center rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <ArrowPathIcon aria-hidden="true" className={`mr-1.5 -ml-0.5 size-5 ${polling ? 'animate-spin' : ''}`} />
-            {polling ? 'Polling…' : 'Poll now'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setUploadOpen(true)}
-            aria-label="Upload PDF"
-            title="Upload PDF"
-            className="cursor-pointer rounded-full bg-indigo-500 p-2 text-white shadow-xs hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
-          >
-            <PlusIcon aria-hidden="true" className="size-5" />
-          </button>
-        </div>
-      </div>
+    <Page>
+      <PageHeader
+        back={{ to: '/', label: 'Projects' }}
+        title={name ?? '\u00a0'}
+        meta={[
+          state.status === 'ready' && `${papers.length} paper${papers.length === 1 ? '' : 's'}`,
+          lastPoll && (
+            <span className="inline-flex items-center gap-1">
+              <CalendarIcon aria-hidden="true" className="size-4 shrink-0 text-gray-500" />
+              Last polled {formatDateTime(lastPoll.finished_at)}
+            </span>
+          ),
+          state.status === 'ready' && <NewAlertsNote count={newAlerts} />,
+        ]}
+        actions={
+          <>
+            <ActionButton disabled title="Set on the server (POLL_INTERVAL_HOURS)">
+              Schedule polls
+            </ActionButton>
+            <ActionButton onClick={() => setUploadOpen(true)}>
+              <PlusIcon aria-hidden="true" className="size-4" />
+              Track paper
+            </ActionButton>
+            <ActionButton tone="primary" disabled={polling} onClick={() => void poll()}>
+              <ArrowPathIcon aria-hidden="true" className={`size-4 ${polling ? 'animate-spin' : ''}`} />
+              {polling ? 'Polling…' : 'Poll now'}
+            </ActionButton>
+          </>
+        }
+      />
 
       <DraftCard projectId={projectId} />
 
-      {state.status === 'loading' && <p className="mt-10 text-sm text-gray-400">Loading tracked papers…</p>}
-      {state.status === 'error' && (
-        <p className="mt-10 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">
-          {state.message}
-        </p>
+      {state.status === 'loading' && (
+        <div className="mt-10">
+          <Loading label="Loading tracked papers…" />
+        </div>
       )}
+      {state.status === 'error' && <p className={`mt-10 ${errorPanel}`}>{state.message}</p>}
       {state.status === 'ready' && (
         <TrackedPaperList
-          papers={state.papers.filter((paper) => paper.project_id === (projectId ?? null))}
+          papers={papers}
           alerts={state.alerts}
           onDelete={(paperId) => void handleDelete(paperId)}
+          onTrack={() => setUploadOpen(true)}
         />
       )}
 
       <TrackPaperDialog open={uploadOpen} onClose={() => setUploadOpen(false)} projectId={projectId} />
-    </main>
+    </Page>
   )
 }
 

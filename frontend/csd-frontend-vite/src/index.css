@@ -3,6 +3,9 @@
 /* The app is always dark, whatever the OS asks for, so dark: styles always apply */
 @custom-variant dark (&:where(:root, :root *));
 
+/* a phone on its side: wide enough for the rail and two panels, too short for their full height */
+@custom-variant short (@media (max-height: 32rem));
+
 :root {
   font-family: ui-sans-serif, system-ui, sans-serif;
   color: #e5e7eb;
@@ -11,6 +14,19 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
+  scrollbar-color: #374151 transparent;
+}
+
+/* the browser's own surfaces, in the desk's palette, everywhere */
+::selection {
+  background: rgb(99 102 241 / 0.4);
+  color: #fff;
+}
+
+input,
+textarea {
+  caret-color: #818cf8;
 }
 
 * {
@@ -105,24 +121,411 @@ select {
   animation: reveal 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* In-app pages borrow the step change: a page's header and its items arrive from below and settle
+   from the same slight blur, one after another (--i is the item's place, capped by the caller). */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(4px);
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+    filter: blur(4px);
+  }
+}
+
+.animate-rise {
+  animation: rise 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/* the penguin. A pose arrives with a small hop; after that it is never quite still: it breathes and
+   sways on its feet, tilts its head, blinks, flaps now and then, taps at its laptop, and hops when a
+   pointer comes over it. Every loop runs from --mascot-delay (a per-penguin negative offset), so
+   penguins sharing a screen don't move in step. Origins are in the drawing's 160x170 units. */
+@keyframes mascot-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.92);
+  }
+}
+
+@keyframes mascot-idle {
+  0%,
+  100% {
+    transform: rotate(0deg) scaleY(1);
+  }
+  25% {
+    transform: rotate(-1.6deg) scaleY(1.014);
+  }
+  50% {
+    transform: rotate(0deg) scaleY(1);
+  }
+  75% {
+    transform: rotate(1.6deg) scaleY(1.014);
+  }
+}
+
+@keyframes mascot-tilt {
+  0%,
+  38%,
+  100% {
+    transform: rotate(0deg) translateX(0);
+  }
+  46%,
+  68% {
+    transform: rotate(-5deg) translateX(-1.5px);
+  }
+  76%,
+  88% {
+    transform: rotate(3deg) translateX(1px);
+  }
+}
+
+@keyframes mascot-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes mascot-flip-l {
+  0%,
+  82%,
+  100% {
+    transform: rotate(0deg);
+  }
+  87% {
+    transform: rotate(14deg);
+  }
+  91% {
+    transform: rotate(-3deg);
+  }
+  95% {
+    transform: rotate(9deg);
+  }
+}
+
+@keyframes mascot-flip-r {
+  0%,
+  82%,
+  100% {
+    transform: rotate(0deg);
+  }
+  87% {
+    transform: rotate(-14deg);
+  }
+  91% {
+    transform: rotate(3deg);
+  }
+  95% {
+    transform: rotate(-9deg);
+  }
+}
+
+@keyframes mascot-wave {
+  0%,
+  44%,
+  100% {
+    transform: rotate(0deg);
+  }
+  11%,
+  33% {
+    transform: rotate(-18deg);
+  }
+  22% {
+    transform: rotate(2deg);
+  }
+}
+
+@keyframes mascot-flap {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-16deg);
+  }
+}
+
+@keyframes mascot-type {
+  0%,
+  44%,
+  100% {
+    transform: rotate(0deg);
+  }
+  8%,
+  24% {
+    transform: rotate(-7deg);
+  }
+  16%,
+  32% {
+    transform: rotate(1deg);
+  }
+}
+
+@keyframes mascot-hop {
+  0%,
+  58%,
+  100% {
+    transform: translateY(0);
+  }
+  68% {
+    transform: translateY(-9px);
+  }
+  76% {
+    transform: translateY(0);
+  }
+  82% {
+    transform: translateY(-3px);
+  }
+  88% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes mascot-ground {
+  0%,
+  58%,
+  76%,
+  88%,
+  100% {
+    transform: scaleX(1);
+  }
+  68% {
+    transform: scaleX(0.82);
+  }
+}
+
+@keyframes mascot-read {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-1.5px) rotate(1.2deg);
+  }
+}
+
+@keyframes mascot-page {
+  0%,
+  78%,
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  86% {
+    transform: scaleX(0.05) skewY(-4deg);
+  }
+  94% {
+    transform: scaleX(-1);
+    opacity: 1;
+  }
+  97% {
+    transform: scaleX(-1);
+    opacity: 0;
+  }
+  98% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+@keyframes mascot-point {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0deg);
+  }
+  70% {
+    transform: rotate(-8deg);
+  }
+  80% {
+    transform: rotate(2deg);
+  }
+  88% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes mascot-mark {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.4) rotate(-20deg);
+  }
+}
+
+@keyframes mascot-mark-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(-6deg);
+  }
+}
+
+@keyframes mascot-hover-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-10px) rotate(-3deg);
+  }
+  65% {
+    transform: translateY(0) scaleY(0.96);
+  }
+}
+
+.animate-mascot-pop {
+  animation: mascot-pop 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.mascot :is(.mascot-page, .mascot-point, .mascot-body, .mascot-face, .mascot-eyes, .mascot-flip-l, .mascot-flip-r, .mascot-wave, .mascot-flap-l, .mascot-flap-r, .mascot-type-l, .mascot-type-r, .mascot-hop, .mascot-ground, .mascot-paper, .mascot-mark, .mascot-hover) {
+  transform-box: view-box;
+}
+
+.mascot:not([data-still]) {
+  --mascot-delay: 0ms;
+
+  .mascot-body {
+    transform-origin: 80px 154px;
+    animation: mascot-idle 5.6s var(--mascot-delay) ease-in-out infinite;
+  }
+
+  .mascot-face {
+    transform-origin: 80px 50px;
+    animation: mascot-tilt 9s var(--mascot-delay) ease-in-out infinite;
+  }
+
+  .mascot-eyes {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: mascot-blink 5.2s var(--mascot-delay) infinite;
+  }
+
+  .mascot-flip-l {
+    transform-origin: 47px 76px;
+    animation: mascot-flip-l 7s var(--mascot-delay) ease-in-out infinite;
+  }
+
+  .mascot-flip-r {
+    transform-origin: 113px 76px;
+    animation: mascot-flip-r 7s calc(var(--mascot-delay) - 2.4s) ease-in-out infinite;
+  }
+
+  .mascot-wave {
+    transform-origin: 112px 96px;
+    animation: mascot-wave 2.6s 300ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+
+  .mascot-flap-l {
+    transform-origin: 48px 96px;
+    animation: mascot-flap 900ms ease-in-out infinite;
+  }
+
+  .mascot-flap-r {
+    transform-origin: 112px 96px;
+    animation: mascot-flap 900ms 450ms ease-in-out infinite reverse;
+  }
+
+  .mascot-type-l {
+    transform-origin: 52px 98px;
+    animation: mascot-type 1.8s var(--mascot-delay) ease-in-out infinite;
+  }
+
+  .mascot-type-r {
+    transform-origin: 108px 98px;
+    animation: mascot-type 1.8s calc(var(--mascot-delay) - 0.13s) ease-in-out infinite reverse;
+  }
+
+  .mascot-page {
+    animation: mascot-page 6.5s var(--mascot-delay) ease-in-out infinite;
+  }
+
+  .mascot-point {
+    animation: mascot-point 3.4s var(--mascot-delay) ease-in-out infinite;
+  }
+
+  .mascot-paper {
+    transform-origin: 80px 120px;
+    animation: mascot-read 4.2s var(--mascot-delay) ease-in-out infinite;
+  }
+
+  .mascot-mark {
+    transform-box: fill-box;
+    transform-origin: bottom center;
+    animation:
+      mascot-mark 520ms 180ms cubic-bezier(0.16, 1, 0.3, 1) both,
+      mascot-mark-bob 2.2s 700ms ease-in-out infinite;
+  }
+
+  .mascot-hover {
+    transform-origin: 80px 158px;
+  }
+}
+
+/* a cheering penguin can't stay on the ground */
+.mascot[data-pose='cheer']:not([data-still]) {
+  .mascot-hop {
+    animation: mascot-hop 2.2s ease-in-out infinite;
+  }
+
+  .mascot-ground {
+    transform-origin: 80px 160px;
+    animation: mascot-ground 2.2s ease-in-out infinite;
+  }
+}
+
+@media (hover: hover) {
+  .mascot:not([data-still]):hover .mascot-hover {
+    animation: mascot-hover-hop 520ms cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+}
+
+/* a dialog rises as a sheet on a phone and settles in place from sm up */
+.animate-dialog {
+  animation: sheet-up 380ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 40rem) {
+  .animate-dialog {
+    animation: dialog-in 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
 /* fewer and gentler: no sliding, blurring or spinning, but the change still reads as a change */
 @media (prefers-reduced-motion: reduce) {
   .animate-step-forward,
   .animate-step-back,
   .animate-badge-pop,
   .animate-count-rise,
-  .animate-reveal {
-    animation: fade-in 160ms ease-out;
+  .animate-reveal,
+  .animate-rise,
+  .animate-mascot-pop,
+  .animate-dialog {
+    animation: fade-in 160ms ease-out both;
+  }
+
+  .mascot * {
+    animation: none !important;
   }
 }
 
-/* the browser's own surfaces on the sign-up card, in the app's palette */
-.signup ::selection {
-  background: rgb(99 102 241 / 0.4);
-  color: #fff;
-}
-
-.signup input,
-.signup textarea {
-  caret-color: #818cf8;
-}
