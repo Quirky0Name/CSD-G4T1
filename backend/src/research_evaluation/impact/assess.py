@@ -35,6 +35,7 @@ from research_evaluation.impact.schemas import (
     Evaluation,
     ImpactAssessment,
     RecommendedActions,
+    prose,
 )
 from research_evaluation.storage import draft_pdf
 
@@ -67,7 +68,7 @@ async def assess(llm: Llm, sm: httpx.AsyncClient, inputs: ReportInputs) -> Evalu
         done["change"] = change.value
         if change.value.severity == "none":
             return Evaluation(
-                change_summary=change.value.summary,
+                change_summary=prose(change.value.summary, change.value.claims),
                 change_severity="none",
                 assessment=assessment,
                 claims=await build_claims(inputs, None, **done),
@@ -97,11 +98,11 @@ async def assess(llm: Llm, sm: httpx.AsyncClient, inputs: ReportInputs) -> Evalu
         evaluation.claims = await build_claims(inputs, draft, **done)
         return evaluation
     return Evaluation(
-        change_summary=change.value.summary,
+        change_summary=prose(change.value.summary, change.value.claims),
         change_severity=change.value.severity,
         impact_level=impact.value.impact_level,
-        evaluation=impact.value.explanation,
-        recommendation=actions.value.recommendation,
+        evaluation=prose(impact.value.explanation, impact.value.claims),
+        recommendation=prose(actions.value.recommendation, actions.value.claims),
         assessment=assessment,
         claims=await build_claims(inputs, draft, **done),
     )

@@ -18,7 +18,7 @@ from research_evaluation.impact.llm import Part, Pdf
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 9
+PROMPT_VERSION = 10
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -74,21 +74,26 @@ Rules:
   missing.
 - A comparison between two documents (a notice's DOI and the paper's) is one
   claim per side, each with its quote.
-- Write the claims first, then build the free text from them: each
-  sentence joins claim texts, changing only pronouns and joining words
-  ("and", "but", "while"). A sentence that isn't made of claim texts comes
-  out, including verdicts such as "the draft is not affected", "the impact
-  is low", "both depend on it" or "the headline result rests on that data"
-  that no claim states with a quote. Never drop a fact the task asks for to
-  satisfy this: back it with the quote that comes closest to stating it.
+- Each step's answer gives its claims first, then its free text as a list
+  of sentences. A sentence is kind "fact" or "advice". A fact lists the
+  numbers of the claims that state it (counting from 1 in this step's
+  claims) and joins their texts, changing only pronouns and joining words
+  ("and", "but", "while"). A fact that lists no claim is removed before the
+  researcher reads it, so every fact you need has its claim. Advice (what
+  to do or check) lists no claims.
+- A verdict is a fact: "the draft is not affected", "the impact is low",
+  "both depend on it", "the headline result rests on that data". It needs a
+  claim whose quote shows it, or it comes out. Never drop a fact the task
+  asks for: back it with the quote that comes closest to stating it.
 - Link a change to the draft by naming the shared fact, not by a verdict:
   "your Introduction quotes the d = 1.8 that the correction changes to
   0.8", which is two claims (the draft's sentence, the notice's), not "the
   correction affects your Introduction", which no single quote shows.
-- Check before you answer: read your free text clause by clause, including
-  what this prompt tells you to say (what is missing, that a judgment is
-  general, that findings may still stand). A factual statement with no claim
-  gets one, or comes out of the text.
+- Check before you answer: read each fact sentence clause by clause,
+  including what this prompt tells you to say (what is missing, that a
+  judgment is general, that findings may still stand). If the claims it
+  lists don't state all of it, add the claim it needs or narrow the
+  sentence.
 - Write for a researcher who knows their field but not publishing
   metadata: plain words, and no DOIs in prose unless needed to tell two
   documents apart."""
@@ -180,18 +185,18 @@ Then, for the report as a whole:
   usually the highest of its alerts, but lower when a later notice resolves
   an earlier one (a lifted concern is none), and none when no alert is
   about this paper.
-- summary: a summary of the changes in two to four sentences, which a
-  researcher can read on its own: what happened to the paper, which parts
-  it touches, and why it is or isn't serious. Give the facts, not a level
-  ("severity is medium"), and no advice on what anyone should do or check:
-  the actions step gives that.
-- claims: one claim per factual statement in your summary. text: the
+- claims: one claim per factual statement your summary will make. text: the
   statement; passages: the quotes that back it, each with its source: a
   notice's DOI, "stored paper" (the STORED PAPER or the TRACKED PAPER's
   details), "current copy", "new version", or "alert <id>" for an alert's
   line in ALERTS. A citation jump, or a retraction flag with no notice, has
   nothing else to quote: quote its alert's line, with source "alert <id>".
-  Leave passages empty only when nothing given shows the statement."""
+  Leave passages empty only when nothing given shows the statement.
+- summary: two to four fact sentences, each listing its claims, which a
+  researcher can read on its own: what happened to the paper, which parts
+  it touches, and why it is or isn't serious. Give the facts, not a level
+  ("severity is medium"), and no advice on what anyone should do or check:
+  the actions step gives that."""
 
 IMPACT_TASK = """\
 TASK: work out how the researcher's draft (the attached PDF) uses the
@@ -246,12 +251,7 @@ uses, and how much the researcher is affected overall.
    | background, critical            | low           | low    | low    |
 
    none when no use is affected or the draft doesn't cite the paper.
-5. explanation: two to five sentences for the researcher: how their draft
-   uses the paper, which of those uses the change touches and why, and how
-   much it matters, naming the sections. Say how much it matters in plain
-   words, without working through the table ("supporting and medium, so
-   low"), and give no advice: the actions step gives that.
-6. claims: one claim per factual statement in your explanation. text: the
+5. claims: one claim per factual statement your explanation will make. text: the
    statement; passages: the quotes that back it, each with its source:
    "draft" for the researcher's draft, "stored paper" for the attached
    STORED PAPER, or a quote CHANGE's claims give, copied with its source.
@@ -270,6 +270,12 @@ uses, and how much the researcher is affected overall.
    the draft doesn't cite is a missing-entry claim, with empty passages, and
    the explanation then says only that the draft doesn't cite it: no
    "so the draft is not affected", and nothing about who wrote the paper.
+6. explanation: two to five fact sentences for the researcher, each listing
+   its claims: how their draft uses the paper, which of those uses the
+   change touches and why, and how much it matters, naming the sections.
+   Say how much it matters in plain words, without working through the
+   table ("supporting and medium, so low"), and give no advice: the actions
+   step gives that.
 
 If there is NO DRAFT: leave the uses empty and cited false, judge the
 impact for a typical researcher who cites the paper as key_evidence, and
@@ -309,17 +315,18 @@ If there is no draft, add an action to upload the draft for this project,
 so the next change can be judged against it, and give that reason in the
 recommendation too.
 
-recommendation: one or two sentences with the gist of the actions, naming
-the fact each one rests on in the words of a CHANGE or IMPACT claim. It adds
-no fact those claims don't state.
-
-claims: one claim per factual statement in your recommendation, including
-the facts its advice rests on. text: the statement; passages: the quotes
-from the CHANGE and IMPACT claims that show that statement, copied with
-their sources; leave out the ones that don't. Copy only those claims'
+claims: one claim per factual statement your recommendation will make,
+including the facts its advice rests on. text: the statement; passages: the
+quotes from the CHANGE and IMPACT claims that show that statement, copied
+with their sources; leave out the ones that don't. Copy only those claims'
 passages, never IMPACT's explanation or a use's reason. A claim of theirs
-with no passages (something missing) is copied with none. The advice to
-upload a draft is not a factual statement and needs no claim."""
+with no passages (something missing) is copied with none.
+
+recommendation: two to four sentences with the gist of the actions: each
+piece of advice is an advice sentence, and the fact it rests on is a fact
+sentence listing its claim, in the words of a CHANGE or IMPACT claim. It
+adds no fact those claims don't state. The advice to upload a draft is
+advice and needs no claim."""
 
 NO_DRAFT = "NO DRAFT: the researcher hasn't uploaded their paper for this project."
 

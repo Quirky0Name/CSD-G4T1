@@ -46,6 +46,28 @@ class Claim(_Answer):
 Claims = Annotated[list[Claim], Field(min_length=1)]
 
 
+class Sentence(_Answer):
+    """One sentence of a step's free text. A fact names the claims (numbered from 1 in the same
+    step's list) that state it; advice states nothing a quote could show, so it needs none."""
+
+    text: str
+    kind: Literal["fact", "advice"]
+    claims: list[int]
+
+
+Sentences = Annotated[list[Sentence], Field(min_length=1)]
+
+
+def prose(sentences: list[Sentence], claims: list[Claim]) -> str:
+    """The free text as stored: the sentences in order, leaving out a fact that names no existing
+    claim, since nothing backs it. If that would leave nothing, every sentence is kept."""
+    backed = [
+        s for s in sentences
+        if s.kind == "advice" or any(1 <= n <= len(claims) for n in s.claims)
+    ]
+    return " ".join(s.text.strip() for s in backed or sentences)
+
+
 class AlertJudgment(_Answer):
     alert_id: int
     about_this_paper: Literal["yes", "no", "unclear"]
@@ -61,8 +83,9 @@ class ChangeAssessment(_Answer):
     alerts: list[AlertJudgment]
     relations: str | None
     severity: Level
-    summary: str
+    # claims before the text, so the model writes what it can back before it writes prose
     claims: Claims
+    summary: Sentences
 
 
 # Step 2: how does it impact the researcher?
@@ -82,8 +105,8 @@ class ImpactAssessment(_Answer):
     reference_entry: str | None
     uses: list[Use]
     impact_level: Level
-    explanation: str
     claims: Claims
+    explanation: Sentences
 
 
 # Step 3: what should the researcher do?
@@ -96,8 +119,8 @@ class Action(_Answer):
 
 class RecommendedActions(_Answer):
     actions: list[Action]
-    recommendation: str
     claims: Claims
+    recommendation: Sentences
 
 
 # What the evaluation carries: each step's claims, each quote checked in code (impact/claims.py;
