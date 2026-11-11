@@ -9,7 +9,6 @@ import java.util.Set;
 final class EventValidator {
 
     private static final Set<String> EVENTS = Set.of("alerts", "report_assessed");
-    private static final Set<String> CHANGE_SEVERITIES = Set.of("none", "low", "medium", "high");
 
     private EventValidator() {
     }
@@ -36,7 +35,7 @@ final class EventValidator {
             if (alert == null) {
                 throw badRequest("alerts must not contain null");
             }
-            if (alert.alertSeverity() == null || !Levels.isLevel(alert.alertSeverity())) {
+            if (!Levels.isLevel(alert.alertSeverity())) {
                 throw badRequest("alert_severity must be low, medium or high");
             }
             if (alert.changeType() == null || alert.description() == null) {
@@ -46,7 +45,7 @@ final class EventValidator {
     }
 
     private static void checkReport(NotificationEvent event) {
-        if (event.changeSeverity() == null || !CHANGE_SEVERITIES.contains(event.changeSeverity())) {
+        if (!Levels.isChangeSeverity(event.changeSeverity())) {
             throw badRequest("change_severity must be none, low, medium or high");
         }
         if (event.changeSummary() == null) {
