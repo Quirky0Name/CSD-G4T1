@@ -250,6 +250,13 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
         finds the backfill.
   - [x] `./mvnw test` passes.
 - **Doc deltas:**
+  - `docs/ARCHITECTURE.md` (Section 2): each channel's PUT updates only that
+    channel's columns (`@DynamicUpdate` on the preferences entity), not the
+    whole row. Why: two overlapping PUTs (email and telegram at once) each
+    loaded the whole row and wrote all columns back, so the second commit
+    could undo the other channel's new values and break "the other channel
+    is unchanged"; the channels share no columns, so partial updates can't
+    collide.
   - `docs/CONTRACTS.md`, errors: a malformed body (not JSON) is Spring's
     generic `400`; field errors say `<field> is required` (`enabled`) or
     `<field> must be low, medium, high or null` /
@@ -429,6 +436,15 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
     auth setting; STARTTLS is used when the server offers it (`enable`, not
     `required`), and the connect, read and write timeouts are 10 s each.
     Why: the spec said "STARTTLS on" and "10 s timeout" per channel.
+  - `docs/CONTRACTS.md` and `docs/SETUP.md`: each channel also has one overall
+    10 s deadline for its whole send (`CHANNEL_DEADLINE`, default `10s`, is
+    for the tests); a channel still running at the deadline is `failed`,
+    logged with the user id, channel and exception class only, and the other
+    channel is unaffected. Why: Research Evaluation waits 30 s for the
+    answer and the per-step SMTP timeouts alone allow an email 40 s or more
+    (connect, EHLO, STARTTLS, AUTH, DATA), so two channels at 10 s each have
+    to fit inside that wait; the send is abandoned, not undone, so a message
+    may still arrive after `failed`.
   - `docs/SETUP.md`: `TELEGRAM_API_URL` exists for the tests (default
     `https://api.telegram.org`) and isn't in `.env.example` or the compose
     file, as the spec's list of seven settings leaves it out. `MAIL_PORT` is
