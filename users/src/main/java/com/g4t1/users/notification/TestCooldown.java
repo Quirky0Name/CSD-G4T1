@@ -14,7 +14,8 @@ import java.util.UUID;
 @Component
 class TestCooldown {
 
-    static final Duration WINDOW = Duration.ofSeconds(60);
+    private static final Duration WINDOW = Duration.ofSeconds(60);
+    static final String TOO_SOON = "Wait " + WINDOW.toSeconds() + " seconds between test messages";
 
     private final Clock clock;
     private final Map<UUID, Instant> lastTest = new HashMap<>();

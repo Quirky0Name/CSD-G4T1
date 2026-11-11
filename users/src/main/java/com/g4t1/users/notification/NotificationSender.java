@@ -75,7 +75,7 @@ public class NotificationSender {
         User user = users.findById(userId).orElseThrow(AccountGoneException::new);
         NotificationPreferences prefs = preferences.findById(userId).orElseThrow(() -> noUser(userId));
         if (!testCooldown.start(userId)) {
-            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Wait 60 seconds between test messages");
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, TestCooldown.TOO_SOON);
         }
         return deliver(user, prefs, (alert, change, impact) -> Optional.of(messages.test()));
     }
