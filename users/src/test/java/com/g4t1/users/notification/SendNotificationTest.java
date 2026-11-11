@@ -21,6 +21,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -121,6 +122,26 @@ class SendNotificationTest {
         assertThat(JsonPath.<String>read(sent.body(), "$.text"))
                 .contains("HIGH retraction: The journal retracted the paper.", "LOW citation_jump: Cited 12 more times.")
                 .satisfies(text -> assertThat(text.indexOf("HIGH retraction")).isLessThan(text.indexOf("LOW citation_jump")));
+    }
+
+    @Test
+    void anEventBelowTheThresholdOrWithANullOneMatchesNothingAndSendsNothing() throws Exception {
+        Account account = registered();
+        putEmail(account, Map.of("enabled", true, "min_alert_severity", "high"));
+        Map<String, Object> telegramChannel = new HashMap<>();
+        telegramChannel.put("enabled", true);
+        telegramChannel.put("chat_id", 42);
+        telegramChannel.put("min_alert_severity", null);
+        putTelegram(account, telegramChannel);
+
+        postEvent(account.id(), alertsEvent(alert(8, "citation_jump", "medium", "Cited 12 more times.")))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.channels.email").isEqualTo("no_match")
+                .jsonPath("$.channels.telegram").isEqualTo("no_match");
+
+        assertThat(mail.getReceivedMessages()).isEmpty();
+        assertThat(telegram.requests()).isEmpty();
     }
 
     private static Map<String, Object> alert(int id, String changeType, String severity, String description) {
