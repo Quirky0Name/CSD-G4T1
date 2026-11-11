@@ -391,7 +391,7 @@ async def test_impact_reads_the_owners_profile_with_the_contexts_user_management
 
     assert await assess_reports(sm.client, context, [report_id]) == [report_id]
 
-    [request] = um.requests
+    [request] = [r for r in um.requests if r.method == "GET"]
     assert request.url.path == f"/internal/users/{owner}/profile"
     stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
     assert stored["assessment"]["profile"] == "read"
@@ -404,3 +404,35 @@ async def test_a_context_with_no_user_management_client_assesses_without_a_profi
 
     stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
     assert stored["assessment"]["profile"] == "none"
+
+
+# telling the owner about the assessed report (docs/EVALUATION.md, "Impact")
+
+
+async def test_an_assessed_report_posts_the_stored_evaluation_to_the_owner(sm, um):
+    report_id = await investigated_report(sm)
+    context = ImpactContext(FakeLlm("high"), um=um.client)
+
+    assert await assess_reports(sm.client, context, [report_id]) == [report_id]
+
+    stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    [request] = [r for r in um.requests if r.method == "POST"]
+    assert request.url.path == f"/internal/users/{stored['owner_id']}/notifications"
+    assert request.extensions["timeout"]["read"] == 30
+    [(user_id, body)] = um.notifications
+    assert str(user_id) == stored["owner_id"]
+    assert body == {
+        "event": "report_assessed",
+        "paper": {
+            "id": stored["paper_id"],
+            "title": "Hydroxychloroquine and azithromycin as a treatment of COVID-19",
+            "doi": PAPER_DOI,
+        },
+        "report_id": report_id,
+        "change_severity": "high",
+        "change_summary": "A high change.",
+        "impact_level": "medium",
+        "evaluation": "Your Discussion relies on it.",
+        "recommendation": "Replace it.",
+    }
+    assert body["change_severity"] == stored["change_severity"]

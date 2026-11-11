@@ -7,6 +7,7 @@ logged, stays `investigated` and nothing is stored for it; nothing retries it (a
 
 import logging
 from dataclasses import dataclass
+from typing import Any
 
 import httpx
 from google.genai import errors as genai_errors
@@ -15,7 +16,15 @@ from pydantic import ValidationError
 from research_evaluation.impact.assess import assess
 from research_evaluation.impact.inputs import gather_inputs
 from research_evaluation.impact.llm import Llm
-from research_evaluation.storage import PaperGone, ReportGone, read_report, store_evaluation
+from research_evaluation.storage import (
+    PaperGone,
+    Report,
+    ReportGone,
+    paper_details,
+    read_report,
+    store_evaluation,
+)
+from research_evaluation.users import notify_quietly
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +60,7 @@ async def assess_report(sm: httpx.AsyncClient, context: ImpactContext, report_id
             return False
         inputs = await gather_inputs(sm, report)
         evaluation = await assess(context.llm, sm, inputs, um=context.um)
-        await store_evaluation(sm, report_id, evaluation.model_dump(mode="json"))
+        stored = await store_evaluation(sm, report_id, evaluation.model_dump(mode="json"))
     except (PaperGone, ReportGone):
         log.info("impact skipped report %s: Storage Management has no such report or paper", report_id)
         return False
@@ -65,7 +74,33 @@ async def assess_report(sm: httpx.AsyncClient, context: ImpactContext, report_id
             ),
         )
         return False
+    await notify_assessed(sm, context, report, stored)
     return True
+
+
+async def notify_assessed(
+    sm: httpx.AsyncClient, context: ImpactContext, report: Report, stored: dict[str, Any]
+) -> None:
+    """Posts the evaluation just stored to the report's owner; User Management decides how to
+    tell them."""
+    if context.um is None or report.owner_id is None:
+        return
+    details = await paper_details(sm, report.paper_id)
+    await notify_quietly(
+        context.um,
+        report.owner_id,
+        report.id,
+        {
+            "event": "report_assessed",
+            "paper": {"id": str(report.paper_id), "title": details.title, "doi": details.doi},
+            "report_id": report.id,
+            "change_severity": stored["change_severity"],
+            "change_summary": stored["change_summary"],
+            "impact_level": stored["impact_level"],
+            "evaluation": stored["evaluation"],
+            "recommendation": stored["recommendation"],
+        },
+    )
 
 
 def _cause(exc: Exception) -> str:
