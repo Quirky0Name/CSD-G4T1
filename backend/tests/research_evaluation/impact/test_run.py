@@ -508,3 +508,18 @@ async def test_storage_management_failing_on_the_notifications_paper_read_still_
     assert um.notifications == []
     assert f"reading report {report_id} for its notification failed" in caplog.text
     await flaky.aclose()
+
+
+async def test_one_nudge_posts_the_alerts_and_then_the_assessed_report(client, sm, um, impact):
+    impact.context = ImpactContext(FakeLlm("high"), um=um.client)
+    paper = await retracted_paper(sm)
+
+    response = await nudge(client, [paper])
+
+    assert response.status_code == 202
+    report = await the_report(sm, paper)
+    assert [(user_id, body["event"]) for user_id, body in um.notifications] == [
+        (UUID(report["owner_id"]), "alerts"),
+        (UUID(report["owner_id"]), "report_assessed"),
+    ]
+    assert {body["report_id"] for _, body in um.notifications} == {report["id"]}
