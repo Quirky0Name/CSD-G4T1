@@ -2,6 +2,7 @@ package com.g4t1.users.notification;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,9 +16,11 @@ import java.util.UUID;
 public class NotificationController {
 
     private final NotificationService notifications;
+    private final NotificationSender sender;
 
-    public NotificationController(NotificationService notifications) {
+    public NotificationController(NotificationService notifications, NotificationSender sender) {
         this.notifications = notifications;
+        this.sender = sender;
     }
 
     @GetMapping
@@ -36,5 +39,11 @@ public class NotificationController {
     public NotificationPreferencesResponse replaceTelegram(@AuthenticationPrincipal UUID userId,
                                                            @RequestBody TelegramRequest request) {
         return notifications.replaceTelegram(userId, request);
+    }
+
+    // sends a fixed message to every enabled channel, to check the chat id and the server's settings
+    @PostMapping("/test")
+    public NotificationOutcomes test(@AuthenticationPrincipal UUID userId) {
+        return sender.sendTest(userId);
     }
 }

@@ -322,6 +322,56 @@ class SendNotificationTest {
         assertThat(mail.getReceivedMessages()).isEmpty();
     }
 
+    @Test
+    void theTestMessageGoesToEachEnabledChannelWhateverItsThresholds() throws Exception {
+        Account account = registered();
+        Map<String, Object> neverSends = new HashMap<>();
+        neverSends.put("enabled", true);
+        putEmail(account, neverSends);
+        putTelegram(account, Map.of("enabled", true, "chat_id", 42, "min_alert_severity", "high"));
+
+        postTest(account.token())
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.channels.email").isEqualTo("sent")
+                .jsonPath("$.channels.telegram").isEqualTo("sent");
+
+        MimeMessage[] received = mail.getReceivedMessages();
+        assertThat(received).hasSize(1);
+        assertThat(received[0].getAllRecipients()).extracting(Object::toString).containsExactly(account.email());
+        assertThat(received[0].getSubject()).isEqualTo("Research Assistant: Test notification");
+        assertThat(telegram.requests()).hasSize(1);
+        assertThat(JsonPath.<String>read(telegram.requests().get(0).body(), "$.text"))
+                .isEqualTo("This is a test message from Research Assistant. If you can read it, this channel works.");
+    }
+
+    @Test
+    void theTestMessageSkipsAChannelThatIsOffAndReportsAFailure() throws Exception {
+        Account account = registered();
+        putEmail(account, Map.of("enabled", false));
+        putTelegram(account, Map.of("enabled", true, "chat_id", 42));
+        telegram.answerWith(403);
+
+        postTest(account.token())
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.channels.email").isEqualTo("disabled")
+                .jsonPath("$.channels.telegram").isEqualTo("failed");
+
+        assertThat(mail.getReceivedMessages()).isEmpty();
+    }
+
+    @Test
+    void theTestEndpointNeedsAUserToken() throws Exception {
+        client.post().uri("/auth/me/notifications/test")
+                .exchange()
+                .expectStatus().isUnauthorized();
+        client.post().uri("/auth/me/notifications/test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + serviceToken(jwtSecret))
+                .exchange()
+                .expectStatus().isForbidden();
+    }
+
     private static Map<String, Object> alert(int id, String changeType, String severity, String description) {
         return Map.of("id", id, "change_type", changeType, "alert_severity", severity, "description", description);
     }
@@ -378,6 +428,12 @@ class SendNotificationTest {
                 .body(body)
                 .exchange()
                 .expectStatus().isOk();
+    }
+
+    private RestTestClient.ResponseSpec postTest(String token) {
+        return client.post().uri("/auth/me/notifications/test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .exchange();
     }
 
     private RestTestClient.ResponseSpec postEvent(String userId, Map<String, Object> event) {

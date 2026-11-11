@@ -38,15 +38,9 @@ class SendNotificationNotConfiguredTest {
 
     @Test
     void anEnabledChannelWithNoServerSettingsIsNotConfigured() {
-        String email = "researcher-" + UUID.randomUUID() + "@example.com";
-        String reply = client.post().uri("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("email", email, "password", "correct horse battery"))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody(String.class).returnResult().getResponseBody();
-        String token = JsonPath.read(reply, "$.token");
-        String id = JsonPath.read(reply, "$.user.id");
+        Account account = registered();
+        String token = account.token();
+        String id = account.id();
         put(token, "email", Map.of("enabled", true, "min_alert_severity", "low"));
         put(token, "telegram", Map.of("enabled", true, "chat_id", 42, "min_alert_severity", "low"));
 
@@ -63,6 +57,34 @@ class SendNotificationNotConfiguredTest {
                 .expectBody()
                 .jsonPath("$.channels.email").isEqualTo("not_configured")
                 .jsonPath("$.channels.telegram").isEqualTo("not_configured");
+    }
+
+    @Test
+    void theTestMessageToAnEnabledChannelWithNoServerSettingsIsNotConfigured() {
+        String token = registered().token();
+        put(token, "email", Map.of("enabled", true));
+        put(token, "telegram", Map.of("enabled", true, "chat_id", 42));
+
+        client.post().uri("/auth/me/notifications/test")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.channels.email").isEqualTo("not_configured")
+                .jsonPath("$.channels.telegram").isEqualTo("not_configured");
+    }
+
+    private record Account(String token, String id) {
+    }
+
+    private Account registered() {
+        String reply = client.post().uri("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("email", "researcher-" + UUID.randomUUID() + "@example.com", "password", "correct horse battery"))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(String.class).returnResult().getResponseBody();
+        return new Account(JsonPath.read(reply, "$.token"), JsonPath.read(reply, "$.user.id"));
     }
 
     private void put(String token, String channel, Map<String, ?> body) {

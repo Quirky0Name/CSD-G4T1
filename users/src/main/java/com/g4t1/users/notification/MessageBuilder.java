@@ -50,6 +50,12 @@ public class MessageBuilder {
         return new Message("Research Assistant: Report ready on \"" + title(event) + "\"", withLink(event, lines));
     }
 
+    // fixed text: the researcher asked for it, to see that a channel works
+    public Message test() {
+        return new Message("Research Assistant: Test notification",
+                "This is a test message from Research Assistant. If you can read it, this channel works.");
+    }
+
     private List<String> header(NotificationEvent event) {
         List<String> lines = new ArrayList<>();
         lines.add(title(event));
