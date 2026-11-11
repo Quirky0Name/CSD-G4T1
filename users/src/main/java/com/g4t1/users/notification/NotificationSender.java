@@ -112,16 +112,19 @@ public class NotificationSender {
     // one overall deadline per channel, whatever its steps: Research Evaluation waits 30 s for both channels
     private Outcome within(UUID userId, String channel, Supplier<Outcome> send) {
         Future<Outcome> sent = sends.submit(send::get);
+        Class<?> reason;
         try {
             return sent.get(channelDeadline.toMillis(), TimeUnit.MILLISECONDS);
-        } catch (TimeoutException | ExecutionException e) {
-            sent.cancel(true);
-            log.warn("{} to user {} failed: {}", channel, userId, e.getClass().getSimpleName());
+        } catch (ExecutionException e) {
+            reason = e.getCause().getClass();
+        } catch (TimeoutException e) {
+            reason = e.getClass();
         } catch (InterruptedException e) {
-            sent.cancel(true);
             Thread.currentThread().interrupt();
-            log.warn("{} to user {} failed: {}", channel, userId, e.getClass().getSimpleName());
+            reason = e.getClass();
         }
+        sent.cancel(true);
+        log.warn("{} to user {} failed: {}", channel, userId, reason.getSimpleName());
         return Outcome.FAILED;
     }
 
