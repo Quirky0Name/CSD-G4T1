@@ -390,6 +390,14 @@ Per report:
      order, so a frontend can show them later; `[]` when there are none. It
      is sent with every evaluation, the placeholder and change severity
      `none` included, since steps 1 and 2 had the chunks either way.
+     A page-less `document` chunk whose text was cut into more than one
+     chunk (`chunk_index` above 0, or its text after the header exactly
+     `embedding.CHUNK_SIZE`, 3,200) also gets `start` and `end`, its range in
+     the document's `text`: `start = chunk_index × 2,800` (`CHUNK_SIZE` −
+     `CHUNK_OVERLAP`, 400) and `end = start +` the length of the chunk's text
+     after its header. `impact.history.context_chunk` computes it when impact
+     reads the chunk, so a later change of chunk size doesn't move stored
+     ranges. Every other item, including a split PDF page, has neither key.
    - Step 1 still attaches the current report's PDFs; the past is added
      beside them as retrieved text, and past documents reach the prompt only
      as text chunks, never as PDFs.
