@@ -83,18 +83,13 @@ async def notify_assessed(
 ) -> None:
     """Posts the evaluation just stored to the report's owner; User Management decides how to
     tell them. A placeholder has no real content to send, so it isn't posted."""
-    if context.um is None or report.owner_id is None or stored["assessment"].get("placeholder"):
+    if context.um is None or report.owner_id is None:
         return
     try:
+        if stored["assessment"].get("placeholder"):
+            return
         details = await paper_details(sm, report.paper_id)
-    except Exception as exc:  # noqa: BLE001 the report is assessed whatever happens to its notification
-        log.warning("reading report %s for its notification failed: %s", report.id, _cause(exc))
-        return
-    await notify_quietly(
-        context.um,
-        report.owner_id,
-        report.id,
-        {
+        body = {
             "event": "report_assessed",
             "paper": {"id": str(report.paper_id), "title": details.title, "doi": details.doi},
             "report_id": report.id,
@@ -103,8 +98,11 @@ async def notify_assessed(
             "impact_level": None if stored["impact_level"] == "none" else stored["impact_level"],
             "evaluation": stored["evaluation"],
             "recommendation": stored["recommendation"],
-        },
-    )
+        }
+    except Exception as exc:  # noqa: BLE001 the report is assessed whatever happens to its notification
+        log.warning("reading report %s for its notification failed: %s", report.id, _cause(exc))
+        return
+    await notify_quietly(context.um, report.owner_id, report.id, body)
 
 
 def _cause(exc: Exception) -> str:
