@@ -6,6 +6,10 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+  flyway:
+    # the shared migrations, then the ones that differ by database: chunks needs pgvector, which H2
+    # (the tests' database) doesn't have, so db/vendor/h2 holds an H2 stand-in
+    locations: classpath:db/migration,classpath:db/vendor/{vendor}
   jackson:
     property-naming-strategy: SNAKE_CASE
   mvc:
