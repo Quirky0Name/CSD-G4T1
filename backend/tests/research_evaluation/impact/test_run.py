@@ -452,6 +452,21 @@ async def test_an_impact_level_of_none_is_posted_as_null(sm, um):
     assert body["change_severity"] == "high"
 
 
+async def test_a_report_with_no_owner_posts_nothing_and_says_so(sm, um, caplog):
+    context = ImpactContext(FakeLlm("high"), um=um.client)
+    report_id = await investigated_report(sm)
+    stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    sm.transport.faults[("GET", f"/internal/reports/{report_id}")] = httpx.Response(
+        200, json={**stored, "owner_id": None}
+    )
+
+    with caplog.at_level(logging.INFO, logger="research_evaluation.impact.run"):
+        assert await assess_reports(sm.client, context, [report_id]) == [report_id]
+
+    assert um.notifications == []
+    assert f"report {report_id} has no owner: its evaluation is not posted" in caplog.text
+
+
 async def test_a_placeholder_evaluation_posts_nothing(sm, um):
     context = ImpactContext(FakeLlm("high", fail_on=1, failure=every_model_failed()), um=um.client)
     report_id = await investigated_report(sm)

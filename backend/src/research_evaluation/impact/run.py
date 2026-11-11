@@ -83,7 +83,10 @@ async def notify_assessed(
 ) -> None:
     """Posts the evaluation just stored to the report's owner; User Management decides how to
     tell them. A placeholder has no real content to send, so it isn't posted."""
-    if context.um is None or report.owner_id is None:
+    if context.um is None:
+        return
+    if report.owner_id is None:
+        log.info("report %s has no owner: its evaluation is not posted", report.id)
         return
     try:
         if stored["assessment"].get("placeholder"):
