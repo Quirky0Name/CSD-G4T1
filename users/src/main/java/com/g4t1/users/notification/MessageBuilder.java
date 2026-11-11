@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 // Writes a notification's subject and plain text; the link to the paper is left out when APP_URL isn't set
 @Component
@@ -24,9 +25,10 @@ public class MessageBuilder {
         List<String> lines = header(event);
         lines.add("");
         passing.stream()
-                .sorted(Comparator.comparingInt((NotificationEvent.Alert alert) -> Levels.rank(alert.alertSeverity())).reversed())
-                .forEach(alert -> lines.add(alert.alertSeverity().toUpperCase() + " " + alert.changeType() + ": "
-                        + alert.description()));
+                .sorted(Comparator.comparingInt(
+                        (NotificationEvent.Alert alert) -> Levels.rank(alert.alertSeverity())).reversed())
+                .forEach(alert -> lines.add(alert.alertSeverity().toUpperCase(Locale.ROOT) + " " + alert.changeType()
+                        + ": " + alert.description()));
         return new Message("Research Assistant: New alerts on \"" + title(event) + "\"", withLink(event, lines));
     }
 
