@@ -32,7 +32,7 @@ def change(*claims: dict) -> ChangeAssessment:
             "alerts": [],
             "relations": None,
             "severity": "high",
-            "summary": "The paper was retracted.",
+            "summary": [{"text": "The paper was retracted.", "kind": "fact", "claims": [1]}],
             "claims": list(claims) or [claim("The paper was retracted.")],
         }
     )
@@ -45,7 +45,7 @@ def impact(*claims: dict) -> ImpactAssessment:
             "reference_entry": None,
             "uses": [],
             "impact_level": "high",
-            "explanation": "Your Discussion rests on it.",
+            "explanation": [{"text": "Your Discussion rests on it.", "kind": "fact", "claims": [1]}],
             "claims": list(claims) or [claim("Your Discussion rests on it.")],
         }
     )
@@ -55,7 +55,7 @@ def actions(*claims: dict) -> RecommendedActions:
     return RecommendedActions.model_validate(
         {
             "actions": [],
-            "recommendation": "Replace the citation.",
+            "recommendation": [{"text": "Replace the citation.", "kind": "fact", "claims": [1]}],
             "claims": list(claims) or [claim("Replace the citation.")],
         }
     )

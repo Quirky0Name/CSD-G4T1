@@ -30,7 +30,7 @@ def change(severity: str) -> ChangeAssessment:
             "alerts": [],
             "relations": None,
             "severity": severity,
-            "summary": f"A {severity} change.",
+            "summary": [{"text": f"A {severity} change.", "kind": "fact", "claims": [1]}],
             "claims": [{"text": "A statement.", "passages": []}],
         }
     )
@@ -42,14 +42,14 @@ IMPACT = ImpactAssessment.model_validate(
         "reference_entry": "[1] Gautret P, et al.",
         "uses": [],
         "impact_level": "medium",
-        "explanation": "Your Discussion relies on it.",
+        "explanation": [{"text": "Your Discussion relies on it.", "kind": "fact", "claims": [1]}],
         "claims": [{"text": "A statement.", "passages": []}],
     }
 )
 ACTIONS = RecommendedActions.model_validate(
     {
         "actions": [{"action": "Replace the citation.", "where": None}],
-        "recommendation": "Replace it.",
+        "recommendation": [{"text": "Replace it.", "kind": "fact", "claims": [1]}],
         "claims": [{"text": "A statement.", "passages": []}],
     }
 )
