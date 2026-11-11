@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-11T00:00:00Z",
+  "generatedAt": "2026-11-11T22:30:00+08:00",
   "title": "Design System: Research desk",
   "extensions": {
     "colorMeta": {
@@ -16,7 +16,10 @@
       "signal-indigo-pale": { "role": "primary", "displayName": "Signal Indigo Pale", "canonical": "#a5b4fc", "tonalRamp": ["#1e1b4b", "#3730a3", "#4f46e5", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe", "#e0e7ff"] },
       "status-red": { "role": "tertiary", "displayName": "Status Red", "canonical": "#f87171", "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5"] },
       "status-amber": { "role": "tertiary", "displayName": "Status Amber", "canonical": "#facc15", "tonalRamp": ["#422006", "#713f12", "#854d0e", "#a16207", "#ca8a04", "#eab308", "#facc15", "#fde047"] },
-      "status-emerald": { "role": "tertiary", "displayName": "Status Emerald", "canonical": "#34d399", "tonalRamp": ["#022c22", "#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7"] }
+      "status-emerald": { "role": "tertiary", "displayName": "Status Emerald", "canonical": "#34d399", "tonalRamp": ["#022c22", "#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7"] },
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "#ffffff", "tonalRamp": ["#6b7280", "#9ca3af", "#d1d5db", "#e5e7eb", "#f3f4f6", "#f9fafb", "#fcfcfd", "#ffffff"] },
+      "paper-ink": { "role": "neutral", "displayName": "Paper Ink", "canonical": "#1f2937", "tonalRamp": ["#030712", "#111827", "#1f2937", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#d1d5db"] },
+      "highlighter": { "role": "tertiary", "displayName": "Highlighter Yellow", "canonical": "#fde047", "tonalRamp": ["#422006", "#713f12", "#a16207", "#ca8a04", "#eab308", "#facc15", "#fde047", "#fef08a"] }
     },
     "typographyMeta": {
       "headline": { "displayName": "Headline", "purpose": "Page titles in the signed-in app; 1.5rem rising to 1.875rem from 640px." },
@@ -29,7 +32,9 @@
       { "name": "card-lift", "value": "0 30px 80px -30px rgba(0,0,0,0.8)", "purpose": "The sign-up card only, lifting it off the ground." },
       { "name": "indigo-glow", "value": "0 8px 20px -8px rgba(99,102,241,0.8)", "purpose": "Under the primary pill." },
       { "name": "indigo-glow-badge", "value": "0 10px 24px -8px rgba(99,102,241,0.7)", "purpose": "Under the illustration's step badge." },
-      { "name": "float", "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)", "purpose": "Menus and listboxes that overlay content (Tailwind shadow-lg)." }
+      { "name": "float", "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)", "purpose": "Menus, listboxes, toasts and dialogs that overlay content (Tailwind shadow-lg)." },
+      { "name": "dialog-scrim", "value": "rgb(0 0 0 / 0.7)", "purpose": "The page behind an open dialog." },
+      { "name": "paper-drop", "value": "0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4)", "purpose": "Under a PDF page or a source's text, so the paper sits on the desk (Tailwind shadow-md shadow-black/40)." }
     ],
     "motion": [
       { "name": "ease-settle", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Every entrance animation." },
@@ -38,11 +43,14 @@
       { "name": "count-rise", "value": "360ms ease-settle; translateY(40%) to rest", "purpose": "The counter's number on each step." },
       { "name": "reveal", "value": "220ms ease-settle; translateY(-4px) to rest", "purpose": "A field revealed inside a step." },
       { "name": "state-change", "value": "150ms", "purpose": "Colour, outline and press-scale transitions on buttons and tiles." },
-      { "name": "reduced-fade", "value": "160ms ease-out opacity", "purpose": "Replaces every entrance under prefers-reduced-motion." }
+      { "name": "reduced-fade", "value": "160ms ease-out opacity", "purpose": "Replaces every entrance under prefers-reduced-motion." },
+      { "name": "toast-in", "value": "300ms ease-out; translateY(8px), or translateX(8px) from 640px, and opacity 0 to rest", "purpose": "A toast arriving top right." },
+      { "name": "toast-out", "value": "100ms ease-in opacity", "purpose": "A toast leaving: the one exit that animates." }
     ],
     "breakpoints": [
       { "name": "sm", "value": "640px" },
-      { "name": "md", "value": "768px" }
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
     ]
   },
   "components": [
@@ -117,21 +125,38 @@
       "description": "Two-panel onboarding card: illustration panel and form pane.",
       "html": "<div class=\"ds-card\"><aside class=\"ds-card-panel\"><span class=\"ds-dots\"><i class=\"on\"></i><i></i><i></i></span></aside><section class=\"ds-card-pane\"><h2>Create your account</h2><p>Then five optional questions, about two minutes.</p></section></div>",
       "css": ".ds-card { display: grid; grid-template-columns: 9fr 11fr; min-height: 240px; border-radius: 24px; background: #111827; outline: 1px solid rgb(255 255 255 / 0.1); outline-offset: -1px; box-shadow: 0 30px 80px -30px rgba(0,0,0,0.8); font-family: ui-sans-serif, system-ui, sans-serif; } .ds-card-panel { display: flex; align-items: flex-end; justify-content: center; padding: 24px; border-radius: 24px 0 0 24px; background: rgb(31 41 55 / 0.4); } .ds-dots { display: flex; gap: 6px; } .ds-dots i { width: 6px; height: 6px; border-radius: 9999px; background: rgb(255 255 255 / 0.15); } .ds-dots i.on { width: 20px; background: #818cf8; } .ds-card-pane { padding: 32px 40px; } .ds-card-pane h2 { margin: 0; color: #fff; font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.025em; } .ds-card-pane p { margin: 8px 0 0; color: #9ca3af; font-size: 14px; line-height: 24px; }"
+    },
+    {
+      "name": "List Card",
+      "kind": "card",
+      "refersTo": "card-list",
+      "description": "A project, report or alert row in the signed-in app.",
+      "html": "<div class=\"ds-list-card\"><p class=\"ds-list-title\">Cognitive load in remote teaching</p><p class=\"ds-list-meta\">Checked 2 hours ago · 3 documents</p></div>",
+      "css": ".ds-list-card { border-radius: 6px; background: rgb(31 41 55 / 0.5); padding: 16px 24px; outline: 1px solid rgb(255 255 255 / 0.1); outline-offset: -1px; font-family: ui-sans-serif, system-ui, sans-serif; } .ds-list-title { margin: 0; color: #fff; font-size: 14px; line-height: 24px; font-weight: 600; } .ds-list-meta { margin: 4px 0 0; color: #9ca3af; font-size: 12px; line-height: 20px; }"
+    },
+    {
+      "name": "Toast",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "A short confirmation top right; the icon carries the tone.",
+      "html": "<div class=\"ds-toast\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" width=\"20\" height=\"20\" aria-hidden=\"true\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z\"/></svg><div>Now tracking \"Cognitive load in remote teaching\".<button>Undo</button></div></div>",
+      "css": ".ds-toast { display: flex; align-items: flex-start; gap: 12px; max-width: 384px; border-radius: 8px; background: #1f2937; padding: 16px; outline: 1px solid rgb(255 255 255 / 0.1); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); color: #f3f4f6; font: 400 14px/24px ui-sans-serif, system-ui, sans-serif; } .ds-toast svg { flex: none; margin-top: 2px; color: #34d399; } .ds-toast button { display: block; margin-top: 4px; border: 0; background: none; padding: 0; color: #818cf8; font: 600 14px/24px ui-sans-serif, system-ui, sans-serif; cursor: pointer; } .ds-toast button:hover { color: #a5b4fc; } .ds-toast button:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }"
     }
   ],
   "narrative": {
     "northStar": "The Night Desk",
-    "overview": "The researcher app is a quiet desk lit for late work: an always-dark ground, slate surfaces stacked one tone apart, white hairlines for every edge, and a single indigo signal that marks where to act, how far along you are, and what you chose. Nothing competes with that signal; status colours (red, amber, emerald) appear only as small tinted badges that report a paper's or alert's state.\n\nThe palette is fixed. The sign-up flow restyled components inside it rather than changing it: a two-panel card, fully rounded pill buttons, one question per screen with a counter, outlined answer tiles that fill indigo when chosen, and a flat authored illustration whose badge changes per step. Inside the signed-in app, controls stay compact and gently rounded; the pill and tile language belongs to onboarding screens.\n\nDev mode is a deliberate exception, bound by a PRODUCT.md brand commitment (the belly-as-UI screen in `DevMode.tsx` / `DevMode.css`). It is its own world and nothing here governs it, nor does it feed this system.",
+    "overview": "The researcher app is a quiet desk lit for late work: an always-dark ground, slate surfaces stacked one tone apart, white hairlines for every edge, and a single indigo signal that marks where to act, how far along you are, and what you chose. Nothing competes with that signal; status colours (red, amber, emerald) appear only as small tinted badges that report a paper's or alert's state.\n\nThe palette is fixed. The sign-up flow restyled components inside it rather than changing it: a two-panel card, fully rounded pill buttons, one question per screen with a counter, outlined answer tiles that fill indigo when chosen, and a flat authored illustration whose badge changes per step. Inside the signed-in app, controls stay compact and gently rounded; the pill and tile language belongs to onboarding screens.\n\nThe papers themselves are the one light thing on the desk. A PDF page or a source's text is laid down as white paper with a soft drop shadow, and the passage a claim rests on is marked with a yellow highlighter stroke the ink shows through.\n\nDev mode is a deliberate exception, bound by a PRODUCT.md brand commitment (the belly-as-UI screen in `DevMode.tsx` / `DevMode.css`). It is its own world and nothing here governs it, nor does it feed this system.",
     "keyCharacteristics": [
       "Always dark, whatever the OS asks for (`dark:` styles always apply).",
       "Tonal layering (ground, card, panel) with inset white hairlines instead of borders or heavy shadow.",
       "One accent, indigo, for action, progress, selection and focus.",
       "Status hues only as tinted, inset-ringed badges.",
+      "Documents read as white paper on the dark desk, with quotes highlighted in yellow.",
       "Motion on entrances only, short and decelerating, with a gentler fade under reduced motion."
     ],
     "rules": [
       { "name": "The One Signal Rule", "body": "Indigo is the only accent. It marks action, progress, selection and focus, and nothing else. Status hues never stand in for it.", "section": "colors" },
-      { "name": "The Always-Dark Rule", "body": "There is no light theme. New components are written dark-first; a light branch is dead code.", "section": "colors" },
+      { "name": "The Always-Dark Rule", "body": "There is no light theme. New components are written dark-first; a light branch is dead code. The only light surface is a document being read, which is paper, not chrome.", "section": "colors" },
       { "name": "The Sentence Case Rule", "body": "Labels are sentence case and quiet; nothing is set in uppercase tracking.", "section": "typography" },
       { "name": "The Hairline Rule", "body": "Edges are inset white outlines at 10%, not borders in a contrasting colour and not shadows. Hover and selection change an outline's opacity or hue; they never add a stroke.", "section": "elevation" }
     ],
@@ -141,12 +166,13 @@
       "**Do** separate surfaces tonally (ground, card, panel) before reaching for a shadow.",
       "**Do** show status as a 10% tinted badge with a 20% inset ring in its own hue.",
       "**Do** animate entrances only, on `cubic-bezier(0.16, 1, 0.3, 1)`, and give every animation a reduced-motion fade.",
-      "**Do** keep the real input in the tab order when a control is custom-drawn, as the answer tiles do."
+      "**Do** keep the real input in the tab order when a control is custom-drawn, as the answer tiles do.",
+      "**Do** show a document as white paper with the paper drop, and mark its quote in highlighter yellow."
     ],
     "donts": [
-      "**Don't** add a light theme or write light-mode classes; the app is always dark.",
-      "**Don't** introduce a second accent hue, or use red, amber or emerald for anything but status.",
-      "**Don't** animate exits; the next screen is never held back.",
+      "**Don't** add a light theme or write light-mode classes; the app is always dark. Paper is the document, not a theme.",
+      "**Don't** introduce a second accent hue, or use red, amber or emerald for anything but status. The highlighter is for quotes only.",
+      "**Don't** animate a screen's exit; the next screen is never held back. A toast's 100ms fade is the one exit that moves.",
       "**Don't** carry dev mode's belly world into the researcher app, or this system into dev mode."
     ]
   }
