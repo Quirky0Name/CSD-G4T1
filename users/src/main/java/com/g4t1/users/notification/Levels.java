@@ -15,6 +15,11 @@ final class Levels {
         return level != null && threshold != null && rank(level) >= rank(threshold);
     }
 
+    // low, medium or high: the values a threshold or an impact level can take
+    static boolean isLevel(String value) {
+        return value != null && !value.equals("none") && ORDER.contains(value);
+    }
+
     static int rank(String level) {
         return ORDER.indexOf(level);
     }

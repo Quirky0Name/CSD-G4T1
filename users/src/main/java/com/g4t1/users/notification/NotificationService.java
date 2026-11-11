@@ -9,13 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class NotificationService {
-
-    private static final Set<String> LEVELS = Set.of("low", "medium", "high");
 
     private final NotificationPreferencesRepository preferences;
     private final UserRepository users;
@@ -29,6 +26,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public NotificationPreferencesResponse find(UUID userId) {
         User user = users.findById(userId).orElseThrow(AccountGoneException::new);
+        // every account has a row, from register or the V6 backfill; only the dev mode admin lacks one, and /auth/me refuses it
         return NotificationPreferencesResponse.from(preferences.findById(userId).orElseThrow(), user.getEmail());
     }
 
@@ -39,6 +37,7 @@ public class NotificationService {
         String alert = level("min_alert_severity", request.minAlertSeverity());
         String change = level("min_change_severity", request.minChangeSeverity());
         String impact = level("min_impact_level", request.minImpactLevel());
+        // a missing row is a 500 on purpose: see find
         NotificationPreferences prefs = preferences.findForUpdate(userId).orElseThrow();
         prefs.replaceEmail(enabled, alert, change, impact);
         return NotificationPreferencesResponse.from(preferences.save(prefs), user.getEmail());
@@ -55,6 +54,7 @@ public class NotificationService {
         if (enabled && chatId == null) {
             throw badRequest("chat_id is required to enable Telegram");
         }
+        // a missing row is a 500 on purpose: see find
         NotificationPreferences prefs = preferences.findForUpdate(userId).orElseThrow();
         prefs.replaceTelegram(enabled, chatId, alert, change, impact);
         return NotificationPreferencesResponse.from(preferences.save(prefs), user.getEmail());
@@ -68,7 +68,7 @@ public class NotificationService {
     }
 
     private static String level(String field, String value) {
-        if (value != null && !LEVELS.contains(value)) {
+        if (value != null && !Levels.isLevel(value)) {
             throw badRequest(field + " must be low, medium, high or null");
         }
         return value;

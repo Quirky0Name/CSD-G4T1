@@ -8,14 +8,14 @@ import java.util.Set;
 // The rules of an event's body; a break is a 400 whose detail starts with the field's name
 final class EventValidator {
 
-    private static final Set<String> LEVELS = Set.of("low", "medium", "high");
+    private static final Set<String> EVENTS = Set.of("alerts", "report_assessed");
     private static final Set<String> CHANGE_SEVERITIES = Set.of("none", "low", "medium", "high");
 
     private EventValidator() {
     }
 
     static void check(NotificationEvent event) {
-        if (event.event() == null || !Set.of("alerts", "report_assessed").contains(event.event())) {
+        if (event.event() == null || !EVENTS.contains(event.event())) {
             throw badRequest("event must be alerts or report_assessed");
         }
         if (event.paper() == null || event.paper().id() == null) {
@@ -36,7 +36,7 @@ final class EventValidator {
             if (alert == null) {
                 throw badRequest("alerts must not contain null");
             }
-            if (alert.alertSeverity() == null || !LEVELS.contains(alert.alertSeverity())) {
+            if (alert.alertSeverity() == null || !Levels.isLevel(alert.alertSeverity())) {
                 throw badRequest("alert_severity must be low, medium or high");
             }
             if (alert.changeType() == null || alert.description() == null) {
@@ -52,7 +52,7 @@ final class EventValidator {
         if (event.changeSummary() == null) {
             throw badRequest("change_summary is required");
         }
-        if (event.impactLevel() != null && !LEVELS.contains(event.impactLevel())) {
+        if (event.impactLevel() != null && !Levels.isLevel(event.impactLevel())) {
             throw badRequest("impact_level must be low, medium, high or null");
         }
         if (event.changeSeverity().equals("none")) {
