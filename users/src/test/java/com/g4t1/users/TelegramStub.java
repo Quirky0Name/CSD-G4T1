@@ -19,6 +19,7 @@ public final class TelegramStub {
     private final HttpServer server;
     private final List<Request> requests = new CopyOnWriteArrayList<>();
     private volatile int status = 200;
+    private volatile long delayMillis = 0;
 
     public TelegramStub() {
         try {
@@ -29,6 +30,13 @@ public final class TelegramStub {
         server.createContext("/", exchange -> {
             String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             requests.add(new Request(exchange.getRequestMethod(), exchange.getRequestURI().getPath(), body));
+            if (delayMillis > 0) {
+                try {
+                    Thread.sleep(delayMillis);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
             byte[] answer = (status == 200 ? "{\"ok\":true}" : "{\"ok\":false}").getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().add("Content-Type", "application/json");
             exchange.sendResponseHeaders(status, answer.length);
@@ -50,9 +58,15 @@ public final class TelegramStub {
         this.status = status;
     }
 
+    // holds every answer back this long, as a Telegram that is up but slow would
+    public void answerAfter(long millis) {
+        this.delayMillis = millis;
+    }
+
     public void reset() {
         requests.clear();
         status = 200;
+        delayMillis = 0;
     }
 
     public void stop() {

@@ -38,6 +38,8 @@ users:
   dev-mode: ${DEV_MODE:false}
   # the refresh token's cookie is Secure (HTTPS only) when true: true on the deployed server
   refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:false}
+  # the longest one outside channel may take to send, steps and all; two channels have to fit in Research Evaluation's 30 s
+  channel-deadline: ${CHANNEL_DEADLINE:10s}
   # the From address of outside notification emails
   mail-from: ${MAIL_FROM:}
   # the site's address, for the link to the paper in a notification; no link when empty
