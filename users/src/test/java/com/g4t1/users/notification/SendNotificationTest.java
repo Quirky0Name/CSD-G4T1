@@ -88,7 +88,7 @@ class SendNotificationTest {
     }
 
     static class MutableClock extends Clock {
-        private Instant now = Instant.parse("2026-11-12T09:00:00Z");
+        private volatile Instant now = Instant.parse("2026-11-12T09:00:00Z");
 
         void advance(Duration by) {
             now = now.plus(by);
