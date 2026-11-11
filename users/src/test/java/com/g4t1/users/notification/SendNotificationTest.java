@@ -19,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -70,6 +71,9 @@ class SendNotificationTest {
 
     @Autowired
     private NotificationPreferencesRepository preferences;
+
+    @Autowired
+    private JdbcTemplate jdbc;
 
     private RestTestClient client;
 
@@ -375,6 +379,28 @@ class SendNotificationTest {
                 .jsonPath("$.channels.telegram").isEqualTo("failed");
 
         assertThat(mail.getReceivedMessages()).isEmpty();
+    }
+
+    @Test
+    void theTestMessageForADeletedAccountIsUnauthorized() throws Exception {
+        Account account = registered();
+        jdbc.update("delete from users.users where id = ?", UUID.fromString(account.id()));
+
+        postTest(account.token())
+                .expectStatus().isUnauthorized()
+                .expectBody().jsonPath("$.detail").isEqualTo("Your account no longer exists");
+
+        assertThat(mail.getReceivedMessages()).isEmpty();
+    }
+
+    @Test
+    void theTestMessageForAnAccountWithNoPreferencesRowIs404() throws Exception {
+        Account account = registered();
+        preferences.deleteById(UUID.fromString(account.id()));
+
+        postTest(account.token())
+                .expectStatus().isNotFound()
+                .expectBody().jsonPath("$.detail").isEqualTo("No user " + account.id());
     }
 
     @Test
