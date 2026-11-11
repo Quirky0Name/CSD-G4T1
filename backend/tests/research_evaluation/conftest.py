@@ -85,11 +85,32 @@ class StubSm:
         return [query for m, path, query in self.transport.requests if m == method and path.endswith(suffix)]
 
 
+def rejection(body: dict) -> str | None:
+    """Why User Management would answer this notification 400, or None if it would take it."""
+    levels = ("low", "medium", "high")
+    match body.get("event"):
+        case "alerts":
+            sent = body.get("alerts")
+            if not sent:
+                return "alerts needs at least one alert"
+            if any(alert.get("alert_severity") not in levels for alert in sent):
+                return "alert_severity must be low, medium or high"
+        case "report_assessed":
+            if body.get("change_severity") not in ("none", *levels):
+                return "change_severity must be a severity level"
+            if body.get("impact_level") not in (None, *levels):
+                return "impact_level must be low, medium, high or null"
+        case event:
+            return f"unknown event {event!r}"
+    return None
+
+
 class StubUm:
     """User Management's internal calls as Research Evaluation reaches them, with no network:
     `profiles` maps a user id to its profile body, and an unknown id is User Management's
-    `No profile <id>` 404; a posted notification is answered `200` and found in `notifications`
-    (the user id and the body). `failure` answers every request with that status (with `detail`)
+    `No profile <id>` 404; a posted notification that keeps the interface's rules (`rejection`) is
+    answered `200` and found in `notifications` (the user id and the body), and one that breaks
+    them is answered `400` and not recorded. `failure` answers every request with that status (with `detail`)
     or raises that exception. Every request is recorded."""
 
     def __init__(self) -> None:
@@ -113,7 +134,10 @@ class StubUm:
             return httpx.Response(self.failure, json={"detail": "injected"})
         if request.url.path.endswith("/notifications"):
             user_id = UUID(request.url.path.removeprefix("/internal/users/").removesuffix("/notifications"))
-            self.notifications.append((user_id, json.loads(request.content)))
+            body = json.loads(request.content)
+            if (problem := rejection(body)) is not None:
+                return httpx.Response(400, json={"detail": problem})
+            self.notifications.append((user_id, body))
             return httpx.Response(200, json={"channels": {"email": "sent", "telegram": "sent"}})
         user_id = UUID(request.url.path.removeprefix("/internal/users/").removesuffix("/profile"))
         if user_id not in self.profiles:
