@@ -75,6 +75,7 @@ Frontend ──/api──▶ Storage Management ◀──/internal── Researc
                      └─▶ Crossref, OpenAlex
 
 Research Evaluation ──/internal/users/{id}/profile──▶ User Management (impact's steps 2 and 3)
+Research Evaluation ──/internal/users/{id}/notifications──▶ User Management ──▶ an SMTP server, Telegram
 ```
 
 One poll, end to end:
@@ -89,10 +90,14 @@ One poll, end to end:
    a rule-based assessment and stores them as alerts. Then it replies:
    `202`, or `503` so Updating re-sends next poll.
 4. After the reply, in the background: **investigation** opens a report
-   grouping the paper's new alerts and stores what it fetched as the
+   grouping the paper's new alerts, posts an `alerts` event to User
+   Management for the report's owner, and stores what it fetched as the
    report's documents (Storage Management downloads their PDFs); then
    **impact** asks Gemini about the report and stores its evaluation (the
-   report becomes `assessed`). Research Evaluation sends no notification.
+   report becomes `assessed`) and posts a `report_assessed` event with it.
+   A placeholder evaluation is not posted. Research Evaluation only posts
+   the events: User Management applies each channel's thresholds, builds the
+   message and sends it (below). A failed post is logged and changes nothing.
 5. The **frontend** reads alerts and reports from Storage Management; the
    researcher acknowledges or dismisses them. The shared refresh of
    papers, alerts and reports runs every 30 s only while a user is signed
@@ -113,8 +118,8 @@ reports on its refresh.
 
 **Outside notifications** are an email or a Telegram message, sent by User
 Management when an alert or an assessed report passes a channel's
-thresholds.
-User Management reads
+thresholds. Research Evaluation posts one event (`POST
+/internal/users/{id}/notifications`, CONTRACTS.md); User Management reads
 the researcher's `notification_preferences`, applies each channel's
 thresholds, builds the message and sends it during the request, then answers
 each channel's outcome. Research Evaluation never holds the bot token, the
@@ -137,7 +142,8 @@ Rules that hold across the flow:
   only for impact's steps 2 and 3. Which user comes from `owner_id` on
   Storage Management's report. A failed read never fails a report.
 - **User Management calls Telegram and an SMTP server**, the only service
-  that does.
+  that does. Research Evaluation posts events to it with its service token
+  and never sends a message itself.
 - **Only Updating calls Research Evaluation** (the nudge), plus a manual
   `POST /evaluate/reports` with a service token. Storage Management and
   the frontend never call it.

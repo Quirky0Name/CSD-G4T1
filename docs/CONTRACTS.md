@@ -529,6 +529,14 @@ address or chat id. There are no retries.
   `<APP_URL>/papers/<paper id>` (trailing slashes of `APP_URL` dropped), none
   when `APP_URL` is not set.
 
+Research Evaluation's side is `users.notify(http, user_id, body)` in
+`backend/src/research_evaluation/users.py`, which raises on any non-2xx answer
+or transport error. Its 30 s timeout is set on that post, so the shared 10 s
+User Management client keeps its timeout for profile reads. A failure is
+logged as `notifying user <id> about report <id> failed: <cause>`, the cause
+being `User Management answered <status>` or the exception class name, never a
+body.
+
 ## Frontend ↔ Storage Management
 
 Owned by: Storage Management. Consumed by: the frontend, at `/api/...`
@@ -1638,8 +1646,13 @@ Management, evaluated in stages").
 **After the reply, in the background** (EVALUATION.md): investigation
 opens a report per paper with new alerts and stores its documents, then
 impact assesses each report it finished (`PUT
-/internal/reports/{reportId}/evaluation`). Research Evaluation sends no
-notification. Nothing in it changes the reply, and Updating never waits for
+/internal/reports/{reportId}/evaluation`). Investigation posts an `alerts`
+event right after opening the report, and impact a `report_assessed` event
+right after the evaluation is stored, each to the report's owner (`POST
+/internal/users/{id}/notifications`, "Research Evaluation ↔ User
+Management"); a placeholder evaluation is not posted, and a failed post
+changes nothing. User Management decides whether and how to tell the
+researcher. Nothing in it changes the reply, and Updating never waits for
 it. Without `GEMINI_API_KEY` reports stay `investigated`. When every
 Gemini model fails a step, the stored evaluation is a placeholder:
 `change_severity` and `impact_level` `low`, the three texts
