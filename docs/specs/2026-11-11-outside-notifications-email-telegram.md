@@ -532,19 +532,19 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
     report <id> failed: <cause>`, with the status code or exception class
     only.
 - **Acceptance criteria:**
-  - [ ] A test shows an opened report posts one `alerts` event to
+  - [x] A test shows an opened report posts one `alerts` event to
         `/internal/users/<owner id>/notifications` with the report's
         alerts (`uv run pytest tests/research_evaluation/investigation`).
-  - [ ] A test shows UM answering `500` still ends the report
+  - [x] A test shows UM answering `500` still ends the report
         `investigated`.
-  - [ ] A test shows an assessed report posts one `report_assessed` event
+  - [x] A test shows an assessed report posts one `report_assessed` event
         carrying the stored `change_severity`, `change_summary`,
         `impact_level`, `evaluation` and `recommendation`; a placeholder
         evaluation posts none (`uv run pytest tests/research_evaluation/impact`).
-  - [ ] A test shows UM timing out still returns True from
+  - [x] A test shows UM timing out still returns True from
         `assess_report`.
-  - [ ] `uv run pytest` passes.
-  - [ ] `uv run ruff check` passes.
+  - [x] `uv run pytest` passes.
+  - [x] `uv run ruff check` passes.
 - **Doc deltas:**
   - `docs/EVALUATION.md`: the flow gains the two posts and when each is
     sent; replace "Research Evaluation sends no notification" with what it
@@ -553,6 +553,15 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
   - `docs/CONTRACTS.md` (`POST /evaluate/changes`, "After the reply"):
     the same replacement.
   - `docs/ARCHITECTURE.md` data flow step 4: the same replacement.
+  - `docs/EVALUATION.md` (Investigation): the alerts post reads the report again (`GET /internal/reports/{id}`) for `owner_id` and the alerts' ids, types, severities and descriptions, because the opened report only carries change keys, and reads the newest snapshot (`paper_details`) for title and DOI. Why: the Interface needs both and the opened report has neither.
+  - `docs/EVALUATION.md`: failing to read the report or paper for a post is logged (`reading report <id> for its notification failed: <cause>`) and also changes nothing, as a failed post doesn't. Why: the reads exist only for the post, and a Storage Management blip there must not leave a report `investigating`.
+  - `docs/EVALUATION.md`: a report whose owner is unknown is logged (`report <id> has no owner: its alerts are not posted`) at INFO, not WARNING. Why: it is a skip the spec asks for, not a failure.
+  - `docs/EVALUATION.md`: the `report_assessed` body is built from the report Storage Management returns from the evaluation PUT, not from the model's draft. Why: the spec says the evaluation as stored.
+  - `docs/EVALUATION.md`: a placeholder is recognised by `assessment.placeholder` in the stored report. Why: the flag is the documented marker, so no text comparison.
+  - `docs/EVALUATION.md`: an `impact_level` of `none` is sent as null. Why: User Management's interface accepts only `low`, `medium`, `high` or null for it and treats null the same.
+  - `docs/CONTRACTS.md`: the 30 s timeout is set on the post itself (`users.notify`), so the shared 10 s User Management client in `main.py` keeps its timeout for profile reads; `main.py` only passes that client to investigation. Why: one client, two timeouts.
+  - `docs/CONTRACTS.md`: the failure log gives `User Management answered <status>` or the exception class name, never a body. Why: spec says status code or exception class only.
+  - Events go through the User Management client both stages already share (`InvestigationContext.um`, new, and `ImpactContext.um`); the `um` test client now records posted notifications and `client` gives investigation that client. Why: no second client to configure.
 
 ## Human checks
 
