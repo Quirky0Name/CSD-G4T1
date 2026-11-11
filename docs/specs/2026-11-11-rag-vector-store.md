@@ -185,6 +185,8 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - `storage/src/main/resources/application.yml` (`spring.flyway.locations`)
   - new package `storage/src/main/java/com/g4t1/storage/chunk/` (`InternalChunkController`, request records, `ChunkService`, `ChunkRepository` on `JdbcTemplate`)
   - `storage/src/test/java/com/g4t1/storage/chunk/`
+  - `storage/src/main/java/com/g4t1/storage/user/UserService.java` (deletes profile chunks)
+  - `storage/pom.xml` (Testcontainers test dependencies; surefire also runs `*IT` classes)
 - **Seams:**
   - `PUT /internal/chunks`: catches validation, the `400`/`404`/`403` answers, replace-not-append, and the stored rows (on H2); misses the real `vector(1536)` column and HNSW index, which only `ChunkPostgresIT` covers.
   - `DELETE /papers/{id}`: catches the cascade from paper to its alert, report and document chunks; misses nothing this subtask adds.
@@ -210,15 +212,15 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
     - Postgres-only tests run in Testcontainers (`pgvector/pgvector:pg17`), skipped when Docker is missing.
     Source: `code: storage/src/test/resources/application-test.yml`.
 - **Acceptance criteria:**
-  - [ ] Storing 2 chunks for an alert, then 1 for the same alert, leaves only the second: `ChunkControllerTest#replacesSourceChunks`.
-  - [ ] An empty `chunks` list deletes the source's chunks: `ChunkControllerTest#emptyChunksDeletes`.
-  - [ ] Each `400` and `404` case in I1: `ChunkControllerTest`, one test per case.
-  - [ ] A user token gets `403`: `ChunkControllerTest#userTokenForbidden`.
-  - [ ] Deleting the paper deletes its alert, report and document chunks: `ChunkControllerTest#deletedWithPaper`.
-  - [ ] Storing 3 `profile` chunks for a user, then 2, leaves only the 2: `ChunkControllerTest#replacesProfileChunks`.
-  - [ ] `DELETE /internal/users/{id}` leaves none of that user's chunks, profile included, and another user's are kept: `ChunkControllerTest#deletedWithUser`.
-  - [ ] The Postgres migration applies, and a stored vector reads back: `ChunkPostgresIT` (Testcontainers, skipped without Docker).
-  - [ ] `./mvnw test` passes.
+  - [x] Storing 2 chunks for an alert, then 1 for the same alert, leaves only the second: `ChunkControllerTest#replacesSourceChunks`.
+  - [x] An empty `chunks` list deletes the source's chunks: `ChunkControllerTest#emptyChunksDeletes`.
+  - [x] Each `400` and `404` case in I1: `ChunkControllerTest`, one test per case.
+  - [x] A user token gets `403`: `ChunkControllerTest#userTokenForbidden`.
+  - [x] Deleting the paper deletes its alert, report and document chunks: `ChunkControllerTest#deletedWithPaper`.
+  - [x] Storing 3 `profile` chunks for a user, then 2, leaves only the 2: `ChunkControllerTest#replacesProfileChunks`.
+  - [x] `DELETE /internal/users/{id}` leaves none of that user's chunks, profile included, and another user's are kept: `ChunkControllerTest#deletedWithUser`.
+  - [x] The Postgres migration applies, and a stored vector reads back: `ChunkPostgresIT` (Testcontainers, skipped without Docker).
+  - [x] `./mvnw test` passes.
 - **Doc deltas:**
   - CONTRACTS.md: I1.
   - STORAGE.md:
@@ -229,6 +231,11 @@ The chunks impact added to the prompt, so a frontend can show them. Sent by S6 i
   - SETUP.md, "Tests": the Postgres-only tests need Docker and are skipped without it.
   - GLOSSARY.md: **Chunk**: a piece of an alert's, report's, report document's or profile's text, stored with its embedding for search.
   - ROADMAP.md: writing profile chunks (which service embeds a profile, and when) and searching them from impact; draft chunks (a `draft_id` column and source type, by migration).
+  - STORAGE.md, "Chunks": the unique constraint is `nulls not distinct`, because only one of the four source ids is ever set and plain `unique` would let duplicates through.
+  - STORAGE.md, "Chunks": `ChunkRepository` binds a vector as `cast(? as vector)` from its text form on Postgres and as a Java array on H2, picked from the JDBC driver's product name, so one repository serves both databases.
+  - STORAGE.md, "Chunks": a check constraint keeps `page` null or at least 1, matching I1; `embed_model` is at most 64 characters (a `400` above that), the column's size.
+  - STORAGE.md, "Chunks": indexes on (`paper_id`, `source_type`) and `user_id`, for search's filters and the user delete.
+  - SETUP.md, "Tests": `./mvnw test` runs the `*IT` classes too (surefire `includes` in `pom.xml`), so the Postgres tests run with the rest when Docker is up.
 
 ### S3. Storage Management searches a paper's chunks
 
