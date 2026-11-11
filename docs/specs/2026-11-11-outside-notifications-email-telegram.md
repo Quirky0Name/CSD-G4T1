@@ -257,6 +257,12 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
     could undo the other channel's new values and break "the other channel
     is unchanged"; the channels share no columns, so partial updates can't
     collide.
+  - `docs/ARCHITECTURE.md` (Section 2): each channel's PUT loads the preferences row with a
+    pessimistic write lock inside its transaction, so overlapping PUTs queue on the row. Why: `@DynamicUpdate`
+    alone writes only the columns each request changed against its own stale read, so two overlapping PUTs to
+    the same channel merged column by column (enabled true from one, chat id null from the other), a state the
+    PUT refuses with `400`; with the lock each same-channel PUT stores a whole channel, and `@DynamicUpdate`
+    stays so PUTs to different channels never write each other's columns.
   - `docs/CONTRACTS.md`, errors: a malformed body (not JSON) is Spring's
     generic `400`; field errors say `<field> is required` (`enabled`) or
     `<field> must be low, medium, high or null` /
@@ -495,6 +501,9 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
   - `docs/ROADMAP.md`: done: notifying about reports while signed out (by
     email or Telegram); open: notification history, retries, email
     verification, linking Telegram without typing a chat id.
+  - `docs/ARCHITECTURE.md` (Section 2): a Telegram send with no chat id on an enabled channel is `failed` without
+    an error, logging the user id and "no chat id" only. Why: the PUT refuses that state, but an older or hand
+    edited row could hold it, and unboxing the null chat id would throw inside the send.
 
 ### S3: Research Evaluation posts the two events
 
