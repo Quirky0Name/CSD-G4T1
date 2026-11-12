@@ -66,18 +66,22 @@ def alert_pieces(alert: AlertInReport) -> list[Piece]:
     return [Piece("\n".join(lines))]
 
 
+def _evaluation_fields(source: Evaluation | Report) -> list[tuple[str, str | None]]:
+    return [
+        ("change summary", source.change_summary),
+        ("change severity", source.change_severity),
+        ("impact level", source.impact_level),
+        ("evaluation", source.evaluation),
+        ("recommendation", source.recommendation),
+    ]
+
+
 def report_pieces(evaluation: Evaluation) -> list[Piece]:
     """The evaluation's fields that are present; none for the placeholder, which says nothing
     about the paper."""
     if evaluation.assessment.get("placeholder"):
         return []
-    fields = [
-        ("change summary", evaluation.change_summary),
-        ("change severity", evaluation.change_severity),
-        ("impact level", evaluation.impact_level),
-        ("evaluation", evaluation.evaluation),
-        ("recommendation", evaluation.recommendation),
-    ]
+    fields = _evaluation_fields(evaluation)
     return [Piece("\n".join(f"{name}: {value}" for name, value in fields if value))]
 
 
@@ -92,14 +96,7 @@ def feedback_piece(report: Report, paper: PaperDetails) -> Piece:
     date = report.created_at.date().isoformat() if report.created_at else UNKNOWN
     head = f'{FEEDBACK_HEAD} {date}: "{paper.title or paper.doi or "unknown paper"}"'
     change_types = ", ".join(dict.fromkeys(alert.change_type for alert in report.alerts))
-    fields = [
-        ("changes", change_types),
-        ("change summary", report.change_summary),
-        ("change severity", report.change_severity),
-        ("impact level", report.impact_level),
-        ("evaluation", report.evaluation),
-        ("recommendation", report.recommendation),
-    ]
+    fields = [("changes", change_types), *_evaluation_fields(report)]
     middle = "\n".join(f"{name}: {value}" for name, value in fields if value)
     tail = f"{VERDICT_LINE}{feedback.verdict}"
     if feedback.note:
