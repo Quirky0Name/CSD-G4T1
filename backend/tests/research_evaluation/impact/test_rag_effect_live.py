@@ -8,7 +8,6 @@ context, not that it gets better."""
 import os
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any, get_args
 from uuid import UUID
 
@@ -28,7 +27,6 @@ from research_evaluation.storage import AlertInReport, Chunk, Feedback, PaperDet
 
 pytestmark = pytest.mark.live
 
-DRAFT = Path(__file__).parents[2] / "fixtures" / "impact" / "draft_cites_ijaa.pdf"
 DEFAULT_PROVIDER = "claude-code"
 DEFAULT_MODELS = {"claude-code": "sonnet", "claude-api": "claude-sonnet-5-5"}
 EFFORT = "medium"

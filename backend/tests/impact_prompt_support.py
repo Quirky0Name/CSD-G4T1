@@ -79,7 +79,6 @@ def sample_inputs() -> ReportInputs:
     )
 
 
-
 async def ijaa_retraction_inputs(sm, owner: UUID | None = None) -> ReportInputs:
     """The IJAA retraction with its notice's real Crossref record and no notice text, and a draft
     in the stub Storage Management that cites the paper, so steps 2 and 3 run."""
@@ -108,6 +107,7 @@ async def ijaa_retraction_inputs(sm, owner: UUID | None = None) -> ReportInputs:
         document_pdfs=[],
         missing=[MissingPdf("stored paper", "not stored")],
     )
+
 
 CHANGE = ChangeAssessment.model_validate(
     {
