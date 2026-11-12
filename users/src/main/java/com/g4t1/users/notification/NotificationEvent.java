@@ -12,6 +12,7 @@ public record NotificationEvent(String event, Paper paper, Long reportId, List<A
                                 String evaluation, String recommendation) {
 
     static final String ALERTS = "alerts";
+    static final String REPORT_ASSESSED = "report_assessed";
 
     public record Paper(UUID id, String title, String doi) {
     }

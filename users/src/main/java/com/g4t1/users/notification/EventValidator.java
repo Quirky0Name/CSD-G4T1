@@ -8,7 +8,7 @@ import java.util.Set;
 // The rules of an event's body; a break is a 400 whose detail starts with the field's name
 final class EventValidator {
 
-    private static final Set<String> EVENTS = Set.of(NotificationEvent.ALERTS, "report_assessed");
+    private static final Set<String> EVENTS = Set.of(NotificationEvent.ALERTS, NotificationEvent.REPORT_ASSESSED);
 
     private EventValidator() {
     }
