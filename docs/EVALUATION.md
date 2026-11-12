@@ -15,8 +15,8 @@ POST /evaluate/changes (paper ids, from Updating)
   ├─ 2. rules       rules.py       alert severity, description, recommendation → POST alert
   └─ reply 202 / 503
        └─ background task, per paper evaluated without failure that had changes:
-          3. investigation  investigation/   open a report, fetch its documents → report ids
-          4. impact         impact/          read the paper's past, Gemini three steps → PUT evaluation → assessed → store the report's chunks
+          3. investigation  investigation/   open a report, post its alerts to User Management, fetch its documents → report ids
+          4. impact         impact/          read the paper's past, Gemini three steps → PUT evaluation → assessed → post it to User Management → store the report's chunks
 POST /evaluate/reports (report ids, by hand) ─▶ 4 only
 ```
 
@@ -125,6 +125,26 @@ finished. Per paper:
 5. Follow links (`run.follow_links`, below): documents reached are stored
    as `related`.
 6. `PATCH` the report to `investigated`.
+
+**The alerts post.** Right after step 1 and before any document is fetched,
+investigation posts an `alerts` event for the report's owner (`POST
+/internal/users/{id}/notifications`, CONTRACTS.md, "Research Evaluation ↔
+User Management"), through the User Management client both stages share
+(`InvestigationContext.um`, optional: `None` posts nothing, as in the evals).
+It isn't posted as each alert is stored: alerts are stored before the nudge's
+reply, which Updating waits for, and Research Evaluation doesn't know the
+paper's owner then. The post reads the report again (`GET
+/internal/reports/{id}`) for `owner_id` and the alerts' ids, types, severities
+and descriptions, because the opened report only carries change keys, and
+reads the newest snapshot (`paper_details`) for the title and DOI. It lists
+every alert of the report; User Management filters per channel. A failed post
+is logged and changes nothing: the report still ends `investigated`. So does
+failing to read the report or paper for the post (logged as `reading report
+<id> for its notification failed: <cause>`), since those reads exist only for
+the post and a Storage Management blip there must not leave a report
+`investigating`. A report whose owner is unknown skips the post, logged at INFO
+(`report <id> has no owner: its alerts are not posted`), not WARNING: it is a
+skip, not a failure.
 
 Investigation fetches facts and judges nothing. In particular it doesn't
 decide whether the current copy differs from the stored paper: hashes
@@ -515,7 +535,39 @@ embeds a profile yet), snapshots, tracked papers' PDFs and drafts
 
 ## Notification
 
-Research Evaluation sends no notification. The frontend notices assessed reports on its refresh (ARCHITECTURE.md).
+Research Evaluation sends no message itself. It posts two events to User
+Management (`POST /internal/users/{id}/notifications`, CONTRACTS.md, "Research
+Evaluation ↔ User Management"), to the report's owner, and User Management
+decides whether to tell the researcher by email or Telegram and sends it
+(ARCHITECTURE.md, "Outside notifications"). The in-app toast is separate: the
+frontend notices assessed reports on its refresh.
+
+- **`alerts`**, when investigation opens a report (Investigation, "The alerts
+  post").
+- **`report_assessed`**, right after impact's `PUT
+  /internal/reports/{reportId}/evaluation` succeeds. The body is built from the
+  report Storage Management returns from that `PUT`, not from the model's
+  draft, because the evaluation is posted as stored. Reading that stored answer
+  (a missing field, a null `assessment`) is inside the same guard as the paper
+  read: a failure is logged as `reading report <id> for its notification
+  failed: <cause>` and posts nothing, because `assess_reports` never raises and
+  a malformed answer must not skip the reports after it. An assessed report
+  whose owner is unknown is logged at INFO (`report <id> has no owner: its
+  evaluation is not posted`). An `impact_level` of `none` is sent as null: User
+  Management accepts only `low`, `medium`, `high` or null for it and treats null
+  the same.
+- **A placeholder evaluation is not posted.** It has no real content to send. It
+  is recognised by `assessment.placeholder` in the stored report, not by
+  comparing text.
+- **Failures.** A failed post (a non-2xx answer, a timeout, a transport error) is
+  logged as `notifying user <id> about report <id> failed: <cause>`, with the
+  status code or exception class only, never a response body. Nothing is
+  retried, and a failed post never changes what investigation or impact did:
+  `assess_report` still returns True and the report still ends `investigated`.
+  The post waits up to 30 s, since User Management sends before it answers.
+
+One nudge posts `alerts` first and `report_assessed` later, once impact has
+assessed the report (without `GEMINI_API_KEY`, only `alerts`).
 
 ## Evals
 
@@ -776,7 +828,7 @@ run `run.py --dry <case>` to check that it builds.
 | Service-token check on its endpoints | `auth.py` (`require_service_token`) |
 | Storage Management client | `storage.py`: snapshots, change keys, alerts, reports, documents, PDFs, evaluation, chunks (`store_chunks`, `search_chunks`, `Chunk`); `PaperGone`, `ReportGone` |
 | Embeddings | `embedding.py` (`Embedder`, `GeminiEmbedder`, `chunk_text`), `chunks.py` (the chunk text for each source, PDF text with `pypdf`) |
-| User Management client | `users.py`: `ResearcherProfile`, `researcher_profile(http, user_id)` |
+| User Management client | `users.py`: `ResearcherProfile`, `researcher_profile(http, user_id)`, `notify(http, user_id, body)` (the events above, 30 s timeout set on the post) |
 | Detection, rules, per-paper evaluation | `changes.py`, `rules.py`, `evaluate.py` |
 | Investigation | `investigation/`: `http.py` (one GET, `FetchStatus`), `crossref.py`, `europepmc.py`, `investigate.py` (plan, fetch), `run.py` |
 | Impact | `impact/`: `llm.py` (Gemini client, `FallbackLlm`), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `history.py` (the query, the three searches), `assess.py`, `run.py` (`ImpactContext`) |
@@ -789,7 +841,8 @@ The lifespan makes four HTTP clients: Storage Management's (base URL,
 service token, 10 s), User Management's (`UM_BASE_URL`, service token, same
 timeout), one for Crossref and Europe PMC (no base URL and no auth), and
 the Gemini client. User Management's is always opened, even without a Gemini
-key, but only `ImpactContext` uses it (`ImpactContext.um`, optional).
+key, but only `ImpactContext` and `InvestigationContext` use it (`ImpactContext.um`
+and `InvestigationContext.um`, both optional: `None` sends nothing, as in the evals).
 
 ## Gotchas
 

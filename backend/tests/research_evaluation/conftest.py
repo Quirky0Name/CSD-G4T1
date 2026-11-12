@@ -1,3 +1,4 @@
+import json
 from uuid import UUID
 
 import httpx
@@ -84,16 +85,52 @@ class StubSm:
         return [query for m, path, query in self.transport.requests if m == method and path.endswith(suffix)]
 
 
+def rejection(body: dict) -> str | None:
+    """Why User Management would answer this notification 400, or None if it would take it; the
+    rules and details are those of its EventValidator."""
+    levels = ("low", "medium", "high")
+    if body.get("event") not in ("alerts", "report_assessed"):
+        return "event must be alerts or report_assessed"
+    if (body.get("paper") or {}).get("id") is None:
+        return "paper is required"
+    if body["event"] == "alerts":
+        sent = body.get("alerts")
+        if not sent:
+            return "alerts must have at least one alert"
+        for alert in sent:
+            if alert is None:
+                return "alerts must not contain null"
+            if alert.get("alert_severity") not in levels:
+                return "alert_severity must be low, medium or high"
+            if alert.get("change_type") is None or alert.get("description") is None:
+                return "change_type and description are required"
+        return None
+    if body.get("change_severity") not in ("none", *levels):
+        return "change_severity must be none, low, medium or high"
+    if body.get("change_summary") is None:
+        return "change_summary is required"
+    if body.get("impact_level") not in (None, *levels):
+        return "impact_level must be low, medium, high or null"
+    if body["change_severity"] == "none":
+        for field in ("impact_level", "evaluation", "recommendation"):
+            if body.get(field) is not None:
+                return f"{field} must be null when change_severity is none"
+    return None
+
+
 class StubUm:
-    """User Management's internal profile read as Research Evaluation reaches it, with no network:
+    """User Management's internal calls as Research Evaluation reaches them, with no network:
     `profiles` maps a user id to its profile body, and an unknown id is User Management's
-    `No profile <id>` 404. `failure` answers every request with that status (with `detail`) or
-    raises that exception. Every request is recorded."""
+    `No profile <id>` 404; a posted notification that keeps the interface's rules (`rejection`) is
+    answered `200` and found in `notifications` (the user id and the body), and one that breaks
+    them is answered `400` and not recorded. `failure` answers every request with that status (with `detail`)
+    or raises that exception. Every request is recorded."""
 
     def __init__(self) -> None:
         self.profiles: dict[UUID, dict] = {}
         self.failure: int | httpx.Response | Exception | None = None
         self.requests: list[httpx.Request] = []
+        self.notifications: list[tuple[UUID, dict]] = []
         self.client = httpx.AsyncClient(
             transport=httpx.MockTransport(self._handle),
             base_url="http://um",
@@ -108,6 +145,13 @@ class StubUm:
             return self.failure
         if self.failure is not None:
             return httpx.Response(self.failure, json={"detail": "injected"})
+        if request.url.path.endswith("/notifications"):
+            user_id = UUID(request.url.path.removeprefix("/internal/users/").removesuffix("/notifications"))
+            body = json.loads(request.content)
+            if (problem := rejection(body)) is not None:
+                return httpx.Response(400, json={"detail": problem})
+            self.notifications.append((user_id, body))
+            return httpx.Response(200, json={"channels": {"email": "sent", "telegram": "sent"}})
         user_id = UUID(request.url.path.removeprefix("/internal/users/").removesuffix("/profile"))
         if user_id not in self.profiles:
             return httpx.Response(404, json={"detail": f"No profile {user_id}"})
@@ -206,7 +250,7 @@ def settings(request) -> ResearchEvaluationSettings:
 
 
 @pytest.fixture
-async def client(sm, external, impact, settings):
+async def client(sm, um, external, impact, settings):
     """Research Evaluation, talking to the stub. The lifespan doesn't run under
     ASGITransport, so the key, the Storage Management client, the snapshot window and
     investigation's and impact's contexts come in as overrides (impact's is None, as with no
@@ -217,7 +261,10 @@ async def client(sm, external, impact, settings):
     app.dependency_overrides[sm_client] = lambda: sm.client
     app.dependency_overrides[snapshot_window] = lambda: settings.evaluation_snapshot_window
     app.dependency_overrides[investigation_context] = lambda: InvestigationContext(
-        external=external.client, crossref_mailto="", pdf_timeout=settings.investigation_pdf_timeout_seconds
+        external=external.client,
+        crossref_mailto="",
+        pdf_timeout=settings.investigation_pdf_timeout_seconds,
+        um=um.client,
     )
     app.dependency_overrides[impact_context] = lambda: impact.context
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://re") as http:

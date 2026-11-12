@@ -1,0 +1,75 @@
+package com.g4t1.users;
+
+import com.sun.net.httpserver.HttpServer;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+// A real HTTP server on a random port standing in for the Telegram Bot API; it records every request
+// and answers with whatever status the test last set
+public final class TelegramStub {
+
+    public record Request(String method, String path, String body) {
+    }
+
+    private final HttpServer server;
+    private final List<Request> requests = new CopyOnWriteArrayList<>();
+    private volatile int status = 200;
+    private volatile long delayMillis = 0;
+
+    public TelegramStub() {
+        try {
+            server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        server.createContext("/", exchange -> {
+            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            requests.add(new Request(exchange.getRequestMethod(), exchange.getRequestURI().getPath(), body));
+            if (delayMillis > 0) {
+                try {
+                    Thread.sleep(delayMillis);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            byte[] answer = (status == 200 ? "{\"ok\":true}" : "{\"ok\":false}").getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(status, answer.length);
+            exchange.getResponseBody().write(answer);
+            exchange.close();
+        });
+        server.start();
+    }
+
+    public String url() {
+        return "http://localhost:" + server.getAddress().getPort();
+    }
+
+    public List<Request> requests() {
+        return requests;
+    }
+
+    public void answerWith(int status) {
+        this.status = status;
+    }
+
+    // holds every answer back this long, as a Telegram that is up but slow would
+    public void answerAfter(long millis) {
+        this.delayMillis = millis;
+    }
+
+    public void reset() {
+        requests.clear();
+        status = 200;
+        delayMillis = 0;
+    }
+
+    public void stop() {
+        server.stop(0);
+    }
+}

@@ -40,7 +40,7 @@ comments into the value.
 | `DEV_MODE` | Storage Management, User Management | `false` unless set. `true` (only that, in any letter case; `1`, `on` and `yes` don't count) creates the admin account `admin` / `12345679` in User Management and serves the `/admin/**` endpoints in Storage Management. Separate from `DEV_TOOLS`. Its password is known: never on a server (DEPLOY.md). Updating and Research Evaluation don't read it |
 | `SM_BASE_URL` | RE, Updating | `http://localhost:8081` (compose overrides it) |
 | `RE_BASE_URL` | Updating | `http://localhost:8000` |
-| `UM_BASE_URL` | RE | `http://localhost:8080`: User Management, where impact reads the researcher's profile (compose sets `http://users:8080`) |
+| `UM_BASE_URL` | RE | `http://localhost:8080`: User Management, where impact reads the researcher's profile and the events for outside notifications are posted (compose sets `http://users:8080`) |
 | `DATABASE_URL` | Updating | `postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` (the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres |
 | `OPENALEX_API_KEY` | Updating (and Storage Management) | openalex.org |
 | `CROSSREF_MAILTO` | Updating, RE (and Storage Management) | a team contact email; empty sends none |
@@ -65,7 +65,8 @@ Outside compose it also reads `SPRING_DATASOURCE_URL`, `_USERNAME`,
 `_PASSWORD`, `GROBID_URL` (default `http://localhost:8070`), `UPLOAD_DIR`
 (default `uploads/` in the working directory) and `PORT` (default 8081).
 
-User Management (`users/`) reads `JWT_SECRET` (the same value),
+User Management (`users/`) also reads the outside notification settings, all
+optional (below, "Email (SMTP)" and "Telegram bot"). It reads `JWT_SECRET` (the same value),
 `SPRING_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD`, and `SM_BASE_URL`
 (Storage Management, which it asks to clear a deleted project; default
 `http://localhost:8081`, and the root stack sets it) and `REFRESH_COOKIE_SECURE`
@@ -203,6 +204,42 @@ Then set `JWT_SECRET`, `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5434/u
 (`.\mvnw.cmd spring-boot:run` on Windows). It listens on 8080; Flyway
 creates the `users` schema and its tables. `docker compose down -v` wipes
 its database.
+
+### Email (SMTP)
+
+Outside notifications by email need an SMTP server; with no `MAIL_HOST`, email
+is not sent and a channel saved enabled gets the outcome `not_configured`. In
+the root `.env` (all read by User Management only):
+
+| Var | Value |
+|---|---|
+| `MAIL_HOST` | the SMTP server; empty turns email off |
+| `MAIL_PORT` | `587` (the default). It is `587` in `.env.example` and the compose file, so an empty value in `.env` never reaches Spring as an empty port |
+| `MAIL_USERNAME`, `MAIL_PASSWORD` | the SMTP login. Authentication happens whenever both are set (JavaMail's rule), so there is no separate auth setting |
+| `MAIL_FROM` | the From address. It has no default: with a `MAIL_HOST` and no `MAIL_FROM` the mail has no From and the SMTP server or JavaMail refuses it (`failed`, logged as `MailSendException`). `not_configured` still means only "no `MAIL_HOST`" |
+| `APP_URL` | the site's address (e.g. `https://our-name.duckdns.org`), for the link to the paper in a message; empty sends no link |
+
+STARTTLS is used when the server offers it (`enable`, not `required`), and the
+connect, read and write timeouts are 10 s each. Each channel also has one
+overall 10 s deadline for its whole send (`CHANNEL_DEADLINE`, default `10s`,
+which the tests shorten): a channel still running at the deadline is `failed`,
+logged with the user id, channel and exception class only, and the other
+channel is unaffected; the send is abandoned, not undone, so a message may
+still arrive after `failed`. `MAIL_PASSWORD`, like every setting in `.env`, also
+reaches Research Evaluation and Updating, which load `.env` whole
+(`env_file`); only User Management reads it.
+
+### Telegram bot
+
+Create a bot with BotFather and set `TELEGRAM_BOT_TOKEN` in `.env`; empty turns
+Telegram off (a channel saved enabled gets `not_configured`). A researcher then
+presses Start on the bot, gets their chat id from a bot such as `@userinfobot`,
+and types it into their Telegram settings (`PUT /auth/me/notifications/telegram`);
+the bot can't message a chat that hasn't pressed Start. `TELEGRAM_API_URL`
+(default `https://api.telegram.org`) exists for the tests, to point User
+Management at a stub; it isn't in `.env.example` or the compose file.
+`POST /auth/me/notifications/test` checks a setup end to end (one per account
+per 60 s).
 
 ## Dev mode: triggering a change
 
