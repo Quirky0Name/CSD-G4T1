@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 import httpx
 import pytest
 import respx
-from impact_prompt_support import CHANGE, DRAFT, sample_inputs, saved, serialise
+from impact_prompt_support import CHANGE, DRAFT, PAPER_PDF, sample_inputs, saved, serialise
 
 from research_evaluation.impact.assess import assess
 from research_evaluation.impact.llm import Answer
@@ -17,6 +17,7 @@ from research_evaluation.impact.prompts import change_prompt, impact_prompt
 from research_evaluation.impact.run import ImpactContext, assess_report
 from research_evaluation.impact.schemas import (
     ChangeAssessment,
+    Claim,
     ImpactAssessment,
     RecommendedActions,
 )
@@ -65,8 +66,11 @@ class RecordingLlm:
             ImpactAssessment: ImpactAssessment(
                 cited=True, reference_entry=None, uses=[], impact_level="medium",
                 explanation="Your Discussion relies on it.",
+                claims=[Claim(text="Your Discussion relies on it.", passages=[])],
             ),
-            RecommendedActions: RecommendedActions(actions=[], recommendation="Replace it."),
+            RecommendedActions: RecommendedActions(
+                actions=[], recommendation="Replace it.", claims=[Claim(text="Replace it.", passages=[])]
+            ),
         }
         return Answer(answers[schema], "fake-gemini-001", self.model)
 
@@ -160,8 +164,18 @@ def test_no_history_unchanged():
     inputs = sample_inputs()
 
     assert serialise(change_prompt(inputs).parts) == saved("step1")
-    assert serialise(impact_prompt(inputs.paper, CHANGE, DRAFT)) == saved("step2")
-    assert serialise(impact_prompt(inputs.paper, CHANGE, DRAFT, chunks=[])) == saved("step2")
+    assert serialise(impact_prompt(inputs.paper, CHANGE, DRAFT, PAPER_PDF).parts) == saved("step2")
+    assert serialise(impact_prompt(inputs.paper, CHANGE, DRAFT, PAPER_PDF, chunks=[]).parts) == saved("step2")
+
+
+def test_step_2_puts_the_past_after_the_draft_and_the_stored_paper():
+    inputs = sample_inputs()
+
+    parts = impact_prompt(inputs.paper, CHANGE, DRAFT, PAPER_PDF, chunks=PAST).parts
+
+    assert serialise(parts[:-2]) == saved("step2")[:-1]
+    assert parts[-2].startswith("PAST TIMELINE\n")
+    assert serialise(parts[-1:]) == saved("step2")[-1:]
 
 
 async def test_search_calls(sm, mock_sm):

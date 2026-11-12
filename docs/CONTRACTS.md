@@ -559,6 +559,7 @@ SETUP.md), with the user's token.
 | New-alert toast | no push: re-fetch alerts and toast unseen `new` ids |
 | Report-ready notification | no push: each refresh (every 30 s) re-fetches `GET /papers/{id}/reports` for every paper and notifies `assessed` ids it hasn't seen; the first load after sign-in (or a reload) only records them. No lean reports endpoint: it reuses the reports call, and only the caller's papers are considered |
 | The draft for a project | `POST` / `GET` / `DELETE /draft` |
+| Show a PDF beside a report's highlights | `GET /papers/{id}/pdf`, `GET /documents/{id}/pdf`, `GET /draft/pdf?project_id=` |
 
 ### `GET /papers`
 
@@ -700,6 +701,7 @@ report of the paper, whatever its status, **newest first** (by
     "id": 3, "paper_id": "uuid", "status": "investigated",
     "created_at": "2026-09-27T08:00:00Z", "investigated_at": "2026-09-27T08:00:40Z",
     "evaluation": null, "recommendation": null, "evaluated_at": null,
+    "change_summary": null, "change_severity": null, "impact_level": null, "claims": null,
     "alerts": [
       {"id": 7, "paper_id": "uuid", "change_type": "retraction", "alert_severity": "high",
        "description": "...", "recommendation": "...", "notice_doi": "10.xxxx/notice",
@@ -729,6 +731,8 @@ be in `GET /papers/{id}/alerts` a moment before it's in a report.
 | `created_at`, `investigated_at` | when the report was opened, and when fetching finished (null until then) |
 | `context_chunks` | the chunks impact added to the prompt, so a frontend can show them: an array of `{"source_type", "source_id", "page"}` in prompt order, as `PUT /internal/reports/{id}/evaluation` stored it. A `document` item opens with `GET /documents/{id}/pdf` at `page`; an `alert` or `report` item is found in the same paper's report list by its id. `[]` when impact found no past; null for a report assessed before V14 or not yet assessed. Returned only here, not by `GET /internal/reports/{id}`, since only a frontend shows it |
 | `evaluation`, `recommendation`, `evaluated_at` | impact's evaluation of the report's alerts together, what the researcher should do, and when it was written. Null until the report is `assessed`, and also null on an assessed report whose change impact rated `none` (not meaningful) |
+| `change_summary`, `change_severity`, `impact_level` | impact's summary of what changed, how serious the change is for anyone relying on the paper, and how much the researcher's draft is affected (`none`, `low`, `medium` or `high`), as in `GET /internal/papers/{id}/reports/{reportId}`. Null until the report is `assessed`; `impact_level` is also null when `change_severity` is `none` |
+| `claims` | the evaluation's claims, an array of `Claim` (below); null until `assessed` and on reports assessed before claims existed (they aren't backfilled) |
 | `alerts` | the report's alerts, in the same shape and order as `GET /papers/{id}/alerts` (newest first, then most severe), **dismissed ones included**, with their status. They're the same alerts, acted on with `PATCH /alerts/{id}`. Can be empty: when a retraction notice arrives after a retraction alert that had none, the alert moves to the paper's next report (see `POST /internal/papers/{id}/alerts`), and the earlier report keeps its documents |
 | `documents` | what investigation fetched, oldest first (the order it stored them) |
 
@@ -750,8 +754,70 @@ and the `current_version` are about the whole report. A document can match no
 alert (two retraction notices in one nudge's window, when the retraction
 alert carries only one): show it with the report.
 
-`file_key`, `sha256` and `report_id` are stored but not returned. The
-frontend has no endpoint to download a document's stored PDF.
+`file_key`, `sha256` and `report_id` are stored but not returned. A
+document's stored PDF is `GET /documents/{id}/pdf` (below). The response
+never carries `assessment`.
+
+#### `Claim`
+
+`claims` is a JSON array Research Evaluation sends on
+`PUT /internal/reports/{reportId}/evaluation`; Storage Management stores it as
+sent and returns it on `GET /internal/reports/{reportId}`,
+`GET /internal/papers/{id}/reports/{reportId}` and `GET /papers/{id}/reports`.
+
+```json
+{
+  "id": "impact-0",
+  "kind": "impact",
+  "text": "The draft's dose choice rests on the finding that 200 mg of caffeine improves working memory",
+  "supported": true,
+  "passages": [
+    {
+      "target": "paper",
+      "document_id": null,
+      "alert_id": null,
+      "quote": "200 mg caffeine improved n-back accuracy",
+      "page": 3,
+      "verified": "verbatim"
+    }
+  ]
+}
+```
+
+| Claim field | Meaning |
+|---|---|
+| `id` | `<kind>-<index in that step's claims>`; unique in the report |
+| `kind` | the step that made it: `change`, `impact` or `action` |
+| `text` | the statement, as the model wrote it; a claim isn't tied to an alert, use or action |
+| `supported` | true when at least one passage has `verified` `verbatim`; false with no passages |
+| `passages` | the claim's passages, as the model ordered them |
+
+| Passage field | Meaning |
+|---|---|
+| `target` | `paper` (the stored PDF), `draft`, `document` or `alert`; null when the quote was found nowhere and its source names no text |
+| `document_id` | the report document's id when `target` is `document`, else null |
+| `alert_id` | the alert's id when `target` is `alert`, else null |
+| `quote` | as the model wrote it |
+| `page` | 1-based page where the quote starts when found in a PDF, else null |
+| `verified` | `verbatim`, `not_found` (the text was read; the quote isn't in it) or `no_text` (no text to check: no PDF, unreadable, or no text layer) |
+
+All of it is model output and fetched text: show as text, never as HTML. A
+passage gives its document, quote and page only: **no bounding boxes or
+character offsets**. A draft quote may not be found in the current upload if
+the draft was replaced after the assessment; only the current upload is
+served. How `verified` is decided is in [EVALUATION.md](EVALUATION.md).
+
+#### User PDFs: `GET /papers/{id}/pdf`, `GET /documents/{id}/pdf`, `GET /draft/pdf?project_id=`
+
+User JWT required, `application/pdf`, only the owner. Another user's item gets
+the same `404` as a missing one. `GET /draft/pdf` serves the project's current
+draft (the default project when `project_id` is left out or `""`).
+
+Errors, as problem details: `400` an id that isn't valid or a `project_id` that
+isn't a UUID; `401` missing or bad token; `403` a service token; `404`, as on
+the internal endpoints, also for a paper with no stored PDF, a document with
+none (a notice, `pending`, `not_found`) and a file missing from disk, each
+with its own `detail`.
 
 Errors, as problem details: `400` an id that isn't a UUID; `401` missing
 or bad token; `403` a service token; `404` no paper with that id **or** a
@@ -1277,6 +1343,7 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
   "created_at": "2026-09-27T08:00:00Z", "investigated_at": null,
   "evaluation": null, "recommendation": null, "evaluated_at": null,
   "change_summary": null, "change_severity": null, "impact_level": null, "assessment": null,
+  "claims": null,
   "alerts": [
     {"id": 7, "change_type": "retraction", "change_key": "retraction", "alert_severity": "high",
      "description": "...", "recommendation": "...", "notice_doi": "10.xxxx/...",
@@ -1300,7 +1367,10 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
   - `evaluation`: how the change affects the researcher; `recommendation`:
     what to do; `evaluated_at`: when impact wrote them;
   - `assessment`: impact's full answer as a JSON object, returned exactly as
-    Research Evaluation sent it.
+    Research Evaluation sent it;
+  - `claims`: an array of `Claim` (see `GET /papers/{id}/reports`), returned
+    exactly as sent; null when the `PUT` left it out, and on reports assessed
+    before claims existed (no backfill).
 
   Unlike the alerts' `alert_severity`, which is fixed by change type, these are
   impact's judgment.
@@ -1360,6 +1430,7 @@ marks the report `assessed`.
   "evaluation": "Your Discussion cites it as …",
   "recommendation": "Replace the citation in the Discussion.",
   "assessment": {"prompt_version": 1, "...": "impact's full answer"},
+  "claims": [{"id": "change-0", "kind": "change", "...": "see Claim"}],
   "context_chunks": [
     {"source_type": "document", "source_id": "7", "page": 3},
     {"source_type": "alert", "source_id": "42", "page": null}
@@ -1374,6 +1445,7 @@ marks the report `assessed`.
 | `impact_level` | `none`, `low`, `medium` or `high`: required unless `change_severity` is `none`, and must be null (or left out) when it is |
 | `evaluation`, `recommendation` | not blank: required unless `change_severity` is `none`, and must be null (or left out) when it is |
 | `assessment` | optional JSON, stored and returned exactly as sent; Storage Management never looks inside |
+| `claims` | optional JSON array of `Claim`, stored in its own column and returned exactly as sent (any JSON value is accepted; left out or `null` stores null). Kept apart from `assessment` so that stays unread. Null for reports assessed before V15 |
 | `context_chunks` | optional JSON array, stored as sent and never looked inside: the chunks impact added to its prompt, in prompt order, each `source_type`, `source_id` and `page` (null when the chunk has none). Absent or `null` stores null; an empty `[]` is kept as `[]`, so a report that found no past is told apart from one assessed before V14 |
 
 **Response `200`:** the report, as `GET` returns it, with `status`

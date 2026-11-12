@@ -1,9 +1,9 @@
 """The shapes of impact's three answers (Gemini's structured output) and of what it sends to
 Storage Management. The field names are the ones the prompts ask for (impact/prompts.py)."""
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 Level = Literal["none", "low", "medium", "high"]
 Role = Literal[
@@ -33,6 +33,19 @@ class Evidence(_Answer):
     quote: str
 
 
+class Claim(_Answer):
+    """One factual statement of a step's answer and the quotes behind it (docs/EVALUATION.md,
+    "Impact"). A claim is about anything the step says, not tied to an alert, use or action;
+    a statement with nothing to quote has no passages."""
+
+    text: str
+    passages: list[Evidence]
+
+
+# every step states at least one thing, so an empty list is an answer that doesn't fit
+Claims = Annotated[list[Claim], Field(min_length=1)]
+
+
 class AlertJudgment(_Answer):
     alert_id: int
     about_this_paper: Literal["yes", "no", "unclear"]
@@ -49,6 +62,7 @@ class ChangeAssessment(_Answer):
     relations: str | None
     severity: Level
     summary: str
+    claims: Claims
 
 
 # Step 2: how does it impact the researcher?
@@ -69,6 +83,7 @@ class ImpactAssessment(_Answer):
     uses: list[Use]
     impact_level: Level
     explanation: str
+    claims: Claims
 
 
 # Step 3: what should the researcher do?
@@ -82,6 +97,35 @@ class Action(_Answer):
 class RecommendedActions(_Answer):
     actions: list[Action]
     recommendation: str
+    claims: Claims
+
+
+# What the evaluation carries: each step's claims, each quote checked in code (impact/claims.py;
+# the `Claim` of docs/CONTRACTS.md). Model output and fetched text: shown as text, never as HTML.
+
+
+Target = Literal["paper", "draft", "document", "alert"]
+Verified = Literal["verbatim", "not_found", "no_text"]
+ClaimKind = Literal["change", "impact", "action"]
+
+
+class Passage(BaseModel):
+    # where the quote was found (or the source it names); None when found nowhere and naming none
+    target: Target | None
+    document_id: int | None
+    alert_id: int | None
+    quote: str
+    # 1-based page the quote starts on, when found in a PDF
+    page: int | None
+    verified: Verified
+
+
+class StoredClaim(BaseModel):
+    id: str  # "<kind>-<index in that step's claims>"
+    kind: ClaimKind
+    text: str
+    supported: bool  # at least one passage is verbatim
+    passages: list[Passage]
 
 
 class ContextChunk(BaseModel):
@@ -103,5 +147,8 @@ class Evaluation(BaseModel):
     evaluation: str | None = None
     recommendation: str | None = None
     assessment: dict[str, Any]
+    # every finished step's claims, quotes checked (impact/claims.py); null on reports assessed
+    # before claims existed
+    claims: list[StoredClaim] | None = None
     # the past chunks steps 1 and 2 were given, in prompt order, so a frontend can show them (I5)
     context_chunks: list[ContextChunk] = []

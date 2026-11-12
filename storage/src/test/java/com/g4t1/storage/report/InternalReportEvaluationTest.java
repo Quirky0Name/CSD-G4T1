@@ -146,6 +146,32 @@ class InternalReportEvaluationTest {
     }
 
     @Test
+    void claimsComeBackExactlyAsSentFromEveryRead() throws Exception {
+        long reportId = investigatedReportId();
+        Map<String, Object> body = full();
+        body.put("claims", claims());
+        JsonNode sent = json.valueToTree(body.get("claims"));
+
+        String put = record(reportId, body).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(json.readTree(put).get("claims")).isEqualTo(sent);
+        String byId = read(reportId).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(json.readTree(byId).get("claims")).isEqualTo(sent);
+        String nested = mvc.perform(service(get("/internal/papers/" + paperId + "/reports/" + reportId)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(json.readTree(nested).get("claims")).isEqualTo(sent);
+    }
+
+    @Test
+    void anEvaluationWithoutClaimsStoresNull() throws Exception {
+        long reportId = investigatedReportId();
+
+        record(reportId, full())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.claims").value(nullValue()));
+        read(reportId).andExpect(jsonPath("$.claims").value(nullValue()));
+    }
+
+    @Test
     void aChangeThatIsntMeaningfulStoresOnlyTheSummaryAndChangeSeverity() throws Exception {
         long reportId = investigatedReportId();
 
@@ -270,6 +296,26 @@ class InternalReportEvaluationTest {
         body.put("recommendation", "Replace the citation.");
         body.put("assessment", assessment);
         return body;
+    }
+
+    // a claim as Research Evaluation sends it, nulls included (docs/CONTRACTS.md, "Claim")
+    static List<Map<String, Object>> claims() {
+        Map<String, Object> verified = new HashMap<>();
+        verified.put("target", "paper");
+        verified.put("document_id", null);
+        verified.put("alert_id", null);
+        verified.put("quote", "200 mg caffeine improved n-back accuracy");
+        verified.put("page", 3);
+        verified.put("verified", "verbatim");
+        Map<String, Object> missing = new HashMap<>(verified);
+        missing.put("target", null);
+        missing.put("page", null);
+        missing.put("verified", "not_found");
+        return List.of(
+                Map.of("id", "impact-0", "kind", "impact", "text", "The draft's dose rests on the finding.",
+                        "supported", true, "passages", List.of(verified, missing)),
+                Map.of("id", "action-0", "kind", "action", "text", "Replace the citation.",
+                        "supported", false, "passages", List.of()));
     }
 
     private static Map<String, Object> without(String field) {

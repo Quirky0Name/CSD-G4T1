@@ -22,7 +22,7 @@ from research_evaluation.storage import AlertInReport, Chunk, DocumentInReport, 
 from research_evaluation.users import ResearcherProfile
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 6
+PROMPT_VERSION = 7
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -44,7 +44,12 @@ Rules:
   question, answer "unclear" and say what is missing. Don't rely on what
   you may remember about the paper.
 - Copy quotes word for word from the given material, and keep each one
-  short (at most 30 words).
+  short (at most 30 words). A quote is one unbroken stretch of the text:
+  never join pieces with "...".
+- Back what you state: each step's claims list its factual statements,
+  each with the quotes from the given material that show it. Quote only
+  the material itself (notices, PDFs, alert lines, the draft), never an
+  earlier step's own wording.
 - Write for a researcher who knows their field but not publishing
   metadata: plain words, and no DOIs in prose unless needed to tell two
   documents apart."""
@@ -128,7 +133,14 @@ Then, for the report as a whole:
   about this paper.
 - summary: a summary of the changes in two to four sentences, which a
   researcher can read on its own: what happened to the paper, which parts
-  it touches, and why it is or isn't serious."""
+  it touches, and why it is or isn't serious.
+- claims: one claim per factual statement in your summary. text: the
+  statement; passages: the quotes that back it, each with its source: a
+  notice's DOI, "stored paper" (the STORED PAPER or the TRACKED PAPER's
+  details), "current copy", "new version", or "alert <id>" for an alert's
+  line in ALERTS. A citation jump, or a retraction flag with no notice, has
+  nothing else to quote: quote its alert's line, with source "alert <id>".
+  Leave passages empty only when nothing given shows the statement."""
 
 IMPACT_TASK = """\
 TASK: work out how the researcher's draft (the attached PDF) uses the
@@ -183,10 +195,18 @@ uses, and how much the researcher is affected overall.
 5. explanation: two to five sentences for the researcher: how their draft
    uses the paper, which of those uses the change touches and why, and how
    much it matters, naming the sections.
+6. claims: one claim per factual statement in your explanation. text: the
+   statement; passages: the quotes that back it, each with its source:
+   "draft" for the researcher's draft, "stored paper" for the attached
+   STORED PAPER, or a quote CHANGE's claims give, copied with its source.
+   For each use, write a claim about it that quotes the draft's citing
+   sentence (source "draft") and, when the STORED PAPER is attached, the
+   passage of it that sentence relies on (source "stored paper").
 
 If there is NO DRAFT: leave the uses empty and cited false, judge the
 impact for a typical researcher who cites the paper as key_evidence, and
-say in the explanation that the judgment is general."""
+say in the explanation that the judgment is general; its claims quote what
+CHANGE's claims quote, or have no passages."""
 
 ACTIONS_TASK = """\
 TASK: recommend what the researcher should do about this change.
@@ -214,7 +234,11 @@ pick from what fits:
 If there is no draft, add an action to upload the draft for this project,
 so the next change can be judged against it.
 
-recommendation: one or two sentences with the gist of the actions."""
+recommendation: one or two sentences with the gist of the actions.
+
+claims: one claim per factual statement in your recommendation. text: the
+statement; passages: the quotes that the CHANGE and IMPACT claims it rests
+on give, copied with their sources (an action to upload the draft too)."""
 
 NO_DRAFT = "NO DRAFT: the researcher hasn't uploaded their paper for this project."
 
@@ -256,8 +280,8 @@ answer other than the {field} must be what it would be with no USER PROFILE."""
 
 
 @dataclass
-class ChangePrompt:
-    """Step 1's parts, and which PDFs went in or were left out (for the result)."""
+class Prompt:
+    """A step's parts, and which PDFs went in or were left out (for the result)."""
 
     parts: list[Part]
     attached: list[str] = field(default_factory=list)
@@ -373,11 +397,11 @@ def history_block(chunks: list[Chunk]) -> str:
     return "PAST TIMELINE\n" + "\n\n".join(blocks) + "\n\n" + PAST_RULES
 
 
-def change_prompt(inputs: ReportInputs) -> ChangePrompt:
+def change_prompt(inputs: ReportInputs) -> Prompt:
     """Step 1: the paper, the alerts, the documents, then the PDFs (stored paper, new versions,
     related documents, current copy, as far as MAX_INLINE_PDF_BYTES goes), then the PAST TIMELINE
     when there are past chunks, then the task."""
-    prompt = ChangePrompt(parts=[], left_out=list(inputs.missing))
+    prompt = Prompt(parts=[], left_out=list(inputs.missing))
     budget = MAX_INLINE_PDF_BYTES
     pdfs: list[tuple[str, str, bytes]] = []  # (label for the result, label for the model, bytes)
     if inputs.paper_pdf is not None:
@@ -459,23 +483,45 @@ def impact_prompt(
     paper: PaperDetails,
     change: BaseModel,
     draft: bytes | None,
+    paper_pdf: bytes | None,
     profile: ResearcherProfile | None = None,
     chunks: list[Chunk] | None = None,
-) -> list[Part]:
-    """Step 2: the paper, step 1's answer, then the draft (or NO DRAFT), then the PAST TIMELINE
-    when there are past chunks, then the profile section when there is a profile, then the task.
-    The rules follow each block, so untrusted values never come last."""
-    parts: list[Part] = [f"{paper_block(paper)}\n\nCHANGE\n{_json(change)}"]
+) -> Prompt:
+    """Step 2: the paper, step 1's answer, then the draft and the stored paper (so claims can
+    quote what the draft relies on), then the PAST TIMELINE when there are past chunks, then the
+    profile section when there is a profile, then the task. The draft always goes in; the stored
+    paper only with a draft, and only when the two fit MAX_INLINE_PDF_BYTES. With no draft: NO
+    DRAFT and no PDFs. The rules follow each block, so untrusted values never come last."""
+    prompt = Prompt(parts=[f"{paper_block(paper)}\n\nCHANGE\n{_json(change)}"])
     if draft is None:
-        parts.append(NO_DRAFT)
+        prompt.parts.append(NO_DRAFT)
     else:
-        parts += ["ATTACHED PDF: THE RESEARCHER'S DRAFT, the paper they are writing for this project.", Pdf(draft)]
+        prompt.parts += [
+            "ATTACHED PDF: THE RESEARCHER'S DRAFT, the paper they are writing for this project.",
+            Pdf(draft),
+        ]
+        prompt.attached.append("draft")
+        if paper_pdf is None:
+            prompt.left_out.append(MissingPdf("stored paper", "not stored"))
+        elif len(draft) + len(paper_pdf) > MAX_INLINE_PDF_BYTES:
+            prompt.left_out.append(MissingPdf("stored paper", "over the size budget"))
+        else:
+            prompt.parts += [
+                (
+                    "ATTACHED PDF: STORED PAPER, the tracked paper as it was when the researcher "
+                    "started tracking it."
+                ),
+                Pdf(paper_pdf),
+            ]
+            prompt.attached.append("stored paper")
+        if prompt.left_out:
+            prompt.parts.append(f"STORED PAPER: not available ({prompt.left_out[0].why})")
     if chunks:
-        parts.append(history_block(chunks))
+        prompt.parts.append(history_block(chunks))
     if profile is not None:
-        parts.append(profile_section(profile, "explanation"))
-    parts.append(IMPACT_TASK)
-    return parts
+        prompt.parts.append(profile_section(profile, "explanation"))
+    prompt.parts.append(IMPACT_TASK)
+    return prompt
 
 
 def actions_prompt(
@@ -498,7 +544,7 @@ def actions_prompt(
     return parts
 
 
-def pdfs_record(prompt: ChangePrompt) -> dict[str, Any]:
+def pdfs_record(prompt: Prompt) -> dict[str, Any]:
     return {
         "attached": prompt.attached,
         "left_out": [{"pdf": m.pdf, "why": m.why} for m in prompt.left_out],

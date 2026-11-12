@@ -31,6 +31,7 @@ def change(severity: str) -> ChangeAssessment:
             "relations": None,
             "severity": severity,
             "summary": f"A {severity} change.",
+            "claims": [{"text": "A statement.", "passages": []}],
         }
     )
 
@@ -42,10 +43,15 @@ IMPACT = ImpactAssessment.model_validate(
         "uses": [],
         "impact_level": "medium",
         "explanation": "Your Discussion relies on it.",
+        "claims": [{"text": "A statement.", "passages": []}],
     }
 )
 ACTIONS = RecommendedActions.model_validate(
-    {"actions": [{"action": "Replace the citation.", "where": None}], "recommendation": "Replace it."}
+    {
+        "actions": [{"action": "Replace the citation.", "where": None}],
+        "recommendation": "Replace it.",
+        "claims": [{"text": "A statement.", "passages": []}],
+    }
 )
 
 

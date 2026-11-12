@@ -116,6 +116,36 @@ narrows "No token revocation" to the access token.
 - **An edit applies to reports assessed after it.** Nothing re-assesses an
   earlier report.
 
+## 2026-11-06 — Claims carry quoted passages, verified in code, and are never dropped
+
+- **Each step's answer lists claims**, one per factual statement, each with
+  the passages (quotes) behind it, from any material the step was given. They
+  aren't derived from alert judgments, uses or actions, so `evidence` and
+  `Use.quote` stay as they were: the evals score them.
+- **Quotes are verified in code**, against the text their source names
+  (`impact/claims.py`). A quote found in another of the report's texts is
+  re-targeted there, so the highlight lands in the right place. **A claim is
+  never dropped**: `supported` is false when no passage was found verbatim.
+  `supported` means only that; there is no runtime check that a quote backs
+  its claim and no fourth Gemini call. Whether quotes back claims is measured
+  offline in the evals (an independent judge model grades backing and
+  coverage; the judge reports, the code decides, as on 2026-10-27).
+- **The draft stands in for the research topic**: step 2 quotes the draft's
+  sentence and the tracked paper's passage behind each use. A topic field
+  isn't built (ROADMAP.md).
+- **`claims` is its own column** (V15; numbered after main's V13 and V14, which reached
+  production first), not read out of `assessment`, so
+  Storage Management still never looks inside `assessment`. No backfill:
+  earlier reports have null `claims`.
+- **A passage has its document, quote and 1-based page**; no bounding boxes
+  or character offsets, and no OCR (a PDF with no text layer is `no_text`).
+- **The backend serves the PDFs** (`GET /papers/{id}/pdf`,
+  `/documents/{id}/pdf`, `/draft/pdf`) to their owner, with the same `404` for
+  another user's item as for a missing one.
+- `pypdf` (BSD-licensed, already used by `evals/real/extract.py`) became a
+  project dependency, and the quote matcher moved into the service so the
+  evals and the service find a quote in the same way.
+
 ## 2026-11-06 — Dev mode: an admin who edits stored paper data, off unless `DEV_MODE=true`
 
 - **Why**: to demo a change on demand. The demo is poll, change the flag,

@@ -319,23 +319,28 @@ Per report:
 
    | Step | Question | Reads | Answer |
    |---|---|---|---|
-   | 1. Change | What changed, is it about this paper, how severe? | paper details, alerts, documents (`<document>` blocks, each with a `links:` line, JSON, or `links: none`), PDFs: stored paper, new versions, related documents (labelled `RELATED, <doi>.`), current copy | `ChangeAssessment`: summary, change severity `none`/`low`/`medium`/`high` |
+   | 1. Change | What changed, is it about this paper, how severe? | paper details, alerts, documents (`<document>` blocks, each with a `links:` line, JSON, or `links: none`), PDFs: stored paper, new versions, related documents (labelled `RELATED, <doi>.`), current copy | `ChangeAssessment`: summary, change severity `none`/`low`/`medium`/`high`, `claims` |
    | gate | change severity `none` = not meaningful: stop, store summary and change severity only | | |
-   | 2. Impact | How does the draft use the paper; is each use affected; how much? | step 1's answer; PDF: the **draft**, read only now (`storage.draft_pdf`); the **profile block**, when there is a profile | `ImpactAssessment`: uses, impact level, explanation |
-   | 3. Actions | What should the researcher do? | steps 1 and 2 as JSON, no PDFs; the profile block, when there is a profile | `RecommendedActions` |
+   | 2. Impact | How does the draft use the paper; is each use affected; how much? | step 1's answer; PDFs: the **draft**, read only now (`storage.draft_pdf`), then the stored paper if both fit the budget (below); the **profile block**, when there is a profile | `ImpactAssessment`: uses, impact level, explanation, `claims` |
+   | 3. Actions | What should the researcher do? | steps 1 and 2 as JSON, no PDFs; the profile block, when there is a profile | `RecommendedActions`: actions, recommendation, `claims` |
 
    No draft: step 2 judges for a typical researcher citing the paper as key
    evidence, and step 3 adds "upload your draft". The impact level follows
    a fixed table in the prompt (change severity × how the draft relies on
    the paper; RE-changes-explained.md §6). Step 1's PDFs are attached in
    that order up to `MAX_INLINE_PDF_BYTES` (40 MB); one that doesn't fit is
-   left out and recorded. Step 1's task says what a RELATED document is
+   left out and recorded. Step 2 attaches the draft first, then the stored
+   paper if the two fit `MAX_INLINE_PDF_BYTES`; with no draft the stored
+   paper isn't attached. What was attached or left out is recorded in
+   `assessment.impact_pdfs`, shaped like `assessment.pdfs`. Step 1's task says what a RELATED document is
    (reached by following a notice's or new version's links; no alert of its
    own). A citation jump has no document: its alert line carries the rule's
    description (the counts), and step 1's task says to judge it as new
    attention, scope `citations_only`, severity `low`, so the gate lets it
-   through to steps 2 and 3. `PROMPT_VERSION` is 6 since the `PAST TIMELINE`
-   section was added (5 for the profile section, 4 for that wording).
+   through to steps 2 and 3. `PROMPT_VERSION` is 7 since claims and step 2's
+   stored paper joined the `PAST TIMELINE` section (6 for the past timeline
+   and 5 for the profile section on one line of work, 5 for claims on the
+   other; 4 for that wording).
 
    **The past.** Before step 1, `impact/history.py` (`read_history`) embeds
    one query and searches the paper's stored chunks
@@ -364,8 +369,8 @@ Per report:
      a failed search, or no embedder (no `GEMINI_API_KEY`; the embedder is
      `ImpactContext.embedder`, the one that stores chunks), step 1's and
      step 2's prompt parts are exactly as before. Step 1: after the
-     attached PDFs, right before the task. Step 2: after the draft (or NO
-     DRAFT), before the profile section and the task. Each item is a
+     attached PDFs, right before the task. Step 2: after the draft and the
+     stored paper (or NO DRAFT), before the profile section and the task. Each item is a
      `<document kind="past_alert|past_report|past_document" source_id=".."
      date="YYYY-MM-DD" report="<id or none>" page="..">` block (`page` only
      when set; the date is `source_date`), its text through `_defuse`. The
@@ -423,12 +428,94 @@ serious the change really is for anyone relying on the paper; its
 retract-and-replace can be a `high` alert, a `medium` change and a `low`
 impact.
 
+**Claims.** Each step's answer carries `claims: list[Claim]` with
+`min_length=1`: an empty list is a schema misfit, which `FallbackLlm` handles
+like any other. A model claim is `{text, passages: list[Evidence]}`, where an
+`Evidence` is `{source, quote}`. `passages` has no minimum: a statement with
+nothing to quote has none.
+
+- The prompt requires one claim per factual statement in that step's
+  `summary`, `explanation` or `recommendation`. A claim can be about anything
+  the step says: it isn't derived from, or tied to, an alert judgment, a use
+  or an action. `evidence` and `Use.quote` stay as they were, because the evals
+  score them.
+- A passage's source can be any material the step was given: `stored paper`,
+  a notice's DOI, `new version`, `current copy`, `draft` or `alert <id>`.
+  Quotes must be contiguous: no `...`.
+- The draft stands in for the research topic (no topic or question field
+  exists). With the stored paper attached, step 2 writes an `impact` claim per
+  use, quoting the draft's sentence and the tracked paper's passage behind it.
+- A citation jump's and a flag-only retraction's `change` claims quote the
+  alert's line as `alert <id>`. `action` claims quote what the `change` and
+  `impact` claims they rest on quote, including "upload your draft".
+- `assessment.impact_pdfs` is null until step 2 runs (change severity `none`,
+  or a placeholder before step 2). With no draft it is
+  `{"attached": [], "left_out": []}`: the stored paper isn't recorded as left
+  out, since step 2 never offers it without a draft. A stored paper Storage
+  Management doesn't have is left out with `why` `not stored`; one over the
+  budget with `over the size budget`, as in step 1.
+
+**How quotes are verified** (`impact/claims.py`, `build_claims`, after the
+steps, in code: no runtime call asks whether a quote backs its claim, and
+there is no fourth Gemini call). The `Evaluation` carries `claims`
+(`list[StoredClaim]`, the `Claim` of CONTRACTS.md): every finished step's
+claims in order, ids `<kind>-<index>`. A claim is never dropped; `supported`
+means only that at least one passage was found verbatim, and is false with no
+passages. Whether quotes back their claims is measured offline in the evals.
+
+- A quote is matched by `impact/quotes.py` (`quoted_in`, after `norm` and
+  `join_hyphens`), the same matcher the evals use.
+- PDF text is read with `pdf_pages` in `asyncio.to_thread`, lazily the first
+  time a quote is searched in that PDF, and at most once per PDF per report. A
+  PDF's pages are searched as one text, so a quote across a page break is
+  found; `page` is the 1-based page where it starts. A match outside a PDF
+  gives `page: null`.
+- No OCR: a PDF with no text layer gives `verified: "no_text"`.
+- No character ranges: claims are a separate list covering the statements,
+  not offsets into `change_summary`, `evaluation` or `recommendation`.
+- Claims quote only source material, never the model's own earlier answers.
+
+**Source resolution.** A passage's `source` label resolves in this order: a
+report document's DOI to that `document` (checked before the paper's own DOI,
+so the paper's DOI names a `current_version` document when the report has
+one); the paper's own DOI or `stored paper` to `paper`; `alert <id>` to
+`alert`; `current copy` to the `current_version` document; `new version` to
+the `new_version` document; `draft` to `draft`. When two documents fit a
+label, the first in the report's order is used. `draft` always resolves, so a
+draft quote on a run with no draft gives `target: "draft"`, `no_text`.
+
+- A document is checked against its PDF when it has one, its `text`, and each
+  scalar value of its `crossref_record` and `links`, searched one value at a
+  time, so a notice with no open-access text can be quoted from its record. A
+  match in the record or links gives `page: null`.
+- `paper` also covers the paper's details as the prompt lays them out
+  (`prompts.paper_block`); a match there gives `page: null`. The details are
+  searched but don't count as text to check.
+- An alert is its line as the prompt shows it.
+
+**Re-targeting.** A quote is searched first in the source it names. When not
+found there, it is searched in the paper, the draft, the documents in the
+report's order, then the alerts; a match there re-targets the passage to
+where it was found and counts as `verbatim`, so the highlight lands in the
+right place. The raw answer in `assessment` stays as it was, and the evals
+still count the quote as misattributed. An empty quote, or one that is only
+`...`, is found nowhere.
+
+**What `verified` means.** `verbatim`: found. `not_found`: the text was read
+and the quote isn't in it. `no_text`: no text to check (no PDF, unreadable, or
+no text layer), including a `stored paper` quote with no readable PDF and not
+in the details. A source naming no text, with the quote found nowhere, gives
+`target: null` and `not_found`. A placeholder evaluation carries the claims of
+the steps that finished; a change severity `none` report carries its `change`
+claims.
+
 **What's stored:** `change_summary`, `change_severity`, `impact_level`,
 `evaluation` (step 2's explanation), `recommendation` (step 3's), and
 `assessment`, JSON with everything else: `prompt_version`, `model`,
 `model_version`, `answered_by` per step, `draft` (`read` / `none` /
-`not_needed`), `profile` (below), `history` (`read` / `none` / `failed`, "The past"), `pdfs` attached and left out, each step's full answer,
-`placeholder`.
+`not_needed`), `profile` (below), `history` (`read` / `none` / `failed`, "The past"), `pdfs` attached and left out, `impact_pdfs` (step 2's, above), each step's
+full answer, `placeholder`. The claims are stored apart, in the evaluation's
+`claims`, so Storage Management never looks inside `assessment`.
 
 `assessment.profile` is one of four values: `not_needed` (step 1 failed, or
 change severity `none`: User Management isn't called); `read` (a profile was
@@ -597,7 +684,7 @@ Or one step at a time (each defaults to the newest results folder):
 | Script | Does | Calls Gemini |
 |---|---|---|
 | `run.py [case ...] [--runs N] [--into <folder>]` | Each case through `assess`; saves `<case>__run<N>.json` (the `Evaluation` as stored) in `evals/results/<UTC stamp>/`. `--into` adds to an existing folder; `--dry` only builds the inputs and prints what each case attaches | yes, `GEMINI_*` |
-| `judge.py [<folder>] [--redo] [--label <label>]` | A second model grades the three free-text fields against the case's facts; writes `<run>.judge.json`, or `<run>.judge-<label>.json` with `--label`. Skips placeholders and runs already judged. `--redo` with `--label` regrades only that label's files. `--label default` is a usage error: `judge_check.py` reads `default` as `<run>.judge.json`, so a `judge-default` file would never be read | yes, `JUDGE_*` |
+| `judge.py [<folder>] [--redo] [--label <label>]` | A second model grades the three free-text fields against the case's facts, then, in a second call, whether each claim's passages back it and which claims cover each statement of the three texts (`passages`, `statements` in the same file; the fact grading's prompt is unchanged, so text scores stay comparable with `PROMPT_VERSION` 4 baselines). A run graded before claims were judged gets only the claims grading when it runs again, without `--redo`. Writes `<run>.judge.json`, or `<run>.judge-<label>.json` with `--label`. Skips placeholders and runs already judged. `--redo` with `--label` regrades only that label's files. `--label default` is a usage error: `judge_check.py` reads `default` as `<run>.judge.json`, so a `judge-default` file would never be read | yes, `JUDGE_*` |
 | `score.py [<folder>]` | The grid (with a verdict per run), pass rates per case, category and overall, failure-type counts, the Metamorphic Groups table, a table per category with an OVERALL row, and the most missed tags and facts | no |
 | `compare.py <baseline> <new>` | Regression check of two results folders (below) | no |
 | `judge_check.py agree`, `sample` or `human` | Checks the judge (below) | no |
@@ -657,12 +744,35 @@ On a failed step it stops; resume with `--folder <folder> --skip-run`.
   - **misattributed**: real, but not in the text its source names (for a
     use, not in the draft).
   - **unknown source**: real, but its source names no text (e.g.
-    `OpenAlex` for a retraction flag with no notice). The prompt has no
-    label for an alert's line yet; add `"alert <id>"` to it (a
-    `PROMPT_VERSION` bump) if these keep coming up.
+    `OpenAlex` for a retraction flag with no notice). Since `PROMPT_VERSION`
+    5 the prompt has the label `alert <id>` for an alert's line.
+
+  `check_quotes` also covers each step's raw `claims[].passages` in
+  `assessment`, against the source the model named. `source_label` knows
+  `draft`, and `quote_sources` includes each document's Crossref record and
+  links, as the service does (`quotes.leaves`).
 
   A sentence that really is in two texts (a notice repeating the paper's
   title) passes under either label.
+- **claims**: three counts per run, from `evaluation.claims` and the judge's
+  grading of them (`check_passages(ev, grade=None)`):
+  - **unlinked claim**: a claim with no passage. An `impact` claim on a run
+    whose `assessment.draft` isn't `read` is exempt: a general judgment has
+    nothing to quote. `unlinked_claim` counts the evaluation's `claims`.
+  - **unbacked passage**: the judge says the passage doesn't back its claim.
+  - **uncovered statement**: the judge finds a factual statement in
+    `change_summary`, `evaluation` or `recommendation` that no claim covers.
+    Code can't prove coverage, so it is measured this way.
+
+  The judge reports, the code decides: a passage the judge skipped counts as
+  unbacked, and a `covered_by` number that isn't a claim covers nothing. Every
+  passage is judged, including ones not found verbatim; an invented quote also
+  counts as `invented_quote`. A run without `claims` (saved before
+  `PROMPT_VERSION` 5) skips all three; a run with `claims` the judge hasn't
+  graded for them yet scores `unlinked_claim` only. `supported` itself is only
+  "found verbatim"; whether quotes back claims is measured here, offline.
+  `evals/check_passage_scoring.py` (run by command, inline fixtures) checks
+  this scoring.
 - **PLACEHOLDER**: every model failed a step. Its tag score is 0
   (none for a case with no expected tags) and it isn't
   judged, but the quotes of the steps that finished before it are still
@@ -677,18 +787,22 @@ make a run pass:
 
 ```json
 {"tag": 0.8, "text": 0.8, "max_hard_fails": 0, "max_invented": 0,
- "max_misattributed": 0, "case_pass_rate": 0.67}
+ "max_misattributed": 0, "max_unlinked": 0, "max_unbacked": 0,
+ "max_uncovered": 0, "case_pass_rate": 0.67}
 ```
 
 - A hard fail, invented or misattributed quote fails the run when there are
   more than the matching `max_*`, so 0 allows none.
-- Unknown-source quotes never fail a run (the prompt has no label for an
-  alert's line yet).
+- Unknown-source quotes never fail a run.
+- Unlinked, unbacked and uncovered counts fail the run when above
+  `max_unlinked`, `max_unbacked` and `max_uncovered`; a run without `claims`
+  skips them.
 - A tagless case skips the tag threshold; a judged run whose case lists no
   facts skips the text threshold.
 - A failed run lists its failure types: `hard_fail`, `wrong_tag` (tag below
   threshold), `missed_fact` (a `must_include` failed), `wrong_fact` (a
-  `must_not_include` failed), `invented_quote`, `misattributed_quote`. An
+  `must_not_include` failed), `invented_quote`, `misattributed_quote`, `unlinked_claim`,
+  `unbacked_passage`, `uncovered_statement`. An
   unjudged run still shows the structured ones found so far; an `error`
   run none.
 - `missed_fact` and `wrong_fact` appear only when the text score is below
@@ -728,7 +842,7 @@ inconsistent.
 
 ```json
 {"runs": {"<case>__run<N>": {"started_at": "<ISO UTC>",
-          "prompt_version": 4, "models": ["gemini-flash-latest", "..."],
+          "prompt_version": 5, "models": ["gemini-flash-latest", "..."],
           "generation": {"temperature": null, "seed": null},
           "case_sha256": "<hex of the case file bytes>"}}}
 ```
@@ -831,11 +945,11 @@ run `run.py --dry <case>` to check that it builds.
 | User Management client | `users.py`: `ResearcherProfile`, `researcher_profile(http, user_id)`, `notify(http, user_id, body)` (the events above, 30 s timeout set on the post) |
 | Detection, rules, per-paper evaluation | `changes.py`, `rules.py`, `evaluate.py` |
 | Investigation | `investigation/`: `http.py` (one GET, `FetchStatus`), `crossref.py`, `europepmc.py`, `investigate.py` (plan, fetch), `run.py` |
-| Impact | `impact/`: `llm.py` (Gemini client, `FallbackLlm`), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `history.py` (the query, the three searches), `assess.py`, `run.py` (`ImpactContext`) |
+| Impact | `impact/`: `llm.py` (Gemini client, `FallbackLlm`), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `history.py` (the query, the three searches), `assess.py`, `claims.py` (`build_claims`), `quotes.py` (`norm`, `quoted_in`, `join_hyphens`, `pdf_pages`, `PdfUnreadable`, `leaves`, `DOI`, `ALERT`, `ELLIPSIS`: shared with the evals; `pypdf` is a project dependency), `run.py` (`ImpactContext`) |
 | Shared with Updating | `backend/src/common/`: `doi.py` (`normalize_doi`), `service_token.py` (`ServiceTokenAuth`), `config.py` |
 | Dev stub of Storage Management | `backend/dev/stub_storage.py` (every internal endpoint in memory, plus `/dev/*` helpers) |
 | Tests | `backend/tests/research_evaluation/` (with `investigation/` and `impact/`); fixtures in `backend/tests/fixtures/` |
-| Evals of impact (dev only) | `backend/evals/`: `cases/`, `thresholds.json`, `run.py`, `judge.py`, `judge_check.py`, `score.py` (also the shared helpers `verdict`, `pass_rate`, `group_by`, `noise_floor`, `overall_mean`, `failure_line`), `compare.py`, `all.py` |
+| Evals of impact (dev only) | `backend/evals/`: `cases/`, `thresholds.json`, `run.py`, `judge.py`, `judge_check.py`, `check_passage_scoring.py`, `real/extract.py` (imports `research_evaluation.impact.quotes` from `src/`; run as `uv run python evals/real/extract.py`, no `--with pypdf`), `score.py` (also the shared helpers `verdict`, `pass_rate`, `group_by`, `noise_floor`, `overall_mean`, `failure_line`), `compare.py`, `all.py` |
 
 The lifespan makes four HTTP clients: Storage Management's (base URL,
 service token, 10 s), User Management's (`UM_BASE_URL`, service token, same
@@ -849,6 +963,7 @@ and `InvestigationContext.um`, both optional: `None` sends nothing, as in the ev
 - **The service token must never leave for an outside host.** Outside
   calls (Crossref, Europe PMC) use their own clients, never the
   Storage Management one.
+- **Never log quotes or PDF text** (claims verification logs neither).
 - **Never log bodies, prompts, the draft or model text.** Every `_cause`
   helper logs status codes and exception classes. (Known gaps: the
   default branch of `_cause` logs `str(exc)`; investigation's `_cause` has

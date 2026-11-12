@@ -94,16 +94,20 @@ One poll, end to end:
    Management for the report's owner, and stores what it fetched as the
    report's documents (Storage Management downloads their PDFs); then
    **impact** reads the paper's past chunks from Storage Management
-   (`POST /internal/chunks/search`), asks Gemini about the report and stores
-   its evaluation (the report becomes `assessed`) and posts a `report_assessed`
-   event with it. A placeholder evaluation is not posted. After the evaluation
-   is stored, the report's, its alerts' and its documents' chunks are embedded
-   (Gemini) and stored (`PUT /internal/chunks`), so a later report's impact
-   finds them. Research Evaluation only posts the events: User Management
-   applies each channel's thresholds, builds the message and sends it (below).
-   A failed post is logged and changes nothing.
+   (`POST /internal/chunks/search`), asks Gemini about the report, checks
+   each quote of the answer's claims against the text it came from
+   (`impact/claims.py`), stores its evaluation with those claims (the report
+   becomes `assessed`) and posts a `report_assessed` event with it. A
+   placeholder evaluation is not posted. After the evaluation is stored, the
+   report's, its alerts' and its documents' chunks are embedded (Gemini) and
+   stored (`PUT /internal/chunks`), so a later report's impact finds them.
+   Research Evaluation only posts the events: User Management applies each
+   channel's thresholds, builds the message and sends it (below). A failed
+   post is logged and changes nothing.
 5. The **frontend** reads alerts and reports from Storage Management; the
-   researcher acknowledges or dismisses them. The shared refresh of
+   researcher acknowledges or dismisses them. It reads the PDFs a report's
+   claims point at (paper, draft, document) from Storage Management with the
+   user's token. The shared refresh of
    papers, alerts and reports runs every 30 s only while a user is signed
    in, and starts fresh for each user. When a refresh finds a report that
    has become `assessed` since the first load, the frontend notifies the
@@ -236,7 +240,7 @@ diagram, up to V9: [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html); V
 | `alerts` | detected change on a paper (type, `change_key`, rule-based alert severity and text, the researcher's status, `report_id`) | V3, V7, V9 |
 | `snapshots` | snapshot Updating sent (insert-only, the full snapshot history per paper) | V4, V9 |
 | `drafts` | project's draft PDF | V6, V9 |
-| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation, the `context_chunks` impact added to its prompt) | V7, V8, V14 |
+| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation, the `context_chunks` impact added to its prompt, `claims`) | V7, V8, V14, V15 |
 | `report_documents` | DOI fetched for a report (notice, new version, related document, current copy) | V7 |
 | `chunks` | embedded piece of an alert's, report's, document's or profile's text (`vector(1536)`, HNSW cosine index); `paper_id` null for profile chunks | V13 |
 
