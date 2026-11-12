@@ -32,7 +32,7 @@ public class ServiceTokens {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(SUBJECT)
-                .claim("role", "service")
+                .claim(JwtAuthFilter.ROLE_CLAIM, JwtAuthFilter.SERVICE_ROLE)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(LIFETIME)))
                 // HS256 forced: the key's length would otherwise pick it, and a 48+ byte JWT_SECRET would give

@@ -28,6 +28,8 @@ import java.util.UUID;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private static final String BEARER = "Bearer ";
+    static final String ROLE_CLAIM = "role";
+    static final String SERVICE_ROLE = "service";
 
     private final SecretKey key;
 
@@ -60,8 +62,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
         Object principal;
         String role;
-        String claimedRole = claims.get("role", String.class);
-        if ("service".equals(claimedRole)) {
+        String claimedRole = claims.get(ROLE_CLAIM, String.class);
+        if (SERVICE_ROLE.equals(claimedRole)) {
             // e.g. sub=svc:updating; never owner-scoped to a real user
             principal = claims.getSubject();
             role = "ROLE_SERVICE";
