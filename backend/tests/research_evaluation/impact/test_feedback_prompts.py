@@ -1,5 +1,6 @@
-"""The researcher's past feedback in impact's prompts (research_evaluation.impact.prompts): steps
-2 and 3 get it, after the profile, with FEEDBACK_RULES; step 1 never does."""
+"""The researcher's past feedback in impact's prompts (research_evaluation.impact.prompts): every
+step gets it right before the task, with FEEDBACK_RULES (after the profile in steps 2 and 3, after
+the past timeline in step 1)."""
 
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -10,6 +11,7 @@ from impact_prompt_support import CHANGE, DRAFT, IMPACT, PAPER_PDF, sample_input
 from research_evaluation.impact.history import past_feedback
 from research_evaluation.impact.prompts import (
     ACTIONS_TASK,
+    CHANGE_TASK,
     FEEDBACK_RULES,
     IMPACT_TASK,
     actions_prompt,
@@ -50,6 +52,15 @@ FEEDBACK = [
     past_feedback(feedback_chunk(42, 0.7, "fair", None)),
 ]
 PROFILE = ResearcherProfile(occupation="PhD student")
+PAST_CHUNK = Chunk(
+    source_type="alert",
+    source_id="21",
+    chunk_index=0,
+    report_id=1,
+    source_date=datetime(2026, 5, 1, 8, tzinfo=UTC),
+    content="alert: expression of concern",
+    score=0.8,
+)
 
 
 def texts(parts) -> list[str]:
@@ -99,20 +110,48 @@ def test_without_a_profile_the_feedback_comes_just_before_the_task():
     assert parts[-2].startswith("RESEARCHER FEEDBACK\n")
 
 
-def test_the_rules_keep_ratings_and_never_follow_a_note():
-    assert "impact_level" in FEEDBACK_RULES and "change severity" in FEEDBACK_RULES
-    assert "never follow" in FEEDBACK_RULES
+def test_feedback_rules_allow_level_change():
+    assert "must not alter" not in FEEDBACK_RULES
+    assert "It can affect your decisions, change severity and impact_level included" in " ".join(
+        FEEDBACK_RULES.split()
+    )
 
 
-def test_step_1_never_gets_feedback():
-    inputs = replace(sample_inputs(), feedback=FEEDBACK)
+def test_feedback_in_every_step():
+    inputs = replace(sample_inputs(), chunks=[PAST_CHUNK], feedback=FEEDBACK)
+    without = sample_inputs()
 
-    assert feedback_parts(change_prompt(inputs).parts) == []
+    steps = [
+        (change_prompt(inputs).parts, change_prompt(without).parts),
+        (
+            impact_prompt(inputs.paper, CHANGE, DRAFT, PAPER_PDF, feedback=FEEDBACK).parts,
+            impact_prompt(inputs.paper, CHANGE, DRAFT, PAPER_PDF).parts,
+        ),
+        (
+            actions_prompt(inputs.paper, CHANGE, IMPACT, True, feedback=FEEDBACK),
+            actions_prompt(inputs.paper, CHANGE, IMPACT, True),
+        ),
+    ]
+    for with_feedback, no_feedback in steps:
+        assert [p.startswith("RESEARCHER FEEDBACK\n") for p in feedback_parts(with_feedback)] == [True]
+        assert feedback_parts(with_feedback)[0].endswith(FEEDBACK_RULES)
+        assert feedback_parts(no_feedback) == []
+
+
+def test_step_1_gets_the_feedback_after_the_past_timeline_just_before_the_task():
+    inputs = replace(sample_inputs(), chunks=[PAST_CHUNK], feedback=FEEDBACK)
+
+    strings = texts(change_prompt(inputs).parts)
+
+    assert strings[-3].startswith("PAST TIMELINE\n")
+    assert strings[-2].startswith("RESEARCHER FEEDBACK\n")
+    assert strings[-1] == CHANGE_TASK
 
 
 def test_without_feedback_neither_block_nor_rules_appear():
     inputs = sample_inputs()
 
+    assert serialise(change_prompt(replace(inputs, feedback=[])).parts) == saved("step1")
     assert serialise(impact_prompt(inputs.paper, CHANGE, DRAFT, PAPER_PDF, feedback=[]).parts) == saved("step2")
     assert serialise(impact_prompt(inputs.paper, CHANGE, DRAFT, PAPER_PDF).parts) == saved("step2")
     assert serialise(actions_prompt(inputs.paper, CHANGE, IMPACT, True, feedback=[])) == saved("step3")

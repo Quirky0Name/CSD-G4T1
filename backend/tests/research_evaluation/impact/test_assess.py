@@ -961,8 +961,8 @@ def test_non_ascii_answers_are_written_as_they_are():
     assert 'research_interests: ["épidémiologie"]' in block
 
 
-def test_the_prompt_version_is_17():
-    assert PROMPT_VERSION == 17
+def test_the_prompt_version_is_18():
+    assert PROMPT_VERSION == 18
 
 
 # Reading the profile in assess: after the gate, next to the draft; a failed read never fails the
@@ -1097,7 +1097,7 @@ async def test_the_assessment_records_only_that_the_profile_was_read(sm, um):
         assert value not in stored
 
 
-# The researcher's past feedback in assess: steps 2 and 3 only, recorded in assessment and in
+# The researcher's past feedback in assess: every step, recorded in assessment and in
 # context_chunks (I5) after the past chunks
 
 FEEDBACK_PAPER = UUID("11111111-2222-3333-4444-555555555555")
@@ -1152,7 +1152,7 @@ async def test_feedback_is_recorded_and_listed_after_the_past_chunks(sm):
     ]
     assert "only use their dataset" not in json.dumps(evaluation.assessment)
     steps = [("researcher_feedback" in texts(call["parts"])) for call in llm.calls]
-    assert steps == [False, True, True]
+    assert steps == [True, True, True]
 
 
 async def test_without_a_status_feedback_is_read_or_none_from_the_inputs(sm):
@@ -1170,10 +1170,15 @@ async def test_a_failed_feedback_read_is_recorded(sm):
     assert evaluation.assessment["feedback"] == "failed"
 
 
-async def test_severity_none_gives_no_step_feedback_and_lists_none(sm):
+async def test_feedback_listed_when_gate_stops(sm):
     llm = fake(sm, severity="none")
+    inputs = await inputs_for(sm, chunks=[past_chunk()], feedback=[feedback_item()])
 
-    evaluation = await assess(llm, sm.client, await inputs_for(sm, feedback=[feedback_item()]), feedback="read")
+    evaluation = await assess(llm, sm.client, inputs, history="read", feedback="read")
 
     assert evaluation.assessment["feedback"] == "read"
-    assert evaluation.model_dump(mode="json")["context_chunks"] == []
+    assert "researcher_feedback" in texts(llm.calls[0]["parts"])
+    assert evaluation.model_dump(mode="json")["context_chunks"] == [
+        {"source_type": "alert", "source_id": "21", "page": None},
+        I5_ITEM,
+    ]

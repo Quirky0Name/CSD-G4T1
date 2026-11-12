@@ -66,7 +66,7 @@ async def assess_report(sm: httpx.AsyncClient, context: ImpactContext, report_id
             log.info("impact skipped report %s: it is %s", report_id, report.status)
             return False
         # the paper's past, read before step 1 and given to steps 1 and 2, and the researcher's
-        # feedback, given to steps 2 and 3; never raises
+        # feedback, given to every step; never raises
         history = await read_history(sm, context.embedder, report)
         inputs = replace(
             await gather_inputs(sm, report), chunks=history.chunks, feedback=history.feedback
