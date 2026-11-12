@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { errorMessage, getProfile, saveProfile } from '../api'
 import { ActionButton } from '../components/ActionButton'
+import NotificationSettings from '../components/NotificationSettings'
 import ProfileQuestions from '../components/ProfileQuestions'
 import { useToast } from '../components/Toasts'
 import { Loading, Page, PageHero, Section } from '../components/Page'
@@ -135,7 +136,9 @@ function Profile() {
             </Section>
           </div>
 
-          <Section id="edit-answers" title="Edit your answers" icon={PencilSquareIcon} index={3}>
+          <NotificationSettings index={3} />
+
+          <Section id="edit-answers" title="Edit your answers" icon={PencilSquareIcon} index={4}>
             <form onSubmit={handleSave} className="max-w-3xl space-y-8">
               <ProfileQuestions answers={load.answers} onChange={edit} errors={errors} />
 
