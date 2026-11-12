@@ -1,0 +1,138 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the retraction was issued in error and has been withdrawn, with the paper reinstated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "A later statement says the retraction was issued in error... The retraction is withdrawn and the article is reinstated"
+    },
+    {
+      "fact": "says the paper's findings or data can still be relied on",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "so its findings can be relied on again"
+    },
+    {
+      "fact": "treats the paper as still retracted or tells the researcher to stop citing it",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the paper's images or data were found to be duplicated or unreliable",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "no problems found in this article's images and data"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "concerns were raised about the duplication of images. The article is therefore retracted.",
+      "backs": true,
+      "pass": true,
+      "reason": "States image duplication concerns and retraction."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The retraction notice for the above article, published on 22 September 2026, was issued in error.",
+      "backs": true,
+      "pass": true,
+      "reason": "Says retraction notice was issued in error."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The image concerns that led to the retraction relate to a different article in the same investigation",
+      "backs": true,
+      "pass": true,
+      "reason": "Image concerns relate to a different article in same investigation."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The publisher has checked the images and data of this article and found no problems with them.",
+      "backs": true,
+      "pass": true,
+      "reason": "Publisher found no problems with this article's images and data."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed.",
+      "backs": true,
+      "pass": true,
+      "reason": "Retraction withdrawn and article reinstated."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 shows retraction over image duplication concerns."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 states this directly."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 3 and 4 cover both parts."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5 states it."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-4",
+      "from": [
+        "change-2",
+        "change-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "With the retraction withdrawn and no problems found, reliance on findings is a plain-meaning consequence."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper was retracted in September 2026 over concerns about duplicated images.",
+      "covered_by": [
+        "change-0",
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "A later statement says the retraction was issued in error, and the image concerns related to a different article, with no problems found in this article's images and data.",
+      "covered_by": [
+        "change-1",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction is withdrawn and the article is reinstated, so its findings can be relied on again.",
+      "covered_by": [
+        "change-3",
+        "change-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

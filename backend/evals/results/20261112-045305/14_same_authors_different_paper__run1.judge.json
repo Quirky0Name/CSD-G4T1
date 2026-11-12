@@ -1,0 +1,151 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the draft does not cite the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Your draft doesn't cite this paper: it has no reference-list entry for it and doesn't cite it in the text."
+    },
+    {
+      "fact": "says no action is needed for the draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "No change to the draft is needed, and you can dismiss this alert."
+    },
+    {
+      "fact": "says the draft cites the retracted paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "Answer says the draft doesn't cite the paper."
+    },
+    {
+      "fact": "recommends removing the 2021 review from the reference list",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "Recommends no change to the draft; no mention of removing a 2021 review."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+      "backs": true,
+      "pass": true,
+      "reason": "The title is a retraction notice of the tracked paper title."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "backs": true,
+      "pass": true,
+      "reason": "States retraction reason: yields not reproducible and raw data altered."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract states 94% recovery from single ethanol extraction."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 gives the retraction title matching the paper."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 states this exactly."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 states this from the abstract."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-3",
+      "from": [
+        "change-0",
+        "change-1",
+        "change-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Retraction notice plus reasons and the 94% abstract result support that yields can't be relied on; 'whole paper' is a reasonable reading of an article retraction."
+    },
+    {
+      "claim_id": "impact-2",
+      "from": [
+        "impact-0",
+        "impact-1"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "If the draft neither lists nor cites the paper, no impact follows."
+    },
+    {
+      "claim_id": "action-2",
+      "from": [
+        "action-0",
+        "action-1"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Same reasoning as claim 7."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's abstract reports a 94% curcumin recovery from a single ethanol extraction, and the retraction applies to the whole paper, so its reported yields can't be relied on.",
+      "covered_by": [
+        "change-2",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your draft doesn't cite this paper: it has no reference-list entry for it and doesn't cite it in the text.",
+      "covered_by": [
+        "impact-0",
+        "impact-1",
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Your draft doesn't cite this paper: it has no reference-list entry for it and doesn't cite it in the text.",
+      "covered_by": [
+        "impact-0",
+        "impact-1",
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

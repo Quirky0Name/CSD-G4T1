@@ -1,0 +1,663 @@
+{
+  "change_summary": "The notice partially retracts Figure 5 and the associated claims about participants with BMI above 30, because of a data-merging error that affected that subgroup only. The stored paper reports the BMI above 30 subgroup result, a rise of 0.8 mmol/L, in Figure 5, so that result is the part affected. The notice says the primary analysis in Table 2 and all other results are unaffected, and the stored paper's primary analysis reports fasting glucose rising by 0.4 mmol/L.",
+  "change_severity": "medium",
+  "impact_level": "low",
+  "evaluation": "Your Introduction cites Lindqvist and Abara [6] for the 0.4 mmol/L rise in fasting glucose, which the stored paper reports as its primary analysis, and the notice says that analysis is unaffected, so this use is not touched. Your Discussion cites [6, 11] for a doubling of the effect in participants with BMI above 30, while the stored paper reports that subgroup result (0.8 mmol/L) in Figure 5, which the notice retracts for a data-merging error, so this use is touched. Overall the impact is low, because the affected sentence is a supporting remark in the Discussion backed by two sources and your main motivation in the Introduction stands.",
+  "recommendation": "Your Discussion cites [6, 11] for a doubling of the effect in participants with BMI above 30, the stored paper reports that subgroup result in Figure 5, and the notice retracts Figure 5 and those claims because of a data-merging error that affected that subgroup only. Remove or rewrite that Discussion sentence, check whether [11] supports it alone, and cite the notice if you keep any mention of it. Your Introduction cites [6] for a 0.4 mmol/L rise, and the notice says the primary analysis in Table 2 and all other results are unaffected. Leave the Introduction citation unchanged.",
+  "assessment": {
+    "prompt_version": 14,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 161,
+          "about_this_paper": "yes",
+          "what_changed": "The notice partially retracts the paper: Figure 5 and the associated claims about participants with BMI above 30 are retracted because of a data-merging error affecting that subgroup only. The primary analysis in Table 2 and all other results are stated to be unaffected.",
+          "scope": "specific_parts",
+          "affected_parts": [
+            {
+              "part": "Figure 5 and Section 3.4: subgroup analysis for BMI above 30 (a rise of 0.8 mmol/L in fasting glucose)",
+              "findings_affected": "The BMI subgroup finding that participants with BMI above 30 had a 0.8 mmol/L rise in fasting glucose, and any claims about differing effect by BMI category."
+            }
+          ],
+          "severity": "medium",
+          "reason": "A prespecified secondary subgroup result is retracted for a data error, but the notice says the primary analysis (Table 2, 0.4 mmol/L rise) and all other results are unaffected, so the main finding stands.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2021.016r",
+              "quote": "Figure 5 and the associated claims about participants with BMI above 30 are retracted because of a data-merging error that affected that subgroup only."
+            },
+            {
+              "source": "10.9999/fake.2021.016r",
+              "quote": "The primary analysis in Table 2 and all other results are unaffected."
+            },
+            {
+              "source": "stored paper",
+              "quote": "Figure 5 gives the subgroup analysis for participants with BMI above 30: a rise of 0.8 mmol/L."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "medium",
+      "claims": [
+        {
+          "text": "The notice partially retracts Figure 5 and the associated claims about participants with BMI above 30, because of a data-merging error that affected that subgroup only.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.016r",
+              "quote": "Figure 5 and the associated claims about participants with BMI above 30 are retracted because of a data-merging error that affected that subgroup only."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The notice says the primary analysis in Table 2 and all other results are unaffected.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.016r",
+              "quote": "The primary analysis in Table 2 and all other results are unaffected."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The stored paper reports the BMI above 30 subgroup result, a rise of 0.8 mmol/L, in Figure 5.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Figure 5 gives the subgroup analysis for participants with BMI above 30: a rise of 0.8 mmol/L."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The stored paper's primary analysis reports fasting glucose rising by 0.4 mmol/L.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "fasting glucose rose by 0.4 mmol/L (95% CI 0.2 to 0.6)."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        }
+      ],
+      "summary": [
+        {
+          "text": "The notice partially retracts Figure 5 and the associated claims about participants with BMI above 30, because of a data-merging error that affected that subgroup only.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The stored paper reports the BMI above 30 subgroup result, a rise of 0.8 mmol/L, in Figure 5, so that result is the part affected.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "The notice says the primary analysis in Table 2 and all other results are unaffected, and the stored paper's primary analysis reports fasting glucose rising by 0.4 mmol/L.",
+          "kind": "fact",
+          "claims": [
+            2,
+            4
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[6] Lindqvist, E., Abara, N. (2021). One week of sleep restriction raises fasting glucose: primary and subgroup results. J. Fake Metabolism.",
+      "uses": [
+        {
+          "section": "Introduction",
+          "quote": "Short sleep acutely raises fasting glucose: one week of restriction raised it by 0.4 mmol/L in healthy adults (Lindqvist and Abara [6]), which motivates our trial.",
+          "role": "key_evidence",
+          "claim_relied_on": "that one week of sleep restriction raised fasting glucose by 0.4 mmol/L in healthy adults (primary result)",
+          "affected": "no",
+          "reason": "The 0.4 mmol/L figure is the primary analysis in Table 2, which the notice says is unaffected."
+        },
+        {
+          "section": "Discussion",
+          "quote": "The effect may be larger in people with obesity, with a doubling reported in participants with BMI above 30 [6, 11].",
+          "role": "supporting",
+          "claim_relied_on": "that participants with BMI above 30 showed a doubled rise in fasting glucose (0.8 vs 0.4 mmol/L)",
+          "affected": "yes",
+          "reason": "This relies on the BMI above 30 subgroup result (Figure 5), which the notice retracts for a data-merging error."
+        }
+      ],
+      "impact_level": "low",
+      "claims": [
+        {
+          "text": "The draft's Introduction cites Lindqvist and Abara [6] for a 0.4 mmol/L rise in fasting glucose after one week of restriction, which it says motivates the trial.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Short sleep acutely raises fasting glucose: one week of restriction raised it by 0.4 mmol/L in healthy adults (Lindqvist and Abara [6]), which motivates our trial."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The stored paper's primary analysis reports that fasting glucose rose by 0.4 mmol/L.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "fasting glucose rose by 0.4 mmol/L (95% CI 0.2 to 0.6)."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The notice says the primary analysis in Table 2 and all other results are unaffected.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.016r",
+              "quote": "The primary analysis in Table 2 and all other results are unaffected."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The change does not touch the Introduction use of the 0.4 mmol/L result.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The draft's Discussion cites [6, 11] for a doubling of the effect reported in participants with BMI above 30.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "The effect may be larger in people with obesity, with a doubling reported in participants with BMI above 30 [6, 11]."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The stored paper reports the BMI above 30 subgroup result, a rise of 0.8 mmol/L, in Figure 5.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Figure 5 gives the subgroup analysis for participants with BMI above 30: a rise of 0.8 mmol/L."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The notice retracts Figure 5 and the associated claims about participants with BMI above 30 because of a data-merging error that affected that subgroup only.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.016r",
+              "quote": "Figure 5 and the associated claims about participants with BMI above 30 are retracted because of a data-merging error that affected that subgroup only."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The change touches the Discussion use of the BMI above 30 doubling.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            5,
+            6,
+            7
+          ]
+        },
+        {
+          "text": "The overall impact is low: the only affected use is a Discussion sentence supported by two sources, while the Introduction's key use is untouched.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            4,
+            8
+          ]
+        }
+      ],
+      "explanation": [
+        {
+          "text": "Your Introduction cites Lindqvist and Abara [6] for the 0.4 mmol/L rise in fasting glucose, which the stored paper reports as its primary analysis, and the notice says that analysis is unaffected, so this use is not touched.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "text": "Your Discussion cites [6, 11] for a doubling of the effect in participants with BMI above 30, while the stored paper reports that subgroup result (0.8 mmol/L) in Figure 5, which the notice retracts for a data-merging error, so this use is touched.",
+          "kind": "fact",
+          "claims": [
+            5,
+            6,
+            7,
+            8
+          ]
+        },
+        {
+          "text": "Overall the impact is low, because the affected sentence is a supporting remark in the Discussion backed by two sources and your main motivation in the Introduction stands.",
+          "kind": "fact",
+          "claims": [
+            9
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Remove or replace the claim that the effect doubles in people with BMI above 30, or rewrite it so it no longer relies on Figure 5 of [6]; re-check whether source [11] supports it on its own, and if you keep the sentence, say the subgroup result was retracted and cite the notice.",
+          "where": "Discussion, sentence starting \"The effect may be larger in people with obesity\""
+        },
+        {
+          "action": "Keep the 0.4 mmol/L citation as it is; no change is needed.",
+          "where": "Introduction, sentence starting \"Short sleep acutely raises fasting glucose\""
+        }
+      ],
+      "claims": [
+        {
+          "text": "The draft's Discussion cites [6, 11] for a doubling of the effect reported in participants with BMI above 30.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "The effect may be larger in people with obesity, with a doubling reported in participants with BMI above 30 [6, 11]."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The stored paper reports the BMI above 30 subgroup result, a rise of 0.8 mmol/L, in Figure 5.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Figure 5 gives the subgroup analysis for participants with BMI above 30: a rise of 0.8 mmol/L."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The notice retracts Figure 5 and the associated claims about participants with BMI above 30 because of a data-merging error that affected that subgroup only.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.016r",
+              "quote": "Figure 5 and the associated claims about participants with BMI above 30 are retracted because of a data-merging error that affected that subgroup only."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The change touches the Discussion use of the BMI above 30 doubling.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The draft's Introduction cites Lindqvist and Abara [6] for a 0.4 mmol/L rise in fasting glucose after one week of restriction, which it says motivates the trial.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Short sleep acutely raises fasting glucose: one week of restriction raised it by 0.4 mmol/L in healthy adults (Lindqvist and Abara [6]), which motivates our trial."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The notice says the primary analysis in Table 2 and all other results are unaffected.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.016r",
+              "quote": "The primary analysis in Table 2 and all other results are unaffected."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "Your Discussion cites [6, 11] for a doubling of the effect in participants with BMI above 30, the stored paper reports that subgroup result in Figure 5, and the notice retracts Figure 5 and those claims because of a data-merging error that affected that subgroup only.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "Remove or rewrite that Discussion sentence, check whether [11] supports it alone, and cite the notice if you keep any mention of it.",
+          "kind": "advice",
+          "claims": []
+        },
+        {
+          "text": "Your Introduction cites [6] for a 0.4 mmol/L rise, and the notice says the primary analysis in Table 2 and all other results are unaffected.",
+          "kind": "fact",
+          "claims": [
+            5,
+            6
+          ]
+        },
+        {
+          "text": "Leave the Introduction citation unchanged.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The notice partially retracts Figure 5 and the associated claims about participants with BMI above 30, because of a data-merging error that affected that subgroup only.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Figure 5 and the associated claims about participants with BMI above 30 are retracted because of a data-merging error that affected that subgroup only.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The notice says the primary analysis in Table 2 and all other results are unaffected.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The primary analysis in Table 2 and all other results are unaffected.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The stored paper reports the BMI above 30 subgroup result, a rise of 0.8 mmol/L, in Figure 5.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Figure 5 gives the subgroup analysis for participants with BMI above 30: a rise of 0.8 mmol/L.",
+          "page": 4,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The stored paper's primary analysis reports fasting glucose rising by 0.4 mmol/L.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "fasting glucose rose by 0.4 mmol/L (95% CI 0.2 to 0.6).",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft's Introduction cites Lindqvist and Abara [6] for a 0.4 mmol/L rise in fasting glucose after one week of restriction, which it says motivates the trial.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Short sleep acutely raises fasting glucose: one week of restriction raised it by 0.4 mmol/L in healthy adults (Lindqvist and Abara [6]), which motivates our trial.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The stored paper's primary analysis reports that fasting glucose rose by 0.4 mmol/L.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "fasting glucose rose by 0.4 mmol/L (95% CI 0.2 to 0.6).",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The notice says the primary analysis in Table 2 and all other results are unaffected.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The primary analysis in Table 2 and all other results are unaffected.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The change does not touch the Introduction use of the 0.4 mmol/L result.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The draft's Discussion cites [6, 11] for a doubling of the effect reported in participants with BMI above 30.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The effect may be larger in people with obesity, with a doubling reported in participants with BMI above 30 [6, 11].",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "The stored paper reports the BMI above 30 subgroup result, a rise of 0.8 mmol/L, in Figure 5.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Figure 5 gives the subgroup analysis for participants with BMI above 30: a rise of 0.8 mmol/L.",
+          "page": 4,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-6",
+      "kind": "impact",
+      "text": "The notice retracts Figure 5 and the associated claims about participants with BMI above 30 because of a data-merging error that affected that subgroup only.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Figure 5 and the associated claims about participants with BMI above 30 are retracted because of a data-merging error that affected that subgroup only.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-7",
+      "kind": "impact",
+      "text": "The change touches the Discussion use of the BMI above 30 doubling.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-8",
+      "kind": "impact",
+      "text": "The overall impact is low: the only affected use is a Discussion sentence supported by two sources, while the Introduction's key use is untouched.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The draft's Discussion cites [6, 11] for a doubling of the effect reported in participants with BMI above 30.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The effect may be larger in people with obesity, with a doubling reported in participants with BMI above 30 [6, 11].",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The stored paper reports the BMI above 30 subgroup result, a rise of 0.8 mmol/L, in Figure 5.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Figure 5 gives the subgroup analysis for participants with BMI above 30: a rise of 0.8 mmol/L.",
+          "page": 4,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The notice retracts Figure 5 and the associated claims about participants with BMI above 30 because of a data-merging error that affected that subgroup only.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Figure 5 and the associated claims about participants with BMI above 30 are retracted because of a data-merging error that affected that subgroup only.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "The change touches the Discussion use of the BMI above 30 doubling.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-4",
+      "kind": "action",
+      "text": "The draft's Introduction cites Lindqvist and Abara [6] for a 0.4 mmol/L rise in fasting glucose after one week of restriction, which it says motivates the trial.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Short sleep acutely raises fasting glucose: one week of restriction raised it by 0.4 mmol/L in healthy adults (Lindqvist and Abara [6]), which motivates our trial.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-5",
+      "kind": "action",
+      "text": "The notice says the primary analysis in Table 2 and all other results are unaffected.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The primary analysis in Table 2 and all other results are unaffected.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}
