@@ -103,35 +103,9 @@ def to_parts(parts: list[Part]) -> list[types.Part]:
     ]
 
 
-async def generate[T: BaseModel](
-    client: genai.Client,
-    model: str,
-    *,
-    system: str,
-    parts: list[Part],
-    schema: type[T],
-) -> Answer[T]:
-    """Ask `model` for an answer matching `schema`; raises pydantic.ValidationError if the
-    model's JSON doesn't fit it, and ValueError if it gave no text at all."""
-    response = await client.aio.models.generate_content(
-        model=model,
-        contents=[types.Content(role="user", parts=to_parts(parts))],
-        config=types.GenerateContentConfig(
-            system_instruction=system,
-            response_mime_type="application/json",
-            response_schema=schema,
-            # impact gives the model no tools
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-        ),
-    )
-    if not response.text:
-        raise NoText("the model returned no text")
-    return Answer(schema.model_validate_json(response.text), response.model_version, model)
-
-
 @dataclass(frozen=True)
 class GeminiLlm:
-    """The Llm impact runs with: a Gemini client and the model name (GEMINI_MODEL)."""
+    """One Gemini model of impact's chain (GEMINI_MODEL or a fallback) on a Gemini client."""
 
     client: genai.Client
     model: str
@@ -139,7 +113,22 @@ class GeminiLlm:
     async def generate[T: BaseModel](
         self, *, system: str, parts: list[Part], schema: type[T]
     ) -> Answer[T]:
-        return await generate(self.client, self.model, system=system, parts=parts, schema=schema)
+        """Ask the model for an answer matching `schema`; raises pydantic.ValidationError if the
+        model's JSON doesn't fit it, and ValueError if it gave no text at all."""
+        response = await self.client.aio.models.generate_content(
+            model=self.model,
+            contents=[types.Content(role="user", parts=to_parts(parts))],
+            config=types.GenerateContentConfig(
+                system_instruction=system,
+                response_mime_type="application/json",
+                response_schema=schema,
+                # impact gives the model no tools
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+            ),
+        )
+        if not response.text:
+            raise NoText("the model returned no text")
+        return Answer(schema.model_validate_json(response.text), response.model_version, self.model)
 
 
 def to_blocks(parts: list[Part]) -> list[dict]:

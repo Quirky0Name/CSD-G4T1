@@ -16,7 +16,6 @@ from research_evaluation.impact.llm import (
     GeminiLlm,
     ModelFailure,
     Pdf,
-    generate,
     to_parts,
 )
 
@@ -44,9 +43,7 @@ def fake_client(models: FakeModels):
 async def test_a_call_sends_the_system_the_parts_and_the_schema_with_no_tools():
     models = FakeModels('{"severity": "high", "summary": "Retracted."}')
 
-    answer = await generate(
-        fake_client(models),
-        "gemini-flash-latest",
+    answer = await GeminiLlm(fake_client(models), "gemini-flash-latest").generate(
         system="the rules",
         parts=["some text", Pdf(b"%PDF-1.7 paper"), "the task"],
         schema=Verdict,
@@ -74,24 +71,14 @@ async def test_a_call_sends_the_system_the_parts_and_the_schema_with_no_tools():
 async def test_an_answer_that_doesnt_fit_the_schema_raises():
     models = FakeModels('{"severity": "high"}')
     with pytest.raises(ValidationError):
-        await generate(fake_client(models), "m", system="s", parts=["p"], schema=Verdict)
+        await GeminiLlm(fake_client(models), "m").generate(system="s", parts=["p"], schema=Verdict)
 
 
 @pytest.mark.parametrize("text", [None, ""])
 async def test_no_text_at_all_raises(text):
     models = FakeModels(text)
     with pytest.raises(ValueError, match="no text"):
-        await generate(fake_client(models), "m", system="s", parts=["p"], schema=Verdict)
-
-
-async def test_the_gemini_llm_passes_its_model_through():
-    models = FakeModels('{"severity": "low", "summary": "A typo."}')
-    llm = GeminiLlm(client=fake_client(models), model="gemini-flash-latest")
-
-    answer = await llm.generate(system="s", parts=["p"], schema=Verdict)
-
-    assert answer.value.severity == "low"
-    assert models.calls[0]["model"] == "gemini-flash-latest"
+        await GeminiLlm(fake_client(models), "m").generate(system="s", parts=["p"], schema=Verdict)
 
 
 class ScriptedModels:
