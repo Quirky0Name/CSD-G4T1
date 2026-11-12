@@ -517,7 +517,8 @@ address or chat id. There are no retries.
   keeps whole characters: when the 4095th unit would be the first half of an
   emoji, the cut is one unit earlier, so a cut message can be 4095 units long.
   It is `sent` on any `2xx` from the bot API (the `ok` field of its answer isn't
-  read); any other status, a refused connection or a timeout is `failed`.
+  read); any other status (a `3xx` redirect is not followed), a refused
+  connection or a timeout is `failed`.
   A send with no chat id on an enabled channel is `failed`. The bot token is in
   the URL, so neither the URL nor the text is logged.
 - **Message body.** `alerts`: the title, the DOI, then one line per passing alert,
