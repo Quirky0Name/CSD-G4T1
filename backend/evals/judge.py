@@ -19,8 +19,8 @@ run graded before claims were judged gets only this grading, without --redo. Wit
 <run>.judge-<label>.json instead, which score.py never reads. Calls the judge model with
 temperature 0 on Gemini; Claude has none.
 
-Every case's `expected.facts` is checked against `Rubric` before the first call. A judge model
-equal to a run's tested model (`assessment.model`) is a usage error. A call that fails leaves
+Every case's `expected.facts` is checked against `Rubric` before the first call. The judge may
+be the run's tested model. A call that fails leaves
 its run ungraded; the run is listed at the end, and running judge.py again grades only those.
 Hitting the Claude usage limit stops it; runs already graded are kept.
 
@@ -28,8 +28,8 @@ Settings (environment or backend/.env):
   --provider     gemini (default), claude-code (the Claude Code login, no key) or claude-api
   JUDGE_API_KEY  a Gemini API key for the judge (falls back to GEMINI_API_KEY); gemini only
   ANTHROPIC_API_KEY  claude-api only
-  JUDGE_MODEL    default gemini-flash-lite-latest, haiku (claude-code) or claude-haiku-5-5
-                 (claude-api); it may not be the model being tested"""
+  JUDGE_MODEL    default gemini-flash-lite-latest, sonnet (claude-code) or claude-sonnet-5-5
+                 (claude-api)"""
 
 import argparse
 import asyncio
@@ -58,8 +58,8 @@ from research_evaluation.impact.schemas import Claim, Sentence, kept
 PROVIDERS = ("gemini", "claude-code", "claude-api")
 DEFAULT_MODELS = {
     "gemini": "gemini-flash-lite-latest",
-    "claude-code": "haiku",
-    "claude-api": "claude-haiku-5-5",
+    "claude-code": "sonnet",
+    "claude-api": "claude-sonnet-5-5",
 }
 EFFORT = "medium"
 
@@ -454,11 +454,6 @@ async def main() -> None:
         if ".judge" in path.name:
             continue  # a grade, not a run (same run list as score.run_paths)
         runs.append((path, json.loads(path.read_text(encoding="utf-8"))))
-    if same := [p.stem for p, ev in runs if ev["assessment"].get("model") == model]:
-        parser.error(
-            f"the judge model {model!r} is the tested model of {', '.join(same)}: "
-            "set JUDGE_MODEL to another model"
-        )
     try:
         judge = make_judge(args.provider, model)
     except NotOnSubscription as exc:
