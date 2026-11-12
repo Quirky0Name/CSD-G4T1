@@ -9,24 +9,21 @@ import os
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, get_args
 from uuid import UUID
 
-import httpx
 import pytest
-from impact_prompt_support import PAPER, sample_inputs
+from impact_prompt_support import ijaa_retraction_inputs
 from pydantic import BaseModel
-from support import TEST_JWT_SECRET, load_fixture
+from support import TEST_JWT_SECRET
 
 from evals import claude_llm
 from research_evaluation.chunks import alert_pieces, feedback_piece, report_pieces
 from research_evaluation.config import ResearchEvaluationSettings
 from research_evaluation.impact.assess import assess
 from research_evaluation.impact.history import PastFeedback, past_feedback
-from research_evaluation.impact.inputs import MissingPdf, ReportInputs
 from research_evaluation.impact.llm import GeminiLlm, Llm, make_client
-from research_evaluation.impact.schemas import Evaluation
-from research_evaluation.investigation.crossref import CrossrefRecord, fetch_record
+from research_evaluation.impact.schemas import Evaluation, Level
 from research_evaluation.storage import AlertInReport, Chunk, Feedback, PaperDetails, Report
 
 pytestmark = pytest.mark.live
@@ -35,7 +32,7 @@ DRAFT = Path(__file__).parents[2] / "fixtures" / "impact" / "draft_cites_ijaa.pd
 DEFAULT_PROVIDER = "claude-code"
 DEFAULT_MODELS = {"claude-code": "sonnet", "claude-api": "claude-sonnet-5-5"}
 EFFORT = "medium"
-LEVELS = ["none", "low", "medium", "high"]
+LEVELS = get_args(Level)
 OWNER = UUID("00000000-0000-0000-0000-00000000a11c")
 OTHER_PAPER = UUID("11111111-2222-3333-4444-555555555555")
 
@@ -212,40 +209,14 @@ WITH_FEEDBACK = Context("feedback", feedback=[feedback_item()])
 WITH_PAST = Context("past", chunks=past_timeline())
 
 
-async def ijaa_inputs(sm) -> ReportInputs:
-    """The IJAA retraction with its notice's real Crossref record and no notice text, and a draft
-    that cites the paper, so steps 2 and 3 run."""
-    reply = load_fixture("crossref", "ijaa_notice")
-    async with httpx.AsyncClient(
-        transport=httpx.MockTransport(lambda request: httpx.Response(200, json=reply))
-    ) as crossref:
-        sample = sample_inputs().report
-        record = await fetch_record(crossref, sample.documents[0].doi, "")
-    assert isinstance(record, CrossrefRecord)
-    notice = sample.documents[0].model_copy(
-        update={
-            "crossref_record": record.model_dump(mode="json"),
-            "text": None,
-            "text_status": "not_open_access",
-        }
-    )
-    paper = await sm.add_paper()
-    await sm.client.post(f"/dev/papers/{paper}/draft", content=DRAFT.read_bytes())
-    return ReportInputs(
-        report=sample.model_copy(update={"paper_id": paper, "owner_id": OWNER, "documents": [notice]}),
-        paper=PAPER,
-        paper_pdf=None,
-        document_pdfs=[],
-        missing=[MissingPdf("stored paper", "not stored")],
-    )
-
-
-async def limited(runs: Runs, call):
-    """Awaits `call`; once Claude's usage limit is reached, this test and every later one skip."""
+async def limited(runs: Runs, coroutine):
+    """Awaits `coroutine`; once Claude's usage limit is reached, this test and every later one
+    skip."""
     if runs.limit is not None:
+        coroutine.close()
         pytest.skip(runs.limit)
     try:
-        return await call
+        return await coroutine
     except claude_llm.ClaudeLimitReached as exc:
         runs.limit = str(exc)
         pytest.skip(runs.limit)
@@ -255,7 +226,7 @@ async def evaluation_with(context: Context, models: Models, runs: Runs, sm, um) 
     if context.name not in runs.evaluations:
         if context.profile is not None:
             um.profiles[OWNER] = context.profile
-        inputs = replace(await ijaa_inputs(sm), chunks=context.chunks, feedback=context.feedback)
+        inputs = replace(await ijaa_retraction_inputs(sm, OWNER), chunks=context.chunks, feedback=context.feedback)
         evaluation = await limited(runs, assess(models.tested, sm.client, inputs, um=um.client))
         assert not evaluation.assessment["placeholder"], evaluation.assessment.get("failures")
         runs.evaluations[context.name] = evaluation
