@@ -19,7 +19,7 @@ from research_evaluation.auth import require_service_token
 from research_evaluation.config import ResearchEvaluationSettings
 from research_evaluation.embedding import GeminiEmbedder
 from research_evaluation.evaluate import EvaluationResult, evaluate_papers
-from research_evaluation.impact.llm import FallbackLlm, gemini_configured, make_client
+from research_evaluation.impact.llm import FallbackLlm, GeminiLlm, gemini_configured, make_client
 from research_evaluation.impact.run import ImpactContext, assess_reports
 from research_evaluation.investigation.run import (
     InvestigationContext,
@@ -143,9 +143,11 @@ def _impact_context(config: ResearchEvaluationSettings, um: httpx.AsyncClient) -
     gemini = make_client(config)
     return ImpactContext(
         FallbackLlm(
-            gemini,
-            # a name listed twice is tried once
-            tuple(dict.fromkeys((config.gemini_model, *config.gemini_fallback_models))),
+            tuple(
+                GeminiLlm(gemini, name)
+                # a name listed twice is tried once
+                for name in dict.fromkeys((config.gemini_model, *config.gemini_fallback_models))
+            )
         ),
         um=um,
         embedder=GeminiEmbedder(gemini, config.embed_model),

@@ -184,7 +184,7 @@ def test_startup_makes_impact_a_gemini_model_with_the_timeout(tmp_path, monkeypa
         assert llm.model == "gemini-test"
         assert llm.models == ("gemini-test", "gemini-older", "gemini-oldest")
         # the SDK takes milliseconds
-        assert llm.client._api_client._http_options.timeout == 45_000
+        assert llm.llms[0].client._api_client._http_options.timeout == 45_000
 
 
 def test_the_fallback_models_default_to_flash_lite():
@@ -262,4 +262,4 @@ def test_startup_gives_impact_an_embedder_on_the_same_gemini_client(tmp_path, mo
     with TestClient(app):
         embedder = app.state.impact.embedder
         assert embedder.model == "gemini-embedding-test"
-        assert embedder.client is app.state.impact.llm.client
+        assert embedder.client is app.state.impact.llm.llms[0].client

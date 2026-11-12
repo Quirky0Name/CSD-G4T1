@@ -621,7 +621,7 @@ async def test_an_answer_with_no_claims_fails_and_the_next_model_is_asked():
         }
     )
 
-    answer = await FallbackLlm(client, ("first", "second")).generate(
+    answer = await FallbackLlm((GeminiLlm(client, "first"), GeminiLlm(client, "second"))).generate(
         system=SYSTEM, parts=["x"], schema=ChangeAssessment
     )
 

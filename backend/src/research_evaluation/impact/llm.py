@@ -5,8 +5,9 @@ text. The rest of impact talks to the `Llm` protocol, so tests can put a fake in
 import base64
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol
+from typing import Protocol
 
+import anthropic
 import httpx
 from google import genai
 from google.genai import errors as genai_errors
@@ -14,9 +15,6 @@ from google.genai import types
 from pydantic import BaseModel, ValidationError
 
 from research_evaluation.config import ResearchEvaluationSettings
-
-if TYPE_CHECKING:
-    from anthropic import AsyncAnthropic
 
 log = logging.getLogger(__name__)
 
@@ -149,7 +147,7 @@ class ClaudeLlm:
     """The Llm impact tries first (CLAUDE_MODEL). Low effort: a researcher waits on all three
     steps, and the prompts spell out the reasoning they want."""
 
-    client: "AsyncAnthropic"
+    client: anthropic.AsyncAnthropic
     model: str
 
     async def generate[T: BaseModel](
@@ -172,7 +170,13 @@ class ClaudeLlm:
 
 # a failure of one model's call, after which the next model is tried; anything else (a bug)
 # propagates straight away
-MODEL_FAILURES = (genai_errors.APIError, httpx.TransportError, ValidationError, ValueError)
+MODEL_FAILURES = (
+    anthropic.APIError,
+    genai_errors.APIError,
+    httpx.TransportError,
+    ValidationError,
+    ValueError,
+)
 
 
 @dataclass(frozen=True)
@@ -191,31 +195,34 @@ class AllModelsFailed(RuntimeError):
 
 @dataclass(frozen=True)
 class FallbackLlm:
-    """The Llm impact runs with (docs/EVALUATION.md, "Impact"): each call tries GEMINI_MODEL, then
-    GEMINI_FALLBACK_MODELS in order, until one answers; raises AllModelsFailed when none
-    does. Every call starts again from the first model."""
+    """The Llm impact runs with (docs/EVALUATION.md, "Impact"): each call tries its models in
+    order (CLAUDE_MODEL, then GEMINI_MODEL and GEMINI_FALLBACK_MODELS) until one answers; raises
+    AllModelsFailed when none does. Every call starts again from the first model."""
 
-    client: genai.Client
-    models: tuple[str, ...]
+    llms: tuple[Llm, ...]
 
     def __post_init__(self):
-        if not self.models:
+        if not self.llms:
             raise ValueError("FallbackLlm needs at least one model")
 
     @property
     def model(self) -> str:
-        return self.models[0]
+        return self.llms[0].model
+
+    @property
+    def models(self) -> tuple[str, ...]:
+        return tuple(llm.model for llm in self.llms)
 
     async def generate[T: BaseModel](
         self, *, system: str, parts: list[Part], schema: type[T]
     ) -> Answer[T]:
         failures = []
-        for model in self.models:
+        for llm in self.llms:
             try:
-                return await generate(self.client, model, system=system, parts=parts, schema=schema)
+                return await llm.generate(system=system, parts=parts, schema=schema)
             except MODEL_FAILURES as exc:
-                failures.append(ModelFailure(model, failure_cause(exc)))
-                log.warning("Gemini model %s failed (%s)", model, failures[-1].cause)
+                failures.append(ModelFailure(llm.model, failure_cause(exc)))
+                log.warning("Gemini model %s failed (%s)", llm.model, failures[-1].cause)
         raise AllModelsFailed(failures)
 
 
