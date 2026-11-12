@@ -308,6 +308,21 @@ class SendNotificationTest {
     }
 
     @Test
+    void aTelegramRedirectIsFailedNotSent(CapturedOutput output) throws Exception {
+        Account account = registered();
+        putTelegram(account, Map.of("enabled", true, "chat_id", 42, "min_alert_severity", "low"));
+        telegram.answerWith(302);
+
+        postEvent(account.id(), alertsEvent(alert(7, "retraction", "high", "The journal retracted the paper.")))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.channels.telegram").isEqualTo("failed");
+
+        assertThat(output.getOut())
+                .contains("telegram message to user " + account.id() + " failed: status 302");
+    }
+
+    @Test
     void aChannelTurnedOffIsDisabledAndSendsNothing() throws Exception {
         Account account = registered();
         putEmail(account, Map.of("enabled", false, "min_alert_severity", "low"));

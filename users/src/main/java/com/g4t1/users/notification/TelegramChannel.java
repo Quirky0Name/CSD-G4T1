@@ -3,6 +3,7 @@ package com.g4t1.users.notification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -50,13 +51,18 @@ public class TelegramChannel {
             return Outcome.FAILED;
         }
         try {
-            rest.post()
+            HttpStatusCode status = rest.post()
                     .uri("/bot{token}/sendMessage", botToken)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of("chat_id", chatId, "text", cut(text), "disable_web_page_preview", true))
                     .retrieve()
-                    .toBodilessEntity();
-            return Outcome.SENT;
+                    .toBodilessEntity()
+                    .getStatusCode();
+            // only 4xx and 5xx raise, and redirects are not followed, so a 3xx lands here
+            if (status.is2xxSuccessful()) {
+                return Outcome.SENT;
+            }
+            log.warn("telegram message to user {} failed: status {}", userId, status.value());
         } catch (RestClientResponseException e) {
             log.warn("telegram message to user {} failed: status {}", userId, e.getStatusCode().value());
         } catch (RestClientException e) {
