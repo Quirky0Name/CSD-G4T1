@@ -6,8 +6,8 @@ import tools.jackson.databind.JsonNode;
 
 // The body of PUT /internal/reports/{reportId}/evaluation: impact's result. With change_severity none
 // (not meaningful) only the summary is sent; otherwise impact_level, evaluation and recommendation are
-// required too. ReportService checks that rule; assessment and claims are stored as-is (claims is
-// optional: null when left out).
+// required too. ReportService checks that rule; assessment, claims and context_chunks are stored
+// as-is (claims and context_chunks are optional: null when left out).
 public record ReportEvaluationRequest(
         @NotBlank String changeSummary,
         @NotNull AssessmentLevel changeSeverity,
@@ -15,5 +15,7 @@ public record ReportEvaluationRequest(
         String evaluation,
         String recommendation,
         JsonNode assessment,
-        JsonNode claims) {
+        JsonNode claims,
+        // the past chunks impact added to the prompt, stored as sent and never looked inside (null: none sent)
+        JsonNode contextChunks) {
 }

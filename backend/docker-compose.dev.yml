@@ -37,7 +37,8 @@ services:
     # inside the container, localhost is the container itself
     environment:
       SM_BASE_URL: http://host.docker.internal:8081
-    # Linux needs this for host.docker.internal (Storage Management runs on the host)
+      UM_BASE_URL: http://host.docker.internal:8080
+    # Linux needs this for host.docker.internal (Storage Management and User Management run on the host)
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

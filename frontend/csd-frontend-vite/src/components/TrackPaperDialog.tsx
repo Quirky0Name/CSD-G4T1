@@ -8,9 +8,11 @@ import { useToast } from './Toasts'
 type TrackPaperDialogProps = {
   open: boolean
   onClose: () => void
+  // left out: the default project
+  projectId?: string
 }
 
-function TrackPaperDialog({ open, onClose }: TrackPaperDialogProps) {
+function TrackPaperDialog({ open, onClose, projectId }: TrackPaperDialogProps) {
   const { refresh } = useTracking()
   const showToast = useToast()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -63,8 +65,8 @@ function TrackPaperDialog({ open, onClose }: TrackPaperDialogProps) {
     setError(null)
     try {
       const paper = selectedFile
-        ? await uploadPaperPdf(selectedFile)
-        : await trackPaperByDoi(doi.trim())
+        ? await uploadPaperPdf(selectedFile, projectId)
+        : await trackPaperByDoi(doi.trim(), projectId)
       await refresh()
       showToast({ tone: 'success', message: `Now tracking "${paper.title ?? paper.doi ?? 'this paper'}".` })
       handleClose()
@@ -76,9 +78,9 @@ function TrackPaperDialog({ open, onClose }: TrackPaperDialogProps) {
 
   return (
     <Dialog open={open} onClose={handleClose} className="relative z-50">
-      <DialogBackdrop className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
+      <DialogBackdrop className="fixed inset-0 bg-black/70" />
       <div className="fixed inset-0 flex items-center justify-center p-4 sm:p-6">
-        <DialogPanel className="w-full max-w-xl rounded-2xl border border-white/10 bg-gray-900 p-6 text-gray-100 shadow-2xl sm:p-8">
+        <DialogPanel className="w-full max-w-xl rounded-lg border border-white/10 bg-gray-900 p-6 text-gray-100 shadow-lg sm:p-8">
           <div className="flex items-start justify-between gap-4">
             <div>
               <DialogTitle className="text-lg font-semibold text-white">Track a paper</DialogTitle>
@@ -141,7 +143,7 @@ function TrackPaperDialog({ open, onClose }: TrackPaperDialogProps) {
 
           <div className="mt-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-white/10" />
-            <span className="text-xs font-medium uppercase tracking-wide text-gray-500">or</span>
+            <span className="text-xs font-medium text-gray-400">or</span>
             <div className="h-px flex-1 bg-white/10" />
           </div>
 

@@ -9,8 +9,9 @@ import java.util.List;
 import java.util.UUID;
 
 // A report as the researcher sees it: its alerts in the alert API's shape (no change_key), its
-// documents, and the evaluation fields impact will fill (null until then). Never impact's raw
-// assessment: claims carry what the researcher needs from it
+// documents, the evaluation fields impact will fill (null until then), and the past chunks impact
+// added to its prompt (a JSON array as Research Evaluation sent it; null when none was sent). Never
+// impact's raw assessment: claims carry what the researcher needs from it
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record UserReportResponse(
         Long id,
@@ -26,13 +27,14 @@ public record UserReportResponse(
         AssessmentLevel impactLevel,
         JsonNode claims,
         List<AlertResponse> alerts,
-        List<UserDocumentResponse> documents) {
+        List<UserDocumentResponse> documents,
+        JsonNode contextChunks) {
 
     static UserReportResponse from(Report report, JsonNode claims, List<AlertResponse> alerts,
-                                   List<UserDocumentResponse> documents) {
+                                   List<UserDocumentResponse> documents, JsonNode contextChunks) {
         return new UserReportResponse(report.getId(), report.getPaperId(), report.getStatus(), report.getCreatedAt(),
                 report.getInvestigatedAt(), report.getEvaluation(), report.getRecommendation(),
                 report.getEvaluatedAt(), report.getChangeSummary(), report.getChangeSeverity(),
-                report.getImpactLevel(), claims, alerts, documents);
+                report.getImpactLevel(), claims, alerts, documents, contextChunks);
     }
 }

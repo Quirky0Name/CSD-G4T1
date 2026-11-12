@@ -1,12 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
-import { login as apiLogin, register as apiRegister } from './api'
+import { login as apiLogin, logout as apiLogout, register as apiRegister, type Profile } from './api'
 import { clearSession, loadSession, saveSession, setUnauthorizedHandler, type Session } from './session'
 
 type AuthValue = {
   session: Session | null
   login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string) => Promise<void>
+  register: (email: string, password: string, profile: Profile) => Promise<void>
   logout: () => void
 }
 
@@ -29,8 +29,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       session,
       login: async (email, password) => start(await apiLogin(email, password)),
-      register: async (email, password) => start(await apiRegister(email, password)),
+      register: async (email, password, profile) => start(await apiRegister(email, password, profile)),
+      // the request goes first, so the server forgets the refresh token; the session is cleared at
+      // once, without waiting for its answer, so a slow or failed request never keeps anyone signed in
       logout: () => {
+        void apiLogout().catch(() => undefined)
         clearSession()
         setSession(null)
       },
@@ -56,4 +59,15 @@ export function RequireAuth() {
 export function GuestOnly() {
   const { session } = useAuth()
   return session ? <Navigate to="/" replace /> : <Outlet />
+}
+
+// The admin account has no papers or projects, so it only ever sees dev mode.
+export function RequireResearcher() {
+  const { session } = useAuth()
+  return session?.user.role === 'admin' ? <Navigate to="/dev" replace /> : <Outlet />
+}
+
+export function RequireAdmin() {
+  const { session } = useAuth()
+  return session?.user.role === 'admin' ? <Outlet /> : <Navigate to="/" replace />
 }

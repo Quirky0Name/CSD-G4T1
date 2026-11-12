@@ -386,3 +386,27 @@ async def test_an_investigated_report_is_stored_assessed_with_only_the_model(sm)
     assert await assess_reports(sm.client, context, [report_id]) == [report_id]
     response = await sm.client.get(f"/internal/reports/{report_id}")
     assert response.json()["status"] == "assessed"
+
+
+async def test_impact_reads_the_owners_profile_with_the_contexts_user_management_client(sm, um):
+    report_id = await investigated_report(sm)
+    report = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    owner = UUID(report["owner_id"])
+    um.profiles[owner] = {"occupation": "PhD student", "research_fields": ["Medicine"]}
+    context = ImpactContext(FakeLlm("high"), um=um.client)
+
+    assert await assess_reports(sm.client, context, [report_id]) == [report_id]
+
+    [request] = um.requests
+    assert request.url.path == f"/internal/users/{owner}/profile"
+    stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    assert stored["assessment"]["profile"] == "read"
+
+
+async def test_a_context_with_no_user_management_client_assesses_without_a_profile(sm):
+    report_id = await investigated_report(sm)
+
+    assert await assess_reports(sm.client, ImpactContext(FakeLlm("high")), [report_id]) == [report_id]
+
+    stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    assert stored["assessment"]["profile"] == "none"

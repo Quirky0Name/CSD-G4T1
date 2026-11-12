@@ -85,7 +85,7 @@ public class ReportDocument {
         this.createdAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
     }
 
-    // the download worked: the file is stored under fileKey
+    // the download worked, or there was none to do (a fake report's copy): the file is stored under fileKey
     void recordPdf(String fileKey, String sha256, String sourceUrl) {
         this.pdfStatus = PdfStatus.OK;
         this.fileKey = fileKey;

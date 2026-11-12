@@ -161,6 +161,15 @@ class StoredClaim(BaseModel):
     passages: list[Passage]
 
 
+class ContextChunk(BaseModel):
+    """A past chunk added to the prompt: enough to find it again (a document's PDF at `page`, or
+    the alert or report in the paper's report list)."""
+
+    source_type: str
+    source_id: str
+    page: int | None = None
+
+
 class Evaluation(BaseModel):
     """The body of `PUT /internal/reports/{id}/evaluation`. With change_severity none only the
     summary and change severity are set (and assessment); the rest stays null."""
@@ -174,3 +183,5 @@ class Evaluation(BaseModel):
     # every finished step's claims, quotes checked (impact/claims.py); null on reports assessed
     # before claims existed
     claims: list[StoredClaim] | None = None
+    # the past chunks steps 1 and 2 were given, in prompt order, so a frontend can show them (I5)
+    context_chunks: list[ContextChunk] = []

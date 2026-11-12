@@ -1,18 +1,23 @@
 """Impact over a list of report ids: for each, read the report, skip it unless it's
-`investigated`, gather its inputs, assess it with the model, and store the evaluation in Storage
-Management, which marks it `assessed` (docs/EVALUATION.md, "Impact").
+`investigated`, read the paper's past (impact.history) and gather its inputs, assess it with the
+model, and store the evaluation in Storage
+Management, which marks it `assessed` (docs/EVALUATION.md, "Impact"), then store the chunks of the
+report, its alerts and its documents for later reports to search (research_evaluation.chunks).
 
 It runs in the background, after investigation, so it must never raise. A report that fails is
 logged, stays `investigated` and nothing is stored for it; nothing retries it (a later sprint)."""
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import httpx
 from google.genai import errors as genai_errors
 from pydantic import ValidationError
 
+from research_evaluation.chunks import store_report_chunks
+from research_evaluation.embedding import Embedder
 from research_evaluation.impact.assess import assess
+from research_evaluation.impact.history import read_history
 from research_evaluation.impact.inputs import gather_inputs
 from research_evaluation.impact.llm import Llm
 from research_evaluation.storage import PaperGone, ReportGone, read_report, store_evaluation
@@ -22,9 +27,14 @@ log = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ImpactContext:
-    """What impact runs with besides the Storage Management client: the model."""
+    """What impact runs with besides the Storage Management client: the model, the User
+    Management client the researcher's profile is read with (None reads no profile, as in the
+    evals), and the embedder the paper's past is searched and the report's chunks are stored with
+    (None does neither)."""
 
     llm: Llm
+    um: httpx.AsyncClient | None = None
+    embedder: Embedder | None = None
 
 
 async def assess_reports(
@@ -46,8 +56,10 @@ async def assess_report(sm: httpx.AsyncClient, context: ImpactContext, report_id
         if report.status != "investigated":
             log.info("impact skipped report %s: it is %s", report_id, report.status)
             return False
-        inputs = await gather_inputs(sm, report)
-        evaluation = await assess(context.llm, sm, inputs)
+        # the paper's past, read before step 1 and given to steps 1 and 2; never raises
+        history = await read_history(sm, context.embedder, report)
+        inputs = replace(await gather_inputs(sm, report), chunks=history.chunks)
+        evaluation = await assess(context.llm, sm, inputs, um=context.um, history=history.status)
         await store_evaluation(sm, report_id, evaluation.model_dump(mode="json"))
     except (PaperGone, ReportGone):
         log.info("impact skipped report %s: Storage Management has no such report or paper", report_id)
@@ -62,6 +74,10 @@ async def assess_report(sm: httpx.AsyncClient, context: ImpactContext, report_id
             ),
         )
         return False
+    # only once the report is assessed, so the researcher sees it first and impact never
+    # retrieves the report it is assessing; inline, so the next report waits. Never raises
+    if context.embedder is not None:
+        await store_report_chunks(sm, context.embedder, inputs, evaluation)
     return True
 
 

@@ -99,6 +99,12 @@ public class AlertService {
         return found.stream().sorted(LIST_ORDER).map(AlertResponse::from).toList();
     }
 
+    // the dev mode admin's view: any researcher's paper, dismissed alerts included
+    public List<AlertResponse> listAllForPaper(UUID paperId) {
+        requirePaper(paperId);
+        return alerts.findByPaperId(paperId).stream().sorted(LIST_ORDER).map(AlertResponse::from).toList();
+    }
+
     /**
      * Records the researcher's response to an alert. Either status can replace any other; setting
      * the status the alert already has changes nothing, so status_changed_at keeps the time of the

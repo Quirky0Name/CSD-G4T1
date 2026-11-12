@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { EllipsisVerticalIcon } from '@heroicons/react/20/solid'
+import { CheckIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import {
   errorMessage,
   setAlertStatus,
@@ -13,7 +12,6 @@ import {
 import { ALERT_STATUS_LABEL, CHANGE_TYPE_LABEL, ALERT_SEVERITY_LABEL, compareAlerts, formatDateTime } from '../format'
 import { useTracking } from '../tracking'
 import { useToast } from './Toasts'
-import DebugJson from './DebugJson'
 
 const ALERT_SEVERITY_STYLES: Record<AlertSeverity, string> = {
   high: 'bg-red-400/10 text-red-400 inset-ring-red-400/20',
@@ -30,28 +28,26 @@ export default function AlertList() {
   const { state } = useTracking()
   const [searchParams] = useSearchParams()
   const paperFilter = searchParams.get('paper')
-  const [expandedId, setExpandedId] = useState<number | null>(null)
+
+  const filteredTitle =
+    paperFilter && state.status === 'ready' ? state.papers.find((paper) => paper.id === paperFilter)?.title : null
 
   return (
     <div>
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base/7 font-semibold text-white">Alerts</h2>
-          <p className="mt-1 text-sm/6 text-gray-400">Monitor changes that may affect your research.</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl/7 font-bold text-white sm:text-3xl sm:tracking-tight">Alerts</h1>
+          <p className="mt-2 text-sm/6 text-gray-400">
+            {filteredTitle ? `For ${filteredTitle}.` : 'Monitor changes that may affect your research.'}
+          </p>
         </div>
         {paperFilter && (
-          <Link to="/alerts" className="mt-1 text-sm font-semibold text-indigo-400 hover:text-indigo-300">
+          <Link to="/alerts" className="mt-1 shrink-0 text-sm font-semibold text-indigo-400 hover:text-indigo-300">
             Show all
           </Link>
         )}
       </div>
 
-      {state.status === 'ready' && (
-        <DebugJson
-          label="alerts (GET /papers/{id}/alerts)"
-          data={state.alerts.filter((alert) => !paperFilter || alert.paper_id === paperFilter)}
-        />
-      )}
       {state.status === 'loading' && <p className="text-sm text-gray-400">Loading alerts…</p>}
       {state.status === 'error' && (
         <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">
@@ -59,13 +55,7 @@ export default function AlertList() {
         </p>
       )}
       {state.status === 'ready' && (
-        <AlertRows
-          papers={state.papers}
-          alerts={state.alerts}
-          paperFilter={paperFilter}
-          expandedId={expandedId}
-          onToggle={(id) => setExpandedId((current) => (current === id ? null : id))}
-        />
+        <AlertRows papers={state.papers} alerts={state.alerts} paperFilter={paperFilter} />
       )}
     </div>
   )
@@ -75,28 +65,36 @@ function AlertRows({
   papers,
   alerts,
   paperFilter,
-  expandedId,
-  onToggle,
 }: {
   papers: Paper[]
   alerts: Alert[]
   paperFilter: string | null
-  expandedId: number | null
-  onToggle: (id: number) => void
 }) {
   const { refresh } = useTracking()
   const showToast = useToast()
+  const [busyId, setBusyId] = useState<number | null>(null)
   const paperTitle = new Map(papers.map((paper) => [paper.id, paper.title ?? 'Untitled paper']))
   const rows = alerts
     .filter((alert) => !paperFilter || alert.paper_id === paperFilter)
     .toSorted(compareAlerts)
 
   const changeStatus = async (alertId: number, status: Exclude<AlertStatus, 'new'>) => {
+    setBusyId(alertId)
     try {
       await setAlertStatus(alertId, status)
       await refresh()
+      // a dismissed alert leaves the list. It can't go back to new, so it comes back acknowledged.
+      if (status === 'dismissed') {
+        showToast({
+          tone: 'info',
+          message: 'Alert dismissed',
+          action: { label: 'Bring back', onClick: () => void changeStatus(alertId, 'acknowledged') },
+        })
+      }
     } catch (err) {
       showToast({ tone: 'error', message: errorMessage(err) })
+    } finally {
+      setBusyId(null)
     }
   }
 
@@ -105,100 +103,98 @@ function AlertRows({
   }
 
   return (
-    <ul role="list" className="space-y-3">
+    <ul role="list" className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,34rem),1fr))] items-start gap-3">
       {rows.map((alert) => (
         <li
           key={alert.id}
           className="overflow-hidden bg-gray-800/50 px-4 py-4 shadow-none outline -outline-offset-1 outline-white/10 sm:rounded-md sm:px-6"
         >
-          <div className="flex items-start justify-between gap-x-6">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
-                <p className="text-sm/6 font-semibold text-white">
-                  {CHANGE_TYPE_LABEL[alert.change_type]} — {paperTitle.get(alert.paper_id) ?? 'Unknown paper'}
-                </p>
+          <div className="flex items-start gap-3">
+            <div className="flex min-w-0 flex-1 flex-wrap items-start gap-x-3 gap-y-1">
+              <p className="min-w-0 text-sm/6 font-semibold text-white">
+                {CHANGE_TYPE_LABEL[alert.change_type]} — {paperTitle.get(alert.paper_id) ?? 'Unknown paper'}
+              </p>
+              <span
+                className={`mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-xs font-medium inset-ring ${ALERT_SEVERITY_STYLES[alert.alert_severity]}`}
+              >
+                {ALERT_SEVERITY_LABEL[alert.alert_severity]}
+              </span>
+              {alert.status !== 'new' && (
                 <span
-                  className={`mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-xs font-medium inset-ring ${ALERT_SEVERITY_STYLES[alert.alert_severity]}`}
+                  className={`mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-xs font-medium inset-ring ${STATUS_STYLES[alert.status]}`}
                 >
-                  {ALERT_SEVERITY_LABEL[alert.alert_severity]}
+                  {ALERT_STATUS_LABEL[alert.status]}
                 </span>
-                {alert.status !== 'new' && (
-                  <span
-                    className={`mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-xs font-medium inset-ring ${STATUS_STYLES[alert.status]}`}
-                  >
-                    {ALERT_STATUS_LABEL[alert.status]}
-                  </span>
-                )}
-              </div>
-
-              <p className="mt-1.5 max-w-4xl text-sm/6 text-gray-400">{alert.description}</p>
-
-              <div className="mt-2 flex flex-wrap items-center gap-x-2 text-xs/5 text-gray-400">
-                <p className="whitespace-nowrap">
-                  Detected <time dateTime={alert.detected_at}>{formatDateTime(alert.detected_at)}</time>
-                </p>
-                {alert.notice_doi && (
-                  <>
-                    <svg viewBox="0 0 2 2" className="size-0.5 fill-current">
-                      <circle r={1} cx={1} cy={1} />
-                    </svg>
-                    <p className="truncate">Notice DOI {alert.notice_doi}</p>
-                  </>
-                )}
-              </div>
+              )}
             </div>
 
-            <div className="flex flex-none items-center gap-x-4">
-              <button
-                type="button"
-                onClick={() => onToggle(alert.id)}
-                className="rounded-md bg-white/10 px-2.5 py-1.5 text-sm font-semibold text-white shadow-none inset-ring inset-ring-white/10 hover:bg-white/20"
-              >
-                {expandedId === alert.id ? 'Hide details' : 'View details'}
-                <span className="sr-only">, {CHANGE_TYPE_LABEL[alert.change_type]}</span>
-              </button>
-
-              <Menu as="div" className="relative">
-                <MenuButton className="relative block text-gray-400 hover:text-white">
-                  <span className="absolute -inset-2.5" />
-                  <span className="sr-only">Open options</span>
-                  <EllipsisVerticalIcon aria-hidden="true" className="size-5" />
-                </MenuButton>
-                <MenuItems
-                  transition
-                  className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-gray-800 py-2 shadow-lg outline outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
+            <div className="-mt-1 -mr-1.5 flex shrink-0 items-center">
+              {alert.status === 'new' && (
+                <AlertAction
+                  label={`Acknowledge, ${CHANGE_TYPE_LABEL[alert.change_type]}`}
+                  title="Acknowledge"
+                  disabled={busyId === alert.id}
+                  onClick={() => void changeStatus(alert.id, 'acknowledged')}
                 >
-                  <MenuItem>
-                    <button
-                      type="button"
-                      onClick={() => void changeStatus(alert.id, 'acknowledged')}
-                      className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
-                    >
-                      Acknowledge<span className="sr-only">, {CHANGE_TYPE_LABEL[alert.change_type]}</span>
-                    </button>
-                  </MenuItem>
-                  <MenuItem>
-                    <button
-                      type="button"
-                      onClick={() => void changeStatus(alert.id, 'dismissed')}
-                      className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
-                    >
-                      Dismiss<span className="sr-only">, {CHANGE_TYPE_LABEL[alert.change_type]}</span>
-                    </button>
-                  </MenuItem>
-                </MenuItems>
-              </Menu>
+                  <CheckIcon aria-hidden="true" className="size-5" />
+                </AlertAction>
+              )}
+              <AlertAction
+                label={`Dismiss, ${CHANGE_TYPE_LABEL[alert.change_type]}`}
+                title="Dismiss"
+                disabled={busyId === alert.id}
+                onClick={() => void changeStatus(alert.id, 'dismissed')}
+              >
+                <XMarkIcon aria-hidden="true" className="size-5" />
+              </AlertAction>
             </div>
           </div>
 
-          {expandedId === alert.id && (
-            <div className="mt-4 border-t border-white/10 pt-4 text-sm/6">
-              <p className="font-semibold text-white">Recommendation</p>
-              <p className="mt-1 text-gray-400">{alert.recommendation}</p>
-            </div>
-          )}
+          <p className="mt-1.5 text-sm/6 text-gray-400">{alert.description}</p>
+          <p className="mt-1.5 text-sm/6 text-gray-200">{alert.recommendation}</p>
+
+          <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 text-xs/5 text-gray-400">
+            <p className="whitespace-nowrap">
+              Detected <time dateTime={alert.detected_at}>{formatDateTime(alert.detected_at)}</time>
+            </p>
+            {alert.notice_doi && (
+              <>
+                <svg viewBox="0 0 2 2" aria-hidden="true" className="hidden size-0.5 fill-current sm:block">
+                  <circle r={1} cx={1} cy={1} />
+                </svg>
+                <p className="min-w-0 truncate">Notice DOI {alert.notice_doi}</p>
+              </>
+            )}
+          </div>
         </li>
       ))}
     </ul>
+  )
+}
+
+function AlertAction({
+  label,
+  title,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string
+  title: string
+  disabled: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={title}
+      disabled={disabled}
+      onClick={onClick}
+      className="flex size-10 items-center justify-center rounded-md text-gray-400 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 sm:size-8"
+    >
+      {children}
+    </button>
   )
 }

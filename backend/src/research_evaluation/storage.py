@@ -5,6 +5,8 @@ handle communitcation with SM
 - POST alerts
 - open a report, POST its documents, mark it investigated (investigation)
 - read a report by id, the paper's details and PDFs, the draft, and store the evaluation (impact)
+- store the embedded chunks of a report, its alerts and its documents, and search a paper's
+  chunks (impact)
 
 handle HTTP codes
 """
@@ -68,6 +70,7 @@ class AlertInReport(BaseModel):
     change_key: str
     alert_severity: str
     description: str
+    recommendation: str | None = None
     notice_doi: str | None = None
     detected_at: datetime
 
@@ -95,13 +98,18 @@ class DocumentInReport(BaseModel):
 
 
 class Report(BaseModel):
-    """A report read by its id (impact's handoff): its paper, status, alerts and documents."""
+    """A report read by its id (impact's handoff): its paper and the paper's owner, status, alerts
+    and documents. owner_id is optional so a response without it fails only the profile read, not
+    the report."""
 
     model_config = ConfigDict(extra="ignore")
 
     id: int
     paper_id: UUID
+    owner_id: UUID | None = None
     status: str
+    # when the report was opened; optional, so an older response still reads
+    created_at: datetime | None = None
     alerts: list[AlertInReport]
     documents: list[DocumentInReport]
 
@@ -278,3 +286,63 @@ def _detail(response: httpx.Response) -> str | None:
     except ValueError:
         return None
     return body.get("detail") if isinstance(body, dict) else None
+
+
+async def store_chunks(
+    http: httpx.AsyncClient,
+    source_type: str,
+    source_id: str,
+    embed_model: str,
+    chunks: list[dict[str, Any]],
+) -> None:
+    """Replaces every stored chunk of one source (`PUT /internal/chunks`); each chunk is
+    `content`, `page` (or None) and its `embedding`. Raises on any error status."""
+    response = await http.put(
+        "/internal/chunks",
+        json={
+            "source_type": source_type,
+            "source_id": source_id,
+            "embed_model": embed_model,
+            "chunks": chunks,
+        },
+    )
+    response.raise_for_status()
+
+
+class Chunk(BaseModel):
+    """A stored chunk a search found (`POST /internal/chunks/search`), nearest first. report_id is
+    the report the source belongs to (None for a profile); source_date is the alert's
+    detected_at, the report's evaluated_at, the document's or profile chunk's created_at."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    source_type: str
+    source_id: str
+    chunk_index: int
+    page: int | None = None
+    report_id: int | None = None
+    source_date: datetime
+    content: str
+    score: float
+
+
+async def search_chunks(
+    http: httpx.AsyncClient,
+    paper_id: UUID,
+    source_type: str,
+    embedding: list[float],
+    limit: int,
+) -> list[Chunk]:
+    """The paper's `limit` chunks of `source_type` nearest to `embedding`, nearest first. Raises on
+    any error status, a missing paper included."""
+    response = await http.post(
+        "/internal/chunks/search",
+        json={
+            "paper_id": str(paper_id),
+            "embedding": embedding,
+            "source_type": source_type,
+            "limit": limit,
+        },
+    )
+    response.raise_for_status()
+    return [Chunk.model_validate(item) for item in response.json()]

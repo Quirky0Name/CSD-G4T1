@@ -1,5 +1,6 @@
 package com.g4t1.users.auth;
 
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -16,7 +17,9 @@ import java.util.UUID;
 @Service
 public class TokenService {
 
-    private static final Duration LIFETIME = Duration.ofHours(24);
+    // an hour: a deleted account's token, which nothing revokes, stops working within it; the
+    // frontend keeps the researcher signed in with the refresh token (RefreshTokenService)
+    private static final Duration LIFETIME = Duration.ofHours(1);
     // as long as the Python services' own service tokens last (backend/src/common/service_token.py)
     private static final Duration SERVICE_LIFETIME = Duration.ofMinutes(5);
 
@@ -28,13 +31,20 @@ public class TokenService {
     }
 
     public String issue(UUID userId) {
-        Instant now = Instant.now();
+        return userToken(userId).compact();
+    }
+
+    // the same token plus role=admin, which Storage Management and User Management read as the admin
+    public String issueAdmin(UUID userId) {
+        return userToken(userId).claim("role", "admin").compact();
+    }
+
+    private JwtBuilder userToken(UUID userId) {
         return Jwts.builder()
                 .subject(userId.toString())
-                .expiration(Date.from(now.plus(LIFETIME)))
+                .expiration(Date.from(Instant.now().plus(LIFETIME)))
                 // HS256 whatever the key's length: the contract says so, and the Python services check for nothing else
-                .signWith(key, Jwts.SIG.HS256)
-                .compact();
+                .signWith(key, Jwts.SIG.HS256);
     }
 
     // for User Management's own calls into Storage Management's /internal/**, which only takes service tokens

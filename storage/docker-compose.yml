@@ -3,7 +3,7 @@
 # Needs JWT_SECRET in storage/.env (gitignored), the same value as backend/.env.
 services:
   storage-db:
-    image: postgres:17
+    image: pgvector/pgvector:pg17
     environment:
       POSTGRES_DB: storage
       POSTGRES_USER: storage

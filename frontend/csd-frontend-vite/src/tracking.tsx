@@ -75,7 +75,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
         showToast({
           tone: 'success',
           message: `Report ready on "${paperTitle.get(report.paper_id)}"`,
-          action: { label: 'View', onClick: () => navigate(`/alerts?paper=${report.paper_id}`) },
+          action: { label: 'View', onClick: () => navigate(`/reports?paper=${report.paper_id}`) },
         })
       }
     }

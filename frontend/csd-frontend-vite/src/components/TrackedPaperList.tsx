@@ -4,24 +4,17 @@ import {
   DocumentTextIcon,
   EllipsisHorizontalIcon,
 } from '@heroicons/react/20/solid'
-import { useNavigate } from 'react-router-dom'
-import type { Alert, Paper, AlertSeverity } from '../api'
-import { formatDateTime, highestNewAlertSeverity, ALERT_SEVERITY_LABEL } from '../format'
-
-const ALERT_SEVERITY_DOT_CLASS: Record<AlertSeverity, string> = {
-  high: 'fill-red-400',
-  medium: 'fill-yellow-400',
-  low: 'fill-blue-400',
-}
+import { Link, useNavigate } from 'react-router-dom'
+import type { Alert, Paper } from '../api'
+import { ALERT_SEVERITY_DOT_CLASS, ALERT_SEVERITY_LABEL, formatDateTime, highestNewAlertSeverity } from '../format'
 
 type TrackedPaperListProps = {
   papers: Paper[]
   alerts: Alert[]
-  onPoll: (paperId: string) => void
   onDelete: (paperId: string) => void
 }
 
-function TrackedPaperList({ papers, alerts, onPoll, onDelete }: TrackedPaperListProps) {
+function TrackedPaperList({ papers, alerts, onDelete }: TrackedPaperListProps) {
   const navigate = useNavigate()
 
   if (papers.length === 0) {
@@ -50,19 +43,26 @@ function TrackedPaperList({ papers, alerts, onPoll, onDelete }: TrackedPaperList
           return (
             <li
               key={paper.id}
-              className="relative overflow-visible rounded-xl outline outline-white/10"
+              className="relative overflow-visible rounded-xl outline outline-white/10 focus-within:outline-indigo-500 hover:outline-white/25"
             >
-              <div className="relative flex items-center gap-x-4 rounded-t-xl border-b border-white/10 bg-gray-800/50 p-6">
+              <div className="flex items-center gap-x-4 rounded-t-xl border-b border-white/10 bg-gray-800/50 p-6">
                 <div className="flex size-12 flex-none items-center justify-center rounded-lg bg-gray-700 ring-1 ring-white/10">
                   <DocumentTextIcon aria-hidden="true" className="size-6 text-gray-300" />
                 </div>
                 <div className="min-w-0 text-sm/6 font-medium text-white">
-                  <p className="truncate">{title}</p>
+                  {/* the link's ::after stretches over the whole card, so the card opens the paper */}
+                  <Link
+                    to={`/papers/${paper.id}`}
+                    title={title}
+                    className="block truncate after:absolute after:inset-0 after:rounded-xl focus:outline-none"
+                  >
+                    {title}
+                  </Link>
                   <p className="truncate text-xs/5 font-normal text-gray-400">
                     {paper.journal ?? 'Journal not available'}
                   </p>
                 </div>
-                <Menu as="div" className="relative ml-auto">
+                <Menu as="div" className="relative z-10 ml-auto">
                   <MenuButton className="relative block text-gray-400 hover:text-white">
                     <span className="absolute -inset-2.5" />
                     <span className="sr-only">Open options for {title}</span>
@@ -73,13 +73,12 @@ function TrackedPaperList({ papers, alerts, onPoll, onDelete }: TrackedPaperList
                     className="absolute right-0 z-10 mt-0.5 w-36 origin-top-right rounded-md bg-gray-800 py-2 shadow-lg outline outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
                   >
                     <MenuItem>
-                      <button
-                        type="button"
-                        onClick={() => onPoll(paper.id)}
+                      <Link
+                        to={`/papers/${paper.id}`}
                         className="block w-full px-3 py-1 text-left text-sm/6 text-white data-focus:bg-white/5"
                       >
-                        Poll now<span className="sr-only">, {title}</span>
-                      </button>
+                        View checks<span className="sr-only">, {title}</span>
+                      </Link>
                     </MenuItem>
                     <MenuItem>
                       <button

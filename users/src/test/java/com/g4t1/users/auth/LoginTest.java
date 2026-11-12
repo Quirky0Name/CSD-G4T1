@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -41,14 +42,17 @@ class LoginTest {
         String email = newEmail();
         String registration = registered(email, "correct horse battery");
 
-        String body = login(email, "correct horse battery")
+        var result = login(email, "correct horse battery")
                 .expectStatus().isOk()
-                .expectBody(String.class).returnResult().getResponseBody();
+                .expectBody(String.class).returnResult();
+        String body = result.getResponseBody();
 
         // login reads the account back from the database, and it should look exactly as register showed it
         assertThat(JsonPath.<Object>read(body, "$.user")).isEqualTo(JsonPath.read(registration, "$.user"));
+        assertThat(JsonPath.<String>read(body, "$.user.role")).isEqualTo("user");
         TokenAssertions.assertIsTokenFor(
                 JsonPath.read(body, "$.token"), JsonPath.read(registration, "$.user.id"), jwtSecret);
+        TokenAssertions.assertSetsRefreshCookie(result.getResponseHeaders().get(HttpHeaders.SET_COOKIE), false);
     }
 
     @Test

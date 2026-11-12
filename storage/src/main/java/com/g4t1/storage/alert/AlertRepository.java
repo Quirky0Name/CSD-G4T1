@@ -33,6 +33,11 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     @Query("update Alert a set a.reportId = :reportId where a.paperId = :paperId and a.reportId is null")
     int assignUnreportedToReport(@Param("paperId") UUID paperId, @Param("reportId") long reportId);
 
+    // only these alerts, unlike assignUnreportedToReport, which would also take a real alert waiting for its report
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("update Alert a set a.reportId = :reportId where a.id in :ids")
+    int assignToReport(@Param("ids") Collection<Long> ids, @Param("reportId") long reportId);
+
     List<Alert> findByReportIdOrderByIdAsc(Long reportId);
 
     // the alerts of several reports in one query, for the frontend's list of a paper's reports; unordered
