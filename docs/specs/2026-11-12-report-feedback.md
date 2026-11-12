@@ -2,7 +2,7 @@
 
 **Status:** approved
 
-**Base commit:** not set
+**Base commit:** `37d6615`
 
 **Repo:** `d:\SMU\CS203\project\rag-eval-history`
 
@@ -51,7 +51,7 @@ Starting branch: `main`
 
 | Order | Branch | Based on | Subtasks |
 |---|---|---|---|
-| 1 | `feat/report-feedback` | `main` | S1, S2, S3, S4, S5 |
+| 1 | `feat/rag-personalisation` | `main` | S1, S2, S3, S4, S5 |
 
 ## Out of scope
 
@@ -107,7 +107,7 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
 
 - **Goal:** a researcher can store, replace and delete a verdict and note on an assessed report of their own paper, and both report reads return it.
 - **Blocked by:** none
-- **Branch:** `feat/report-feedback`
+- **Branch:** `feat/rag-personalisation`
 - **Order on branch:** 1
 - **Files:** `storage/src/main/resources/db/migration/V15__add_report_feedback.sql`, `report/Report.java`, `report/ReportController.java`, `report/ReportService.java`, new `report/ReportFeedbackRequest.java` and `report/ReportFeedbackResponse.java`, `report/UserReportResponse.java`, the internal report response, tests under `storage/src/test/.../report/`.
 - **Seams:**
@@ -135,7 +135,7 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
 
 - **Goal:** the chunks table holds `feedback` chunks in place of `profile` ones, and a `feedback` search covers all the owner's papers and returns paper id and title.
 - **Blocked by:** none
-- **Branch:** `feat/report-feedback`
+- **Branch:** `feat/rag-personalisation`
 - **Order on branch:** 2
 - **Files:** `db/vendor/postgresql/V16__feedback_chunks.sql`, `db/vendor/h2/V16__feedback_chunks.sql`, `chunk/ChunkService.java`, `chunk/ChunkRepository.java`, `chunk/ChunkMatch.java`, `chunk/InternalChunkController.java`, `user/UserService.java`, chunk tests (`ChunkControllerTest`, `ChunkPostgresIT`, `ChunkSearchPostgresIT`), user deletion test.
 - **Seams:**
@@ -158,7 +158,7 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
 
 - **Goal:** Research Evaluation turns a report's feedback into one chunk and stores it, on request.
 - **Blocked by:** S1, S2
-- **Branch:** `feat/report-feedback`
+- **Branch:** `feat/rag-personalisation`
 - **Order on branch:** 3
 - **Files:** `backend/src/research_evaluation/chunks.py` (`feedback_piece`), `storage.py` (`Report.feedback`, evaluation fields, `Chunk.paper_id`, `Chunk.paper_title`), new `feedback.py` (`store_feedback_chunk`), `main.py` (`POST /embed/feedback`), tests under `backend/tests/research_evaluation/`.
 - **Seams:**
@@ -193,7 +193,7 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
 
 - **Goal:** saving feedback embeds and stores its chunk, and deleting it removes the chunk, without another click.
 - **Blocked by:** S1, S3
-- **Branch:** `feat/report-feedback`
+- **Branch:** `feat/rag-personalisation`
 - **Order on branch:** 4
 - **Files:** new `storage/.../evaluation/ResearchEvaluationClient.java`, a service-token minter, `ReportService.java`, `application.yml`, `docker-compose.yml` (`RE_BASE_URL` for storage), SETUP.md env table.
 - **Seams:** `PUT` and `DELETE .../feedback` with a stubbed Research Evaluation (MockRestServiceServer or WireMock): catches the nudge after commit, its token, and that a failing or unreachable Research Evaluation still answers `200`/`204`.
@@ -213,7 +213,7 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
 
 - **Goal:** steps 2 and 3 get the researcher's nearest past feedback, and the report's `context_chunks` lists it with what a client needs to link it.
 - **Blocked by:** S2, S3
-- **Branch:** `feat/report-feedback`
+- **Branch:** `feat/rag-personalisation`
 - **Order on branch:** 5
 - **Files:** `impact/history.py`, `impact/assess.py`, `impact/prompts.py` (`FEEDBACK_RULES`, `feedback_block`, `PROMPT_VERSION` 7), `impact/schemas.py` (`ContextChunk`), `impact/run.py`, tests under `backend/tests/research_evaluation/impact/`.
 - **Seams:**
