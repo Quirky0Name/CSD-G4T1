@@ -1,0 +1,116 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the change is only to the author's affiliation",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "it changes the first author's affiliation from University of Northfield to Northfield Institute of Education... The change is administrative"
+    },
+    {
+      "fact": "says the results and conclusions are unaffected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The notice states that the change does not affect the results or conclusions."
+    },
+    {
+      "fact": "recommends changing the draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "describes a change to any result or number",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Correction to: School start times and teenage sleep",
+      "backs": true,
+      "pass": true,
+      "reason": "Title shows a correction to the named article."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the affiliation was University of Northfield and correct is Northfield Institute of Education."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "This does not affect the results or conclusions of the article.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the change does not affect results or conclusions."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 shows correction for that title."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 shows the affiliation change."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 shows the notice statement."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-3",
+      "from": [
+        "change-1",
+        "change-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "An affiliation change not affecting results is reasonably administrative, but 'administrative' is a mild addition; it follows broadly from the affiliation change and no effect on results."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "A correction was issued for School start times and teenage sleep, changing first author's affiliation from University of Northfield to Northfield Institute of Education.",
+      "covered_by": [
+        "change-0",
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice states that the change does not affect the results or conclusions.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The change is administrative and not meaningful for the paper's findings.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}
