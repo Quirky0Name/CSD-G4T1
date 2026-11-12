@@ -1,10 +1,11 @@
-"""Gemini client for impact: one async call that takes text and PDFs and returns the model's
-answer parsed into a pydantic model (Gemini's structured output), so callers never parse free
+"""Impact's models, Claude and Gemini: one async call that takes text and PDFs and returns the
+model's answer parsed into a pydantic model (structured output), so callers never parse free
 text. The rest of impact talks to the `Llm` protocol, so tests can put a fake in its place."""
 
+import base64
 import logging
 from dataclasses import dataclass
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 import httpx
 from google import genai
@@ -14,9 +15,14 @@ from pydantic import BaseModel, ValidationError
 
 from research_evaluation.config import ResearchEvaluationSettings
 
+if TYPE_CHECKING:
+    from anthropic import AsyncAnthropic
+
 log = logging.getLogger(__name__)
 
 PDF_MIME_TYPE = "application/pdf"
+# room for step 3's actions and claims; a non-streaming call this size stays under the SDK's timeout
+CLAUDE_MAX_TOKENS = 16000
 
 
 class GeminiNotConfiguredError(RuntimeError):
@@ -116,6 +122,44 @@ class GeminiLlm:
         self, *, system: str, parts: list[Part], schema: type[T]
     ) -> Answer[T]:
         return await generate(self.client, self.model, system=system, parts=parts, schema=schema)
+
+
+def to_blocks(parts: list[Part]) -> list[dict]:
+    return [
+        {
+            "type": "document",
+            "source": {
+                "type": "base64",
+                "media_type": PDF_MIME_TYPE,
+                "data": base64.standard_b64encode(part.data).decode(),
+            },
+        }
+        if isinstance(part, Pdf)
+        else {"type": "text", "text": part}
+        for part in parts
+    ]
+
+
+@dataclass(frozen=True)
+class ClaudeLlm:
+    """The Llm impact tries first (CLAUDE_MODEL). Low effort: a researcher waits on all three
+    steps, and the prompts spell out the reasoning they want."""
+
+    client: "AsyncAnthropic"
+    model: str
+
+    async def generate[T: BaseModel](
+        self, *, system: str, parts: list[Part], schema: type[T]
+    ) -> Answer[T]:
+        response = await self.client.messages.parse(
+            model=self.model,
+            max_tokens=CLAUDE_MAX_TOKENS,
+            system=system,
+            messages=[{"role": "user", "content": to_blocks(parts)}],
+            output_format=schema,
+            output_config={"effort": "low"},
+        )
+        return Answer(response.parsed_output, response.model, self.model)
 
 
 # a failure of one model's call, after which the next model is tried; anything else (a bug)
