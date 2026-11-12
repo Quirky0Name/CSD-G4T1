@@ -67,6 +67,22 @@ def gemini_configured(settings: ResearchEvaluationSettings) -> bool:
     return settings.gemini_api_key is not None and bool(settings.gemini_api_key.get_secret_value())
 
 
+def claude_configured(settings: ResearchEvaluationSettings) -> bool:
+    return settings.anthropic_api_key is not None and bool(
+        settings.anthropic_api_key.get_secret_value()
+    )
+
+
+def make_claude_client(settings: ResearchEvaluationSettings) -> anthropic.AsyncAnthropic:
+    """An Anthropic client whose calls give up after IMPACT_LLM_TIMEOUT_SECONDS. No retries:
+    the fallback chain is the retry, so an overloaded Claude moves straight on to Gemini."""
+    return anthropic.AsyncAnthropic(
+        api_key=settings.anthropic_api_key.get_secret_value(),
+        timeout=settings.impact_llm_timeout_seconds,
+        max_retries=0,
+    )
+
+
 def make_client(settings: ResearchEvaluationSettings) -> genai.Client:
     """A Gemini client whose calls give up after IMPACT_LLM_TIMEOUT_SECONDS."""
     if not gemini_configured(settings):

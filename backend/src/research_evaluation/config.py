@@ -14,6 +14,7 @@ from common.service_token import decode_jwt_secret
 DEFAULT_SM_BASE_URL = "http://localhost:8081"
 DEFAULT_UM_BASE_URL = "http://localhost:8080"
 DEFAULT_SNAPSHOT_WINDOW = 5
+DEFAULT_CLAUDE_MODEL = "claude-sonnet-5-5"
 DEFAULT_GEMINI_MODEL = "gemini-flash-latest"
 # not gemini-3.8-flash (what gemini-flash-latest resolves to) nor gemini-2.5-flash (gone for new
 # keys): docs/EVALUATION.md, "Impact"
@@ -39,14 +40,18 @@ class ResearchEvaluationSettings(BaseSettings):
     # how long investigation waits for Storage Management to store a document, which includes
     # downloading its PDF (over 30 s per link); it runs after the nudge's reply
     investigation_pdf_timeout_seconds: float = Field(default=120, gt=0)
-    # impact's LLM (aistudio.google.com); optional so the service still starts without it,
-    # impact.llm refuses to build a client when it's missing
+    # the model impact tries first (console.anthropic.com), before the Gemini ones; optional,
+    # without it impact runs on Gemini only
+    anthropic_api_key: SecretStr | None = None
+    claude_model: str = DEFAULT_CLAUDE_MODEL
+    # impact's Gemini models and the embedder (aistudio.google.com); optional so the service
+    # still starts without it, impact.llm refuses to build a client when it's missing
     gemini_api_key: SecretStr | None = None
     gemini_model: str = DEFAULT_GEMINI_MODEL
     # tried in order after gemini_model when a call to it fails (docs/EVALUATION.md, "Impact");
     # comma separated in the env, empty for none
     gemini_fallback_models: Annotated[list[str], NoDecode] = list(DEFAULT_GEMINI_FALLBACK_MODELS)
-    # how long impact waits for one Gemini call; it runs after investigation, in the background
+    # how long impact waits for one model's call; it runs after investigation, in the background
     impact_llm_timeout_seconds: float = Field(default=120, gt=0)
     # the Gemini model past alerts, reports and documents are embedded with, at 1536 dimensions
     # (docs/EVALUATION.md, "Embeddings"); uses GEMINI_API_KEY

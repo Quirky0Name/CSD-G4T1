@@ -19,7 +19,15 @@ from research_evaluation.auth import require_service_token
 from research_evaluation.config import ResearchEvaluationSettings
 from research_evaluation.embedding import GeminiEmbedder
 from research_evaluation.evaluate import EvaluationResult, evaluate_papers
-from research_evaluation.impact.llm import FallbackLlm, GeminiLlm, gemini_configured, make_client
+from research_evaluation.impact.llm import (
+    ClaudeLlm,
+    FallbackLlm,
+    GeminiLlm,
+    claude_configured,
+    gemini_configured,
+    make_claude_client,
+    make_client,
+)
 from research_evaluation.impact.run import ImpactContext, assess_reports
 from research_evaluation.investigation.run import (
     InvestigationContext,
@@ -139,14 +147,23 @@ def configure_logging() -> None:
 
 
 def _impact_context(config: ResearchEvaluationSettings, um: httpx.AsyncClient) -> ImpactContext:
-    """Impact's model and embedder, on one Gemini client (GEMINI_API_KEY must be set)."""
+    """Impact's models, Claude first when ANTHROPIC_API_KEY is set, and its embedder, on the
+    Gemini models' client (GEMINI_API_KEY must be set)."""
+    claude = (
+        (ClaudeLlm(make_claude_client(config), config.claude_model),)
+        if claude_configured(config)
+        else ()
+    )
     gemini = make_client(config)
     return ImpactContext(
         FallbackLlm(
-            tuple(
-                GeminiLlm(gemini, name)
-                # a name listed twice is tried once
-                for name in dict.fromkeys((config.gemini_model, *config.gemini_fallback_models))
+            (
+                *claude,
+                *(
+                    GeminiLlm(gemini, name)
+                    # a name listed twice is tried once
+                    for name in dict.fromkeys((config.gemini_model, *config.gemini_fallback_models))
+                ),
             )
         ),
         um=um,
