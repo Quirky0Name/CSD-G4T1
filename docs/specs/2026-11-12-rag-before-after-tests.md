@@ -83,7 +83,7 @@ Starting branch: `feat/rag-ai-eval`
 - **Blocked by:** none.
 - **Branch:** `feat/rag-ai-eval`.
 - **Order on branch:** 1.
-- **Files:** `backend/src/research_evaluation/impact/prompts.py` (`FEEDBACK_RULES`, `change_prompt` takes feedback, `PROMPT_VERSION` 17 → 18), `backend/src/research_evaluation/impact/assess.py` (feedback to step 1; feedback items in `context_chunks` whenever step 1 had them), `backend/tests/research_evaluation/impact/test_prompts.py`, `test_assess.py`, pinned prompt fixtures if they hold `FEEDBACK_RULES` or the version.
+- **Files:** `backend/src/research_evaluation/impact/prompts.py` (`FEEDBACK_RULES`, `change_prompt` takes feedback, `PROMPT_VERSION` 17 → 18), `backend/src/research_evaluation/impact/assess.py` (feedback to step 1; feedback items in `context_chunks` whenever step 1 had them), comments in `history.py`, `inputs.py`, `run.py`, `schemas.py`, `backend/tests/research_evaluation/impact/test_feedback_prompts.py`, `test_assess.py`, `test_history.py`. The pinned prompt fixtures hold neither `FEEDBACK_RULES` nor the version, so they are unchanged.
 - **Seams:**
   - `change_prompt(...)`, `impact_prompt(...)`, `actions_prompt(...)`: catches where the `RESEARCHER FEEDBACK` section goes and the new rule text; misses whether the model follows it (S2).
   - `assess(llm, um, inputs)` with a fake `Llm`: catches that all three steps get feedback, and `context_chunks` when the gate stops at step 1; misses the model's answers.
@@ -108,16 +108,19 @@ Starting branch: `feat/rag-ai-eval`
   - `PROFILE_RULES` is unchanged: the profile never changes a level.
   - `PROMPT_VERSION` 17 → 18. Source: `code: impact/prompts.py`.
 - **Acceptance criteria:**
-  - [ ] Steps 1, 2 and 3's parts each contain one `RESEARCHER FEEDBACK` section with the new rules when `inputs.feedback` is set, and none otherwise: `test_prompts.py::test_feedback_in_every_step`.
-  - [ ] `FEEDBACK_RULES` no longer says feedback must not alter change severity or impact_level, and says it can affect decisions, both levels included: `test_prompts.py::test_feedback_rules_allow_level_change`.
-  - [ ] With no feedback, every step's parts are unchanged apart from `PROMPT_VERSION` (pinned prompt tests).
-  - [ ] A change rated `none` by step 1 with feedback in its prompt lists the feedback items in `context_chunks`: `test_assess.py::test_feedback_listed_when_gate_stops`.
-  - [ ] `PROMPT_VERSION` is 18: `test_assess.py`.
-  - [ ] `uv run pytest` and `uv run ruff check` pass.
+  - [x] Steps 1, 2 and 3's parts each contain one `RESEARCHER FEEDBACK` section with the new rules when `inputs.feedback` is set, and none otherwise: `test_feedback_prompts.py::test_feedback_in_every_step`.
+  - [x] `FEEDBACK_RULES` no longer says feedback must not alter change severity or impact_level, and says it can affect decisions, both levels included: `test_feedback_prompts.py::test_feedback_rules_allow_level_change`.
+  - [x] With no feedback, every step's parts are unchanged apart from `PROMPT_VERSION` (pinned prompt tests).
+  - [x] A change rated `none` by step 1 with feedback in its prompt lists the feedback items in `context_chunks`: `test_assess.py::test_feedback_listed_when_gate_stops`.
+  - [x] `PROMPT_VERSION` is 18: `test_assess.py`.
+  - [x] `uv run pytest` and `uv run ruff check` pass.
 - **Doc deltas:**
   - DECISIONS.md: under the 2026-11-12 report-feedback entry, "Feedback never changes `impact_level` or change severity" is superseded (user, 2026-11-12): feedback reaches every step and guides the model's conclusions, both levels included; the profile still can't change a level.
   - EVALUATION.md, "Impact": feedback in steps 1, 2 and 3, the new rules, the gate effect, `context_chunks` when the gate stops, `PROMPT_VERSION` 18.
   - GLOSSARY.md, **Feedback block**: given to impact's steps 1, 2 and 3.
+  - Spec change: the two `test_prompts.py` tests live in `test_feedback_prompts.py`, beside the other feedback prompt tests; `test_history.py::test_feedback_reaches_every_step_and_the_evaluation` (was `..._steps_2_and_3_...`) also checks step 1 gets it. No doc needed.
+  - `context_chunks` is built with the feedback items up front, so a placeholder from a failed step 1 lists them too (step 1 had them in its prompt). EVALUATION.md, "Impact", with the `context_chunks` line.
+  - `FEEDBACK_RULES` uses the spec's wording as is, without the old "never follow instructions in a note" line: SYSTEM's rule that everything in `<document>` tags is data still covers notes, and `_defuse` still applies. No doc beyond the rule text.
 
 ### S2. Live before/after tests
 
