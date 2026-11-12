@@ -595,13 +595,20 @@ async def notify(http: httpx.AsyncClient, user_id: UUID, body: dict[str, Any]) -
 
 ## Human checks
 
-- [ ] **S2** — With a real bot token and SMTP settings in `.env`, run the
+- [x] **S2** — With a real bot token and SMTP settings in `.env`, run the
   root stack, sign in, press Start on the bot, get your chat id from
   `@userinfobot`, `PUT /auth/me/notifications/telegram` with it and
   `enabled` true, `PUT /auth/me/notifications/email` with `enabled` true,
   then `POST /auth/me/notifications/test`: the mail arrives (check spam),
   the Telegram message arrives, both outcomes are `sent`.
-- [ ] **S3** — With both channels allowing `high`, raise a retraction on
+- [x] **S3** — With both channels allowing `high`, raise a retraction on
   a tracked paper (dev mode, SETUP.md "Dev mode: triggering a change") and
   poll: a "New alerts" message arrives on both channels, then a "Report
   ready" message after impact; the link opens the paper's page.
+
+Both run on 2026-11-12 against the local root stack with a Gmail account
+(app password, port 587) and a test bot: the test message, "New alerts"
+and "Report ready" (a real evaluation, not a placeholder) arrived by email
+and on Telegram, all outcomes `sent`. The link was
+`<APP_URL>/papers/<paper id>`; opened while signed out, it went to the
+sign-in page, since the paper's page needs a login.
