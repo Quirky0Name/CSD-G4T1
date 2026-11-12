@@ -6,7 +6,6 @@ import {
   ArrowLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  MinusCircleIcon,
   Square3Stack3DIcon,
 } from '@heroicons/react/20/solid'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -461,10 +460,7 @@ function ClaimItem({ claim, active, onClaim }: { claim: Claim; active: boolean; 
       >
         <span className={`block text-sm/6 ${active ? 'text-white' : 'text-gray-300'}`}>{claim.text}</span>
         {!claim.supported && (
-          <span className="mt-1 flex items-center gap-1 text-xs/5 font-medium text-yellow-500">
-            <MinusCircleIcon aria-hidden="true" className="size-3.5" />
-            No quote found
-          </span>
+          <span className="mt-1 block text-xs/5 text-gray-400">No quote found</span>
         )}
       </button>
     </li>
@@ -598,15 +594,15 @@ function TextWithNote({ text, quote, seq }: { text: string; quote: string; seq: 
 }
 
 function NotOnPage({ children }: { children: ReactNode }) {
-  return <p className="border-b border-white/10 bg-yellow-400/10 px-4 py-2 text-xs/5 text-yellow-200">{children}</p>
+  return <p className="border-b border-white/10 px-4 py-2 text-xs/5 text-gray-400">{children}</p>
 }
 
 function Muted({ children, quote }: { children: ReactNode; quote?: string }) {
   return (
-    <div className="p-4">
+    <div className="space-y-3 p-4">
       {children && <p className="text-sm/6 text-gray-400">{children}</p>}
       {quote && (
-        <blockquote className="mt-3 rounded-xl bg-white/5 px-3.5 py-2.5 text-sm/6 text-gray-300">“{quote}”</blockquote>
+        <blockquote className="rounded-xl bg-white/5 px-3.5 py-2.5 text-sm/6 text-gray-300">“{quote}”</blockquote>
       )}
     </div>
   )

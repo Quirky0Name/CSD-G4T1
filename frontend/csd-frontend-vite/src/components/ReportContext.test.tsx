@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { useState } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Alert, Profile } from '../api'
+import type { Alert, Profile, UserReport } from '../api'
 import type { ContextEntry } from '../context/resolve'
 import { ContextList, ContextPane } from './ReportContext'
 
@@ -110,5 +110,45 @@ describe('ContextPane', () => {
     expect(screen.getByText('iron deficiency, fatigue')).toBeTruthy()
     expect(screen.getByText('How reports are written')).toBeTruthy()
     expect(screen.getByText('Keep it short.')).toBeTruthy()
+  })
+
+  it('shows the note on the report the feedback was given on, found by its source id', () => {
+    const report: UserReport = {
+      id: 7,
+      paper_id: 'paper-1',
+      status: 'assessed',
+      created_at: '2026-10-12T00:00:00Z',
+      investigated_at: null,
+      evaluation: null,
+      recommendation: null,
+      evaluated_at: null,
+      change_summary: 'A correction to the dosing table.',
+      change_severity: 'medium',
+      impact_level: 'low',
+      claims: null,
+      context_chunks: null,
+      feedback: { verdict: 'overstated', note: 'The table change was cosmetic.', updated_at: '2026-10-13T00:00:00Z' },
+      alerts: [],
+      documents: [],
+    }
+    const entry = { ...entries[1], report } as ContextEntry
+    render(
+      <MemoryRouter>
+        <ContextPane entry={entry} seq={0} />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Your note')).toBeTruthy()
+    expect(screen.getByText('The table change was cosmetic.')).toBeTruthy()
+  })
+
+  it('leaves the note out when the feedback had none', () => {
+    render(
+      <MemoryRouter>
+        <ContextPane entry={entries[1]} seq={0} />
+      </MemoryRouter>,
+    )
+
+    expect(screen.queryByText('Your note')).toBeNull()
   })
 })
