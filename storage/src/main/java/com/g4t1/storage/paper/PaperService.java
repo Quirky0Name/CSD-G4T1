@@ -121,6 +121,21 @@ public class PaperService {
     public byte[] storedPdf(UUID paperId) {
         Paper paper = papers.findById(paperId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId));
+        return pdfOf(paperId, paper);
+    }
+
+    /**
+     * The same PDF, for the paper's owner (the frontend shows it beside a report's highlights).
+     * Someone else's paper gets the same 404 as a missing one.
+     */
+    public byte[] ownedPdf(UUID ownerId, UUID paperId) {
+        Paper paper = papers.findById(paperId)
+                .filter(found -> found.getOwnerId().equals(ownerId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId));
+        return pdfOf(paperId, paper);
+    }
+
+    private byte[] pdfOf(UUID paperId, Paper paper) {
         if (!paper.hasFile()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Paper " + paperId + " has no stored PDF");
         }

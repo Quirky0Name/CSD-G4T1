@@ -4,28 +4,22 @@
     python evals/real/extract.py           # PDFs here with no .txt yet
     python evals/real/extract.py --redo    # every PDF here
 
-Needs pypdf (`uv run --with pypdf`). A word hyphenated across a line break is joined
-("pro-" / "liferation" becomes "proliferation"). Check the .txt is in reading order: two-column
+Needs pypdf, a project dependency. Uses the service's PDF text and hyphen joining
+(research_evaluation.impact.quotes): a word hyphenated across a line break is joined ("pro-" /
+"liferation" becomes "proliferation"). Check the .txt is in reading order: two-column
 text that comes out interleaved makes real quotes look invented."""
 
 import argparse
-import re
+import sys
 from pathlib import Path
 
-from pypdf import PdfReader
+sys.path.insert(0, str(Path(__file__).parents[2] / "src"))
 
-# a line ending in "<letter>-", then a line starting with a letter (joined if it is lowercase)
-HYPHEN_BREAK = re.compile(r"([^\W\d_])-[ \t]*\n[ \t]*([^\W\d_])")
-
-
-def join_hyphen(match: re.Match) -> str:
-    before, after = match.groups()
-    return before + after if after.islower() else match.group()
+from research_evaluation.impact.quotes import join_hyphens, pdf_pages
 
 
 def pdf_text(path: Path) -> str:
-    pages = [page.extract_text() or "" for page in PdfReader(path).pages]
-    return HYPHEN_BREAK.sub(join_hyphen, "\n\n".join(pages))
+    return join_hyphens("\n\n".join(pdf_pages(path.read_bytes())))
 
 
 def main() -> None:

@@ -47,6 +47,8 @@ public class Report {
     private String assessment;
     // the past chunks impact added to the prompt, a JSON array as Research Evaluation sent it; null when not sent
     private String contextChunks;
+    // JSON text, as Research Evaluation sent it; null on reports assessed before claims existed
+    private String claims;
 
     protected Report() {
     }
@@ -112,5 +114,9 @@ public class Report {
 
     public String getContextChunks() {
         return contextChunks;
+    }
+
+    public String getClaims() {
+        return claims;
     }
 }

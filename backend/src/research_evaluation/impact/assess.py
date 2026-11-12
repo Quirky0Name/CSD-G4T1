@@ -22,6 +22,8 @@ from typing import Any
 
 import httpx
 
+from research_evaluation.impact.claims import build_claims
+from research_evaluation.impact.history import context_chunk
 from research_evaluation.impact.inputs import ReportInputs
 from research_evaluation.impact.llm import AllModelsFailed, Llm
 from research_evaluation.impact.prompts import (
@@ -57,10 +59,7 @@ async def assess(
     None works it out from `inputs.chunks`, as the evals do."""
     prompt = change_prompt(inputs)
     # the past chunks steps 1 and 2 get, in prompt order, for the frontend to show (I5)
-    context = [
-        ContextChunk(source_type=c.source_type, source_id=c.source_id, page=c.page)
-        for c in inputs.chunks
-    ]
+    context = [context_chunk(c) for c in inputs.chunks]
     assessment: dict[str, Any] = {
         "prompt_version": PROMPT_VERSION,
         "model": llm.model,
@@ -71,21 +70,28 @@ async def assess(
         "profile": "not_needed",
         "history": history or ("read" if inputs.chunks else "none"),
         "pdfs": pdfs_record(prompt),
+        # step 2's PDFs (the draft, then the stored paper), shaped like pdfs; null until step 2
+        "impact_pdfs": None,
         "change": None,
         "impact": None,
         "actions": None,
     }
     step = "change"
+    # each step's answer once it finishes, and the draft once read: the claims are built from them
+    done: dict[str, Any] = {"change": None, "impact": None, "actions": None}
+    draft: bytes | None = None
     try:
         change = await llm.generate(system=SYSTEM, parts=prompt.parts, schema=ChangeAssessment)
         assessment["model_version"] = change.model_version
         assessment["answered_by"]["change"] = change.model
         assessment["change"] = change.value.model_dump(mode="json")
+        done["change"] = change.value
         if change.value.severity == "none":
             return Evaluation(
                 change_summary=change.value.summary,
                 change_severity="none",
                 assessment=assessment,
+                claims=await build_claims(inputs, None, **done),
                 context_chunks=context,
             )
 
@@ -94,13 +100,14 @@ async def assess(
         assessment["draft"] = "read" if draft is not None else "none"
         assessment["profile"], profile = await _read_profile(um, inputs.report)
         step = "impact"
-        impact = await llm.generate(
-            system=SYSTEM,
-            parts=impact_prompt(inputs.paper, change.value, draft, profile, inputs.chunks),
-            schema=ImpactAssessment,
+        step_two = impact_prompt(
+            inputs.paper, change.value, draft, inputs.paper_pdf, profile, inputs.chunks
         )
+        assessment["impact_pdfs"] = pdfs_record(step_two)
+        impact = await llm.generate(system=SYSTEM, parts=step_two.parts, schema=ImpactAssessment)
         assessment["answered_by"]["impact"] = impact.model
         assessment["impact"] = impact.value.model_dump(mode="json")
+        done["impact"] = impact.value
         step = "actions"
         actions = await llm.generate(
             system=SYSTEM,
@@ -109,8 +116,11 @@ async def assess(
         )
         assessment["answered_by"]["actions"] = actions.model
         assessment["actions"] = actions.value.model_dump(mode="json")
+        done["actions"] = actions.value
     except AllModelsFailed as exc:
-        return _placeholder(assessment, step, exc, context)
+        evaluation = _placeholder(assessment, step, exc, context)
+        evaluation.claims = await build_claims(inputs, draft, **done)
+        return evaluation
     return Evaluation(
         change_summary=change.value.summary,
         change_severity=change.value.severity,
@@ -118,6 +128,7 @@ async def assess(
         evaluation=impact.value.explanation,
         recommendation=actions.value.recommendation,
         assessment=assessment,
+        claims=await build_claims(inputs, draft, **done),
         context_chunks=context,
     )
 

@@ -18,6 +18,7 @@ from research_evaluation.impact.llm import AllModelsFailed, Answer, ModelFailure
 from research_evaluation.impact.run import ImpactContext, assess_report
 from research_evaluation.impact.schemas import (
     ChangeAssessment,
+    Claim,
     ImpactAssessment,
     RecommendedActions,
 )
@@ -108,13 +109,18 @@ class FakeLlm:
             raise AllModelsFailed([ModelFailure("fake-gemini", "Gemini answered 503 (UNAVAILABLE)")])
         answers = {
             ChangeAssessment: ChangeAssessment(
-                alerts=[], relations=None, severity=self.severity, summary="Table 2 was corrected."
+                alerts=[], relations=None, severity=self.severity, summary="Table 2 was corrected.",
+                claims=[Claim(text="Table 2 was corrected.", passages=[])],
             ),
             ImpactAssessment: ImpactAssessment(
                 cited=True, reference_entry=None, uses=[], impact_level="medium",
                 explanation="Your Discussion relies on Table 2.",
+                claims=[Claim(text="Your Discussion relies on Table 2.", passages=[])],
             ),
-            RecommendedActions: RecommendedActions(actions=[], recommendation="Recheck Table 2."),
+            RecommendedActions: RecommendedActions(
+                actions=[], recommendation="Recheck Table 2.",
+                claims=[Claim(text="Recheck Table 2.", passages=[])],
+            ),
         }
         return Answer(answers[schema], "fake-gemini-001")
 

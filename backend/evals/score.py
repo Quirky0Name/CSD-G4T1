@@ -7,9 +7,7 @@ Per run it scores tags, flags hard failures, checks quotes, and displays a rich 
 alongside advanced actionable diagnostics for prompt engineering."""
 
 import json
-import re
 import sys
-import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -23,13 +21,12 @@ sys.path.insert(0, str(ROOT.parent / "src"))
 import case_text
 
 from research_evaluation.impact.prompts import alerts_block, paper_block
+from research_evaluation.impact.quotes import ALERT, DOI, leaves, norm, quoted_in
 from research_evaluation.storage import AlertInReport, PaperDetails
 
 LEVELS = ["none", "low", "medium", "high"]
 # the fixed source names the step 1 prompt allows besides a notice's DOI, by document kind
 KIND_LABELS = {"current_version": "current copy", "new_version": "new version"}
-DOI = re.compile(r"10\.\d{4,9}/\S+")
-ALERT = re.compile(r"alert\s*#?\s*(\d+)")
 console = Console()
 
 
@@ -81,13 +78,6 @@ def hard_fails(ev: dict, rules: list[str]) -> list[str]:
     return hit
 
 
-def norm(text: str) -> str:
-    # NFKC first: a real PDF's ligature ("ﬁ") matches a quote that spells it out ("fi")
-    text = unicodedata.normalize("NFKC", text)
-    text = text.replace("\u2019", "'").replace("\u201c", '"').replace("\u201d", '"')
-    return re.sub(r"\s+", " ", text).strip().lower()
-
-
 def quote_sources(case: dict) -> dict[str, str]:
     """Each label the model may give as an evidence quote's source, and the (normalised) text
     behind it, as the prompt showed it. "draft" is for impact's uses, which have no label."""
@@ -101,6 +91,9 @@ def quote_sources(case: dict) -> dict[str, str]:
     for d in docs:
         # a rich PDF's running head, banner and watermark belong to the document it is stored for
         text = " ".join(t for t in (d.get("text"), d.get("title"), case_text.pdf_text(d)) if t)
+        # a notice with no open-access text can be quoted from its record and links (as
+        # impact/claims.py checks them)
+        text = " ".join([text, *leaves(d.get("crossref_record")), *leaves(d.get("links"))])
         texts[d["doi"].lower()].append(text)
         if d["kind"] in KIND_LABELS:
             texts[KIND_LABELS[d["kind"]]].append(text)
@@ -120,25 +113,16 @@ def source_label(source: str, sources: dict[str, str]) -> str | None:
     alert = ALERT.search(source)
     if alert and f"alert {alert.group(1)}" in sources:
         return f"alert {alert.group(1)}"
-    return next((name for name in ("stored paper", "current copy", "new version") if name in source and name in sources), None)
-
-
-def quoted_in(quote: str, text: str) -> bool:
-    """A normalised quote is in a normalised text; "..." or "…" in the quote skips words, so each
-    piece must be there, in order."""
-    start = 0
-    for piece in filter(None, (p.strip() for p in re.split(r"\.\.\.|…", quote))):
-        found = text.find(piece, start)
-        if found < 0:
-            return False
-        start = found + len(piece)
-    return True
+    names = ("stored paper", "current copy", "new version", "draft")
+    return next((name for name in names if name in source and name in sources), None)
 
 
 def check_quotes(ev: dict, case: dict) -> dict[str, int]:
     """Each quote is invented (in none of the case's texts), misattributed (in one, but not the one
     its source names; for impact's uses, not in the draft) or of unknown source (real, but its
-    source names no text)."""
+    source names no text). Quotes are the alerts' evidence, the uses' quotes and every step's
+    claims' passages, as the model answered them: the evaluation's `claims` re-target a quote
+    found elsewhere, but here it still counts as misattributed."""
     sources = quote_sources(case)
     a = ev["assessment"]
     found = {"quotes": 0, "invented": 0, "misattributed": 0, "unknown_source": 0}
@@ -148,6 +132,12 @@ def check_quotes(ev: dict, case: dict) -> dict[str, int]:
         for e in al["evidence"]
     ]
     claimed += [(u["quote"], "draft") for u in (a.get("impact") or {}).get("uses", [])]
+    claimed += [
+        (p["quote"], source_label(p["source"], sources))
+        for step in ("change", "impact", "actions")
+        for c in (a.get(step) or {}).get("claims", [])
+        for p in c["passages"]
+    ]
     for quote, label in claimed:
         q = norm(quote)
         found["quotes"] += 1
@@ -158,6 +148,34 @@ def check_quotes(ev: dict, case: dict) -> dict[str, int]:
         elif not quoted_in(q, sources[label]):
             found["misattributed"] += 1
     return found
+
+
+def check_passages(ev: dict, grade: dict | None = None) -> dict[str, int | None]:
+    """A run's claims: unlinked (a claim with no passage; an impact claim on a run whose draft
+    wasn't read is exempt, since a general judgment has nothing to quote), and, from the judge's
+    grading (`grade`, the .judge.json), unbacked (a passage the judge says doesn't back its claim)
+    and uncovered (a statement of the three free-text fields no claim covers). A count is None
+    when it can't be scored: every count for a run with no `claims` (saved before
+    PROMPT_VERSION 5), unbacked and uncovered for a run the judge hasn't graded for claims."""
+    claims = ev.get("claims")
+    if claims is None:
+        return {"unlinked": None, "unbacked": None, "uncovered": None}
+    draft_read = ev["assessment"].get("draft") == "read"
+    unlinked = sum(
+        1 for c in claims if not c["passages"] and (c["kind"] != "impact" or draft_read)
+    )
+    if not grade or "passages" not in grade:
+        return {"unlinked": unlinked, "unbacked": None, "uncovered": None}
+    return {
+        "unlinked": unlinked,
+        "unbacked": sum(not p["pass"] for p in grade["passages"]),
+        "uncovered": sum(not s["pass"] for s in grade["statements"]),
+    }
+
+
+def passage_flags(r: dict) -> list[str]:
+    names = {"unlinked": "unlinked claim", "unbacked": "unbacked passage", "uncovered": "uncovered statement"}
+    return [f"{r[k]} {name}" for k, name in names.items() if r.get(k)]
 
 
 def quote_flags(r: dict) -> list[str]:
@@ -177,6 +195,7 @@ def score_run(path: Path, case: dict) -> dict:
             "tag": tag,
             "hard": [],
             **check_quotes(ev, case),
+            **check_passages(ev),
             "detail": {},
             "judged": False,
             "failed_facts": [],
@@ -186,8 +205,9 @@ def score_run(path: Path, case: dict) -> dict:
     judge_path = path.with_suffix(".judge.json")
     text = None
     failed = []
-    if judge_path.exists():
-        items = json.loads(judge_path.read_text())["items"]
+    grade = json.loads(judge_path.read_text()) if judge_path.exists() else None
+    if grade is not None:
+        items = grade["items"]
         text = sum(i["pass"] for i in items) / len(items) if items else None
         failed = [i for i in items if not i["pass"]]
     return {
@@ -196,6 +216,7 @@ def score_run(path: Path, case: dict) -> dict:
         "tag": mean(list(detail.values())),
         "hard": hard_fails(ev, expected.get("hard_fail_if", [])),
         **check_quotes(ev, case),
+        **check_passages(ev, grade),
         "text": text,
         "detail": detail,
         "judged": judge_path.exists(),
@@ -231,6 +252,14 @@ def verdict(r: dict, thresholds: dict) -> dict:
         failures.append("invented_quote")
     if r["misattributed"] > thresholds["max_misattributed"]:
         failures.append("misattributed_quote")
+    # a count of None (a run saved before claims, or not yet graded for them) skips its threshold
+    for count, limit, failure in (
+        ("unlinked", "max_unlinked", "unlinked_claim"),
+        ("unbacked", "max_unbacked", "unbacked_passage"),
+        ("uncovered", "max_uncovered", "uncovered_statement"),
+    ):
+        if r.get(count) is not None and r[count] > thresholds[limit]:
+            failures.append(failure)
     if not r["judged"]:
         return {"result": "unjudged", "failures": failures}
     return {"result": "fail" if failures else "pass", "failures": failures}
@@ -246,7 +275,8 @@ def verdict_cell(v: dict) -> str:
 
 
 FAILURE_TYPES = (
-    "hard_fail", "wrong_tag", "missed_fact", "wrong_fact", "invented_quote", "misattributed_quote"
+    "hard_fail", "wrong_tag", "missed_fact", "wrong_fact", "invented_quote", "misattributed_quote",
+    "unlinked_claim", "unbacked_passage", "uncovered_statement",
 )
 
 
@@ -437,7 +467,7 @@ def main() -> None:
             got = "/".join(dict.fromkeys(short(v) for v in resolve(ev, t)))
             row_cells.append(f"[{colour(r['detail'][t])}]{got}[/]")
         
-        flags = ["PLACEHOLDER"] * r["failed"] + [f"HARD: {h}" for h in r["hard"]] + quote_flags(r)
+        flags = ["PLACEHOLDER"] * r["failed"] + [f"HARD: {h}" for h in r["hard"]] + quote_flags(r) + passage_flags(r)
         misses = [
             f"{t}: {'/'.join(dict.fromkeys(short(v) for v in resolve(ev, t)))}"
             for t, sc in r["detail"].items()

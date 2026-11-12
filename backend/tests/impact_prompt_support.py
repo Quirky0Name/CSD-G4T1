@@ -75,7 +75,20 @@ def sample_inputs() -> ReportInputs:
 
 
 CHANGE = ChangeAssessment.model_validate(
-    {"alerts": [], "relations": None, "severity": "high", "summary": "The paper was retracted."}
+    {
+        "alerts": [],
+        "relations": None,
+        "severity": "high",
+        "summary": "The paper was retracted.",
+        "claims": [
+            {
+                "text": "The paper was retracted.",
+                "passages": [
+                    {"source": "10.1016/j.ijantimicag.2024.107416", "quote": "This article has been retracted"}
+                ],
+            }
+        ],
+    }
 )
 
 

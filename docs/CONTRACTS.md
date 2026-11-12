@@ -60,7 +60,7 @@ Owned by: User Management (`users/`). Consumed by: the frontend, at `/auth`
 and `/projects` on its own address, since User Management sends no CORS
 headers: the Vite proxy in development, Caddy in the root stack. Register,
 login, refresh and logout need no `Authorization` header; the project
-calls, deleting the account and `GET`/`PUT /auth/me/profile` need the
+calls, deleting the account, `GET`/`PUT /auth/me/profile` and the `/auth/me/notifications` calls need the
 user's token, as Storage Management's do. Register, login and refresh
 answer with the same shape, so the frontend handles them alike:
 
@@ -201,13 +201,86 @@ value is the displayed text. The lists live in
 `users/src/main/resources/profile/options.json` and are duplicated in the
 frontend (frontend `README.md`).
 
+### `GET /auth/me/notifications`
+
+User token only. The researcher's outside notification preferences: whether
+each channel is on, Telegram's chat id and each channel's thresholds. Every
+account has them from registration on (defaults below). **Response `200`:**
+
+```json
+{
+  "email": {"enabled": false, "address": "a@b.c",
+            "min_alert_severity": "high", "min_change_severity": "medium", "min_impact_level": "medium"},
+  "telegram": {"enabled": false, "chat_id": null,
+               "min_alert_severity": "high", "min_change_severity": "medium", "min_impact_level": "medium"}
+}
+```
+
+`address` is the account email, read-only: email goes to the account email,
+which is not verified, and there is no second address. Each threshold is
+`low`, `medium`, `high` or `null` (never). A report sends on a channel when
+its change severity **or** its impact level is at or above that channel's
+`min_change_severity` / `min_impact_level`; an alert sends when its
+`alert_severity` is at or above `min_alert_severity`. "At or above" means
+`high` sends `high`. Defaults, written at registration: both channels off,
+Telegram with no chat id, and both channels' `min_alert_severity` `high`,
+`min_change_severity` `medium`, `min_impact_level` `medium`.
+
+Errors, as problem details: `401` missing or bad token, or `Your account no
+longer exists` (the account was deleted); `403` an admin or service token.
+
+### `PUT /auth/me/notifications/email`, `PUT /auth/me/notifications/telegram`
+
+User token only. Each replaces that channel and leaves the other unchanged.
+**Request** for email: `{"enabled", "min_alert_severity", "min_change_severity",
+"min_impact_level"}`; for Telegram the same plus `chat_id`. **Response
+`200`:** the `GET` body. A `PUT` stores the whole channel, with no partial
+update: a left-out threshold or `chat_id` is `null`; a left-out or `null`
+`enabled` is `400`. Saving doesn't contact Telegram or the SMTP server.
+
+The researcher types the Telegram chat id themselves (from a bot such as
+`@userinfobot`) and must press Start on the project's bot first, since a bot
+can't message a chat that hasn't started it. Linking through the bot (a deep
+link, `getUpdates`, a webhook) is not built.
+
+Rules, with a `400` whose `detail` starts with the field name: a threshold is
+exactly `low`, `medium`, `high` or `null` (`<field> must be low, medium, high
+or null`; `High` and `none` are refused). `enabled` is required (`enabled is
+required`); it may be a string Jackson coerces to a boolean (`"true"`), and
+only a missing or null one is `400`. `chat_id` is a JSON integer, not `0`, or
+`null` (`chat_id must be a non-zero integer or null`): it may be negative
+(group and channel ids are) and is stored as a bigint; a string or a fraction
+is `400`. `enabled` true with `chat_id` null is `400` `chat_id is required to
+enable Telegram`. A body that isn't JSON is Spring's generic `400`. Nothing
+changes on a `400`. The chat id is never logged. `401` and `403` as for `GET`.
+
+### `POST /auth/me/notifications/test`
+
+User token only. No body. Sends a fixed test message to every enabled channel,
+ignoring the thresholds: subject `Research Assistant: Test notification`,
+body `This is a test message from Research Assistant. If you can read it,
+this channel works.` (the same body goes to Telegram), with no link.
+**Response `200`:** `{"channels": {"email": "sent", "telegram": "disabled"}}`,
+each outcome `sent`, `failed`, `disabled` (the channel is off) or
+`not_configured` (the server has no SMTP host or bot token); outcomes as for
+the internal endpoint in "Research Evaluation ↔ User Management".
+
+Errors: `401` `Your account no longer exists` for a deleted account, `404`
+`No user <id>` for an account with no preferences row, `403` an admin or
+service token, and `429` `Wait 60 seconds between test messages` for a second
+call from the same account within 60 s of its last accepted one, which sends
+nothing. A `401` or `404` is answered before the window and doesn't start it.
+Why: the address is unverified, so an unthrottled test endpoint could be
+looped to spam a third party and get the SMTP account suspended. The window
+is kept in memory, keyed by account id, so a restart resets it.
+
 ### `DELETE /auth/me`
 
 User JWT required. Deletes the caller's account. **Request:**
 `{"password": "..."}`, the account's password. First asks Storage
 Management to clear everything the user owns (`DELETE /internal/users/{id}`,
-below), then deletes the account, its projects, its profile and its refresh
-tokens (database cascade). **Response `204`.**
+below), then deletes the account, its projects, its profile, its refresh
+tokens and its notification preferences (database cascade). **Response `204`.**
 
 Errors, as problem details: `400` a missing or blank password; `401`
 missing or bad token, or `Your account no longer exists` for an account
@@ -332,7 +405,7 @@ bad token, `403` a user token.
 
 Owned by: User Management. Consumed by: Research Evaluation, with its
 service token (`sub=svc:research-evaluation`), for impact's steps 2 and 3
-(EVALUATION.md). Reachable only on the compose network: Caddy and the Vite
+(EVALUATION.md) and to post the events outside notifications are sent for. Reachable only on the compose network: Caddy and the Vite
 proxy forward `/auth/*` and `/projects*`, never `/internal`.
 
 ### `GET /internal/users/{id}/profile`
@@ -349,6 +422,122 @@ other `detail` is a failed read, not "no profile".
 Research Evaluation learns whose profile to read from `owner_id` on the
 report (see `GET /internal/papers/{id}/reports/{reportId}`), since it only
 has a `paper_id`.
+
+### `POST /internal/users/{id}/notifications`
+
+Owned by User Management. Service token only (`/internal/**` takes only
+`ROLE_SERVICE`). Research Evaluation posts one event per call, and User
+Management applies each channel's thresholds, builds the message and sends
+it. **Request**, one of:
+
+```json
+{
+  "event": "alerts",
+  "paper": {"id": "uuid", "title": "string or null", "doi": "string or null"},
+  "report_id": 3,
+  "alerts": [
+    {"id": 7, "change_type": "retraction", "alert_severity": "high", "description": "..."}
+  ]
+}
+```
+
+```json
+{
+  "event": "report_assessed",
+  "paper": {"id": "uuid", "title": "string or null", "doi": "string or null"},
+  "report_id": 3,
+  "change_severity": "high",
+  "change_summary": "...",
+  "impact_level": "medium",
+  "evaluation": "string or null",
+  "recommendation": "string or null"
+}
+```
+
+- `event` is `alerts` or `report_assessed`; anything else is `400`.
+- `alerts`: at least one; each `alert_severity` is `low`, `medium` or `high`.
+- `report_assessed`: the fields as stored by `PUT
+  /internal/reports/{reportId}/evaluation`; `impact_level`, `evaluation` and
+  `recommendation` are null when `change_severity` is `none`, and a `none`
+  report with any of them set is `400`.
+
+**Response `200`:**
+
+```json
+{"channels": {"email": "sent", "telegram": "no_match"}}
+```
+
+Each channel's outcome is one of `sent`, `failed`, `disabled` (the user
+turned it off), `no_match` (the event is below its thresholds) and
+`not_configured` (the server has no `MAIL_HOST` or `TELEGRAM_BOT_TOKEN`; a
+channel can still be saved enabled without them).
+
+Errors: `400` a body that breaks the rules; `401`/`403` as for every
+`/internal` call; `404` `No user <id>` (no account, or no preferences row: a
+dev mode admin created after V6). The body is checked before the user is
+looked up, so a bad body for an unknown user is `400`, not `404`. `400`
+details start with the field: `event must be alerts or report_assessed`,
+`paper is required` (`paper` needs an `id`), `alerts must have at least one
+alert`, `alerts must not contain null`, `alert_severity must be low, medium or
+high`, `change_type and description are required` (each alert),
+`change_severity must be none, low, medium or high`, `change_summary is
+required`, `impact_level must be low, medium, high or null`, and
+`impact_level must be null when change_severity is none` (likewise
+`evaluation` and `recommendation`). A body that isn't JSON, or whose
+`paper.id` isn't a uuid, is Spring's generic `400`.
+
+**Which events send.** Levels are ordered `low` < `medium` < `high`. An
+`alerts` event passes a channel when at least one alert's severity is at or
+above its `min_alert_severity`; the message lists only those alerts. A
+`report_assessed` event passes when `change_severity` is at or above
+`min_change_severity` or `impact_level` is at or above `min_impact_level`. A
+`null` threshold never passes, and a `change_severity` of `none` never passes,
+whatever its impact level.
+
+**Sending.** Synchronous: User Management sends during the request and
+answers only after trying both channels, one after another; Research
+Evaluation calls it with a 30 s timeout. Each channel has one overall 10 s
+deadline for its whole send (`CHANNEL_DEADLINE`, default `10s`, which the tests
+shorten); a channel still running at the deadline is `failed`, and the other
+channel is unaffected. The send is abandoned, not undone, so a message may
+still arrive after `failed`. Why: two channels at 10 s each have to fit inside
+Research Evaluation's 30 s wait, and the SMTP steps alone (connect, EHLO,
+STARTTLS, AUTH, DATA) can take an email 40 s or more. A failed channel logs the
+user id, channel and the status code or exception class only, never the text,
+address or chat id. There are no retries.
+
+- **Email:** to the account email, plain text, never cut. Subject
+  `Research Assistant: New alerts on "<title>"` or `Research Assistant: Report
+  ready on "<title>"`; a missing title is `a tracked paper` (in the message's
+  first line too). From `MAIL_FROM`, which has no default: with a `MAIL_HOST`
+  and no `MAIL_FROM` the mail has no From and the SMTP server or JavaMail
+  refuses it (`failed`, logged as `MailSendException`).
+- **Telegram:** `sendMessage` to the chat id, plain text (no `parse_mode`),
+  `disable_web_page_preview` true, cut to 4096 UTF-16 units ending `…`. The cut
+  keeps whole characters: when the 4095th unit would be the first half of an
+  emoji, the cut is one unit earlier, so a cut message can be 4095 units long.
+  It is `sent` on any `2xx` from the bot API (the `ok` field of its answer isn't
+  read); any other status (a `3xx` redirect is not followed), a refused
+  connection or a timeout is `failed`.
+  A send with no chat id on an enabled channel is `failed`. The bot token is in
+  the URL, so neither the URL nor the text is logged.
+- **Message body.** `alerts`: the title, the DOI, then one line per passing alert,
+  `<ALERT SEVERITY> <change type>: <description>`, most severe first, equal
+  severities keeping the order posted; change types print as posted
+  (`citation_jump`). `report_assessed`: the title, the DOI, `Change:
+  <change_severity>`, the change summary, `Impact on your draft: <impact_level>`,
+  the evaluation, `What to do:` and the recommendation; the parts that are null
+  are left out. The DOI line is left out when `doi` is null. Then the link
+  `<APP_URL>/papers/<paper id>` (trailing slashes of `APP_URL` dropped), none
+  when `APP_URL` is not set.
+
+Research Evaluation's side is `users.notify(http, user_id, body)` in
+`backend/src/research_evaluation/users.py`, which raises on any non-2xx answer
+or transport error. Its 30 s timeout is set on that post, so the shared 10 s
+User Management client keeps its timeout for profile reads. A failure is
+logged as `notifying user <id> about report <id> failed: <cause>`, the cause
+being `User Management answered <status>` or the exception class name, never a
+body.
 
 ## Frontend ↔ Storage Management
 
@@ -370,6 +559,7 @@ SETUP.md), with the user's token.
 | New-alert toast | no push: re-fetch alerts and toast unseen `new` ids |
 | Report-ready notification | no push: each refresh (every 30 s) re-fetches `GET /papers/{id}/reports` for every paper and notifies `assessed` ids it hasn't seen; the first load after sign-in (or a reload) only records them. No lean reports endpoint: it reuses the reports call, and only the caller's papers are considered |
 | The draft for a project | `POST` / `GET` / `DELETE /draft` |
+| Show a PDF beside a report's highlights | `GET /papers/{id}/pdf`, `GET /documents/{id}/pdf`, `GET /draft/pdf?project_id=` |
 
 ### `GET /papers`
 
@@ -511,6 +701,7 @@ report of the paper, whatever its status, **newest first** (by
     "id": 3, "paper_id": "uuid", "status": "investigated",
     "created_at": "2026-09-27T08:00:00Z", "investigated_at": "2026-09-27T08:00:40Z",
     "evaluation": null, "recommendation": null, "evaluated_at": null,
+    "change_summary": null, "change_severity": null, "impact_level": null, "claims": null,
     "alerts": [
       {"id": 7, "paper_id": "uuid", "change_type": "retraction", "alert_severity": "high",
        "description": "...", "recommendation": "...", "notice_doi": "10.xxxx/notice",
@@ -538,8 +729,10 @@ be in `GET /papers/{id}/alerts` a moment before it's in a report.
 |---|---|
 | `status` | `investigating` (its documents are being fetched, or fetching stopped midway; nothing resumes it yet), `investigated` (fetching finished) or `assessed` (impact wrote its evaluation) |
 | `created_at`, `investigated_at` | when the report was opened, and when fetching finished (null until then) |
-| `context_chunks` | the chunks impact added to the prompt, so a frontend can show them: an array of `{"source_type", "source_id", "page"}` in prompt order, as `PUT /internal/reports/{id}/evaluation` stored it. A `document` item opens with `GET /documents/{id}/pdf` at `page`; an `alert` or `report` item is found in the same paper's report list by its id. `[]` when impact found no past; null for a report assessed before V14 or not yet assessed. Returned only here, not by `GET /internal/reports/{id}`, since only a frontend shows it |
+| `context_chunks` | the chunks impact added to the prompt, so a frontend can show them: an array of items in prompt order, as `PUT /internal/reports/{id}/evaluation` stored it, e.g. `{"source_type": "document", "source_id": "7", "page": null, "start": 2800, "end": 6000}`. `source_type` is `document`, `alert` or `report`; `source_id` is the document's, alert's or report's own id (not the report it belongs to); `page` is the PDF page the chunk came from, null when it isn't from a PDF page; `start` and `end` (ints, both or neither) are only on a `document` item with `page` null whose `text` was cut into more than one chunk: the chunk's character range in the document's `text`, `text.slice(start, end)`, and absent otherwise. How to show an item: an `alert` or `report` item is the alert or report with that id in this paper's report list (one chunk is the whole alert or report); a `document` item with `page` opens `GET /documents/{id}/pdf` at `page`; a `document` item without `page` (a notice or other Europe PMC text) is the document with that `id` in any report's `documents` (a document's `id` is unique across reports), its `text` shown whole, or with `start`/`end` `text.slice(start, end)` marked, like the highlighting `TextPane`. `text_truncated` true means the stored text was cut at 60,000 characters and only that part was chunked. The chunk's text is not stored on the report. A PDF page over 8,000 characters is split and gets no `start`/`end`: the frontend opens the page without marking the part. Items of reports assessed before `start`/`end` existed have none; they aren't backfilled. `[]` when impact found no past; null for a report assessed before V14 or not yet assessed. Returned only here, not by `GET /internal/reports/{id}`, since only a frontend shows it |
 | `evaluation`, `recommendation`, `evaluated_at` | impact's evaluation of the report's alerts together, what the researcher should do, and when it was written. Null until the report is `assessed`, and also null on an assessed report whose change impact rated `none` (not meaningful) |
+| `change_summary`, `change_severity`, `impact_level` | impact's summary of what changed, how serious the change is for anyone relying on the paper, and how much the researcher's draft is affected (`none`, `low`, `medium` or `high`), as in `GET /internal/papers/{id}/reports/{reportId}`. Null until the report is `assessed`; `impact_level` is also null when `change_severity` is `none` |
+| `claims` | the evaluation's claims, an array of `Claim` (below); null until `assessed` and on reports assessed before claims existed (they aren't backfilled) |
 | `alerts` | the report's alerts, in the same shape and order as `GET /papers/{id}/alerts` (newest first, then most severe), **dismissed ones included**, with their status. They're the same alerts, acted on with `PATCH /alerts/{id}`. Can be empty: when a retraction notice arrives after a retraction alert that had none, the alert moves to the paper's next report (see `POST /internal/papers/{id}/alerts`), and the earlier report keeps its documents |
 | `documents` | what investigation fetched, oldest first (the order it stored them) |
 
@@ -561,13 +754,75 @@ and the `current_version` are about the whole report. A document can match no
 alert (two retraction notices in one nudge's window, when the retraction
 alert carries only one): show it with the report.
 
-`file_key`, `sha256` and `report_id` are stored but not returned. The
-frontend has no endpoint to download a document's stored PDF.
+`file_key`, `sha256` and `report_id` are stored but not returned. A
+document's stored PDF is `GET /documents/{id}/pdf` (below). The response
+never carries `assessment`.
 
 Errors, as problem details: `400` an id that isn't a UUID; `401` missing
 or bad token; `403` a service token; `404` no paper with that id **or** a
 paper that belongs to another user (both `No paper <id>`, as for
 `GET /papers/{id}/alerts`).
+
+#### `Claim`
+
+`claims` is a JSON array Research Evaluation sends on
+`PUT /internal/reports/{reportId}/evaluation`; Storage Management stores it as
+sent and returns it on `GET /internal/reports/{reportId}`,
+`GET /internal/papers/{id}/reports/{reportId}` and `GET /papers/{id}/reports`.
+
+```json
+{
+  "id": "impact-0",
+  "kind": "impact",
+  "text": "The draft's dose choice rests on the finding that 200 mg of caffeine improves working memory",
+  "supported": true,
+  "passages": [
+    {
+      "target": "paper",
+      "document_id": null,
+      "alert_id": null,
+      "quote": "200 mg caffeine improved n-back accuracy",
+      "page": 3,
+      "verified": "verbatim"
+    }
+  ]
+}
+```
+
+| Claim field | Meaning |
+|---|---|
+| `id` | `<kind>-<index in that step's claims>`; unique in the report |
+| `kind` | the step that made it: `change`, `impact` or `action` |
+| `text` | the statement, as the model wrote it; a claim isn't tied to an alert, use or action |
+| `supported` | true when at least one passage has `verified` `verbatim`; false with no passages |
+| `passages` | the claim's passages, as the model ordered them |
+
+| Passage field | Meaning |
+|---|---|
+| `target` | `paper` (the stored PDF), `draft`, `document` or `alert`; null when the quote was found nowhere and its source names no text |
+| `document_id` | the report document's id when `target` is `document`, else null |
+| `alert_id` | the alert's id when `target` is `alert`, else null |
+| `quote` | as the model wrote it |
+| `page` | 1-based page where the quote starts when found in a PDF, else null |
+| `verified` | `verbatim`, `not_found` (the text was read; the quote isn't in it) or `no_text` (no text to check: no PDF, unreadable, or no text layer) |
+
+All of it is model output and fetched text: show as text, never as HTML. A
+passage gives its document, quote and page only: **no bounding boxes or
+character offsets**. A draft quote may not be found in the current upload if
+the draft was replaced after the assessment; only the current upload is
+served. How `verified` is decided is in [EVALUATION.md](EVALUATION.md).
+
+#### User PDFs: `GET /papers/{id}/pdf`, `GET /documents/{id}/pdf`, `GET /draft/pdf?project_id=`
+
+User JWT required, `application/pdf`, only the owner. Another user's item gets
+the same `404` as a missing one. `GET /draft/pdf` serves the project's current
+draft (the default project when `project_id` is left out or `""`).
+
+Errors, as problem details: `400` an id that isn't valid or a `project_id` that
+isn't a UUID; `401` missing or bad token; `403` a service token; `404`, as on
+the internal endpoints, also for a paper with no stored PDF, a document with
+none (a notice, `pending`, `not_found`) and a file missing from disk, each
+with its own `detail`.
 
 ### `POST /papers` (track by DOI)
 
@@ -1088,6 +1343,7 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
   "created_at": "2026-09-27T08:00:00Z", "investigated_at": null,
   "evaluation": null, "recommendation": null, "evaluated_at": null,
   "change_summary": null, "change_severity": null, "impact_level": null, "assessment": null,
+  "claims": null,
   "alerts": [
     {"id": 7, "change_type": "retraction", "change_key": "retraction", "alert_severity": "high",
      "description": "...", "recommendation": "...", "notice_doi": "10.xxxx/...",
@@ -1111,7 +1367,10 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
   - `evaluation`: how the change affects the researcher; `recommendation`:
     what to do; `evaluated_at`: when impact wrote them;
   - `assessment`: impact's full answer as a JSON object, returned exactly as
-    Research Evaluation sent it.
+    Research Evaluation sent it;
+  - `claims`: an array of `Claim` (see `GET /papers/{id}/reports`), returned
+    exactly as sent; null when the `PUT` left it out, and on reports assessed
+    before claims existed (no backfill).
 
   Unlike the alerts' `alert_severity`, which is fixed by change type, these are
   impact's judgment.
@@ -1171,8 +1430,10 @@ marks the report `assessed`.
   "evaluation": "Your Discussion cites it as …",
   "recommendation": "Replace the citation in the Discussion.",
   "assessment": {"prompt_version": 1, "...": "impact's full answer"},
+  "claims": [{"id": "change-0", "kind": "change", "...": "see Claim"}],
   "context_chunks": [
     {"source_type": "document", "source_id": "7", "page": 3},
+    {"source_type": "document", "source_id": "8", "page": null, "start": 2800, "end": 6000},
     {"source_type": "alert", "source_id": "42", "page": null}
   ]
 }
@@ -1185,7 +1446,8 @@ marks the report `assessed`.
 | `impact_level` | `none`, `low`, `medium` or `high`: required unless `change_severity` is `none`, and must be null (or left out) when it is |
 | `evaluation`, `recommendation` | not blank: required unless `change_severity` is `none`, and must be null (or left out) when it is |
 | `assessment` | optional JSON, stored and returned exactly as sent; Storage Management never looks inside |
-| `context_chunks` | optional JSON array, stored as sent and never looked inside: the chunks impact added to its prompt, in prompt order, each `source_type`, `source_id` and `page` (null when the chunk has none). Absent or `null` stores null; an empty `[]` is kept as `[]`, so a report that found no past is told apart from one assessed before V14 |
+| `claims` | optional JSON array of `Claim`, stored in its own column and returned exactly as sent (any JSON value is accepted; left out or `null` stores null). Kept apart from `assessment` so that stays unread. Null for reports assessed before V15 |
+| `context_chunks` | optional JSON array, stored as sent and never looked inside: the chunks impact added to its prompt, in prompt order, each `source_type`, `source_id` and `page` (null when the chunk has none), plus `start` and `end` (both or neither) on a page-less `document` item whose text was cut into more than one chunk; the item is described under `GET /papers/{id}/reports`. Absent or `null` stores null; an empty `[]` is kept as `[]`, so a report that found no past is told apart from one assessed before V14 |
 
 **Response `200`:** the report, as `GET` returns it, with `status`
 `assessed`, `evaluated_at` set and the fields as sent (the unsent ones
@@ -1520,8 +1782,13 @@ Management, evaluated in stages").
 **After the reply, in the background** (EVALUATION.md): investigation
 opens a report per paper with new alerts and stores its documents, then
 impact assesses each report it finished (`PUT
-/internal/reports/{reportId}/evaluation`). Research Evaluation sends no
-notification. Nothing in it changes the reply, and Updating never waits for
+/internal/reports/{reportId}/evaluation`). Investigation posts an `alerts`
+event right after opening the report, and impact a `report_assessed` event
+right after the evaluation is stored, each to the report's owner (`POST
+/internal/users/{id}/notifications`, "Research Evaluation ↔ User
+Management"); a placeholder evaluation is not posted, and a failed post
+changes nothing. User Management decides whether and how to tell the
+researcher. Nothing in it changes the reply, and Updating never waits for
 it. Without `GEMINI_API_KEY` reports stay `investigated`. When every
 Gemini model fails a step, the stored evaluation is a placeholder:
 `change_severity` and `impact_level` `low`, the three texts
@@ -1637,6 +1904,7 @@ logged by Updating, not returned.
 | `SM_BASE_URL` | Research Evaluation, Updating, User Management | Storage Management's base URL (`http://localhost:8081` locally) |
 | `RE_BASE_URL` | Updating | Research Evaluation's base URL (Updating's nudge goes here). Storage Management never calls Research Evaluation |
 | `UM_BASE_URL` | Research Evaluation | User Management's base URL (`http://localhost:8080` locally, `http://users:8080` in the root compose stack) |
+| `APP_URL` | User Management | the site's address (e.g. `https://our-name.duckdns.org`), for the link `<APP_URL>/papers/<paper id>` in an outside notification; empty sends no link |
 | `REFRESH_COOKIE_SECURE` | User Management | `true` adds `Secure` to the refresh cookie; `false` by default, so it works over plain HTTP locally. Set `true` on the deployed server |
 
 See [SETUP.md](SETUP.md) for the full env var list including the

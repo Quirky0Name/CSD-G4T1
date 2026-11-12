@@ -43,6 +43,13 @@ public class DraftController {
         return drafts.find(userId, projectId);
     }
 
+    // the current draft's PDF; another user's project has no draft of theirs, so it's the same 404
+    @GetMapping("/pdf")
+    public ResponseEntity<byte[]> pdf(@AuthenticationPrincipal UUID userId,
+                                      @RequestParam(name = "project_id", required = false) UUID projectId) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(drafts.ownedPdf(userId, projectId));
+    }
+
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@AuthenticationPrincipal UUID userId,
