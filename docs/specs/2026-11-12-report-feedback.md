@@ -204,6 +204,8 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
   - Added in build: `Chunk.source_date` is optional, since a feedback chunk can outlive its deleted feedback (a failed delete nudge) and its `feedback_updated_at` is then null; one such chunk must not fail the whole search; EVALUATION.md.
   - Added in build: the stub Storage Management gains `PUT /internal/chunks`, a report `feedback` field, and stub-only `PUT /dev/reports/{id}/feedback` and `GET /dev/chunks/{type}/{id}`, so the feedback path runs against it; no doc (dev aid, documented in its docstrings).
   - Added in sweep: `store_feedback_chunk` runs one at a time per report (an `asyncio.Lock` per report id, FIFO) and reads the report once it holds the lock, so of two quick saves the later one's chunk is the one stored; correct because Research Evaluation runs one uvicorn worker (user: "Per-report lock"; `test_of_two_quick_saves_the_later_one_is_stored`); EVALUATION.md.
+  - Added in sweep: the title and each evaluation field are written on one line (every line break `str.splitlines` knows becomes a space), as the content block shows, so model-written text can't put a `researcher's note:` or `researcher's verdict:` line above the real verdict and change what S5 reads back; the note keeps its own text (user: "One line per field"; `test_label_lines_in_the_evaluation_or_title_never_change_the_verdict_read_back`); EVALUATION.md.
+  - Added in sweep: the 8000 limit holds for any real title; a title of about 7,450 characters or more would push the chunk past it, since the title is never cut, and its embed would then fail and be logged (user: "Leave it"); EVALUATION.md.
 
 ### S4: Save and delete nudge the embedder (Storage)
 
