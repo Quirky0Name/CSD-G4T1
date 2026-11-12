@@ -328,12 +328,14 @@ anything.
   frontend shows as the draft the example's claims quote; it is never
   stored as anyone's draft). `.gitattributes` there keeps
   the PDFs byte for byte. It is read by `FakeReportExample`.
-- It was generated once from eval case 11
+- It is eval case 11's answer
   (`backend/evals/cases/11_concern_then_retraction_replacement.json`: paper,
-  notices, PDFs and draft all made up) by a subagent that ran impact's
-  three prompts through three subagents, not Gemini, with `claude-opus-5-5`.
-  `assessment` is `{"fake": true, ...}` and names that model in `model` and
-  `answered_by`. The writer's helper script was a throwaway, not in the repo.
+  notices, PDFs and draft all made up), taken from the prompt version 14 eval
+  run (`evals/results/v14-runs1`, `--provider claude-code --model opus`), not
+  Gemini. `assessment` is `{"fake": true, ...}` and names
+  `claude-opus-5-5` in `model` and `answered_by`. The run's `claims` are left
+  out: their passages name the case's document ids, which a fake report's
+  stored documents don't keep.
   Text names the example's paper whichever paper it goes on, and can't be
   customised (no body).
 - Alerts get `change_key` `fake:<uuid>`, and snapshot ids `0`; timestamps
