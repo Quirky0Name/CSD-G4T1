@@ -133,9 +133,7 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public List<UserReportResponse> listForOwner(UUID userId, UUID paperId) {
-        if (!papers.findById(paperId).map(paper -> paper.getOwnerId().equals(userId)).orElse(false)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
-        }
+        requireOwnedPaper(userId, paperId);
         return userReports(paperId);
     }
 
@@ -248,19 +246,26 @@ public class ReportService {
     }
 
     private Report requireOwnedReport(UUID userId, UUID paperId, long reportId) {
-        if (!papers.findById(paperId).map(paper -> paper.getOwnerId().equals(userId)).orElse(false)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
-        }
+        requireOwnedPaper(userId, paperId);
+        return requireReportOf(paperId, reportId);
+    }
+
+    private Report requireReport(UUID paperId, long reportId) {
+        requirePaper(paperId);
+        return requireReportOf(paperId, reportId);
+    }
+
+    private Report requireReportOf(UUID paperId, long reportId) {
         return reports.findById(reportId)
                 .filter(report -> report.getPaperId().equals(paperId))
                 .orElseThrow(() -> noReport(reportId));
     }
 
-    private Report requireReport(UUID paperId, long reportId) {
-        requirePaper(paperId);
-        return reports.findById(reportId)
-                .filter(report -> report.getPaperId().equals(paperId))
-                .orElseThrow(() -> noReport(reportId));
+    // a paper that doesn't exist and one that belongs to someone else are the same 404
+    private void requireOwnedPaper(UUID userId, UUID paperId) {
+        if (!papers.findById(paperId).map(paper -> paper.getOwnerId().equals(userId)).orElse(false)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
+        }
     }
 
     private static ResponseStatusException noReport(long reportId) {
