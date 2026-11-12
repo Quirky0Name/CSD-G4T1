@@ -16,7 +16,7 @@ POST /evaluate/changes (paper ids, from Updating)
   └─ reply 202 / 503
        └─ background task, per paper evaluated without failure that had changes:
           3. investigation  investigation/   open a report, post its alerts to User Management, fetch its documents → report ids
-          4. impact         impact/          read the paper's past, Gemini three steps → PUT evaluation → assessed → post it to User Management → store the report's chunks
+          4. impact         impact/          read the paper's past, three model steps → PUT evaluation → assessed → post it to User Management → store the report's chunks
 POST /evaluate/reports (report ids, by hand) ─▶ 4 only
 ```
 
@@ -303,18 +303,18 @@ DOIs only through these fixed rules and caps.
 
 `impact/run.py` `assess_reports(sm, context, report_ids)`, one report at
 a time, called with investigation's ids after each nudge or by
-`POST /evaluate/reports`. Without `GEMINI_API_KEY` it doesn't run (one log
-line) and reports stay `investigated`.
+`POST /evaluate/reports`. Without `ANTHROPIC_API_KEY` or `GEMINI_API_KEY` it
+doesn't run (one log line) and reports stay `investigated`.
 
 Per report:
 
 1. `GET /internal/reports/{id}`; skip unless `investigated` (before any PDF
-   or Gemini call, so a wrong or repeated id costs one read).
+   or model call, so a wrong or repeated id costs one read).
    Then `impact/history.py` reads the paper's past (below).
 2. `inputs.gather_inputs`: the paper's details (newest snapshot), the
    paper's stored PDF, each document whose `pdf_status` is `ok`. Anything
    missing is recorded, not a failure.
-3. `assess.assess`, three Gemini calls in a row (`prompts.py`, structured
+3. `assess.assess`, three model calls in a row (`prompts.py`, structured
    output against the schemas in `schemas.py`, no tools):
 
    | Step | Question | Reads | Answer |
@@ -559,13 +559,23 @@ fit `ResearcherProfile`). `um` is checked first, so the evals, which pass
 none, record `none`. `assessment` records only the status, never the
 profile's values.
 
-**Model fallback** (`llm.FallbackLlm`): each call tries `GEMINI_MODEL`,
-then `GEMINI_FALLBACK_MODELS` in order (duplicates removed), starting from
-`GEMINI_MODEL` again for every step. Any Gemini-side failure moves on: an
-API error of any code, a transport error or timeout
-(`IMPACT_LLM_TIMEOUT_SECONDS`), no text, an answer that doesn't fit the
-schema. Anything else raises. The SDK makes one attempt per call, so every
-retry is a fallback.
+**Model fallback** (`llm.FallbackLlm`): each call tries `CLAUDE_MODEL`
+(`claude-sonnet-5-5`, only when `ANTHROPIC_API_KEY` is set), then
+`GEMINI_MODEL`, then `GEMINI_FALLBACK_MODELS` in order (duplicates
+removed), starting from the first model again for every step. Any
+model-side failure moves on: an API error of any code, a transport error or
+timeout (`IMPACT_LLM_TIMEOUT_SECONDS`), a Claude refusal (`stop_reason`
+`refusal`), no text, an answer that doesn't fit the schema. Anything else
+raises. Neither SDK retries (the Anthropic client has `max_retries=0`), so
+every retry is a fallback, and an overloaded Sonnet moves straight on to
+Gemini.
+
+**Claude's call** (`llm.ClaudeLlm`): the same system prompt, text and PDFs
+(as base64 `document` blocks) as Gemini gets, the schema through
+`messages.parse`, adaptive thinking at effort `low`, since a researcher
+waits on all three steps. With only `ANTHROPIC_API_KEY` set, impact runs on
+Claude alone and has no embedder, so the paper's past is neither searched
+nor stored (below).
 
 **When every model fails a step**, `assess` returns a placeholder
 evaluation: both levels `low`, all three texts `PLACEHOLDER_TEXT`
@@ -606,10 +616,10 @@ no chunks.
 `assess_report` with no background task (the next report waits for it), never
 before it. The evaluation `PUT` makes the report `assessed`, so the
 researcher's next refresh shows the notification; storing chunks never
-delays or blocks it. A report that is never assessed (no `GEMINI_API_KEY`,
-or impact failed) gets no chunks. There is no backfill: rows stored before
+delays or blocks it. A report that is never assessed (no model key, or
+impact failed) gets no chunks. There is no backfill: rows stored before
 V13 have none. The embedder rides in `ImpactContext.embedder`: at startup a
-`GeminiEmbedder` on the same Gemini client as the model; `None` (no
+`GeminiEmbedder` on the Gemini models' client; `None` (no
 `GEMINI_API_KEY`, and the existing tests) stores no chunks.
 
 **What is stored.** Alerts, then the report, then documents, each source
@@ -692,8 +702,9 @@ assessed the report (without `GEMINI_API_KEY`, only `alerts`).
 
 `backend/evals/` measures how well impact (the three steps) answers,
 so a prompt or model change can be compared against a score instead of a
-guess. Production runs them on Gemini; the evals can also run them on
-Claude (`--provider`, below), which measures Claude, not production. It's a dev tool: no service imports it, it isn't in the Docker
+guess. Production runs them on Sonnet when `ANTHROPIC_API_KEY` is set, with
+Gemini as its fallback; `--provider claude-api --effort low` (below) sends
+production's Sonnet request, plus prompt caching. It's a dev tool: no service imports it, it isn't in the Docker
 images, and pytest doesn't run it. It calls the real `assess.assess` on
 hand-written cases, with a fake Storage Management that only serves the
 draft, and scores the saved answers afterwards, so re-scoring costs no
@@ -819,8 +830,10 @@ billed to the key. `evals/results/` is tracked in git.
   them); `meta.json` records them as null, and the Claude judge has no
   temperature 0, so check its agreement with itself (`judge_check.py
   agree`).
-- **Claude results measure Claude, not production's Gemini.** `compare.py`
-  across providers shows the model change; it isn't a regression check.
+- **Compare like with like.** Production leads with Sonnet at effort `low`;
+  the evals default to `medium`, so pass `--effort low` to measure
+  production, and a Gemini run measures the fallback. `compare.py` across
+  providers shows the model change; it isn't a regression check.
 
 **A case** (`evals/cases/NN_name.json`, 24 of them, 13 marked
 `"tier": "hard"`) is one report: `paper` (details) and `paper_text`,
@@ -1175,17 +1188,17 @@ run `run.py --dry <case>` to check that it builds.
 | User Management client | `users.py`: `ResearcherProfile`, `researcher_profile(http, user_id)`, `notify(http, user_id, body)` (the events above, 30 s timeout set on the post) |
 | Detection, rules, per-paper evaluation | `changes.py`, `rules.py`, `evaluate.py` |
 | Investigation | `investigation/`: `http.py` (one GET, `FetchStatus`), `crossref.py`, `europepmc.py`, `investigate.py` (plan, fetch), `run.py` |
-| Impact | `impact/`: `llm.py` (Gemini client, `FallbackLlm`, the `Llm` protocol), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `history.py` (the query, the three searches), `assess.py`, `claims.py` (`build_claims`), `quotes.py` (`norm`, `quoted_in`, `join_hyphens`, `pdf_pages`, `PdfUnreadable`, `leaves`, `DOI`, `ALERT`, `ELLIPSIS`: shared with the evals; `pypdf` is a project dependency), `run.py` (`ImpactContext`) |
+| Impact | `impact/`: `llm.py` (`ClaudeLlm`, `GeminiLlm`, `FallbackLlm`, the `Llm` protocol), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `history.py` (the query, the three searches), `assess.py`, `claims.py` (`build_claims`), `quotes.py` (`norm`, `quoted_in`, `join_hyphens`, `pdf_pages`, `PdfUnreadable`, `leaves`, `DOI`, `ALERT`, `ELLIPSIS`: shared with the evals; `pypdf` is a project dependency), `run.py` (`ImpactContext`) |
 | Shared with Updating | `backend/src/common/`: `doi.py` (`normalize_doi`), `service_token.py` (`ServiceTokenAuth`), `config.py` |
 | Dev stub of Storage Management | `backend/dev/stub_storage.py` (every internal endpoint in memory, plus `/dev/*` helpers) |
 | Tests | `backend/tests/research_evaluation/` (with `investigation/` and `impact/`); fixtures in `backend/tests/fixtures/` |
 | Evals of impact (dev only) | `backend/evals/`: `cases/`, `thresholds.json`, `run.py`, `claude_llm.py` (`ClaudeLlm` through Claude Code, `ClaudeApiLlm` through the Claude API, `preflight`, `ClaudeLimitReached`, `NotOnSubscription`), `judge.py` (`Rubric`), `judge_check.py`, `check_passage_scoring.py`, `real/extract.py` (imports `research_evaluation.impact.quotes` from `src/`; run as `uv run python evals/real/extract.py`, no `--with pypdf`), `score.py` (also the shared helpers `verdict`, `pass_rate`, `group_by`, `noise_floor`, `overall_mean`, `failure_line`), `compare.py`, `all.py` |
 
-The lifespan makes four HTTP clients: Storage Management's (base URL,
-service token, 10 s), User Management's (`UM_BASE_URL`, service token, same
+The lifespan makes Storage Management's HTTP client (base URL, service
+token, 10 s), User Management's (`UM_BASE_URL`, service token, same
 timeout), one for Crossref and Europe PMC (no base URL and no auth), and
-the Gemini client. User Management's is always opened, even without a Gemini
-key, but only `ImpactContext` and `InvestigationContext` use it (`ImpactContext.um`
+impact's Anthropic and Gemini clients, each only with its key. User
+Management's is always opened, even without a model key, but only `ImpactContext` and `InvestigationContext` use it (`ImpactContext.um`
 and `InvestigationContext.um`, both optional: `None` sends nothing, as in the evals).
 
 ## Gotchas
@@ -1220,8 +1233,10 @@ and `InvestigationContext.um`, both optional: `None` sends nothing, as in the ev
   `POST /evaluate/reports` skips it. Only `assessment.placeholder` tells it
   from a real `low`.
 - **Slow paths add up:** reports are assessed one after another, each up
-  to (1 + fallbacks) × 3 × `IMPACT_LLM_TIMEOUT_SECONDS` (12 minutes with
-  the defaults).
+  to (models in the chain) × 3 × `IMPACT_LLM_TIMEOUT_SECONDS` (18 minutes
+  with Sonnet and both Gemini models).
+- **Sonnet is paid per token** (`ANTHROPIC_API_KEY`, console.anthropic.com),
+  with no free tier: a report is three calls, each sending its PDFs.
 - **Free-tier Gemini:** about 20 requests per model per day (`429`), and
   `gemini-flash-latest` (currently `gemini-3.8-flash`) is often `503`
   ("high demand"). `gemini-2.5-flash` isn't available to new keys. A
