@@ -1,10 +1,10 @@
 package com.g4t1.storage.admin;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.g4t1.storage.alert.AlertSeverity;
 import com.g4t1.storage.alert.ChangeType;
 import com.g4t1.storage.report.CrossrefStatus;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.g4t1.storage.report.DocumentKind;
 import com.g4t1.storage.report.FeedbackVerdict;
 import com.g4t1.storage.report.ReportEvaluationRequest;

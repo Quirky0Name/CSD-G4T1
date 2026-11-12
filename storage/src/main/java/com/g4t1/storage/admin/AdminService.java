@@ -103,16 +103,16 @@ public class AdminService {
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
         ReportEvaluationRequest evaluation = content.evaluation();
         if (wanted == ReportStatus.ASSESSED) {
-            evaluation = withContext(evaluation, storePast(paperId, now.minus(PAST_AGE)));
+            evaluation = evaluation.withContextChunks(storePast(paperId, now.minus(PAST_AGE)));
         }
-        return reports.storeFake(paperId, fakeAlerts(content.alerts(), now),
-                content.documents().stream().map(this::fakeDocument).toList(), wanted, evaluation);
+        return reports.storeFake(paperId, fakeAlerts(content.alerts(), now), fakeDocuments(content.documents()),
+                wanted, evaluation);
     }
 
     private ArrayNode storePast(UUID paperId, Instant at) {
         FakeReportExample.PastContent past = example.pastContent();
         ReportService.StoredFakePast stored = reports.storeFakePast(paperId, fakeAlerts(past.alerts(), at),
-                past.documents().stream().map(this::fakeDocument).toList(), past.evaluation(),
+                fakeDocuments(past.documents()), past.evaluation(),
                 past.feedback().verdict(), past.feedback().note(), at);
         ArrayNode items = json.createArrayNode();
         for (FakeReportExample.PastItem item : past.contextChunks()) {
@@ -147,10 +147,8 @@ public class AdminService {
         return items;
     }
 
-    private static ReportEvaluationRequest withContext(ReportEvaluationRequest evaluation, ArrayNode items) {
-        return new ReportEvaluationRequest(evaluation.changeSummary(), evaluation.changeSeverity(),
-                evaluation.impactLevel(), evaluation.evaluation(), evaluation.recommendation(),
-                evaluation.assessment(), evaluation.claims(), items);
+    private List<FakeDocument> fakeDocuments(List<FakeReportExample.ExampleDocument> documents) {
+        return documents.stream().map(this::fakeDocument).toList();
     }
 
     private static List<NewAlertRequest> fakeAlerts(List<FakeReportExample.ExampleAlert> alerts, Instant at) {

@@ -59,7 +59,7 @@ export function entryMeta(entry: ContextEntry): string[] {
       case 'feedback':
         return [`You said ${VERDICT_LABEL[entry.verdict].toLowerCase()}`, entry.date ? shortDate(entry.date) : '']
       case 'profile':
-        return [occupation(entry.profile) ?? '', (entry.profile.research_fields ?? []).join(', ')]
+        return [occupation(entry.profile) ?? '', listed(entry.profile.research_fields)]
       case 'missing':
         return ['Removed since this report was written']
     }
@@ -72,14 +72,19 @@ function occupation(profile: Profile): string | null {
   return (profile.occupation === 'Other' && profile.occupation_other?.trim()) || profile.occupation
 }
 
+// a list answer as one line; a profile sent without the list has none
+function listed(values: string[] | null | undefined): string {
+  return (values ?? []).join(', ')
+}
+
 // a profile's answered questions, in the questionnaire's order (GLOSSARY.md, "Profile"); unanswered ones
 // are left out. All of it is the researcher's own text: render it as text
 export function profileAnswers(profile: Profile): { label: string; value: string }[] {
   const answers = [
     { label: 'Occupation', value: occupation(profile) ?? '' },
-    { label: 'Research fields', value: (profile.research_fields ?? []).join(', ') },
-    { label: 'Research interests', value: (profile.research_interests ?? []).join(', ') },
-    { label: 'Type of work', value: (profile.work_types ?? []).join(', ') },
+    { label: 'Research fields', value: listed(profile.research_fields) },
+    { label: 'Research interests', value: listed(profile.research_interests) },
+    { label: 'Type of work', value: listed(profile.work_types) },
     { label: 'How reports are written', value: profile.response_preferences?.trim() ?? '' },
   ]
   return answers.filter((answer) => answer.value.trim() !== '')
