@@ -1,0 +1,312 @@
+{
+  "change_summary": "The editor and publisher retracted the paper after concerns about duplicated images came up in a publisher investigation into a group of articles. A later statement says the retraction notice was issued in error: the image concerns relate to a different article, and this article was included by mistake. The publisher checked this article's images and data and found no problems, and the retraction is withdrawn, the article is reinstated and the RETRACTED watermark has been removed. The paper's findings can be relied on again as published, but no current copy of the paper was available here to confirm that the watermark is gone.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 12,
+    "model": "opus",
+    "model_version": "claude-opus-5-5",
+    "answered_by": {
+      "change": "opus",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 251,
+          "about_this_paper": "yes",
+          "what_changed": "The editor and publisher retracted the paper after a publisher investigation into a group of articles raised concerns about duplicated images. A later statement in this report says the retraction was issued in error and withdraws it.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "The retraction was reversed by a later statement. That statement says the image concerns belong to a different article and that this article's images and data had no problems, so its findings can be relied on again.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2021.025r",
+              "quote": "We, the Editor and Publisher of J. Fake Bioengineering, have retracted the above article."
+            },
+            {
+              "source": "10.9999/fake.2021.025r",
+              "quote": "Following an investigation by the publisher into a group of articles, concerns were raised about the duplication of images."
+            },
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed."
+            }
+          ]
+        },
+        {
+          "alert_id": 252,
+          "about_this_paper": "yes",
+          "what_changed": "A statement of reinstatement says the retraction was issued in error, because the image concerns relate to a different article. It says the publisher checked this article's images and data and found no problems, and that the article is reinstated with the RETRACTED watermark removed.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "This statement cancels the earlier retraction and finds no problems with the paper's images or data, so the paper's findings can be relied on again.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The image concerns that led to the retraction relate to a different article in the same investigation, and this article was included by mistake."
+            },
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The publisher has checked the images and data of this article and found no problems with them."
+            },
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed."
+            }
+          ]
+        }
+      ],
+      "relations": "The statement of reinstatement (alert 252) reverses the retraction (alert 251). It says the retraction was issued in error, withdraws it and reinstates the article.",
+      "severity": "none",
+      "claims": [
+        {
+          "text": "The editor and publisher retracted the paper",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.025r",
+              "quote": "We, the Editor and Publisher of J. Fake Bioengineering, have retracted the above article."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "the retraction followed concerns about duplicated images raised in a publisher investigation into a group of articles",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.025r",
+              "quote": "Following an investigation by the publisher into a group of articles, concerns were raised about the duplication of images."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "A later statement says the retraction notice was issued in error",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The retraction notice for the above article, published on 22 September 2026, was issued in error."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "the image concerns relate to a different article, and this article was included by mistake",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The image concerns that led to the retraction relate to a different article in the same investigation, and this article was included by mistake."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The publisher checked this article's images and data and found no problems",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The publisher has checked the images and data of this article and found no problems with them."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "the retraction is withdrawn, the article is reinstated and the RETRACTED watermark has been removed",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The paper's findings can be relied on again as published",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The publisher has checked the images and data of this article and found no problems with them."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "no current copy of the paper was available here to confirm that the watermark is gone",
+          "passages": [],
+          "absence": true
+        }
+      ],
+      "summary": [
+        {
+          "text": "The editor and publisher retracted the paper after concerns about duplicated images came up in a publisher investigation into a group of articles.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "A later statement says the retraction notice was issued in error: the image concerns relate to a different article, and this article was included by mistake.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The publisher checked this article's images and data and found no problems, and the retraction is withdrawn, the article is reinstated and the RETRACTED watermark has been removed.",
+          "kind": "fact",
+          "claims": [
+            5,
+            6
+          ]
+        },
+        {
+          "text": "The paper's findings can be relied on again as published, but no current copy of the paper was available here to confirm that the watermark is gone.",
+          "kind": "fact",
+          "claims": [
+            7,
+            8
+          ]
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The editor and publisher retracted the paper",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "We, the Editor and Publisher of J. Fake Bioengineering, have retracted the above article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "the retraction followed concerns about duplicated images raised in a publisher investigation into a group of articles",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Following an investigation by the publisher into a group of articles, concerns were raised about the duplication of images.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "A later statement says the retraction notice was issued in error",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 2,
+          "alert_id": null,
+          "quote": "The retraction notice for the above article, published on 22 September 2026, was issued in error.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "the image concerns relate to a different article, and this article was included by mistake",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 2,
+          "alert_id": null,
+          "quote": "The image concerns that led to the retraction relate to a different article in the same investigation, and this article was included by mistake.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The publisher checked this article's images and data and found no problems",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 2,
+          "alert_id": null,
+          "quote": "The publisher has checked the images and data of this article and found no problems with them.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-5",
+      "kind": "change",
+      "text": "the retraction is withdrawn, the article is reinstated and the RETRACTED watermark has been removed",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 2,
+          "alert_id": null,
+          "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-6",
+      "kind": "change",
+      "text": "The paper's findings can be relied on again as published",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 2,
+          "alert_id": null,
+          "quote": "The publisher has checked the images and data of this article and found no problems with them.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-7",
+      "kind": "change",
+      "text": "no current copy of the paper was available here to confirm that the watermark is gone",
+      "supported": false,
+      "passages": []
+    }
+  ]
+}

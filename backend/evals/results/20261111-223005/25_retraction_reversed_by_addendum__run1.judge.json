@@ -1,0 +1,155 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the retraction was issued in error and has been withdrawn, with the paper reinstated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "the retraction was issued in error... The retraction is withdrawn, the article is reinstated"
+    },
+    {
+      "fact": "says the paper's findings or data can still be relied on",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "so the paper's findings can be relied on again as they stood before the retraction"
+    },
+    {
+      "fact": "treats the paper as still retracted or tells the researcher to stop citing it",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the paper's images or data were found to be duplicated or unreliable",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "the publisher checked the article's images and data and found no problems with them"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Following an investigation by the publisher into a group of articles, concerns were raised about the duplication of images.",
+      "backs": true,
+      "pass": true,
+      "reason": "States concerns about image duplication after publisher investigation of a group of articles."
+    },
+    {
+      "claim_id": "change-0",
+      "quote": "The article is therefore retracted.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the article is retracted, supporting the retraction."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The retraction notice for the above article, published on 22 September 2026, was issued in error.",
+      "backs": true,
+      "pass": true,
+      "reason": "Says retraction notice was issued in error."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The image concerns that led to the retraction relate to a different article in the same investigation, and this article was included by mistake.",
+      "backs": true,
+      "pass": true,
+      "reason": "Image concerns relate to a different article; this one included by mistake."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The publisher has checked the images and data of this article and found no problems with them.",
+      "backs": true,
+      "pass": true,
+      "reason": "Publisher checked images and data, found no problems."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed.",
+      "backs": true,
+      "pass": true,
+      "reason": "States retraction withdrawn, reinstated, watermark removed."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 1 and 2 show the retraction and the reason."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 3 and 4 cover the error and the reason."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5 states it directly."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 6 states it directly."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-5",
+      "from": [
+        "change-1",
+        "change-2",
+        "change-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Retraction withdrawn, issued in error, and no problems found with images and data, so reliance as before is a reasonable follow-on."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The publisher retracted the article over concerns about duplicated images raised in an investigation of a group of articles.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "A later statement says the retraction was issued in error, because the image concerns relate to a different article and this article was included by mistake, and the publisher checked the article's images and data and found no problems.",
+      "covered_by": [
+        "change-1",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed, so the paper's findings can be relied on again as they stood before the retraction.",
+      "covered_by": [
+        "change-3",
+        "change-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No current copy of the paper was available to confirm that the watermark has been removed.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-4"
+  ]
+}

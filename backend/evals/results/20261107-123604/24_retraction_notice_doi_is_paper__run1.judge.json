@@ -1,0 +1,112 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the alert's retraction notice is the paper's own DOI, so following it leads back to the paper itself rather than to a separate retraction notice",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"its notice has the same DOI as the tracked paper\""
+    },
+    {
+      "fact": "says the alert's date (1 July 2020) is the paper's own issue publication date, not the date of a retraction",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": ""
+    },
+    {
+      "fact": "says nothing else shows a retraction: the current copy has no retraction banner or watermark and its title has no RETRACTED prefix",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The Crossref title is the paper's own title with no \\\"RETRACTED\\\" label. The downloaded current copy has the same content as the stored paper and shows no retraction watermark or banner.\""
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"Nothing given confirms a retraction or any change to the findings.\""
+    },
+    {
+      "fact": "states a reason for a retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing or replacing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, notice 10.9999/fake.2020.024",
+      "backs": false,
+      "pass": false,
+      "reason": "The quoted alert line names a retraction notice with DOI 10.9999/fake.2020.024. It does not show the tracked paper's DOI, so it cannot show that the notice DOI matches the paper's own DOI."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text is the paper's ordinary title with no retraction label. The source is only given as a fetched document, not explicitly as Crossref, but the title content matches what the claim says about the Crossref title."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "A retraction alert was raised.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The alert's notice has the same DOI as the tracked paper.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The Crossref title is the paper's own title with no \"RETRACTED\" label.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The downloaded current copy has the same content as the stored paper.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The downloaded current copy shows no retraction watermark or banner.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing given confirms a retraction or any change to the findings.",
+      "covered_by": [],
+      "pass": false
+    }
+  ],
+  "absent_claims": []
+}

@@ -1,0 +1,211 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the paper was retracted because of an analysis error that invalidates the main result",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The authors found a coding error in their analysis that invalidates the main result.\""
+    },
+    {
+      "fact": "says the impact judgment is general because there is no draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No draft has been uploaded, so this judgment is general, not based on how your paper cites the work.\""
+    },
+    {
+      "fact": "recommends uploading the draft so future changes can be judged against it",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": "\"Upload your draft, then remove or replace every citation of this retracted paper that is used as evidence... Once you upload your draft, I can check the actual citing sentences.\" The answer asks for the draft so citations can be checked, not so future changes can be judged against it."
+    },
+    {
+      "fact": "names a section of the researcher's draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the draft cites the paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"No draft has been uploaded, so this judgment is general, not based on how your paper cites the work.\" The answer treats whether the draft cites the paper as unknown."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the article was retracted because of a coding error that invalidates the main result, matching claim 1."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the reported 2.1% increase was not reproducible, matching claim 2."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": false,
+      "pass": false,
+      "reason": "States the 2.1% hip bone density effect of 1000 IU vitamin D, but says nothing about it failing to reproduce, so it does not show non-reproducibility."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "retraction, notice 10.9999/fake.2019.008r, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Retraction alert record showing alert severity high, matching claim 3."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same retraction statement as passage 1; matches claim 4."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the 2.1% increase was not reproducible, matching claim 5."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "retraction, notice 10.9999/fake.2019.008r, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Retraction alert record with severity high, matching claim 6."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": false,
+      "pass": false,
+      "reason": "Shows the retraction for a coding error invalidating the main result, but does not say the paper should not be used as evidence; that consequence is not in the quote."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": false,
+      "pass": false,
+      "reason": "Shows the 2.1% increase was not reproducible, but does not say claims resting on it need re-checking."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "No draft has been uploaded, so this judgment is general, not based on how your paper cites the work.",
+      "backs": true,
+      "pass": true,
+      "reason": "States no draft has been uploaded and the judgment is general, matching claim 9's core point; the request to upload to check citing sentences is a reasonable reading of the 'Once you upload' context."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "retraction, notice 10.9999/fake.2019.008r, detected 2026-10-01, alert severity high",
+      "backs": false,
+      "pass": false,
+      "reason": "Shows the alert severity as high, but does not state that the retraction affects the whole paper."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper has been retracted.",
+      "covered_by": [
+        "change-0",
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The authors found a coding error in their analysis that invalidates the main result.",
+      "covered_by": [
+        "change-0",
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The 2.1% rise in hip bone density from 1000 IU daily vitamin D could not be reproduced.",
+      "covered_by": [
+        "change-1",
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's central finding shouldn't be relied on or cited as support.",
+      "covered_by": [
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No draft has been uploaded, so this judgment is general, not based on how your paper cites the work.",
+      "covered_by": [
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper was retracted because of a coding error that invalidates its main result.",
+      "covered_by": [
+        "change-0",
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "For a typical researcher who cites it as key evidence for a vitamin D effect on bone density, a whole-paper retraction at high severity means high impact.",
+      "covered_by": [
+        "change-2",
+        "impact-2",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Once you upload your draft, I can check the actual citing sentences.",
+      "covered_by": [
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Upload your draft, then remove or replace every citation of this retracted paper that is used as evidence, and re-check the claims it supported.",
+      "covered_by": [
+        "action-0",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "If your own analysis depends on it, raise that with your co-authors or supervisor.",
+      "covered_by": [],
+      "pass": false
+    }
+  ]
+}

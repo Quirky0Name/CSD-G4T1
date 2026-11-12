@@ -7,7 +7,10 @@ same), and the change in overall pass rate, mean tag and mean text, each labelle
 when it is no bigger than the larger of the two folders' noise floors (all.py's spread of the
 per-run overall tag score, score.noise_floor). A case whose file changed between the runs
 (meta.json's case_sha256) is listed as "case changed"; cases in only one folder are listed
-apart. Neither counts toward the totals."""
+apart. Neither counts toward the totals. A different prompt_version, models, prompt_sha256 (the
+prompt texts, in each folder's prompts.json) or provider is a header line, not an error; a folder
+made before prompt_sha256 and provider were recorded is compared without them. Across providers
+it shows the model change, not a regression."""
 
 import argparse
 import json
@@ -21,14 +24,17 @@ def load(folder: Path) -> tuple[dict[str, list[dict]], dict | None]:
     """The folder's scored runs by case, and its meta.json (None for a folder made before it)."""
     by_case = score.group_by(orchestrator.load_runs(folder), "case")
     meta_path = folder / "meta.json"
-    meta = json.loads(meta_path.read_text()) if meta_path.exists() else None
+    meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else None
     return dict(by_case), meta
 
 
 def meta_values(meta: dict, field: str) -> str:
-    """The distinct values of one meta.json field across a folder's runs, as text."""
+    """The distinct values of one meta.json field across a folder's runs, as text; runs that
+    don't record it are left out ("" when none does)."""
     seen = []
     for entry in meta["runs"].values():
+        if field not in entry:
+            continue
         value = entry[field]
         text = ", ".join(value) if isinstance(value, list) else str(value)
         if text not in seen:
@@ -80,8 +86,10 @@ def main() -> None:
     print(f"Baseline: {base_folder}")
     print(f"New:      {new_folder}")
     if base_meta and new_meta:
-        for field in ("prompt_version", "models"):
+        for field in ("prompt_version", "models", "prompt_sha256", "provider"):
             before, after = meta_values(base_meta, field), meta_values(new_meta, field)
+            if field in ("prompt_sha256", "provider") and not (before and after):
+                continue  # a folder made before the field: compared without it
             if before == after:
                 print(f"{field}: {before}")
             else:

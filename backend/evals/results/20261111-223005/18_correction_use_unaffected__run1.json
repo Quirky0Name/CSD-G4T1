@@ -1,0 +1,979 @@
+{
+  "change_summary": "The notice is titled as a correction to a paper called \"Ultrasound-guided nerve block and pain after knee surgery\", which is the title of the tracked paper. The correction says that, in Table 4 (the sensitivity analysis excluding patients with prior opioid use), the mean opioid dose in the nerve-block group should read 19 mg instead of 12 mg, and Section 3.4 of the original paper also gives the 12 mg figure in its text. The paper describes this sensitivity analysis as descriptive and not powered for formal comparison, while the notice states that the primary outcome in Table 2 and all other results are unchanged. The primary outcome was a mean pain score at 24 hours of 3.1 with the block and 5.2 without (p < 0.001), and this main finding, lower pain at 24 hours with the block, still stands after the correction.",
+  "change_severity": "low",
+  "impact_level": "none",
+  "evaluation": "In its Background and rationale section, the draft cites Oyelaran et al. [15] for the finding that ultrasound-guided nerve blocks lower pain at 24 hours (3.1 versus 5.2), the outcome the draft's trial tests, and the paper reports a mean pain score at 24 hours of 3.1 with the block and 5.2 without. The draft also refers to the paper as the inpatient trial that chose 24 hours deliberately as its time point, and says the 11-point numerical rating scale allows direct comparison with the inpatient trial that motivates its study. The correction changes the mean opioid dose in the nerve-block group in Table 4, the sensitivity analysis excluding patients with prior opioid use, from 12 mg to 19 mg, while the notice states that the primary outcome in Table 2 and all other results are unchanged. The draft does not mention the opioid-dose figure from the paper's sensitivity analysis, and the correction does not touch the draft's use of the 3.1 versus 5.2 pain result, the 24-hour time point or the pain scale. None of the draft's uses of the paper is affected, so the impact is none.",
+  "recommendation": "The correction changes the mean opioid dose in the nerve-block group in Table 4, the sensitivity analysis excluding patients with prior opioid use, from 12 mg to 19 mg, while the notice states that the primary outcome in Table 2 and all other results are unchanged. The draft does not mention the opioid-dose figure from the paper's sensitivity analysis, and the correction does not touch the draft's use of the 3.1 versus 5.2 pain result, the 24-hour time point or the pain scale. None of the draft's uses of the paper is affected, so the impact is none. No change to the draft is needed, and you can dismiss this alert.",
+  "assessment": {
+    "prompt_version": 13,
+    "model": "opus",
+    "model_version": "claude-opus-5-5",
+    "answered_by": {
+      "change": "opus",
+      "impact": "opus",
+      "actions": "opus"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 181,
+          "about_this_paper": "yes",
+          "what_changed": "A correction states that in Table 4 (the sensitivity analysis excluding patients with prior opioid use) the mean opioid dose in the nerve-block group should read 19 mg, not 12 mg. The notice says the primary outcome and all other results are unchanged.",
+          "scope": "specific_parts",
+          "affected_parts": [
+            {
+              "part": "Table 4 and Section 3.4 (sensitivity analysis excluding patients with prior opioid use)",
+              "findings_affected": "The mean opioid dose in the nerve-block group among opioid-naive patients changes from 12 mg to 19 mg. This was a descriptive analysis, not powered for formal comparison. The primary pain outcome (3.1 vs 5.2 at 24 hours) is unaffected."
+            }
+          ],
+          "severity": "low",
+          "reason": "The correction changes one secondary number in a descriptive, unpowered sensitivity analysis. The notice states that the primary outcome and all other results are unchanged, so the main findings stand.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg"
+            },
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "The primary outcome in Table 2 and all other results are unchanged."
+            },
+            {
+              "source": "stored paper",
+              "quote": "This analysis was descriptive and was not powered for formal comparison."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "low",
+      "claims": [
+        {
+          "text": "The notice is titled as a correction to a paper called \"Ultrasound-guided nerve block and pain after knee surgery\".",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "Correction to: Ultrasound-guided nerve block and pain after knee surgery"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The tracked paper has the title \"Ultrasound-guided nerve block and pain after knee surgery\".",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "title: Ultrasound-guided nerve block and pain after knee surgery"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The correction says that, in Table 4 (the sensitivity analysis excluding patients with prior opioid use), the mean opioid dose in the nerve-block group should read 19 mg instead of 12 mg.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "In Table 4 (the sensitivity analysis excluding patients with prior opioid use)"
+            },
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "Section 3.4 of the original paper also gives the 12 mg figure in its text.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "In the sensitivity analysis excluding patients with prior opioid use, the mean opioid dose in the nerve-block group was 12 mg."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The paper describes this sensitivity analysis as descriptive and not powered for formal comparison.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "This analysis was descriptive and was not powered for formal comparison."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The notice states that the primary outcome in Table 2 and all other results are unchanged.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "The primary outcome in Table 2 and all other results are unchanged."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The primary outcome was a mean pain score at 24 hours of 3.1 with the block and 5.2 without (p < 0.001).",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "The mean pain score at 24 hours was 3.1 with the block and 5.2 without (p < 0.001)."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The main finding, lower pain at 24 hours with the block, still stands after the correction.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            5,
+            6,
+            7
+          ]
+        }
+      ],
+      "summary": [
+        {
+          "text": "The notice is titled as a correction to a paper called \"Ultrasound-guided nerve block and pain after knee surgery\", which is the title of the tracked paper.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "The correction says that, in Table 4 (the sensitivity analysis excluding patients with prior opioid use), the mean opioid dose in the nerve-block group should read 19 mg instead of 12 mg, and Section 3.4 of the original paper also gives the 12 mg figure in its text.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The paper describes this sensitivity analysis as descriptive and not powered for formal comparison, while the notice states that the primary outcome in Table 2 and all other results are unchanged.",
+          "kind": "fact",
+          "claims": [
+            5,
+            6
+          ]
+        },
+        {
+          "text": "The primary outcome was a mean pain score at 24 hours of 3.1 with the block and 5.2 without (p < 0.001), and this main finding, lower pain at 24 hours with the block, still stands after the correction.",
+          "kind": "fact",
+          "claims": [
+            7,
+            8
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[15] Oyelaran, D., Voss, H. (2019). Ultrasound-guided nerve block and pain after knee surgery. J. Fake Anaesthesia. doi:10.9999/fake.2019.018",
+      "uses": [
+        {
+          "section": "2. Background and rationale",
+          "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population.",
+          "role": "key_evidence",
+          "claim_relied_on": "That in the inpatient trial an ultrasound-guided nerve block lowered mean pain at rest 24 hours after knee replacement from 5.2 to 3.1, which motivates the draft's primary outcome",
+          "affected": "no",
+          "reason": "The correction changes only the opioid dose in the Table 4 sensitivity analysis, and the notice says the primary outcome in Table 2 is unchanged."
+        },
+        {
+          "section": "2. Background and rationale",
+          "quote": "That inpatient trial chose 24 hours deliberately, as the point at which spinal anaesthesia has worn off and mobilisation has begun",
+          "role": "background",
+          "claim_relied_on": "That the inpatient trial chose 24 hours as its primary time point because spinal anaesthesia has worn off and mobilisation has begun",
+          "affected": "no",
+          "reason": "The choice of time point is part of the trial's design, not the Table 4 sensitivity analysis that the correction changes."
+        },
+        {
+          "section": "2. Background and rationale",
+          "quote": "The 11-point numerical rating scale is well validated and easily used by patients at home [14], and it allows direct comparison with the inpatient trial that motivates our study.",
+          "role": "methods_or_data",
+          "claim_relied_on": "That the inpatient trial measured pain on an 11-point numerical rating scale, so the draft's trial uses the same scale for direct comparison",
+          "affected": "no",
+          "reason": "The pain scale and the primary outcome measured on it are not part of the corrected opioid-dose figure."
+        }
+      ],
+      "impact_level": "none",
+      "claims": [
+        {
+          "text": "In its Background and rationale section, the draft cites Oyelaran et al. [15] for the finding that ultrasound-guided nerve blocks lower pain at 24 hours (3.1 versus 5.2), the outcome the draft's trial tests.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The paper reports a mean pain score at 24 hours of 3.1 with the block and 5.2 without.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "The mean pain score at 24 hours was 3.1 with the block and 5.2 without (p < 0.001)."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The correction changes the mean opioid dose in the nerve-block group in Table 4, the sensitivity analysis excluding patients with prior opioid use, from 12 mg to 19 mg.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "In Table 4 (the sensitivity analysis excluding patients with prior opioid use)"
+            },
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The notice states that the primary outcome in Table 2 and all other results are unchanged.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "The primary outcome in Table 2 and all other results are unchanged."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The correction does not touch the draft's use of the 3.1 versus 5.2 pain result.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The draft also refers to the paper as the inpatient trial that chose 24 hours deliberately as its time point.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "That inpatient trial chose 24 hours deliberately, as the point at which spinal anaesthesia has worn off and mobilisation has begun"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The paper says its choice of 24 hours as the primary time point was deliberate.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Our choice of 24 hours as the primary time point was deliberate."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The correction does not touch the draft's use of the paper's 24-hour time point.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            6,
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The draft says the 11-point numerical rating scale allows direct comparison with the inpatient trial that motivates its study.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "The 11-point numerical rating scale is well validated and easily used by patients at home [14], and it allows direct comparison with the inpatient trial that motivates our study."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The paper measured its primary outcome on an 11-point numerical rating scale.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "The primary outcome was pain at rest 24 hours after the end of surgery, measured on an 11-point numerical rating scale"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The correction does not touch the draft's use of the paper's pain scale.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            9,
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The draft does not mention the opioid-dose figure from the paper's sensitivity analysis.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "None of the draft's uses of the paper is affected, so the impact is none.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            5,
+            8,
+            11,
+            12
+          ]
+        }
+      ],
+      "explanation": [
+        {
+          "text": "In its Background and rationale section, the draft cites Oyelaran et al. [15] for the finding that ultrasound-guided nerve blocks lower pain at 24 hours (3.1 versus 5.2), the outcome the draft's trial tests, and the paper reports a mean pain score at 24 hours of 3.1 with the block and 5.2 without.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "The draft also refers to the paper as the inpatient trial that chose 24 hours deliberately as its time point, and says the 11-point numerical rating scale allows direct comparison with the inpatient trial that motivates its study.",
+          "kind": "fact",
+          "claims": [
+            6,
+            9
+          ]
+        },
+        {
+          "text": "The correction changes the mean opioid dose in the nerve-block group in Table 4, the sensitivity analysis excluding patients with prior opioid use, from 12 mg to 19 mg, while the notice states that the primary outcome in Table 2 and all other results are unchanged.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The draft does not mention the opioid-dose figure from the paper's sensitivity analysis, and the correction does not touch the draft's use of the 3.1 versus 5.2 pain result, the 24-hour time point or the pain scale.",
+          "kind": "fact",
+          "claims": [
+            12,
+            5,
+            8,
+            11
+          ]
+        },
+        {
+          "text": "None of the draft's uses of the paper is affected, so the impact is none.",
+          "kind": "fact",
+          "claims": [
+            13
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "No action needed: the correction does not touch any of the draft's uses of Oyelaran et al. [15], so the alert can be dismissed.",
+          "where": null
+        }
+      ],
+      "claims": [
+        {
+          "text": "In its Background and rationale section, the draft cites Oyelaran et al. [15] for the finding that ultrasound-guided nerve blocks lower pain at 24 hours (3.1 versus 5.2), the outcome the draft's trial tests.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The correction changes the mean opioid dose in the nerve-block group in Table 4, the sensitivity analysis excluding patients with prior opioid use, from 12 mg to 19 mg.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "In Table 4 (the sensitivity analysis excluding patients with prior opioid use)"
+            },
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The notice states that the primary outcome in Table 2 and all other results are unchanged.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "The primary outcome in Table 2 and all other results are unchanged."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The correction does not touch the draft's use of the 3.1 versus 5.2 pain result.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The draft does not mention the opioid-dose figure from the paper's sensitivity analysis.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "The draft also refers to the paper as the inpatient trial that chose 24 hours deliberately as its time point.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "That inpatient trial chose 24 hours deliberately, as the point at which spinal anaesthesia has worn off and mobilisation has begun"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The correction does not touch the draft's use of the paper's 24-hour time point.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            6,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The draft says the 11-point numerical rating scale allows direct comparison with the inpatient trial that motivates its study.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "The 11-point numerical rating scale is well validated and easily used by patients at home [14], and it allows direct comparison with the inpatient trial that motivates our study."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The correction does not touch the draft's use of the paper's pain scale.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            8,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "None of the draft's uses of the paper is affected, so the impact is none.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            4,
+            7,
+            9,
+            5
+          ]
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "The correction changes the mean opioid dose in the nerve-block group in Table 4, the sensitivity analysis excluding patients with prior opioid use, from 12 mg to 19 mg, while the notice states that the primary outcome in Table 2 and all other results are unchanged.",
+          "kind": "fact",
+          "claims": [
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The draft does not mention the opioid-dose figure from the paper's sensitivity analysis, and the correction does not touch the draft's use of the 3.1 versus 5.2 pain result, the 24-hour time point or the pain scale.",
+          "kind": "fact",
+          "claims": [
+            5,
+            4,
+            7,
+            9
+          ]
+        },
+        {
+          "text": "None of the draft's uses of the paper is affected, so the impact is none.",
+          "kind": "fact",
+          "claims": [
+            10
+          ]
+        },
+        {
+          "text": "No change to the draft is needed, and you can dismiss this alert.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The notice is titled as a correction to a paper called \"Ultrasound-guided nerve block and pain after knee surgery\".",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Correction to: Ultrasound-guided nerve block and pain after knee surgery",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The tracked paper has the title \"Ultrasound-guided nerve block and pain after knee surgery\".",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "title: Ultrasound-guided nerve block and pain after knee surgery",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The correction says that, in Table 4 (the sensitivity analysis excluding patients with prior opioid use), the mean opioid dose in the nerve-block group should read 19 mg instead of 12 mg.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "In Table 4 (the sensitivity analysis excluding patients with prior opioid use)",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "Section 3.4 of the original paper also gives the 12 mg figure in its text.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "In the sensitivity analysis excluding patients with prior opioid use, the mean opioid dose in the nerve-block group was 12 mg.",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The paper describes this sensitivity analysis as descriptive and not powered for formal comparison.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "This analysis was descriptive and was not powered for formal comparison.",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-5",
+      "kind": "change",
+      "text": "The notice states that the primary outcome in Table 2 and all other results are unchanged.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The primary outcome in Table 2 and all other results are unchanged.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-6",
+      "kind": "change",
+      "text": "The primary outcome was a mean pain score at 24 hours of 3.1 with the block and 5.2 without (p < 0.001).",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The mean pain score at 24 hours was 3.1 with the block and 5.2 without (p < 0.001).",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-7",
+      "kind": "change",
+      "text": "The main finding, lower pain at 24 hours with the block, still stands after the correction.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "In its Background and rationale section, the draft cites Oyelaran et al. [15] for the finding that ultrasound-guided nerve blocks lower pain at 24 hours (3.1 versus 5.2), the outcome the draft's trial tests.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The paper reports a mean pain score at 24 hours of 3.1 with the block and 5.2 without.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The mean pain score at 24 hours was 3.1 with the block and 5.2 without (p < 0.001).",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The correction changes the mean opioid dose in the nerve-block group in Table 4, the sensitivity analysis excluding patients with prior opioid use, from 12 mg to 19 mg.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "In Table 4 (the sensitivity analysis excluding patients with prior opioid use)",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The notice states that the primary outcome in Table 2 and all other results are unchanged.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The primary outcome in Table 2 and all other results are unchanged.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The correction does not touch the draft's use of the 3.1 versus 5.2 pain result.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "The draft also refers to the paper as the inpatient trial that chose 24 hours deliberately as its time point.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "That inpatient trial chose 24 hours deliberately, as the point at which spinal anaesthesia has worn off and mobilisation has begun",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-6",
+      "kind": "impact",
+      "text": "The paper says its choice of 24 hours as the primary time point was deliberate.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Our choice of 24 hours as the primary time point was deliberate.",
+          "page": 4,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-7",
+      "kind": "impact",
+      "text": "The correction does not touch the draft's use of the paper's 24-hour time point.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-8",
+      "kind": "impact",
+      "text": "The draft says the 11-point numerical rating scale allows direct comparison with the inpatient trial that motivates its study.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The 11-point numerical rating scale is well validated and easily used by patients at home [14], and it allows direct comparison with the inpatient trial that motivates our study.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-9",
+      "kind": "impact",
+      "text": "The paper measured its primary outcome on an 11-point numerical rating scale.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The primary outcome was pain at rest 24 hours after the end of surgery, measured on an 11-point numerical rating scale",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-10",
+      "kind": "impact",
+      "text": "The correction does not touch the draft's use of the paper's pain scale.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-11",
+      "kind": "impact",
+      "text": "The draft does not mention the opioid-dose figure from the paper's sensitivity analysis.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-12",
+      "kind": "impact",
+      "text": "None of the draft's uses of the paper is affected, so the impact is none.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "In its Background and rationale section, the draft cites Oyelaran et al. [15] for the finding that ultrasound-guided nerve blocks lower pain at 24 hours (3.1 versus 5.2), the outcome the draft's trial tests.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The correction changes the mean opioid dose in the nerve-block group in Table 4, the sensitivity analysis excluding patients with prior opioid use, from 12 mg to 19 mg.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "In Table 4 (the sensitivity analysis excluding patients with prior opioid use)",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The notice states that the primary outcome in Table 2 and all other results are unchanged.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The primary outcome in Table 2 and all other results are unchanged.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "The correction does not touch the draft's use of the 3.1 versus 5.2 pain result.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-4",
+      "kind": "action",
+      "text": "The draft does not mention the opioid-dose figure from the paper's sensitivity analysis.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-5",
+      "kind": "action",
+      "text": "The draft also refers to the paper as the inpatient trial that chose 24 hours deliberately as its time point.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "That inpatient trial chose 24 hours deliberately, as the point at which spinal anaesthesia has worn off and mobilisation has begun",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-6",
+      "kind": "action",
+      "text": "The correction does not touch the draft's use of the paper's 24-hour time point.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-7",
+      "kind": "action",
+      "text": "The draft says the 11-point numerical rating scale allows direct comparison with the inpatient trial that motivates its study.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The 11-point numerical rating scale is well validated and easily used by patients at home [14], and it allows direct comparison with the inpatient trial that motivates our study.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-8",
+      "kind": "action",
+      "text": "The correction does not touch the draft's use of the paper's pain scale.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-9",
+      "kind": "action",
+      "text": "None of the draft's uses of the paper is affected, so the impact is none.",
+      "supported": false,
+      "passages": []
+    }
+  ]
+}

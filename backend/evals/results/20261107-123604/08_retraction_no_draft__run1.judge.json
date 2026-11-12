@@ -1,0 +1,178 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the paper was retracted because of an analysis error that invalidates the main result",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The paper has been retracted because a coding error in the analysis invalidates its main result\"; change_summary: \"The authors found a coding error in the analysis that invalidates the main result.\""
+    },
+    {
+      "fact": "says the impact judgment is general because there is no draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No draft was uploaded, so this judgment is general and assumes a typical researcher who cites the paper as key evidence.\""
+    },
+    {
+      "fact": "recommends uploading the draft so future changes can be judged against it",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": "\"Upload your draft so the uses can be checked.\" The stated purpose is checking existing uses of the paper, not judging future changes against the draft."
+    },
+    {
+      "fact": "names a section of the researcher's draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the draft cites the paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The answer says \"No draft was uploaded\" and only refers hypothetically to \"a typical researcher who cites the paper as key evidence\"; it does not say the draft cites the paper."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text states the article was retracted because the authors found a coding error that invalidates the main result, which is what claim 1 says."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text says the reported 2.1% increase in bone density was not reproducible, matching claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text from the tracked paper states that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year, which matches the claimed central finding."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same quoted text as passage 1: the article was retracted because a coding error invalidates the main result, matching claim 4."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same quoted text as passage 2: the 2.1% increase was not reproducible, matching claim 5."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same quoted text as passage 1: retraction due to a coding error that invalidates the main result, matching claim 6."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same quoted text as passage 2: the 2.1% increase was not reproducible, matching claim 7."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper on vitamin D and bone density in older women",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "has been retracted.",
+      "covered_by": [
+        "change-0",
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The authors found a coding error in the analysis that invalidates the main result.",
+      "covered_by": [
+        "change-0",
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The reported 2.1% rise in hip bone density could not be reproduced.",
+      "covered_by": [
+        "change-1",
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "so the paper's central finding no longer stands.",
+      "covered_by": [
+        "change-0",
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No draft was uploaded.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper has been retracted because a coding error in the analysis invalidates the main result.",
+      "covered_by": [
+        "change-0",
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "the reported 2.1% increase in bone density could not be reproduced.",
+      "covered_by": [
+        "change-1",
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "the paper was retracted for a coding error that invalidates its main result.",
+      "covered_by": [
+        "change-0",
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

@@ -1,0 +1,198 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the draft does not cite the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Your draft does not cite it, either in the text or in the reference list.\""
+    },
+    {
+      "fact": "says no action is needed for the draft or the alert can be dismissed",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No action is needed: the tracked paper was retracted, but your draft does not cite it. The alert can be dismissed.\""
+    },
+    {
+      "fact": "says the draft cites the retracted paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing a reference from the draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: Green roofs and urban cooling",
+      "backs": true,
+      "pass": true,
+      "reason": "The retraction notice headline names the paper 'Green roofs and urban cooling', which shows the paper has been retracted."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice text states the two reasons given in the claim: image manipulation in the supplementary figures and unverifiable temperature data."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Green roofs lowered surface temperature by 4 C in three cities.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's own sentence states that green roofs lowered surface temperature by 4 C in three cities, matching the claim."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Retraction: Green roofs and urban cooling",
+      "backs": true,
+      "pass": true,
+      "reason": "The retraction notice headline names the paper and marks it as a retraction, which shows the paper has been retracted."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Okoye, B. (2021). Shade and urban heat. J. Fake Urban Studies.",
+      "backs": false,
+      "pass": false,
+      "reason": "The quote shows one draft reference, Okoye (2021). It does not show that the list contains only Okoye and Fischer or that the tracked paper is absent."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Fischer, L. (2016). Trees in cities. J. Fake Ecology.",
+      "backs": false,
+      "pass": false,
+      "reason": "The quote shows one draft reference, Fischer (2016). It does not show that the list contains only Okoye and Fischer or that the tracked paper is absent."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Retraction: Green roofs and urban cooling",
+      "backs": true,
+      "pass": true,
+      "reason": "The retraction notice headline names the paper 'Green roofs and urban cooling' and marks it as retracted, which supports the claim."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Okoye, B. (2021). Shade and urban heat. J. Fake Urban Studies.",
+      "backs": false,
+      "pass": false,
+      "reason": "The quote shows one draft reference, Okoye (2021). It does not show that the list contains only Okoye and Fischer or that the tracked paper is absent."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Fischer, L. (2016). Trees in cities. J. Fake Ecology.",
+      "backs": false,
+      "pass": false,
+      "reason": "The quote shows one draft reference, Fischer (2016). It does not show that the list contains only Okoye and Fischer or that the tracked paper is absent."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper 'Green roofs and urban cooling' has been retracted.",
+      "covered_by": [
+        "change-0",
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice gives two reasons: image manipulation in the supplementary figures, and temperature data that could not be verified.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's main finding is a 4 C drop in surface temperature in three cities.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's main finding rests on the temperature data.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The tracked paper, 'Green roofs and urban cooling', has been retracted.",
+      "covered_by": [
+        "change-0",
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The tracked paper is by Haddad and Berg, 2018.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft does not cite the tracked paper in its reference list.",
+      "covered_by": [
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft does not cite the tracked paper in its text.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's two references are Okoye (2021) and Fischer (2016), which are different papers.",
+      "covered_by": [
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The retraction does not affect the draft.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "The tracked paper was retracted.",
+      "covered_by": [
+        "change-0",
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft does not cite the tracked paper.",
+      "covered_by": [
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

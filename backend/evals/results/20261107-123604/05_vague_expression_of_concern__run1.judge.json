@@ -1,0 +1,226 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the notice does not say which data or findings are in question",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The notice does not say which data are affected, and no outcome has been reported yet.\" and \"It does not say which data, so it is uncertain whether the forced-swim result you rely on is affected.\""
+    },
+    {
+      "fact": "advises hedging the wording or not building new work on the finding",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"hedge that sentence, cite the notice, and don't build new work on the finding until the investigation reports.\""
+    },
+    {
+      "fact": "notes that the outcome of the investigation is not yet known",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"no outcome has been reported yet.\""
+    },
+    {
+      "fact": "says the paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"The paper has not been retracted or corrected.\""
+    },
+    {
+      "fact": "names a specific figure or table as the problem",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"The notice does not say which data are affected\" and \"It does not say which data, so it is uncertain whether the forced-swim result you rely on is affected.\""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Expression of concern: Gut bacteria and mood in mice",
+      "backs": true,
+      "pass": true,
+      "reason": "The title 'Expression of concern: Gut bacteria and mood in mice' shows the journal issued an expression of concern about this paper."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says the editors are aware of concerns regarding some of the data in the article, which matches the claim."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The matter is being looked into and we will update readers when more information is available.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says the matter is being looked into and readers will be updated later, so it is under investigation with no outcome given."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "The causal role of gut bacteria in depressive behaviour is supported by transplant studies, notably Lopez and Chen [8], who showed reduced activity in recipient mice.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says the causal role of gut bacteria is supported by transplant studies, notably Lopez and Chen [8], which matches the claim that the Discussion relies on it as key support."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Our own proposal builds on this finding.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says 'Our own proposal builds on this finding', which shows the proposal is built on the cited work."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test (Figure 3).",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper states that transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test, matching the claim."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says concerns exist about some data in the article, which matches the claim."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "The matter is being looked into and we will update readers when more information is available.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says the matter is being looked into with updates to follow. It does not name the affected data, which is consistent with the claim that it is not known which data are affected."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says concerns exist about some data in the article, which matches the claim."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The matter is being looked into and we will update readers when more information is available.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says the matter is being looked into and no outcome is given. It does not name the affected data, consistent with the claim."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The causal role of gut bacteria in depressive behaviour is supported by transplant studies, notably Lopez and Chen [8], who showed reduced activity in recipient mice.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says the causal role of gut bacteria is supported by transplant studies, notably Lopez and Chen [8], which matches the claim."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "Our own proposal builds on this finding.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says 'Our own proposal builds on this finding', showing the proposal is built on the cited work."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The journal has published an expression of concern about this paper.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The editors say they have concerns about some of the data in the article and are looking into it.",
+      "covered_by": [
+        "change-1",
+        "change-2",
+        "impact-2",
+        "impact-3",
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice does not say which data are affected, and no outcome has been reported yet.",
+      "covered_by": [
+        "change-2",
+        "impact-3",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper has not been retracted or corrected.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your Discussion cites Lopez and Chen [8] as the main support for a causal role of gut bacteria in depressive behaviour, and says your proposal builds on it.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The journal has issued an expression of concern about some of the paper's data.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice does not say which data are affected, so it is uncertain whether the forced-swim result the draft relies on is affected.",
+      "covered_by": [
+        "impact-3",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's argument rests mainly on this paper.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The journal has issued an expression of concern about some of the data without saying which.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "impact-2",
+        "impact-3",
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The researcher's Discussion leans on this paper as key evidence.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

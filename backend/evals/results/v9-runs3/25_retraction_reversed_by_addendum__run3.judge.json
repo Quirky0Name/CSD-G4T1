@@ -1,0 +1,113 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the retraction was issued in error and has been withdrawn, with the paper reinstated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"issued a statement of reinstatement saying the retraction was an error\" ... \"withdrew the retraction and removed the watermark\""
+    },
+    {
+      "fact": "says the paper's findings or data can still be relied on",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The publisher checked this article's images and data and found no problems, withdrew the retraction\""
+    },
+    {
+      "fact": "treats the paper as still retracted or tells the researcher to stop citing it",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the paper's images or data were found to be duplicated or unreliable",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"The publisher retracted the paper over duplicated images\" and \"The image concerns related to a different article in the same investigation.\" The answer reports duplication as the original reason for retraction and says the concerns were about another article, not that this paper's images were found duplicated."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "concerns were raised about the duplication of images. The article is therefore retracted.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says concerns about duplicated images were raised and the article is therefore retracted, which matches the claim."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "was issued in error.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the retraction 'was issued in error', which matches the claim that the reinstatement notice says so."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The image concerns that led to the retraction relate to a different article in the same investigation",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the image concerns that led to the retraction relate to a different article in the same investigation, which matches the claim."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The publisher has checked the images and data of this article and found no problems with them.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the publisher checked this article's images and data and found no problems, which matches the claim."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the retraction is withdrawn, the article is reinstated, and the RETRACTED watermark removed, which matches the claim."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The publisher retracted the paper over duplicated images.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The publisher then issued a statement of reinstatement saying the retraction was an error.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The image concerns related to a different article in the same investigation.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The publisher checked this article's images and data and found no problems.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The publisher withdrew the retraction and removed the watermark.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

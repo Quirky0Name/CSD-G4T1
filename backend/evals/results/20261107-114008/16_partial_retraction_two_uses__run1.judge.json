@@ -1,0 +1,240 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says only the BMI above 30 subgroup analysis (Figure 5) is retracted",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The journal partly retracted this paper. Figure 5 and the claims about participants with BMI above 30 (a 0.8 mmol/L glucose rise) are withdrawn because of a data-merging error in that subgroup.\""
+    },
+    {
+      "fact": "says the primary result cited in the Introduction is not affected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The notice says the primary analysis in Table 2 (0.4 mmol/L rise) and all other results are unaffected, so the main finding stands.\" and \"The Introduction use of the 0.4 mmol/L primary result is unaffected and can stay.\""
+    },
+    {
+      "fact": "says the Discussion sentence about participants with obesity relies on the retracted subgroup finding",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"In the Discussion it cites the paper (with [11]) for a doubled effect in people with BMI above 30, which is the retracted Figure 5 finding.\" and \"Remove or rewrite the Discussion sentence about a doubled effect with BMI above 30, because it rests on the retracted Figure 5.\""
+    },
+    {
+      "fact": "says the whole paper is retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"The journal partly retracted this paper.\" and \"all other results are unaffected\""
+    },
+    {
+      "fact": "recommends removing the Introduction citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"Remove or rewrite the Discussion sentence about a doubled effect with BMI above 30... The Introduction use of the 0.4 mmol/L primary result is unaffected and can stay.\""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Figure 5 and the associated claims about participants with BMI above 30 are retracted because of a data-merging error that affected that subgroup only.",
+      "backs": true,
+      "pass": true,
+      "reason": "States that Figure 5 and the BMI above 30 claims are retracted for a subgroup-only data-merging error, which matches claim 1."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The primary analysis in Table 2 and all other results are unaffected.",
+      "backs": true,
+      "pass": true,
+      "reason": "States that the Table 2 primary analysis and all other results are unaffected, which matches claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Figure 5 gives the subgroup analysis for participants with BMI above 30: a rise of 0.8 mmol/L.",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives the Figure 5 BMI above 30 subgroup rise as 0.8 mmol/L, which matches the 0.8 part of claim 3. It does not state the 0.4 primary figure, which passage 4 covers."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "fasting glucose rose by 0.4 mmol/L (95% CI 0.2 to 0.6).",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives the overall fasting glucose rise as 0.4 mmol/L (95% CI 0.2 to 0.6), which matches the 0.4 primary rise in claim 3."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Short sleep acutely raises fasting glucose: one week of restriction raised it by 0.4 mmol/L in healthy adults (Lindqvist and Abara [6])",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's sentence cites Lindqvist and Abara [6] for a 0.4 mmol/L fasting glucose rise, which is the Introduction use of the primary result described in claim 4. The passage does not itself identify [6] as the retracted paper."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "fasting glucose rose by 0.4 mmol/L (95% CI 0.2 to 0.6).",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives the 0.4 mmol/L primary rise with its CI, which matches the primary result that claim 4 says the Introduction cites."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "The primary analysis in Table 2 and all other results are unaffected.",
+      "backs": true,
+      "pass": true,
+      "reason": "States that the Table 2 primary analysis and all other results are unaffected, which supports claim 4's statement that the notice says the 0.4 result is unaffected."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "The effect may be larger in people with obesity, with a doubling reported in participants with BMI above 30 [6, 11].",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows the Discussion sentence citing [6, 11] for a doubling in participants with BMI above 30, which matches claim 5's description of the citation."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Figure 5 gives the subgroup analysis for participants with BMI above 30: a rise of 0.8 mmol/L.",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives the Figure 5 BMI above 30 rise as 0.8 mmol/L, twice the 0.4 primary rise, so it supports the claim that the doubled effect rests on the Figure 5 subgroup."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Figure 5 and the associated claims about participants with BMI above 30 are retracted because of a data-merging error that affected that subgroup only.",
+      "backs": true,
+      "pass": true,
+      "reason": "States that Figure 5 and the BMI above 30 claims are retracted for a subgroup-only error, which supports claim 5's premise that the doubled effect rests on the retracted Figure 5."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "The effect may be larger in people with obesity, with a doubling reported in participants with BMI above 30 [6, 11].",
+      "backs": false,
+      "pass": false,
+      "reason": "Quotes the Discussion sentence but does not show that it relies on the retracted result or needs removal or rewording. Those are the points claim 6 asserts."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Figure 5 and the associated claims about participants with BMI above 30 are retracted because of a data-merging error that affected that subgroup only.",
+      "backs": true,
+      "pass": true,
+      "reason": "States that Figure 5 and the BMI above 30 claims are retracted. This supports the premise that the subgroup result is retracted, though it does not itself say the Discussion sentence relies on it."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Short sleep acutely raises fasting glucose: one week of restriction raised it by 0.4 mmol/L in healthy adults (Lindqvist and Abara [6])",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Introduction sentence cites Lindqvist and Abara [6] for the 0.4 mmol/L rise, which matches the Introduction use of the primary result in claim 7."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The primary analysis in Table 2 and all other results are unaffected.",
+      "backs": true,
+      "pass": true,
+      "reason": "States that the Table 2 primary analysis and all other results are unaffected, which supports claim 7's statement that the primary result is not affected."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The journal partly retracted this paper.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Figure 5 and the claims about participants with BMI above 30 (a 0.8 mmol/L glucose rise) are withdrawn because of a data-merging error in that subgroup.",
+      "covered_by": [
+        "change-0",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the primary analysis in Table 2 (0.4 mmol/L rise) and all other results are unaffected, so the main finding stands.",
+      "covered_by": [
+        "change-1",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Any citation of the BMI-subgroup result should be removed or revised.",
+      "covered_by": [
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft cites the paper twice.",
+      "covered_by": [
+        "impact-0",
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "In the Introduction it uses the 0.4 mmol/L primary result as motivation, and that result is not affected.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "In the Discussion it cites the paper (with [11]) for a doubled effect in people with BMI above 30, which is the retracted Figure 5 finding.",
+      "covered_by": [
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "This is a supporting use and the notice is medium severity, so the overall impact is low.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "Still, the Discussion sentence should be removed or reworded.",
+      "covered_by": [
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Remove or rewrite the Discussion sentence about a doubled effect with BMI above 30, because it rests on the retracted Figure 5.",
+      "covered_by": [
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Check whether [11] supports it alone.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "The Introduction use of the 0.4 mmol/L primary result is unaffected and can stay.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    }
+  ]
+}

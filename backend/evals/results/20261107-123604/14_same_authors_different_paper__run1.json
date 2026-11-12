@@ -1,0 +1,302 @@
+{
+  "change_summary": "The paper has been retracted. The notice says the reported yields could not be reproduced and the raw data were altered. The paper's single result, a 94% curcumin recovery from one ethanol extraction, therefore can't be relied on.",
+  "change_severity": "high",
+  "impact_level": "none",
+  "evaluation": "Your draft does not cite the retracted 2018 paper. The only Okonkwo and Eze entry is a different paper, their 2021 review, and the other reference is by Tan. The Introduction says yields above 90% from one ethanol step \"have been claimed\" for turmeric, but it gives no citation and already says the claims were questioned. It may allude to this paper's 94% result, but nothing ties the sentence to it. The retraction therefore has no impact on your draft as written.",
+  "recommendation": "No action is needed: the draft does not cite the retracted 2018 paper, so the alert can be dismissed. The only Okonkwo and Eze entry is their 2021 review, a different paper.",
+  "assessment": {
+    "prompt_version": 6,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 141,
+          "about_this_paper": "yes",
+          "what_changed": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "Retraction for irreproducible results and altered raw data means the findings, including the 94% curcumin recovery, cannot be relied on.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered."
+            },
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "summary": "The paper has been retracted. The notice says the reported yields could not be reproduced and the raw data were altered. The paper's single result, a 94% curcumin recovery from one ethanol extraction, therefore can't be relied on.",
+      "claims": [
+        {
+          "text": "The paper has been retracted.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric"
+            }
+          ]
+        },
+        {
+          "text": "The retraction reason is that the reported yields could not be reproduced and the raw data were altered.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "the reported yields could not be reproduced and the raw data were found to have been altered"
+            }
+          ]
+        },
+        {
+          "text": "The paper's main reported result was a 94% curcumin recovery from a single ethanol extraction.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder."
+            }
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": false,
+      "reference_entry": null,
+      "uses": [],
+      "impact_level": "none",
+      "explanation": "Your draft does not cite the retracted 2018 paper. The only Okonkwo and Eze entry is a different paper, their 2021 review, and the other reference is by Tan. The Introduction says yields above 90% from one ethanol step \"have been claimed\" for turmeric, but it gives no citation and already says the claims were questioned. It may allude to this paper's 94% result, but nothing ties the sentence to it. The retraction therefore has no impact on your draft as written.",
+      "claims": [
+        {
+          "text": "The draft's reference list has an Okonkwo and Eze entry from 2021, a review, not the tracked 2018 research paper.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Okonkwo, C., & Eze, P. (2021). Green solvents for curcumin extraction: a review. J. Fake Chemistry, 12, 40-62."
+            }
+          ]
+        },
+        {
+          "text": "The draft mentions yields above 90% from a single ethanol step without citing a source, and says these claims have since been questioned.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Extraction yields above 90% from a single ethanol step have been claimed for turmeric, although these claims have since been questioned."
+            }
+          ]
+        },
+        {
+          "text": "The tracked paper reported 94% curcumin recovery from a single ethanol extraction.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder."
+            }
+          ]
+        },
+        {
+          "text": "The tracked paper has been retracted.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric"
+            }
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [],
+      "recommendation": "No action is needed: the draft does not cite the retracted 2018 paper, so the alert can be dismissed. The only Okonkwo and Eze entry is their 2021 review, a different paper.",
+      "claims": [
+        {
+          "text": "The tracked 2018 paper has been retracted.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric"
+            }
+          ]
+        },
+        {
+          "text": "The draft's only Okonkwo and Eze reference is a 2021 review, not the tracked 2018 paper.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Okonkwo, C., & Eze, P. (2021). Green solvents for curcumin extraction: a review. J. Fake Chemistry, 12, 40-62."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The paper has been retracted.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The retraction reason is that the reported yields could not be reproduced and the raw data were altered.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the reported yields could not be reproduced and the raw data were found to have been altered",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The paper's main reported result was a 94% curcumin recovery from a single ethanol extraction.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft's reference list has an Okonkwo and Eze entry from 2021, a review, not the tracked 2018 research paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Okonkwo, C., & Eze, P. (2021). Green solvents for curcumin extraction: a review. J. Fake Chemistry, 12, 40-62.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The draft mentions yields above 90% from a single ethanol step without citing a source, and says these claims have since been questioned.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Extraction yields above 90% from a single ethanol step have been claimed for turmeric, although these claims have since been questioned.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The tracked paper reported 94% curcumin recovery from a single ethanol extraction.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The tracked paper has been retracted.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The tracked 2018 paper has been retracted.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The draft's only Okonkwo and Eze reference is a 2021 review, not the tracked 2018 paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Okonkwo, C., & Eze, P. (2021). Green solvents for curcumin extraction: a review. J. Fake Chemistry, 12, 40-62.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

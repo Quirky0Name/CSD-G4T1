@@ -1,0 +1,130 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the alert's retraction notice is the paper's own DOI, so following it leads back to the paper itself rather than to a separate retraction notice",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The alert's notice has the same DOI as the tracked paper"
+    },
+    {
+      "fact": "says the alert's date (1 July 2020) is the paper's own issue publication date, not the date of a retraction",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "dated 2020-07-01, which is also the paper's own version-of-record date... reflects the paper's own issue date rather than a retraction"
+    },
+    {
+      "fact": "says nothing else shows a retraction: the current copy has no retraction banner or watermark and its title has no RETRACTED prefix",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The current copy shows no retraction watermark or banner, and its content does not differ from the stored paper."
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "nothing shows a change to the paper; not a retraction"
+    },
+    {
+      "fact": "states a reason for a retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing or replacing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "notice 10.9999/fake.2020.024, notice dated 2020-07-01",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line shows notice DOI matching the paper's and date 2020-07-01."
+    },
+    {
+      "claim_id": "change-0",
+      "quote": "doi:10.9999/fake.2020.024",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows the tracked paper's DOI, which matches the notice DOI in passage 1."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "Version of record published in the July 2020 issue: Volume 56, Issue 1, 1 July 2020, pages 41\u201358.",
+      "backs": true,
+      "pass": true,
+      "reason": "States version of record published 1 July 2020."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 1 and 2 show the same DOI and the date 2020-07-01."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 gives 1 July 2020 as the version-of-record date, matching the notice date in passage 1."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-4",
+      "from": [
+        "change-0",
+        "change-1",
+        "change-2",
+        "change-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Claims 1 and 2 show the notice date equals the paper's issue date. Claims 3 and 4 have no passages and are assumed, so the no-banner and no-change parts rest on them. Taken as stated, the conclusion follows."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The alert's notice has the same DOI as the tracked paper and is dated 2020-07-01, which is also the paper's own version-of-record date.",
+      "covered_by": [
+        "change-0",
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy shows no retraction watermark or banner, and its content does not differ from the stored paper.",
+      "covered_by": [
+        "change-2",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "So the alert reflects the paper's own issue date rather than a retraction, and nothing shows a change to the paper.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-2",
+    "change-3"
+  ]
+}

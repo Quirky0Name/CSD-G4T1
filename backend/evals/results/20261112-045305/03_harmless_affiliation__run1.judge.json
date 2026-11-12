@@ -1,0 +1,116 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the change is only to the author's affiliation",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "changing the first author's affiliation ... so the change is administrative only."
+    },
+    {
+      "fact": "says the results and conclusions are unaffected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "the correction does not affect the results or conclusions of the article"
+    },
+    {
+      "fact": "recommends changing the draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "recommendation is null; only notes the stored paper lists the old affiliation"
+    },
+    {
+      "fact": "describes a change to any result or number",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "Only an affiliation change is described; no result or number changed."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the old affiliation was University of Northfield and the correct one is Northfield Institute of Education, showing the change."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This does not affect the results or conclusions of the article.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states the correction does not affect results or conclusions."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Garcia, M. (University of Northfield), Okafor, T.",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper's author list shows Garcia (first author) with University of Northfield."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 shows the affiliation changed from University of Northfield to Northfield Institute of Education."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 says exactly this."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 lists the first author with University of Northfield."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-3",
+      "from": [
+        "change-0",
+        "change-1"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "An affiliation change that the notice says does not affect results or conclusions is reasonably administrative and not serious for a reader."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper received a correction changing the first author's affiliation from University of Northfield to Northfield Institute of Education.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The stored paper lists the old affiliation, University of Northfield.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice states the correction does not affect the results or conclusions of the article, so the change is administrative only.",
+      "covered_by": [
+        "change-1",
+        "change-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

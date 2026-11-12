@@ -1,0 +1,252 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the notice does not say which data or findings are in question",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "change_summary: \"The notice doesn't say which data, so it's unclear whether the forced-swim result in Figure 3 or the bacterial counts in Figure 4 are involved.\" evaluation: \"the notice does not say which data.\""
+    },
+    {
+      "fact": "advises hedging the wording or not building new work on the finding",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "recommendation: \"Hedge the Discussion sentence that cites Lopez and Chen [8] and avoid building new work on it\""
+    },
+    {
+      "fact": "notes that the outcome of the investigation is not yet known",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "change_summary: \"They say concerns have been raised about some of the data and that the matter is being looked into.\" recommendation: \"Keep tracking, since the matter is being looked into.\" (Implies the outcome is pending; no explicit 'not yet known' wording.)"
+    },
+    {
+      "fact": "says the paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "names a specific figure or table as the problem",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The answer mentions Figure 3 and Figure 4 only as possibly involved or as the source of a result (\"whether the forced-swim result in Figure 3 or the bacterial counts in Figure 4 are involved\"; \"abstract reports that result from a forced-swim test (Figure 3)\"). It does not name either as the problem."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the editors have been made aware of concerns about some of the data in the article, which is the core of claim 1's statement about the expression of concern."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The matter is being looked into and we will update readers when more information is available.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the matter is being looked into and readers will be updated when more information is available, matching claim 2."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Figure 3 shows immobility time; Figure 4 shows bacterial counts.",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper's figure captions say Figure 3 shows immobility time and Figure 4 shows bacterial counts. This supports the Figure 3 and Figure 4 identification in claim 4."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "made recipient mice less active in a forced-swim test (Figure 3).",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper says transplanting bacteria made recipient mice less active in a forced-swim test (Figure 3), which is the abstract result claim 4 describes."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice. Our own proposal builds on this finding.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says Lopez and Chen [8] showed reduced activity in recipient mice and that the draft's own proposal builds on this finding, matching claim 5."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Transplanting gut bacteria from depressed donors made recipient mice less active in a",
+      "backs": true,
+      "pass": true,
+      "reason": "The opening of the abstract sentence says transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test, matching claim 6. It is a fragment, but it states the claimed result."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "forced-swim test (Figure 3).",
+      "backs": true,
+      "pass": true,
+      "reason": "The sentence tail names the forced-swim test and Figure 3. Together with passage 6 it completes the abstract statement in claim 6, so it supports that claim."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the editors have been made aware of concerns about some of the data in the article, matching claim 7."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice. Our own proposal builds on this finding.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says Lopez and Chen [8] showed reduced activity in recipient mice and that its own proposal builds on this finding, matching claim 9."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the editors have been made aware of concerns about some of the data in the article, matching claim 10."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "The matter is being looked into and we will update readers when more information is available.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the matter is being looked into and readers will be updated when more information is available, matching claim 12."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The journal's editors issued an expression of concern about the paper.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The editors say concerns have been raised about some of the data.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The editors say the matter is being looked into.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice does not say which data are concerned.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "It is unclear whether the forced-swim result in Figure 3 or the bacterial counts in Figure 4 are involved, because the notice does not say which data.",
+      "covered_by": [
+        "change-2",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft says its own proposal builds on the Lopez and Chen finding.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper's abstract reports the result from a forced-swim test (Figure 3).",
+      "covered_by": [
+        "change-3",
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The editors have been made aware of concerns regarding some of the data reported in the article.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice does not say which data are concerned.",
+      "covered_by": [
+        "change-2",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "It is uncertain whether the result the draft relies on is involved in the editors' concerns.",
+      "covered_by": [
+        "change-2",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The editors say they have been made aware of concerns regarding some of the data reported in the article.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice does not say which data are concerned.",
+      "covered_by": [
+        "change-2",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The matter is being looked into.",
+      "covered_by": [
+        "change-1",
+        "action-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-2",
+    "impact-3",
+    "action-2"
+  ]
+}

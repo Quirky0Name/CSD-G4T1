@@ -94,6 +94,12 @@ def quote_sources(case: dict) -> dict[str, str]:
         # a notice with no open-access text can be quoted from its record and links (as
         # impact/claims.py checks them)
         text = " ".join([text, *leaves(d.get("crossref_record")), *leaves(d.get("links"))])
+        # the prompt shows the DOI and, for a notice, this line (prompts.document_block), so
+        # neither is invented
+        text += f" {d['doi']}"
+        if d["kind"] == "notice":
+            included = d.get("update_to_includes_paper")
+            text += f" update_to_includes_paper: {'unknown' if included is None else str(included).lower()}"
         texts[d["doi"].lower()].append(text)
         if d["kind"] in KIND_LABELS:
             texts[KIND_LABELS[d["kind"]]].append(text)
@@ -150,25 +156,73 @@ def check_quotes(ev: dict, case: dict) -> dict[str, int]:
     return found
 
 
+# each stored claim kind and the assessment step its claims come from
+CLAIM_STEPS = (("change", "change"), ("impact", "impact"), ("action", "actions"))
+
+
+def flagged_absences(ev: dict) -> list[str]:
+    """The ids of the claims the model marked `absence` (PROMPT_VERSION 12 on): it says each
+    states only that something is missing, so it has nothing to quote."""
+    return [
+        f"{kind}-{i}"
+        for kind, step in CLAIM_STEPS
+        for i, claim in enumerate((ev["assessment"].get(step) or {}).get("claims") or [])
+        if claim.get("absence")
+    ]
+
+
+def derived_claims(ev: dict) -> dict[str, list[str]]:
+    """Each derived claim's id (PROMPT_VERSION 13 on) and the ids of the claims it says it
+    follows from: its step's `from_claims` numbers (from 1 in that step's claims), keeping only
+    those that name another claim of the step, then (PROMPT_VERSION 15 on) `from_change` and
+    `from_impact`, numbers in an earlier step's claims, keeping only those that name a claim of a
+    step before its own. A claim naming none of them isn't derived."""
+    steps = [(kind, (ev["assessment"].get(step) or {}).get("claims") or []) for kind, step in CLAIM_STEPS]
+    earlier_fields = {"change": "from_change", "impact": "from_impact"}
+    out = {}
+    for at, (kind, claims) in enumerate(steps):
+        for i, claim in enumerate(claims):
+            sources = [
+                f"{kind}-{n - 1}" for n in dict.fromkeys(claim.get("from_claims") or [])
+                if 1 <= n <= len(claims) and n - 1 != i
+            ]
+            for earlier, earlier_claims in steps[:at]:
+                sources += [
+                    f"{earlier}-{n - 1}" for n in dict.fromkeys(claim.get(earlier_fields[earlier]) or [])
+                    if 1 <= n <= len(earlier_claims)
+                ]
+            if sources:
+                out[f"{kind}-{i}"] = sources
+    return out
+
+
 def check_passages(ev: dict, grade: dict | None = None) -> dict[str, int | None]:
     """A run's claims: unlinked (a claim with no passage; an impact claim on a run whose draft
-    wasn't read is exempt, since a general judgment has nothing to quote), and, from the judge's
-    grading (`grade`, the .judge.json), unbacked (a passage the judge says doesn't back its claim)
-    and uncovered (a statement of the three free-text fields no claim covers). A count is None
-    when it can't be scored: every count for a run with no `claims` (saved before
-    PROMPT_VERSION 5), unbacked and uncovered for a run the judge hasn't graded for claims."""
+    wasn't read is exempt, since a general judgment has nothing to quote, and so is a claim the
+    model marked `absence` or the judge says states only an absence, and a derived claim), and,
+    from the judge's grading (`grade`, the .judge.json), unbacked (a passage the judge says shows
+    none of its claim, a quoted claim whose passages together don't show it, or a derived claim
+    that doesn't follow from the claims it names) and uncovered (a statement of the three
+    free-text fields no claim covers). A count is None when it can't be scored: every count for
+    a run with no `claims` (saved before PROMPT_VERSION 5), unbacked and uncovered for a run the
+    judge hasn't graded for claims."""
     claims = ev.get("claims")
     if claims is None:
         return {"unlinked": None, "unbacked": None, "uncovered": None}
     draft_read = ev["assessment"].get("draft") == "read"
+    exempt = {*(grade or {}).get("absent_claims", []), *flagged_absences(ev), *derived_claims(ev)}
     unlinked = sum(
-        1 for c in claims if not c["passages"] and (c["kind"] != "impact" or draft_read)
+        1
+        for c in claims
+        if not c["passages"] and (c["kind"] != "impact" or draft_read) and c["id"] not in exempt
     )
     if not grade or "passages" not in grade:
         return {"unlinked": unlinked, "unbacked": None, "uncovered": None}
     return {
         "unlinked": unlinked,
-        "unbacked": sum(not p["pass"] for p in grade["passages"]),
+        "unbacked": sum(
+            not x["pass"] for x in (*grade["passages"], *grade.get("claims", []), *grade.get("derived", []))
+        ),
         "uncovered": sum(not s["pass"] for s in grade["statements"]),
     }
 
@@ -183,7 +237,7 @@ def quote_flags(r: dict) -> list[str]:
 
 
 def score_run(path: Path, case: dict) -> dict:
-    ev = json.loads(path.read_text())
+    ev = json.loads(path.read_text(encoding="utf-8"))
     expected = case["expected"]
     out = {"case": path.name.split("__")[0], "category": case["category"], "path": path}
     if ev["assessment"]["placeholder"]:
@@ -205,7 +259,7 @@ def score_run(path: Path, case: dict) -> dict:
     judge_path = path.with_suffix(".judge.json")
     text = None
     failed = []
-    grade = json.loads(judge_path.read_text()) if judge_path.exists() else None
+    grade = json.loads(judge_path.read_text(encoding="utf-8")) if judge_path.exists() else None
     if grade is not None:
         items = grade["items"]
         text = sum(i["pass"] for i in items) / len(items) if items else None
@@ -228,7 +282,7 @@ def score_run(path: Path, case: dict) -> dict:
 def load_thresholds() -> dict:
     """The pass/fail thresholds in evals/thresholds.json, fixed before a run
     (docs/EVALUATION.md)."""
-    return json.loads((ROOT / "thresholds.json").read_text())
+    return json.loads((ROOT / "thresholds.json").read_text(encoding="utf-8"))
 
 
 def verdict(r: dict, thresholds: dict) -> dict:
@@ -383,7 +437,7 @@ def most_common_value(runs: list[dict], tag: str) -> str | None:
     the grid shows it; None when no run is left. Values tied for most common are all given,
     sorted and joined with " | ", so the result doesn't depend on the order of the runs."""
     values = Counter(
-        "/".join(dict.fromkeys(short(v) for v in resolve(json.loads(r["path"].read_text()), tag)))
+        "/".join(dict.fromkeys(short(v) for v in resolve(json.loads(r["path"].read_text(encoding="utf-8")), tag)))
         for r in runs
         if not r["failed"]
     )
@@ -434,7 +488,7 @@ def metamorphic_groups(runs: list[dict], cases: dict[str, dict], thresholds: dic
 def main() -> None:
     folders = sorted((ROOT / "results").glob("*"))
     folder = Path(sys.argv[1]) if len(sys.argv) > 1 else folders[-1]
-    cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
+    cases = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in (ROOT / "cases").glob("*.json")}
 
     runs = [score_run(p, cases[p.name.split("__")[0]]) for p in run_paths(folder)]
     thresholds = load_thresholds()
@@ -458,7 +512,7 @@ def main() -> None:
 
     for r in runs:
         path = r["path"]
-        ev = json.loads(path.read_text())
+        ev = json.loads(path.read_text(encoding="utf-8"))
         row_cells = [path.name.split("__")[0][:30]]
         for t in tags:
             if t not in r["detail"]:

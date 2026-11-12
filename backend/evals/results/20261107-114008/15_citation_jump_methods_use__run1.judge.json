@@ -1,0 +1,202 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the alert is about a rise in citations and not a change to the paper's content",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"OpenAlex recorded a sharp rise in citations to this paper\" and \"There is no notice and no changed document, so nothing shows that the paper's content changed.\""
+    },
+    {
+      "fact": "says no change to the draft is needed or the alert can be dismissed",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No action is needed: the alert only reports a jump in works citing Mensah (2020), with no notice and no change to the paper.\" and \"so the alert can be dismissed.\""
+    },
+    {
+      "fact": "suggests the paper's findings or methods are in doubt",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The answer says the Methods use \"is not affected\" and the impact is \"none\"; it does not cast doubt on the paper's findings or methods."
+    },
+    {
+      "fact": "recommends replacing or removing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The answer recommends no action and never suggests replacing or removing the Mensah (2020) citation."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the 61 vs. 4 citing-works counts over consecutive 30-day periods, which is what claim 1 says."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "citation_jump, no notice",
+      "backs": true,
+      "pass": true,
+      "reason": "Labels the alert as a citation_jump with no notice, which supports claim 2's 'no notice, citation counts only'."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3].",
+      "backs": true,
+      "pass": true,
+      "reason": "Says the predicted structures were scored with StructCompare using Mensah's default parameters. This supports the tool and defaults part of claim 3, though it does not say 'Methods'."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We present StructCompare, an open-source tool that scores the similarity of predicted protein structures.",
+      "backs": false,
+      "pass": false,
+      "reason": "Describes what StructCompare is. It does not show that the draft uses the tool or its default parameters."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives the jump in citing works, which supports claim 4's jump. It does not itself mention notices or content."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "citation_jump, no notice",
+      "backs": true,
+      "pass": true,
+      "reason": "Says there is no notice, which supports the no-notice part of claim 4."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows a rise in citing works, which supports the core of claim 5."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "citation_jump, no notice",
+      "backs": true,
+      "pass": true,
+      "reason": "Says there is no notice, which supports claim 5's no-notice part. It does not establish that nothing calls for action."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3].",
+      "backs": false,
+      "pass": false,
+      "reason": "Shows the draft uses StructCompare, but says nothing about it being the only use or about the use being unaffected, so it does not support claim 6's conclusion."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "OpenAlex recorded a sharp rise in citations to this paper: 61 citing works in the last 30 days, against 4 in the 30 days before.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "There is no notice and no changed document.",
+      "covered_by": [
+        "change-1",
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing shows that the paper's content changed.",
+      "covered_by": [
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "This is new attention only, so the severity is low.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your draft cites Mensah (2020) once, in Methods, as the source of the StructCompare tool and its default parameters.",
+      "covered_by": [
+        "impact-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert only reports that 61 works cited the paper in the last 30 days, up from 4 before.",
+      "covered_by": [
+        "change-0",
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "That is more attention, not a notice or a change to the paper.",
+      "covered_by": [
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Nothing suggests the Methods use is affected, so the impact is none.",
+      "covered_by": [
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No action is needed.",
+      "covered_by": [
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert only reports a jump in works citing Mensah (2020), with no notice and no change to the paper.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The Methods use of StructCompare and its default parameters is not affected.",
+      "covered_by": [
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert can be dismissed.",
+      "covered_by": [
+        "action-1"
+      ],
+      "pass": true
+    }
+  ]
+}

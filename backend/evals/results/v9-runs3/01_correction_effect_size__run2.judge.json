@@ -1,0 +1,231 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the effect size changed from d = 1.8 to d = 0.8",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"It should be d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.\" The evaluation also says \"the figure you quote is wrong.\""
+    },
+    {
+      "fact": "says the draft's Introduction is the affected part",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Your Introduction cites [12] for a large effect (d = 1.8) and draws the expectation that mindfulness will strongly reduce anxiety.\" The recommendation says \"Update the Introduction's figure.\""
+    },
+    {
+      "fact": "tells the researcher to update the number or soften the 'large effect' wording",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Update the Introduction's figure and cite the correction\" and \"Revisit 'strongly', since the notice says the direction of the effect and the conclusion that training reduced anxiety are unchanged.\" This tells the researcher to revisit the strength wording, which is close to softening it, though it names \"strongly\" rather than \"large effect\"."
+    },
+    {
+      "fact": "claims the paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "mentions an effect size other than 1.8 or 0.8",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The only effect sizes mentioned are d = 0.8 and d = 1.8. The other numbers (95% CI 0.5 to 1.1, and 1.4 to 2.2 in the change_summary) are confidence interval bounds, not effect sizes."
+    },
+    {
+      "fact": "says the conclusion that training reduces anxiety is reversed",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"The notice says the direction of the effect and the conclusion that training reduced anxiety are unchanged.\" The answer says the opposite of reversal."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "the effect size in Table 2 was reported incorrectly because of a calculation error.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched document states the Table 2 effect size was reported incorrectly because of a calculation error, matching claim 1."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice gives the correct value as d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8, matching claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Mindfulness training produced a large reduction in exam anxiety (d = 1.8, 95% CI 1.4 to 2.2).",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper reports a large reduction in exam anxiety with d = 1.8, 95% CI 1.4 to 2.2, matching claim 3's report of the figures and the 'large' wording."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the direction of the effect and the conclusion that training reduced anxiety are unchanged, matching claim 4."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Smith et al. [12] found a large effect (d = 1.8), so we expect mindfulness to strongly reduce anxiety.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Introduction cites Smith et al. [12] for a large effect (d = 1.8) and says it expects mindfulness to strongly reduce anxiety, matching claim 5."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Mindfulness training produced a large reduction in exam anxiety (d = 1.8, 95% CI 1.4 to 2.2).",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper states a large reduction in exam anxiety with d = 1.8, 95% CI 1.4 to 2.2, matching claim 6."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice gives the correct value as d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8, matching claim 7."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "The direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the direction of the effect and the conclusion that training reduced anxiety are unchanged, matching claim 8."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Smith et al. [12] found a large effect (d = 1.8), so we expect mindfulness to strongly reduce anxiety.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Introduction says Smith et al. [12] found a large effect (d = 1.8) and expects mindfulness to strongly reduce anxiety, matching claim 9."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice gives the correct value as d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8, matching claim 10."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+      "backs": null,
+      "pass": false,
+      "reason": ""
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "A correction says the effect size in Table 2 was wrong because of a calculation error.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "It should be d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+      "covered_by": [
+        "change-1",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The stored paper reports d = 1.8 (95% CI 1.4 to 2.2) in its Results and calls the effect large.",
+      "covered_by": [
+        "change-2",
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+      "covered_by": [
+        "change-3",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The Introduction cites [12] for a large effect (d = 1.8) and draws the expectation that mindfulness will strongly reduce anxiety.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The correction changes that effect size to d = 0.8 (95% CI 0.5 to 1.1), so the figure quoted in the Introduction is wrong.",
+      "covered_by": [
+        "change-1",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice says the direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+      "covered_by": [
+        "change-3",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The expectation of a reduction in anxiety stands.",
+      "covered_by": [
+        "change-3",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice says \"The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.\"",
+      "covered_by": [
+        "change-1",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice says the direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+      "covered_by": [
+        "change-3",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice's correct value of d = 0.8 is the number the Introduction sentence quotes.",
+      "covered_by": [],
+      "pass": false
+    }
+  ],
+  "absent_claims": []
+}

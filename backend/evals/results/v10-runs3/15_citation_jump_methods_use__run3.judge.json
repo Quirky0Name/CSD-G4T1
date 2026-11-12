@@ -1,0 +1,235 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the alert is about a rise in citations and not a change to the paper's content",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The alert reports a rise in citing works, from 4 to 61, which is new attention rather than a change to the paper's content.\""
+    },
+    {
+      "fact": "says no change to the draft is needed or the alert can be dismissed",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No action is needed and the alert can be dismissed.\""
+    },
+    {
+      "fact": "suggests the paper's findings or methods are in doubt",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends replacing or removing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line states the citing-works count rose from 4 to 61 over the 30-day windows, which is what claim 1 says."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "citation_jump, no notice",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert is labelled citation_jump with no notice, which shows it is a citation-driven alert with no content-change notice. The 'new attention' gloss is a reasonable reading of that label."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3].",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Methods says predicted structures were scored with StructCompare using the default parameters of Mensah [3], matching claim 4."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "We present StructCompare, an open-source tool that scores the similarity of predicted protein structures.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper describes StructCompare as an open-source tool that scores the similarity of predicted protein structures, matching claim 5."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line gives the rise from 4 to 61 citing works, which is the count claim 6 reports."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "citation_jump, no notice",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert is labelled citation_jump with no notice, which supports the citation-jump, no-content-change reading in claim 6."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3].",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Methods cites [3] for the default parameters used with StructCompare to score predicted structures, matching claim 8."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line gives the rise from 4 to 61 citing works, which is the count claim 9 reports."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "citation_jump, no notice",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert is labelled citation_jump with no notice, which supports the citation-jump, no-content-change reading in claim 9."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The alert reports a rise in citing works, from 4 to 61.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "There is no notice for this alert.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The alert is a citation jump.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The alert reflects new attention rather than a change to the paper's content.",
+      "covered_by": [
+        "change-2",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's Methods section cites [3] for the default parameters used with StructCompare to score predicted structures.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper presents StructCompare as an open-source tool that scores the similarity of predicted protein structures.",
+      "covered_by": [
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert reports a rise in citing works, from 4 to 61.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert reflects new attention rather than a change to the paper's content.",
+      "covered_by": [
+        "change-2",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert does not affect the StructCompare use cited in the Methods section.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "There is no notice for this alert.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft's Methods section cites [3] for the default parameters used with StructCompare to score predicted structures.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert reports a rise in citing works, from 4 to 61.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert reflects new attention rather than a change to the paper's content.",
+      "covered_by": [
+        "change-2",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "There is no notice for this alert.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-1",
+    "impact-3",
+    "action-2"
+  ]
+}

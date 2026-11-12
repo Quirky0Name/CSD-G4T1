@@ -1,0 +1,193 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the paper was retracted because of an analysis error that invalidates the main result",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The paper has been retracted after the authors found a coding error in the analysis. The coding error invalidates the main result\""
+    },
+    {
+      "fact": "says the impact judgment is general because there is no draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No draft was uploaded, so this judgment is general, for a typical researcher who cites the paper as key evidence, and not about your specific draft.\""
+    },
+    {
+      "fact": "recommends uploading the draft so future changes can be judged against it",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Upload your draft for this project so the next change can be judged against it and you can see which citations are affected.\""
+    },
+    {
+      "fact": "names a section of the researcher's draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the draft cites the paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice says the article was retracted after a coding error in the analysis was found, and that the error invalidates the main result. This matches claim 1."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice says the coding error invalidates the main result, which is what claim 2 states."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice says the reported 2.1% increase in bone density was not reproducible, which matches claim 3."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted words are from the tracked paper and say 1000 IU daily vitamin D raised hip bone density by 2.1% over a year. This matches claim 4's description of the abstract's reported result."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice says the retraction followed a coding error that invalidates the main result, which matches claim 6."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice says the reported 2.1% increase was not reproducible, which matches claim 7."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice says the retraction followed a coding error that invalidates the main result, which matches claim 9."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice says the reported 2.1% increase was not reproducible, which matches claim 10."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper has been retracted after the authors found a coding error in the analysis.",
+      "covered_by": [
+        "change-0",
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The coding error invalidates the main result.",
+      "covered_by": [
+        "change-1",
+        "impact-1",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The reported 2.1% increase in bone density was not reproducible.",
+      "covered_by": [
+        "change-2",
+        "impact-2",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The stored paper's abstract reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The 2.1% result in the stored paper's abstract is the result the notice says was not reproducible.",
+      "covered_by": [
+        "change-2",
+        "change-3",
+        "impact-2",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No draft was uploaded.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper has been retracted after the authors found a coding error in the analysis that invalidates the main result, and the reported 2.1% increase in bone density was not reproducible.",
+      "covered_by": [
+        "impact-1",
+        "impact-2",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No draft was uploaded.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper has been retracted after the authors found a coding error in the analysis that invalidates the main result, and the reported 2.1% increase in bone density was not reproducible.",
+      "covered_by": [
+        "impact-1",
+        "impact-2",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "impact-0",
+    "action-0"
+  ]
+}

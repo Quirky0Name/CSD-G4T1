@@ -3,9 +3,18 @@ raw Evaluation JSON. Scoring happens later, on the saved files, so re-scoring co
 
     python evals/run.py 01_correction_effect_size --runs 1   # case file stem
     python evals/run.py --runs 3            # every case
+    python evals/run.py --provider claude-code              # through Claude Code, on the subscription
+    python evals/run.py --into evals/results/<stamp> --resume   # only the runs not saved yet, or failed
 
-Reads GEMINI_API_KEY (and optionally GEMINI_MODEL, GEMINI_FALLBACK_MODELS) from the environment
-or backend/.env. Needs fpdf2 to turn the cases' texts into PDFs (not a project dependency)."""
+--provider gemini (default) reads GEMINI_API_KEY and GEMINI_MODEL from the environment or
+backend/.env; it never falls back to another model, so GEMINI_FALLBACK_MODELS isn't used.
+--provider claude-code runs `claude -p` on the Claude Code login (a claude.ai subscription, never
+an API key; backend/.env isn't read), default `--model sonnet --effort medium`. --provider
+claude-api calls the Claude API with ANTHROPIC_API_KEY (environment or backend/.env), billed to
+the key, default `--model claude-sonnet-5-5 --effort medium`; it needs `--with anthropic`.
+
+Needs fpdf2 to turn the cases' texts into PDFs (not a project dependency). It writes
+prompts.json into the folder: the prompt texts the runs used, keyed by prompt_sha256."""
 
 import argparse
 import asyncio
@@ -15,6 +24,7 @@ import os
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Protocol
 from uuid import UUID
 
 import httpx
@@ -26,11 +36,14 @@ ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT.parent / "src"))
 
 import case_text
+import claude_llm
+import judge
+from claude_llm import ApiStopped, ClaudeLimitReached, NotOnSubscription, Usage
 
+from research_evaluation.impact import prompts
 from research_evaluation.impact.assess import assess
 from research_evaluation.impact.inputs import ReportInputs
-from research_evaluation.impact.llm import FallbackLlm
-from research_evaluation.impact.prompts import PROMPT_VERSION
+from research_evaluation.impact.llm import FallbackLlm, Llm
 from research_evaluation.storage import (
     AlertInReport,
     DocumentInReport,
@@ -41,14 +54,27 @@ from research_evaluation.storage import (
 PAPER_ID = UUID("00000000-0000-0000-0000-000000000001")
 
 
-def load_env() -> None:
+PROVIDERS = ("gemini", "claude-code", "claude-api")
+# the tested model and its effort when --model / --effort aren't given
+DEFAULT_MODELS = {"claude-code": "sonnet", "claude-api": "claude-sonnet-5-5"}
+DEFAULT_EFFORT = "medium"
+
+
+def load_env(keys: tuple[str, ...]) -> None:
     env = ROOT.parent / ".env"
     if not env.exists():
         return
-    for line in env.read_text().splitlines():
+    for line in env.read_text(encoding="utf-8").splitlines():
         key, sep, value = line.partition("=")
-        if sep and key.strip() in ("GEMINI_API_KEY", "GEMINI_MODEL", "GEMINI_FALLBACK_MODELS"):
+        if sep and key.strip() in keys:
             os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
+
+
+class EvalLlm(Llm, Protocol):
+    """An Llm that also says which models it was given, as meta.json records them."""
+
+    @property
+    def models(self) -> tuple[str, ...]: ...
 
 FONTS = ROOT / "fonts"
 FONT = "DejaVu"  # covers non-Latin-1 text (·, –, ≥, α, curly quotes), unlike the core fonts
@@ -285,20 +311,50 @@ def fake_storage(draft: bytes | None) -> httpx.AsyncClient:
 def record_run(out_dir: Path, name: str, entry: dict) -> None:
     """Adds a run's entry to <out_dir>/meta.json, replacing the entry of a run that is re-run."""
     path = out_dir / "meta.json"
-    meta = json.loads(path.read_text()) if path.exists() else {"runs": {}}
+    meta = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"runs": {}}
     meta["runs"][name] = entry
-    path.write_text(json.dumps(meta, indent=2))
+    path.write_text(json.dumps(meta, indent=2), encoding="utf-8")
 
 
-async def run_case(llm: FallbackLlm, case_file: Path, run: int, out_dir: Path) -> None:
+def prompt_texts() -> dict[str, str]:
+    """The prompt templates a run uses, read when called (so a changed prompts.py shows)."""
+    return {
+        "system": prompts.SYSTEM,
+        "change_task": prompts.CHANGE_TASK,
+        "impact_task": prompts.IMPACT_TASK,
+        "actions_task": prompts.ACTIONS_TASK,
+        "judge_system": judge.SYSTEM,
+        "judge_passage_system": judge.PASSAGE_SYSTEM,
+    }
+
+
+def record_prompts(out_dir: Path) -> str:
+    """Adds the current prompt texts to <out_dir>/prompts.json, unless their hash is already
+    there, and returns the hash: sha256 of the six texts as canonical JSON."""
+    texts = prompt_texts()
+    canonical = json.dumps(texts, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    sha = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    path = out_dir / "prompts.json"
+    recorded = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    if sha not in recorded:
+        recorded[sha] = {"prompt_version": prompts.PROMPT_VERSION, **texts}
+        path.write_text(json.dumps(recorded, indent=2, ensure_ascii=False), encoding="utf-8")
+    return sha
+
+
+async def run_case(
+    llm: EvalLlm, case_file: Path, run: int, out_dir: Path, provider: str = "gemini"
+) -> None:
     name = f"{case_file.stem}__run{run}"
     case_bytes = case_file.read_bytes()
     # what produced the run, so a regression can be told from noise or from a changed case
     entry = {
         "started_at": datetime.now(UTC).isoformat(),
-        "prompt_version": PROMPT_VERSION,
+        "prompt_version": prompts.PROMPT_VERSION,
+        "prompt_sha256": record_prompts(out_dir),
+        "provider": provider,
         "models": list(llm.models),
-        # assess sets neither: the model's defaults, as in production
+        # assess sets neither, and the Claude CLI has no flag for them: the model's defaults
         "generation": {"temperature": None, "seed": None},
         "case_sha256": hashlib.sha256(case_bytes).hexdigest(),
     }
@@ -306,7 +362,7 @@ async def run_case(llm: FallbackLlm, case_file: Path, run: int, out_dir: Path) -
     async with fake_storage(draft) as sm:
         evaluation = await assess(llm, sm, inputs)
     body = evaluation.model_dump(mode="json")
-    (out_dir / f"{name}.json").write_text(json.dumps(body, indent=2))
+    (out_dir / f"{name}.json").write_text(json.dumps(body, indent=2), encoding="utf-8")
     record_run(out_dir, name, entry)
     a = body["assessment"]
     print(
@@ -315,49 +371,161 @@ async def run_case(llm: FallbackLlm, case_file: Path, run: int, out_dir: Path) -
     )
 
 
+def saved(out_dir: Path, name: str) -> bool:
+    """A run file exists for `name` and isn't a placeholder (what --resume skips)."""
+    path = out_dir / f"{name}.json"
+    if not path.exists():
+        return False
+    try:
+        return not json.loads(path.read_text(encoding="utf-8"))["assessment"]["placeholder"]
+    except (json.JSONDecodeError, KeyError, TypeError):
+        return False
+
+
+def print_usage(usage: Usage) -> None:
+    """After each call: its tokens and, on Claude Code, the subscription's utilization."""
+    parts = [
+        f"in {usage.input_tokens}",
+        f"cache write {usage.cache_write_tokens}",
+        f"cache read {usage.cache_read_tokens}",
+        f"out {usage.output_tokens}",
+    ]
+    if usage.five_hour is not None or usage.seven_day is not None:
+        parts.append(f"5-hour {fraction(usage.five_hour)}, 7-day {fraction(usage.seven_day)} used")
+    if usage.request_id:
+        parts.append(f"request {usage.request_id}")
+    print(f"  {'failed call' if usage.failed else 'call'}: " + ", ".join(parts), flush=True)
+
+
+def fraction(value: float | None) -> str:
+    return "?" if value is None else f"{value:.0%}"
+
+
+def resume_command(args: argparse.Namespace, out_dir: Path) -> str:
+    """The command that continues this run in the same folder."""
+    flags = [*args.cases, "--runs", str(args.runs), "--provider", args.provider]
+    if args.model:
+        flags += ["--model", args.model]
+    if args.effort:
+        flags += ["--effort", args.effort]
+    with_anthropic = " --with anthropic" if args.provider == "claude-api" else ""
+    return (
+        f"uv run --with fpdf2 --with rich{with_anthropic} python evals/run.py "
+        + " ".join(flags)
+        + f' --into "{out_dir}" --resume'
+    )
+
+
+def make_llm(args: argparse.Namespace) -> EvalLlm:
+    """The tested model for the chosen provider; none falls back to another model."""
+    if args.provider == "claude-code":
+        claude_llm.preflight()
+        return claude_llm.ClaudeLlm(
+            args.model or DEFAULT_MODELS["claude-code"],
+            effort=args.effort or DEFAULT_EFFORT,
+            report=print_usage,
+        )
+    if args.provider == "claude-api":
+        load_env(("ANTHROPIC_API_KEY",))
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            sys.exit("ANTHROPIC_API_KEY is not set")
+        return claude_llm.ClaudeApiLlm(
+            claude_llm.api_client(),
+            args.model or DEFAULT_MODELS["claude-api"],
+            effort=args.effort or DEFAULT_EFFORT,
+            report=print_usage,
+        )
+    load_env(("GEMINI_API_KEY", "GEMINI_MODEL"))
+    if not os.environ.get("GEMINI_API_KEY"):
+        sys.exit("GEMINI_API_KEY is not set")
+    model = args.model or os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
+    return FallbackLlm(
+        genai.Client(
+            api_key=os.environ["GEMINI_API_KEY"],
+            # same limit as production (IMPACT_LLM_TIMEOUT_SECONDS), in milliseconds
+            http_options=types.HttpOptions(timeout=120_000),
+        ),
+        # GEMINI_MODEL only: an eval never falls back, a failed run is re-run with --resume
+        (model.strip(),),
+    )
+
+
+def failed_runs(out_dir: Path, names: list[str]) -> list[tuple[str, str]]:
+    """The placeholder runs among `names`, with their failed step and causes."""
+    out = []
+    for name in names:
+        path = out_dir / f"{name}.json"
+        if not path.exists():
+            continue
+        a = json.loads(path.read_text(encoding="utf-8"))["assessment"]
+        if a["placeholder"]:
+            causes = "; ".join(f"{f['model']}: {f['cause']}" for f in a.get("failures") or [])
+            out.append((name, f"step {a.get('failed_step')}: {causes}"))
+    return out
+
+
 async def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("cases", nargs="*", help="case names (file stems); default is all")
     parser.add_argument("--runs", type=int, default=1)
-    parser.add_argument("--into", help="an existing results folder to add to (resume)")
-    parser.add_argument("--dry", action="store_true", help="build each case's inputs, no Gemini call")
+    parser.add_argument("--into", help="an existing results folder to add to")
+    parser.add_argument("--dry", action="store_true", help="build each case's inputs, no model call")
+    parser.add_argument("--provider", choices=PROVIDERS, default="gemini")
+    parser.add_argument("--model", help="the tested model (default per provider)")
+    parser.add_argument("--effort", help="the tested model's effort (claude providers; default medium)")
+    parser.add_argument(
+        "--resume", action="store_true",
+        help="with --into: skip runs already saved, re-run placeholders",
+    )
     args = parser.parse_args()
+    if args.resume and not args.into:
+        parser.error("--resume needs --into <folder>")
+    if args.effort and args.provider == "gemini":
+        parser.error("--effort applies only to --provider claude-code or claude-api")
 
     if args.dry:
-        from research_evaluation.impact.prompts import change_prompt
-
         for path in sorted((ROOT / "cases").glob("*.json")):
             if args.cases and path.stem not in args.cases:
                 continue
-            inputs, draft = build_inputs(json.loads(path.read_text()))
-            prompt = change_prompt(inputs)
+            inputs, draft = build_inputs(json.loads(path.read_text(encoding="utf-8")))
+            prompt = prompts.change_prompt(inputs)
             print(
                 f"{path.stem}: alerts={len(inputs.report.alerts)} documents={len(inputs.report.documents)} "
                 f"pdfs={prompt.attached} draft={'yes' if draft else 'no'}"
             )
         return
 
-    load_env()
-    if not os.environ.get("GEMINI_API_KEY"):
-        sys.exit("GEMINI_API_KEY is not set")
-    models = [os.environ.get("GEMINI_MODEL", "gemini-flash-latest")]
-    models += os.environ.get("GEMINI_FALLBACK_MODELS", "gemini-flash-lite-latest").split(",")
-    llm = FallbackLlm(
-        genai.Client(
-            api_key=os.environ["GEMINI_API_KEY"],
-            # same limit as production (IMPACT_LLM_TIMEOUT_SECONDS), in milliseconds
-            http_options=types.HttpOptions(timeout=120_000),
-        ),
-        tuple(dict.fromkeys(m.strip() for m in models if m.strip())),
-    )
+    try:
+        llm = make_llm(args)
+    except NotOnSubscription as exc:
+        sys.exit(f"stopped before any call: {exc}")
 
     stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     out_dir = Path(args.into) if args.into else ROOT / "results" / stamp
     out_dir.mkdir(parents=True, exist_ok=True)
     names = args.cases or sorted(p.stem for p in (ROOT / "cases").glob("*.json"))
-    for name in names:
-        for run in range(1, args.runs + 1):
-            await run_case(llm, ROOT / "cases" / f"{name}.json", run, out_dir)
+    targets = [(name, run) for name in names for run in range(1, args.runs + 1)]
+    try:
+        for name, run in targets:
+            if args.resume and saved(out_dir, f"{name}__run{run}"):
+                continue
+            await run_case(llm, ROOT / "cases" / f"{name}.json", run, out_dir, args.provider)
+    except ClaudeLimitReached as exc:
+        when = (
+            datetime.fromtimestamp(exc.resets_at, UTC).strftime("%Y-%m-%d %H:%M UTC")
+            if exc.resets_at else "unknown"
+        )
+        print(f"\nstopped: {exc}; the run in progress was not saved. Resets at: {when}")
+        print(f"continue with:\n    {resume_command(args, out_dir)}")
+        sys.exit(3)
+    except (NotOnSubscription, ApiStopped) as exc:
+        sys.exit(f"\nstopped: {exc}")
+    failures = failed_runs(out_dir, [f"{n}__run{r}" for n, r in targets])
+    if failures:
+        print(f"\n{len(failures)} failed run(s), saved as placeholders:")
+        for name, cause in failures:
+            print(f"  {name}: {cause}")
+        print(f"re-run them with:\n    {resume_command(args, out_dir)}")
     print(f"saved to {out_dir}")
 
 

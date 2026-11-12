@@ -1,0 +1,83 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the change is only to the author's affiliation",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education.\""
+    },
+    {
+      "fact": "says the results and conclusions are unaffected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The notice says the correction does not affect the results or conclusions of the article.\""
+    },
+    {
+      "fact": "recommends changing the draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "describes a change to any result or number",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched document says the first author's affiliation was given as University of Northfield and the correct one is Northfield Institute of Education. This matches the claim that the correction changes it from one to the other."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "Garcia, M. (University of Northfield), Okafor, T.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's author line reads 'Garcia, M. (University of Northfield)', so the first author's affiliation is listed as University of Northfield, as the claim states."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "This does not affect the results or conclusions of the article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched document says 'This does not affect the results or conclusions of the article.' This matches the claim that the notice says the correction does not affect results or conclusions."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The stored paper listed the first author's affiliation as University of Northfield.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the correction does not affect the results or conclusions of the article.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

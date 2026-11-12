@@ -1,0 +1,397 @@
+{
+  "change_summary": "The 2020 paper on wrist-sensor heart-rate accuracy in older adults has been retracted at the authors' request. The reason is duplicate publication: it repeats the data and findings of their 2019 paper. The editors found no problem with the data, so the findings (within 4.8 bpm of ECG in 200 adults) likely still stand in the 2019 original. You should cite the 2019 paper instead.",
+  "change_severity": "medium",
+  "impact_level": "low",
+  "evaluation": "Your draft cites Nguyen and Cole (2020) once, in the Introduction, as one of three sources for wrist sensors being accurate to about 5 bpm in older adults. The retraction covers the whole paper, so this citation is affected. The reason is duplicate publication, and the editors found no problem with the data. The same findings are in the authors' earlier 2019 paper. Because it is a supporting use and severity is medium, the impact is low. You can replace the citation with the 2019 paper.",
+  "recommendation": "Keep the Introduction citation but cite the retraction notice with it, and also cite the authors' earlier 2019 original after checking it gives the same finding. The retraction is for duplication and the editors found no problem with the data, so the claim itself is not weakened.",
+  "assessment": {
+    "prompt_version": 5,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 131,
+          "about_this_paper": "yes",
+          "what_changed": "The paper was retracted at the authors' request because it substantially duplicates their earlier 2019 paper. The data and findings are the same as in that earlier paper, and the editors found no problem with the data.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "medium",
+          "reason": "Retraction for duplicate publication: the findings are not faulted and still stand in the earlier 2019 paper (Nguyen and Cole), so a reader can cite that instead.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "retracted at the authors' request because it substantially duplicates a paper they published earlier"
+            },
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The editors found no problem with the data themselves."
+            },
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The data and findings are the same as in the earlier paper, which remains in the literature."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "medium",
+      "summary": "The 2020 paper on wrist-sensor heart-rate accuracy in older adults has been retracted at the authors' request. The reason is duplicate publication: it repeats the data and findings of their 2019 paper. The editors found no problem with the data, so the findings (within 4.8 bpm of ECG in 200 adults) likely still stand in the 2019 original. You should cite the 2019 paper instead.",
+      "claims": [
+        {
+          "text": "The paper was retracted at the authors' request for duplicating their earlier 2019 paper.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "retracted at the authors' request because it substantially duplicates a paper they published earlier"
+            }
+          ]
+        },
+        {
+          "text": "The data and findings are the same as in the earlier paper, which remains in the literature, and the editors found no problem with the data.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The data and findings are the same as in the earlier paper, which remains in the literature."
+            },
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The editors found no problem with the data themselves."
+            }
+          ]
+        },
+        {
+          "text": "The paper reported wrist sensors within 4.8 bpm of ECG in 200 adults aged 70 or over.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8"
+            }
+          ]
+        },
+        {
+          "text": "A retraction alert was raised for this paper.",
+          "passages": [
+            {
+              "source": "alert 131",
+              "quote": "retraction, notice 10.9999/fake.2020.013r"
+            }
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "Nguyen, T., & Cole, R. (2020). Wearable heart rate monitoring in older adults. J Fake Cardiol, 14(2).",
+      "uses": [
+        {
+          "section": "1. Introduction",
+          "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults (Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021).",
+          "role": "supporting",
+          "claim_relied_on": "that wrist-worn sensors estimate heart rate to within about 5 bpm in older adults, as one of three sources",
+          "affected": "yes",
+          "reason": "The whole paper is retracted, so this citation points to a retracted paper, although the findings are unchanged in the earlier 2019 paper."
+        }
+      ],
+      "impact_level": "low",
+      "explanation": "Your draft cites Nguyen and Cole (2020) once, in the Introduction, as one of three sources for wrist sensors being accurate to about 5 bpm in older adults. The retraction covers the whole paper, so this citation is affected. The reason is duplicate publication, and the editors found no problem with the data. The same findings are in the authors' earlier 2019 paper. Because it is a supporting use and severity is medium, the impact is low. You can replace the citation with the 2019 paper.",
+      "claims": [
+        {
+          "text": "The draft cites the paper in the Introduction as one of three sources for wrist sensors estimating heart rate to about 5 bpm in older adults.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults"
+            },
+            {
+              "source": "stored paper",
+              "quote": "Wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8"
+            }
+          ]
+        },
+        {
+          "text": "The paper was retracted at the authors' request because it duplicates their earlier paper.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "retracted at the authors' request because it substantially duplicates a paper they published earlier"
+            }
+          ]
+        },
+        {
+          "text": "The editors found no problem with the data, and the findings are the same as in the earlier paper, which remains in the literature.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The editors found no problem with the data themselves."
+            },
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The data and findings are the same as in the earlier paper, which remains in the literature."
+            }
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Keep the citation to Nguyen and Cole (2020) and add the retraction notice to it, noting the paper was retracted for duplicate publication, not because of a data problem.",
+          "where": "1. Introduction, sentence starting 'Wrist-worn sensors can estimate heart rate to within about 5 beats per minute'; and the reference list entry for Nguyen & Cole (2020)"
+        },
+        {
+          "action": "Also cite the authors' earlier 2019 paper, which holds the same data and findings. First check that it reports the same result (about 5 bpm in older adults). Then cite it as the original source in place of, or next to, the 2020 version.",
+          "where": "1. Introduction, same sentence, and the reference list"
+        }
+      ],
+      "recommendation": "Keep the Introduction citation but cite the retraction notice with it, and also cite the authors' earlier 2019 original after checking it gives the same finding. The retraction is for duplication and the editors found no problem with the data, so the claim itself is not weakened.",
+      "claims": [
+        {
+          "text": "The 2020 paper was retracted at the authors' request because it duplicates their earlier paper.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "retracted at the authors' request because it substantially duplicates a paper they published earlier"
+            }
+          ]
+        },
+        {
+          "text": "The editors found no problem with the data, and the same findings remain in the earlier paper.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The editors found no problem with the data themselves."
+            },
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The data and findings are the same as in the earlier paper, which remains in the literature."
+            }
+          ]
+        },
+        {
+          "text": "The draft cites the paper once, in the Introduction, as one of three supporting sources for the roughly 5 bpm accuracy claim.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The paper was retracted at the authors' request for duplicating their earlier 2019 paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "retracted at the authors' request because it substantially duplicates a paper they published earlier",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The data and findings are the same as in the earlier paper, which remains in the literature, and the editors found no problem with the data.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors found no problem with the data themselves.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The paper reported wrist sensors within 4.8 bpm of ECG in 200 adults aged 70 or over.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "A retraction alert was raised for this paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 131,
+          "quote": "retraction, notice 10.9999/fake.2020.013r",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft cites the paper in the Introduction as one of three sources for wrist sensors estimating heart rate to about 5 bpm in older adults.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults",
+          "page": 1,
+          "verified": "verbatim"
+        },
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The paper was retracted at the authors' request because it duplicates their earlier paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "retracted at the authors' request because it substantially duplicates a paper they published earlier",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The editors found no problem with the data, and the findings are the same as in the earlier paper, which remains in the literature.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors found no problem with the data themselves.",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The 2020 paper was retracted at the authors' request because it duplicates their earlier paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "retracted at the authors' request because it substantially duplicates a paper they published earlier",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The editors found no problem with the data, and the same findings remain in the earlier paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors found no problem with the data themselves.",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The draft cites the paper once, in the Introduction, as one of three supporting sources for the roughly 5 bpm accuracy claim.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

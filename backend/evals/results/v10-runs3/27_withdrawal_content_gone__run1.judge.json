@@ -1,0 +1,327 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the paper was withdrawn and its full text and PDF were replaced by a withdrawal statement, so the content is no longer available from the publisher",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The paper has been withdrawn and its full text and PDF replaced by a withdrawal statement.\" (The answer does not explicitly say the content is unavailable from the publisher.)"
+    },
+    {
+      "fact": "says the withdrawal statement gives the reason that the temperature records were processed with an incorrect calibration, so the results cannot be relied on",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The withdrawal is because the indoor temperature records had been processed with an incorrect sensor calibration, and the reported results cannot be relied on.\""
+    },
+    {
+      "fact": "says the draft takes its 2.1 \u00b0C green-roof cooling parameter from the withdrawn paper and that its estimate depends on it",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Your Methods section cites Okafor et al. [14] as the source of the 2.1 \u00b0C reduction... and sets your model's green-roof effect to 2.1 \u00b0C. Your Discussion says the green-roof result scales almost directly with the 2.1 \u00b0C that you take from Okafor et al. [14].\""
+    },
+    {
+      "fact": "tells the researcher to stop relying on the paper for the parameter, replace the source or re-derive the value, and raise it with co-authors because the draft's method depends on it",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Raise this with your co-authors or supervisor before changing the text, find a reliable replacement value, re-run the model, and then replace or remove citation [14].\""
+    },
+    {
+      "fact": "says the alert is not about this paper or not meaningful because the notice DOI is the paper's own DOI",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the paper's findings still stand or can still be relied on",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says no action is needed",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The article was withdrawn before final publication, and its full text and PDF have been replaced by this statement.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched withdrawal notice says the article was withdrawn and its full text and PDF replaced by a statement. This matches claim 1."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "the indoor temperature records analysed in it had been processed with an incorrect sensor calibration",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the indoor temperature records were processed with an incorrect sensor calibration, which is the stated reason in claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "so the reported results cannot be relied on.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the reported results cannot be relied on, which matches claim 3."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "the mean daily peak indoor temperature in green-roofed flats was 2.1 \u00b0C lower than in the paired control flats",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper says mean daily peak indoor temperature in green-roofed flats was 2.1 \u00b0C lower than in paired control flats, which matches claim 4."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "the reduction in daily peak indoor temperature measured during heatwaves in the paired field study of top-floor social-housing flats by Okafor et al. [14]",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Methods text attributes the heatwave peak-temperature reduction to Okafor et al. [14]. That supports the claim that Methods cites [14] as the source of the reduction."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "We set the indoor cooling effect of a green roof in the model to 2.1 \u00b0C",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft states that the indoor cooling effect of a green roof in the model is set to 2.1 \u00b0C, which matches claim 6."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "the green-roof result scales almost directly with the 2.1 \u00b0C reduction in peak indoor temperature that we take from Okafor et al. [14].",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Discussion says the green-roof result scales almost directly with the 2.1 \u00b0C reduction taken from Okafor et al. [14], which matches claim 7."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "the mean daily peak indoor temperature in green-roofed flats was 2.1 \u00b0C lower than in the paired control flats",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's 2.1 \u00b0C lower mean daily peak in green-roofed flats versus paired control flats matches claim 8."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "The article was withdrawn before final publication, and its full text and PDF have been replaced by this statement.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same withdrawal notice text as passage 1, stating the full text and PDF were replaced by a statement. Matches claim 9."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "the indoor temperature records analysed in it had been processed with an incorrect sensor calibration, so the reported results cannot be relied on.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice gives the incorrect sensor calibration as the problem and says the results cannot be relied on. Matches claim 10."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "The article was withdrawn before final publication, and its full text and PDF have been replaced by this statement.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same withdrawal notice text as passage 1. Matches claim 11."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "the indoor temperature records analysed in it had been processed with an incorrect sensor calibration, so the reported results cannot be relied on.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice gives the incorrect sensor calibration and the unreliability of results. Matches claim 12."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "We set the indoor cooling effect of a green roof in the model to 2.1 \u00b0C",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft states that the model's indoor cooling effect for a green roof is set to 2.1 \u00b0C, which matches claim 13."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "the reduction in daily peak indoor temperature measured during heatwaves in the paired field study of top-floor social-housing flats by Okafor et al. [14]",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Methods text attributes the heatwave peak-temperature reduction to Okafor et al. [14]. Matches claim 14."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "the green-roof result scales almost directly with the 2.1 \u00b0C reduction in peak indoor temperature that we take from Okafor et al. [14].",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Discussion says the green-roof result scales almost directly with the 2.1 \u00b0C reduction taken from Okafor et al. [14]. Matches claim 15."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper has been withdrawn and its full text and PDF replaced by a withdrawal statement.",
+      "covered_by": [
+        "change-0",
+        "impact-4",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The withdrawal is because the indoor temperature records had been processed with an incorrect sensor calibration.",
+      "covered_by": [
+        "change-1",
+        "impact-5",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The reported results cannot be relied on.",
+      "covered_by": [
+        "change-2",
+        "impact-5",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The stored paper's headline finding is a 2.1 \u00b0C lower mean daily peak indoor temperature in green-roofed flats.",
+      "covered_by": [
+        "change-3",
+        "impact-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's Methods section cites Okafor et al. [14] as the source of the 2.1 \u00b0C reduction in daily peak indoor temperature.",
+      "covered_by": [
+        "impact-0",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft sets the model's green-roof effect to 2.1 \u00b0C.",
+      "covered_by": [
+        "impact-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's Discussion says the green-roof result scales almost directly with the 2.1 \u00b0C reduction taken from Okafor et al. [14].",
+      "covered_by": [
+        "impact-2",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper reports a 2.1 \u00b0C lower mean daily peak indoor temperature in green-roofed flats.",
+      "covered_by": [
+        "change-3",
+        "impact-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper has been withdrawn and its text replaced by a withdrawal statement.",
+      "covered_by": [
+        "change-0",
+        "impact-4",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The withdrawal statement says the indoor temperature records were processed with an incorrect sensor calibration.",
+      "covered_by": [
+        "change-1",
+        "impact-5",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The withdrawal statement says the reported results cannot be relied on.",
+      "covered_by": [
+        "change-2",
+        "impact-5",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Both the Methods use and the Discussion use of the 2.1 \u00b0C figure are affected.",
+      "covered_by": [
+        "impact-0",
+        "impact-2",
+        "action-3",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's key model parameter comes from the withdrawn paper.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper has been withdrawn and its full text replaced by a withdrawal statement.",
+      "covered_by": [
+        "change-0",
+        "impact-4",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The withdrawal notice says the indoor temperature records had been processed with an incorrect sensor calibration, so the reported results cannot be relied on.",
+      "covered_by": [
+        "change-1",
+        "change-2",
+        "impact-5",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft sets the green-roof effect in its model to 2.1 \u00b0C, taking it from Okafor et al. [14].",
+      "covered_by": [
+        "impact-0",
+        "impact-1",
+        "action-2",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft's Discussion says its green-roof result scales almost directly with the 2.1 \u00b0C figure.",
+      "covered_by": [
+        "impact-2",
+        "action-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

@@ -1,0 +1,189 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the draft does not cite the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Your draft does not cite \\\"Green roofs and urban cooling\\\" (Haddad and Berg, 2018), so the retraction does not touch it.\""
+    },
+    {
+      "fact": "says no action is needed for the draft or the alert can be dismissed",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The draft does not cite the retracted green roofs paper (Haddad and Berg, 2018), so no change is needed and the alert can be dismissed.\""
+    },
+    {
+      "fact": "says the draft cites the retracted paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing a reference from the draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: Green roofs and urban cooling",
+      "backs": true,
+      "pass": true,
+      "reason": "The heading names the paper 'Green roofs and urban cooling' as a retraction, which backs the claim that the paper was retracted."
+    },
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, notice 10.9999/fake.2018.010r",
+      "backs": true,
+      "pass": true,
+      "reason": "The line refers to a retraction notice for the paper, which supports the claim that it was retracted."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "image manipulation in the supplementary figures and because the temperature data could not be verified",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted words give the two reasons, image manipulation in the supplementary figures and unverifiable temperature data, as the claim states."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Green roofs lowered surface temperature by 4 C in three cities.",
+      "backs": false,
+      "pass": false,
+      "reason": "The passage states the 4 C surface temperature reduction, which backs the finding. It does not show that the finding depends on the temperature data, which the claim also asserts."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Okoye, B. (2021). Shade and urban heat. J. Fake Urban Studies.",
+      "backs": false,
+      "pass": false,
+      "reason": "This is a reference entry for Okoye (2021). It does not show that the Haddad and Berg paper is absent from the reference list, which is what the claim states."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Fischer, L. (2016). Trees in cities. J. Fake Ecology.",
+      "backs": false,
+      "pass": false,
+      "reason": "This is a reference entry for Fischer (2016). It does not show that the Haddad and Berg paper is absent from the reference list."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Street trees cool neighbourhoods through shade and evapotranspiration (Okoye, 2021).",
+      "backs": true,
+      "pass": true,
+      "reason": "The sentence cites Okoye (2021) in text for street trees cooling neighbourhoods, which matches the claim's description. It does not show that this is the only in-text citation."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Retraction: Green roofs and urban cooling",
+      "backs": false,
+      "pass": false,
+      "reason": "The heading shows the retraction but says nothing about the draft not citing the paper, which the second half of the claim asserts."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Retraction: Green roofs and urban cooling",
+      "backs": true,
+      "pass": true,
+      "reason": "The heading names the green roofs paper as retracted, which backs the claim."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Okoye, B. (2021). Shade and urban heat. J. Fake Urban Studies.",
+      "backs": false,
+      "pass": false,
+      "reason": "This is a reference entry for Okoye (2021). It does not show that the draft fails to cite the retracted paper or that the list holds only these two entries."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Fischer, L. (2016). Trees in cities. J. Fake Ecology.",
+      "backs": false,
+      "pass": false,
+      "reason": "This is a reference entry for Fischer (2016). It does not show that the draft fails to cite the retracted paper."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "Street trees cool neighbourhoods through shade and evapotranspiration (Okoye, 2021).",
+      "backs": true,
+      "pass": true,
+      "reason": "The sentence cites Okoye (2021) in text for street trees, matching the claim's description. It does not show that this is the only in-text citation."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The journal has retracted \"Green roofs and urban cooling\".",
+      "covered_by": [
+        "change-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice gives two reasons: image manipulation in the supplementary figures, and temperature data that could not be verified.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's one stated finding, a 4 C drop in surface temperature, rests on that data.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "It should not be relied on.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your draft does not cite \"Green roofs and urban cooling\" (Haddad and Berg, 2018), so the retraction does not touch it.",
+      "covered_by": [
+        "impact-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The reference list has only Okoye (2021) and Fischer (2016), and neither is the retracted paper.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The Introduction cites Okoye (2021) for the cooling effect of street trees, which is a different paper.",
+      "covered_by": [
+        "impact-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft does not cite the retracted green roofs paper (Haddad and Berg, 2018), so no change is needed and the alert can be dismissed.",
+      "covered_by": [
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    }
+  ]
+}

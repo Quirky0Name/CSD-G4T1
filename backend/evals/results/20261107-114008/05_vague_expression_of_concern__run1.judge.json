@@ -1,0 +1,230 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the notice does not say which data or findings are in question",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The notice doesn't say which data are affected\" (change_summary); \"The journal's expression of concern says some of the paper's data are in question, but it doesn't say which.\" (evaluation)"
+    },
+    {
+      "fact": "advises hedging the wording or not building new work on the finding",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"hedge the Discussion sentence that uses Lopez and Chen [8] as key evidence\" and \"don't build new work on it\" (recommendation)"
+    },
+    {
+      "fact": "notes that the outcome of the investigation is not yet known",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The editors say some of the reported data are in question and are looking into it.\" (change_summary); \"Nothing is retracted yet.\" and \"keep tracking for a retraction or correction\" (recommendation)"
+    },
+    {
+      "fact": "says the paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"Nothing is retracted yet.\" (evaluation)"
+    },
+    {
+      "fact": "names a specific figure or table as the problem",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"the forced-swim result (Figure 3) and the bacterial counts (Figure 4) can't be ruled in or out\" (change_summary) names figures, but says the notice does not identify them as the problem; the answer states the affected data are unknown."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "Says editors are aware of concerns about some of the reported data, which matches the journal flagging data concerns. It does not name the notice type as an expression of concern."
+    },
+    {
+      "claim_id": "change-0",
+      "quote": "expression_of_concern, notice 10.9999/fake.2022.005e",
+      "backs": true,
+      "pass": true,
+      "reason": "Names the notice as an expression_of_concern, which directly states the claim."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The matter is being looked into and we will update readers when more information is available.",
+      "backs": true,
+      "pass": true,
+      "reason": "Says the matter is being looked into and no outcome is given yet, matching the claim that it is still under investigation."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Figure 3 shows immobility time; Figure 4 shows bacterial counts.",
+      "backs": false,
+      "pass": false,
+      "reason": "Only says what Figures 3 and 4 show. It does not say the findings rest on them or that the notice leaves the affected data unspecified."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "The causal role of gut bacteria in depressive behaviour is supported by transplant studies,",
+      "backs": false,
+      "pass": false,
+      "reason": "Only states that transplant studies support a causal role. It does not name Lopez and Chen [8] or say the draft builds its proposal on it."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Our own proposal",
+      "backs": false,
+      "pass": false,
+      "reason": "The heading 'Our own proposal' does not show that the proposal builds on Lopez and Chen."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Transplanting gut bacteria from depressed donors made recipient mice less active in a",
+      "backs": false,
+      "pass": false,
+      "reason": "Describes a transplant result in mice but does not show that the draft cites Lopez and Chen as its example or builds on it."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "Says some of the data are concerns without saying which, so the unspecified-data part matches the claim."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "The matter is being looked into and we will update readers when more information is available.",
+      "backs": true,
+      "pass": true,
+      "reason": "Says the matter is being looked into with updates to come, matching the under-investigation part of the claim."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Figure 3 shows immobility time; Figure 4 shows bacterial counts.",
+      "backs": false,
+      "pass": false,
+      "reason": "Only identifies what Figures 3 and 4 show. It does not say Figure 3 is the forced-swim result the draft relies on or that the notice leaves it unresolved."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "Says concerns exist about some of the data without saying which, matching the claim's unspecified-data part."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "The matter is being looked into and we will update readers when more information is available.",
+      "backs": true,
+      "pass": true,
+      "reason": "Says the matter is being looked into with updates to come, matching the still-under-investigation part of the claim."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The causal role of gut bacteria in depressive behaviour is supported by transplant studies,",
+      "backs": false,
+      "pass": false,
+      "reason": "Only states that transplant studies support a causal role. It does not say the draft uses Lopez and Chen as key evidence or raise the forced-swim question."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Figure 3 shows immobility time; Figure 4 shows bacterial counts.",
+      "backs": false,
+      "pass": false,
+      "reason": "Only identifies what Figures 3 and 4 show. It does not say whether the forced-swim result is affected or unclear."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The journal has published an expression of concern about \"Gut bacteria and mood in mice\".",
+      "covered_by": [
+        "change-0",
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The editors say some of the reported data are in question and are looking into it.",
+      "covered_by": [
+        "change-1",
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice doesn't say which data are affected, so the forced-swim result (Figure 3) and the bacterial counts (Figure 4) can't be ruled in or out.",
+      "covered_by": [
+        "change-2",
+        "impact-1",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Treat the findings as in doubt until the journal updates readers.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your Discussion cites Lopez and Chen [8] as the main example of transplant studies supporting a causal role of gut bacteria in depression, and says your proposal builds on this finding.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The journal's expression of concern says some of the paper's data are in question, but it doesn't say which.",
+      "covered_by": [
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The forced-swim result you rely on therefore can't be ruled in or out, so I count the use as affected, with that uncertainty.",
+      "covered_by": [
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Because the paper is key evidence and the severity is medium, the impact is medium.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "Nothing is retracted yet.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "Keep the citation for now, but hedge the Discussion sentence that uses Lopez and Chen [8] as key evidence, cite the expression of concern, and don't build new work on it.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "Look for independent supporting studies, and keep tracking for a retraction or correction.",
+      "covered_by": [],
+      "pass": false
+    }
+  ]
+}

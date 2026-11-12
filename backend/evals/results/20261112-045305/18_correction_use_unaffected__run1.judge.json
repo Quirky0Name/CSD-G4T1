@@ -1,0 +1,281 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the correction concerns the opioid dose in the Table 4 sensitivity analysis",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "A correction changes the nerve-block group's mean opioid dose in Table 4 (sensitivity analysis excluding prior opioid users) from 12 mg to 19 mg."
+    },
+    {
+      "fact": "says the draft's use of the pain scores is not affected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The draft's use of [15] for the pain result is not touched by the correction."
+    },
+    {
+      "fact": "says no change to the draft is needed",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "No change to the draft is needed, so you can dismiss this alert."
+    },
+    {
+      "fact": "recommends changing the pain-score claim",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "No change to the draft is needed"
+    },
+    {
+      "fact": "says the primary outcome is affected",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "says the primary outcome in Table 2 and all other results are unchanged"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg.",
+      "backs": true,
+      "pass": true,
+      "reason": "States 12 mg should read 19 mg for nerve-block group opioid dose."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The primary outcome in Table 2 and all other results are unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the primary outcome and all other results unchanged."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "the mean opioid dose in the nerve-block group was 12 mg.",
+      "backs": true,
+      "pass": true,
+      "reason": "Paper reports 12 mg in sensitivity analysis."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "This analysis was descriptive and was not powered for formal comparison.",
+      "backs": true,
+      "pass": true,
+      "reason": "Says analysis descriptive, not powered."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft cites Oyelaran [15] for 3.1 vs 5.2 pain at 24 h."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "The mean pain score at 24 hours was 3.1 with the block and 5.2 without (p < 0.001).",
+      "backs": true,
+      "pass": true,
+      "reason": "Paper gives 3.1 vs 5.2 at 24 hours."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg.",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows the 12 to 19 mg change."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "The primary outcome in Table 2 and all other results are unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows primary outcome and other results unchanged."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft cites Oyelaran [15] for 3.1 vs 5.2 pain at 24 h."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg.",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows the 12 to 19 mg change."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The primary outcome in Table 2 and all other results are unchanged.",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows primary outcome and other results unchanged."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage gives the 12 to 19 mg correction; table context is minor."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Directly stated."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Both 12 mg and the descriptive, underpowered statement are in the paper."
+    },
+    {
+      "claim_id": "impact-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Draft passage states this."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Paper passage states 3.1 vs 5.2."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Both parts shown by the correction passages."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Draft passage states this."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Both parts shown by the correction passages."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "impact-3",
+      "from": [
+        "impact-0",
+        "impact-1",
+        "impact-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft uses pain result; correction concerns only opioid dose and says primary outcome unchanged."
+    },
+    {
+      "claim_id": "impact-4",
+      "from": [
+        "impact-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "If the cited pain result is untouched, impact is none."
+    },
+    {
+      "claim_id": "action-2",
+      "from": [
+        "action-0",
+        "action-1"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Same reasoning from the draft's citation and the correction's scope."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "Correction changes nerve-block group's mean opioid dose in Table 4 sensitivity analysis from 12 mg to 19 mg.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Notice says primary outcome in Table 2 and all other results are unchanged.",
+      "covered_by": [
+        "change-1",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Stored paper reports 12 mg for that analysis and says it was descriptive and not powered for formal comparison.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Draft's Background section cites Oyelaran et al. [15] for 24-hour pain result (3.1 vs 5.2), and the stored paper reports those figures.",
+      "covered_by": [
+        "impact-0",
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Correction changes only the nerve-block opioid dose from 12 to 19 mg and says primary outcome in Table 2 and all other results unchanged.",
+      "covered_by": [
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The pain result the draft relies on is not touched, and impact is none.",
+      "covered_by": [
+        "impact-3",
+        "impact-4",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Draft cites Oyelaran et al. [15] for 24-hour pain result (3.1 vs 5.2), and the correction changes only opioid dose 12 to 19 mg while saying primary outcome and all other results unchanged.",
+      "covered_by": [
+        "impact-0",
+        "impact-2",
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Draft's use of [15] for the pain result is not touched by the correction.",
+      "covered_by": [
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

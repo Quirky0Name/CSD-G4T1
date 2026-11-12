@@ -1,0 +1,553 @@
+{
+  "change_summary": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019). The paper reports that wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8 beats per minute of ECG, and the notice says its data and findings are the same as in the earlier paper, which remains in the literature. The editors found no problem with the data themselves.",
+  "change_severity": "medium",
+  "impact_level": "low",
+  "evaluation": "The draft has a section headed Introduction, and it cites Nguyen and Cole, 2020, together with Alvarez et al., 2018 and Farouk, 2021, for the statement that wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults. The paper reports that wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8 beats per minute of ECG. The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019), so the retraction covers the paper your sentence cites. The notice says the data and findings are the same as in the earlier paper, which remains in the literature, and the editors found no problem with the data themselves. Your sentence also cites two other sources, so the impact is low: the problem is mainly which paper you cite, not whether the claim holds.",
+  "recommendation": "The draft cites Nguyen and Cole, 2020, together with Alvarez et al., 2018 and Farouk, 2021, for the statement that wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults. The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019), and the editors found no problem with the data themselves. The notice says the data and findings are the same as in the earlier paper, which remains in the literature. Replace the 2020 citation in that Introduction sentence and in your reference list with the 2019 paper, after checking that it reports the same result. The claim itself can stay.",
+  "assessment": {
+    "prompt_version": 12,
+    "model": "opus",
+    "model_version": "claude-opus-5-5",
+    "answered_by": {
+      "change": "opus",
+      "impact": "opus",
+      "actions": "opus"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 131,
+          "about_this_paper": "yes",
+          "what_changed": "The paper was retracted at the authors' request because it substantially duplicates the authors' earlier 2019 paper (doi 10.9999/fake.2019.130). The notice says the data and findings are the same as in that earlier paper, which has not been retracted, and the editors found no problem with the data.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "medium",
+          "reason": "This is a retraction for duplicate publication, not for errors or misconduct. The editors found no problem with the data, and the same findings still stand in the earlier 2019 paper, which remains in the literature.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130)."
+            },
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The data and findings are the same as in the earlier paper, which remains in the literature."
+            },
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The editors found no problem with the data themselves."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "medium",
+      "claims": [
+        {
+          "text": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019)",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130)."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "the notice says its data and findings are the same as in the earlier paper, which remains in the literature",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The data and findings are the same as in the earlier paper, which remains in the literature."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The editors found no problem with the data themselves",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The editors found no problem with the data themselves."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The paper reports that wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8 beats per minute of ECG",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8"
+            }
+          ],
+          "absence": false
+        }
+      ],
+      "summary": [
+        {
+          "text": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019).",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The paper reports that wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8 beats per minute of ECG, and the notice says its data and findings are the same as in the earlier paper, which remains in the literature.",
+          "kind": "fact",
+          "claims": [
+            4,
+            2
+          ]
+        },
+        {
+          "text": "The editors found no problem with the data themselves.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "Nguyen, T., & Cole, R. (2020). Wearable heart rate monitoring in older adults. J Fake Cardiol, 14(2).",
+      "uses": [
+        {
+          "section": "Introduction",
+          "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults (Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021).",
+          "role": "supporting",
+          "claim_relied_on": "That wrist-worn optical sensors measure heart rate in older adults to within about 5 beats per minute of ECG (the paper reports 4.8 bpm in 200 adults aged 70 or over), cited alongside two other sources.",
+          "affected": "yes",
+          "reason": "The whole paper has been retracted for duplicate publication, although the notice says the data are sound and the same findings remain in the authors' earlier 2019 paper."
+        }
+      ],
+      "impact_level": "low",
+      "claims": [
+        {
+          "text": "The draft cites Nguyen and Cole, 2020, together with Alvarez et al., 2018 and Farouk, 2021, for the statement that wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults (Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021)."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The draft has a section headed Introduction",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "1. Introduction"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The paper reports that wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8 beats per minute of ECG",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019)",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130)."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The notice says the data and findings are the same as in the earlier paper, which remains in the literature",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The data and findings are the same as in the earlier paper, which remains in the literature."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The editors found no problem with the data themselves",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The editors found no problem with the data themselves."
+            }
+          ],
+          "absence": false
+        }
+      ],
+      "explanation": [
+        {
+          "text": "The draft has a section headed Introduction, and it cites Nguyen and Cole, 2020, together with Alvarez et al., 2018 and Farouk, 2021, for the statement that wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults.",
+          "kind": "fact",
+          "claims": [
+            2,
+            1
+          ]
+        },
+        {
+          "text": "The paper reports that wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8 beats per minute of ECG.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019), so the retraction covers the paper your sentence cites.",
+          "kind": "fact",
+          "claims": [
+            4
+          ]
+        },
+        {
+          "text": "The notice says the data and findings are the same as in the earlier paper, which remains in the literature, and the editors found no problem with the data themselves.",
+          "kind": "fact",
+          "claims": [
+            5,
+            6
+          ]
+        },
+        {
+          "text": "Your sentence also cites two other sources, so the impact is low: the problem is mainly which paper you cite, not whether the claim holds.",
+          "kind": "fact",
+          "claims": [
+            1,
+            5
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Replace the citation to Nguyen and Cole, 2020 with the authors' earlier paper (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130). First check that the 2019 paper reports the same heart-rate accuracy result. Keep the other two citations.",
+          "where": "Introduction, sentence starting \"Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults\""
+        },
+        {
+          "action": "Update the reference list: replace the Nguyen & Cole (2020) entry with the 2019 paper. If you mention the 2020 paper anywhere else, cite the retraction notice too.",
+          "where": "Reference list, entry \"Nguyen, T., & Cole, R. (2020). Wearable heart rate monitoring in older adults.\""
+        }
+      ],
+      "claims": [
+        {
+          "text": "The draft cites Nguyen and Cole, 2020, together with Alvarez et al., 2018 and Farouk, 2021, for the statement that wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults (Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021)."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019)",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130)."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The notice says the data and findings are the same as in the earlier paper, which remains in the literature",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The data and findings are the same as in the earlier paper, which remains in the literature."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The editors found no problem with the data themselves",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.013r",
+              "quote": "The editors found no problem with the data themselves."
+            }
+          ],
+          "absence": false
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "The draft cites Nguyen and Cole, 2020, together with Alvarez et al., 2018 and Farouk, 2021, for the statement that wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019), and the editors found no problem with the data themselves.",
+          "kind": "fact",
+          "claims": [
+            2,
+            4
+          ]
+        },
+        {
+          "text": "The notice says the data and findings are the same as in the earlier paper, which remains in the literature.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "Replace the 2020 citation in that Introduction sentence and in your reference list with the 2019 paper, after checking that it reports the same result. The claim itself can stay.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019)",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130).",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "the notice says its data and findings are the same as in the earlier paper, which remains in the literature",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The editors found no problem with the data themselves",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors found no problem with the data themselves.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The paper reports that wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8 beats per minute of ECG",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft cites Nguyen and Cole, 2020, together with Alvarez et al., 2018 and Farouk, 2021, for the statement that wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults (Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The draft has a section headed Introduction",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "1. Introduction",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The paper reports that wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8 beats per minute of ECG",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019)",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130).",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The notice says the data and findings are the same as in the earlier paper, which remains in the literature",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "The editors found no problem with the data themselves",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors found no problem with the data themselves.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The draft cites Nguyen and Cole, 2020, together with Alvarez et al., 2018 and Farouk, 2021, for the statement that wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults (Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019)",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130).",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The notice says the data and findings are the same as in the earlier paper, which remains in the literature",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "The editors found no problem with the data themselves",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors found no problem with the data themselves.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

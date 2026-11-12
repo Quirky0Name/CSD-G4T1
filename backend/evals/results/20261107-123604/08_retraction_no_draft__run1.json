@@ -1,0 +1,262 @@
+{
+  "change_summary": "The paper on vitamin D and bone density in older women has been retracted. The authors found a coding error in the analysis that invalidates the main result. The reported 2.1% rise in hip bone density could not be reproduced, so the paper's central finding no longer stands.",
+  "change_severity": "high",
+  "impact_level": "high",
+  "evaluation": "No draft was uploaded, so this judgment is general and assumes a typical researcher who cites the paper as key evidence. The paper has been retracted because a coding error in the analysis invalidates its main result, and the reported 2.1% increase in bone density could not be reproduced. A claim that rests mainly on this paper would no longer be supported, so the impact would be high.",
+  "recommendation": "Upload your draft so the uses can be checked. Because the paper was retracted for a coding error that invalidates its main result, remove or replace any citation that uses it as evidence and re-check the claims it supported.",
+  "assessment": {
+    "prompt_version": 6,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "none",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 81,
+          "about_this_paper": "yes",
+          "what_changed": "The paper has been retracted. The notice says the authors found a coding error in the analysis that invalidates the main result, and the reported 2.1% increase in bone density could not be reproduced.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "The retraction is for an analysis error that invalidates the paper's main result, so the findings can't be relied on.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result."
+            },
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "The reported 2.1% increase in bone density was not reproducible."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "summary": "The paper on vitamin D and bone density in older women has been retracted. The authors found a coding error in the analysis that invalidates the main result. The reported 2.1% rise in hip bone density could not be reproduced, so the paper's central finding no longer stands.",
+      "claims": [
+        {
+          "text": "The paper has been retracted because of a coding error in the analysis that invalidates the main result.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result."
+            }
+          ]
+        },
+        {
+          "text": "The reported 2.1% increase in bone density could not be reproduced.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "The reported 2.1% increase in bone density was not reproducible."
+            }
+          ]
+        },
+        {
+          "text": "The stored paper's central finding was a 2.1% rise in hip bone density with 1000 IU daily vitamin D.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "1000 IU daily vitamin D raised hip bone density by 2.1% over a year."
+            }
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": false,
+      "reference_entry": null,
+      "uses": [],
+      "impact_level": "high",
+      "explanation": "No draft was uploaded, so this judgment is general and assumes a typical researcher who cites the paper as key evidence. The paper has been retracted because a coding error in the analysis invalidates its main result, and the reported 2.1% increase in bone density could not be reproduced. A claim that rests mainly on this paper would no longer be supported, so the impact would be high.",
+      "claims": [
+        {
+          "text": "The paper has been retracted because a coding error in the analysis invalidates the main result.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result."
+            }
+          ]
+        },
+        {
+          "text": "The reported 2.1% increase in bone density could not be reproduced.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "The reported 2.1% increase in bone density was not reproducible."
+            }
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Upload your draft to this project so the retraction can be checked against the places where you cite this paper and future changes can be judged against it.",
+          "where": null
+        },
+        {
+          "action": "Once uploaded, find every sentence that cites the vitamin D and bone density paper (Rossi, Wang 2019). If the citation is evidence for an effect of vitamin D on bone density, remove or replace it with a source that has not been retracted, and re-check the claim it supported.",
+          "where": "Introduction, Discussion and any sentence citing the paper's 2.1% bone density result"
+        },
+        {
+          "action": "If you cite the paper only to discuss the retraction, keep the citation and also cite the retraction notice. Do not quote the 2.1% figure as a finding.",
+          "where": "Any sentence that mentions the paper"
+        }
+      ],
+      "recommendation": "Upload your draft so the uses can be checked. Because the paper was retracted for a coding error that invalidates its main result, remove or replace any citation that uses it as evidence and re-check the claims it supported.",
+      "claims": [
+        {
+          "text": "The paper has been retracted because of a coding error in the analysis that invalidates the main result.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result."
+            }
+          ]
+        },
+        {
+          "text": "The reported 2.1% increase in bone density could not be reproduced.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "The reported 2.1% increase in bone density was not reproducible."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The paper has been retracted because of a coding error in the analysis that invalidates the main result.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The reported 2.1% increase in bone density could not be reproduced.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The reported 2.1% increase in bone density was not reproducible.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The stored paper's central finding was a 2.1% rise in hip bone density with 1000 IU daily vitamin D.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The paper has been retracted because a coding error in the analysis invalidates the main result.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The reported 2.1% increase in bone density could not be reproduced.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The reported 2.1% increase in bone density was not reproducible.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The paper has been retracted because of a coding error in the analysis that invalidates the main result.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The reported 2.1% increase in bone density could not be reproduced.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The reported 2.1% increase in bone density was not reproducible.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

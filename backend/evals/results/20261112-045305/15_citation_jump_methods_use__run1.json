@@ -1,0 +1,440 @@
+{
+  "change_summary": "The alert reports a rise in citing works, from 4 to 61. There is no notice for this alert. The rise is new attention to the paper, not a change to its content, so it is low severity.",
+  "change_severity": "low",
+  "impact_level": "none",
+  "evaluation": "Your Methods section cites Mensah [3] for the default parameters used with StructCompare to score predicted structures. The alert only reports a rise in works citing the paper, from 4 to 61, and there is no notice for it. The change touches no part of the paper that your Methods use relies on. The impact on your draft is none.",
+  "recommendation": "The alert only reports a rise in works citing the paper, from 4 to 61, and there is no notice for it. Your Methods section cites Mensah [3] for the default parameters used with StructCompare to score predicted structures. The change touches no part of the paper that your Methods use relies on, and the impact on your draft is none. No action is needed; you can dismiss this alert.",
+  "assessment": {
+    "prompt_version": 14,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 151,
+          "about_this_paper": "yes",
+          "what_changed": "The alert reports a rise in works citing the paper, from 4 to 61 in 30 days. It is new attention, not a change to the paper's content, and no notice exists.",
+          "scope": "citations_only",
+          "affected_parts": [],
+          "severity": "low",
+          "reason": "A citation jump is a signal of new attention only; nothing in the material shows any change to the paper's content.",
+          "evidence": []
+        }
+      ],
+      "relations": null,
+      "severity": "low",
+      "claims": [
+        {
+          "text": "The alert reports a rise in citing works, from 4 to 61.",
+          "passages": [
+            {
+              "source": "alert 151",
+              "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "There is no notice for this alert.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "The rise is new attention to the paper, not a change to its content, so it is low severity.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2
+          ]
+        }
+      ],
+      "summary": [
+        {
+          "text": "The alert reports a rise in citing works, from 4 to 61.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "There is no notice for this alert.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "The rise is new attention to the paper, not a change to its content, so it is low severity.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[3] Mensah, K. (2020). An open-source tool for comparing protein structure predictions. J. Fake Bioinformatics.",
+      "uses": [
+        {
+          "section": "Methods",
+          "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3].",
+          "role": "methods_or_data",
+          "claim_relied_on": "the default parameters of the StructCompare tool used to score predicted structures",
+          "affected": "no",
+          "reason": "The only change is a rise in citations, which says nothing about a change to the paper's content or its parameters."
+        }
+      ],
+      "impact_level": "none",
+      "claims": [
+        {
+          "text": "The draft's Methods section cites Mensah [3] for the default parameters used with StructCompare to score predicted structures.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3]."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The stored paper presents StructCompare, a tool that scores the similarity of predicted protein structures.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "We present StructCompare, an open-source tool that scores the similarity of predicted protein structures."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The alert reports a rise in works citing the paper, from 4 to 61.",
+          "passages": [
+            {
+              "source": "alert 151",
+              "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "There is no notice for this alert.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "The change touches no part of the paper that the draft's use in Methods relies on.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The impact on the draft is none.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            5
+          ]
+        }
+      ],
+      "explanation": [
+        {
+          "text": "Your Methods section cites Mensah [3] for the default parameters used with StructCompare to score predicted structures.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The alert only reports a rise in works citing the paper, from 4 to 61, and there is no notice for it.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The change touches no part of the paper that your Methods use relies on.",
+          "kind": "fact",
+          "claims": [
+            5
+          ]
+        },
+        {
+          "text": "The impact on your draft is none.",
+          "kind": "fact",
+          "claims": [
+            6
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [],
+      "claims": [
+        {
+          "text": "The alert reports a rise in works citing the paper, from 4 to 61.",
+          "passages": [
+            {
+              "source": "alert 151",
+              "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "There is no notice for this alert.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "The draft's Methods section cites Mensah [3] for the default parameters used with StructCompare to score predicted structures.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3]."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The change touches no part of the paper that the draft's use in Methods relies on.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The impact on the draft is none.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            4
+          ]
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "The alert only reports a rise in works citing the paper, from 4 to 61, and there is no notice for it.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "Your Methods section cites Mensah [3] for the default parameters used with StructCompare to score predicted structures.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "The change touches no part of the paper that your Methods use relies on, and the impact on your draft is none.",
+          "kind": "fact",
+          "claims": [
+            4,
+            5
+          ]
+        },
+        {
+          "text": "No action is needed; you can dismiss this alert.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The alert reports a rise in citing works, from 4 to 61.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 151,
+          "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "There is no notice for this alert.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The rise is new attention to the paper, not a change to its content, so it is low severity.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft's Methods section cites Mensah [3] for the default parameters used with StructCompare to score predicted structures.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3].",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The stored paper presents StructCompare, a tool that scores the similarity of predicted protein structures.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We present StructCompare, an open-source tool that scores the similarity of predicted protein structures.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The alert reports a rise in works citing the paper, from 4 to 61.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 151,
+          "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "There is no notice for this alert.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The change touches no part of the paper that the draft's use in Methods relies on.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "The impact on the draft is none.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The alert reports a rise in works citing the paper, from 4 to 61.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 151,
+          "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "There is no notice for this alert.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The draft's Methods section cites Mensah [3] for the default parameters used with StructCompare to score predicted structures.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3].",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "The change touches no part of the paper that the draft's use in Methods relies on.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-4",
+      "kind": "action",
+      "text": "The impact on the draft is none.",
+      "supported": false,
+      "passages": []
+    }
+  ]
+}

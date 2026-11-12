@@ -20,7 +20,7 @@ ANSWERS = {
             "alerts": [],
             "relations": None,
             "severity": "high",
-            "summary": "Retracted.",
+            "summary": [{"text": "Retracted.", "kind": "fact", "claims": [1]}],
             "claims": [{"text": "A statement.", "passages": []}],
         }
     ),
@@ -30,12 +30,12 @@ ANSWERS = {
             "reference_entry": None,
             "uses": [],
             "impact_level": "none",
-            "explanation": "Your draft doesn't cite it.",
+            "explanation": [{"text": "Your draft doesn't cite it.", "kind": "fact", "claims": [1]}],
             "claims": [{"text": "A statement.", "passages": []}],
         }
     ),
     RecommendedActions: RecommendedActions.model_validate(
-        {"actions": [], "recommendation": "No action needed.", "claims": [{"text": "A statement.", "passages": []}]}
+        {"actions": [], "recommendation": [{"text": "No action needed.", "kind": "fact", "claims": [1]}], "claims": [{"text": "A statement.", "passages": []}]}
     ),
 }
 

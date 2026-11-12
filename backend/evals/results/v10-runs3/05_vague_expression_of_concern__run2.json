@@ -1,0 +1,558 @@
+{
+  "change_summary": "The journal issued an expression of concern saying the editors were made aware of concerns about some of the data reported in the article. The matter is being looked into and readers will be updated later. The notice does not say which data are concerned.",
+  "change_severity": "medium",
+  "impact_level": "medium",
+  "evaluation": "Your Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice, in support of a causal role of gut bacteria in depressive behaviour, and says your own proposal builds on this finding. The stored paper reports that transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test, citing Figure 3, which shows immobility time. The journal's notice says the editors were made aware of concerns about some of the data reported in the article, but it does not say which data. It is therefore uncertain whether the immobility result you rely on is touched; counting it as possibly affected, the impact on your draft is medium because the finding is central to your Discussion argument. The journal says the matter is being looked into and readers will be updated.",
+  "recommendation": "Your Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice, in support of a causal role of gut bacteria in depressive behaviour, and says your own proposal builds on this finding. The journal's notice says the editors were made aware of concerns about some of the data reported in the article, but it does not say which data. Hedge the Discussion wording, avoid building further on this finding, and cite the expression of concern next to reference [8]. The journal says the matter is being looked into and readers will be updated. Tracking continues, so a retraction or correction would raise a new alert.",
+  "assessment": {
+    "prompt_version": 10,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 51,
+          "about_this_paper": "yes",
+          "what_changed": "The journal issued an expression of concern saying the editors have concerns about some of the data reported in the article and are looking into it. The notice does not say which data.",
+          "scope": "unclear",
+          "affected_parts": [],
+          "severity": "medium",
+          "reason": "An expression of concern about data puts the findings in doubt; the notice names no specific figure, so the scope can't be narrowed. Medium is the level this notice type usually has.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The editors have been made aware of concerns regarding some of the data reported in this article."
+            },
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The matter is being looked into and we will update readers when more information is available."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "medium",
+      "claims": [
+        {
+          "text": "The journal published an expression of concern about the article, saying the editors were made aware of concerns about some of the data reported in it.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The editors have been made aware of concerns regarding some of the data reported in this article."
+            }
+          ]
+        },
+        {
+          "text": "The matter is being looked into and readers will be updated when more information is available.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The matter is being looked into and we will update readers when more information is available."
+            }
+          ]
+        },
+        {
+          "text": "The notice does not say which data are concerned.",
+          "passages": []
+        },
+        {
+          "text": "The stored paper's abstract bases its claim on Figure 3, which shows immobility time.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Figure 3 shows immobility time; Figure 4 shows bacterial counts."
+            }
+          ]
+        }
+      ],
+      "summary": [
+        {
+          "text": "The journal issued an expression of concern saying the editors were made aware of concerns about some of the data reported in the article.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The matter is being looked into and readers will be updated later.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "The notice does not say which data are concerned.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[8] Lopez, D., Chen, W. (2022). Gut bacteria and mood in mice. J. Fake Microbiology.",
+      "uses": [
+        {
+          "section": "Discussion",
+          "quote": "The causal role of gut bacteria in depressive behaviour is supported by transplant studies, notably Lopez and Chen [8], who showed reduced activity in recipient mice.",
+          "role": "key_evidence",
+          "claim_relied_on": "that transplanting gut bacteria caused reduced activity in recipient mice, supporting a causal role of gut bacteria in depressive behaviour",
+          "affected": "unclear",
+          "reason": "The notice raises concerns about some unnamed data in the article, and the draft's claim rests on the immobility result (Figure 3), which may or may not be among them."
+        }
+      ],
+      "impact_level": "medium",
+      "claims": [
+        {
+          "text": "The draft's Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice, in support of a causal role of gut bacteria in depressive behaviour.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "The causal role of gut bacteria in depressive behaviour is supported by transplant studies, notably Lopez and Chen [8], who showed reduced activity in recipient mice."
+            }
+          ]
+        },
+        {
+          "text": "The draft says its own proposal builds on this finding.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Our own proposal builds on this finding."
+            }
+          ]
+        },
+        {
+          "text": "The stored paper reports that transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test, citing Figure 3.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test (Figure 3)."
+            }
+          ]
+        },
+        {
+          "text": "The stored paper says Figure 3 shows immobility time.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Figure 3 shows immobility time; Figure 4 shows bacterial counts."
+            }
+          ]
+        },
+        {
+          "text": "The journal's notice says the editors were made aware of concerns about some of the data reported in the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The editors have been made aware of concerns regarding some of the data reported in this article."
+            }
+          ]
+        },
+        {
+          "text": "The notice does not say which data are concerned.",
+          "passages": []
+        },
+        {
+          "text": "The notice says the matter is being looked into and readers will be updated.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The matter is being looked into and we will update readers when more information is available."
+            }
+          ]
+        }
+      ],
+      "explanation": [
+        {
+          "text": "Your Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice, in support of a causal role of gut bacteria in depressive behaviour, and says your own proposal builds on this finding.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "The stored paper reports that transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test, citing Figure 3, which shows immobility time.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The journal's notice says the editors were made aware of concerns about some of the data reported in the article, but it does not say which data.",
+          "kind": "fact",
+          "claims": [
+            5,
+            6
+          ]
+        },
+        {
+          "text": "It is therefore uncertain whether the immobility result you rely on is touched; counting it as possibly affected, the impact on your draft is medium because the finding is central to your Discussion argument.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2,
+            6
+          ]
+        },
+        {
+          "text": "The journal says the matter is being looked into and readers will be updated.",
+          "kind": "fact",
+          "claims": [
+            7
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Hedge the wording of the sentence citing Lopez and Chen [8], so it no longer presents the transplant result as settled support for a causal role of gut bacteria. Say that the journal has issued an expression of concern about the article.",
+          "where": "Discussion, 'The causal role of gut bacteria in depressive behaviour is supported by transplant studies, notably Lopez and Chen [8]...'"
+        },
+        {
+          "action": "Do not build new work on this finding. Reword or qualify the statement that your proposal builds on it, or add support from independent studies.",
+          "where": "Discussion, 'Our own proposal builds on this finding.'"
+        },
+        {
+          "action": "Cite the expression of concern next to reference [8] in the reference list.",
+          "where": "Reference list, entry [8]"
+        },
+        {
+          "action": "Keep tracking the paper. The journal says it will update readers, and a retraction or correction would raise a new alert.",
+          "where": null
+        }
+      ],
+      "claims": [
+        {
+          "text": "The draft's Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice, in support of a causal role of gut bacteria in depressive behaviour.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "The causal role of gut bacteria in depressive behaviour is supported by transplant studies, notably Lopez and Chen [8], who showed reduced activity in recipient mice."
+            }
+          ]
+        },
+        {
+          "text": "The draft says its own proposal builds on this finding.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Our own proposal builds on this finding."
+            }
+          ]
+        },
+        {
+          "text": "The journal's notice says the editors were made aware of concerns about some of the data reported in the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The editors have been made aware of concerns regarding some of the data reported in this article."
+            }
+          ]
+        },
+        {
+          "text": "The notice does not say which data are concerned.",
+          "passages": []
+        },
+        {
+          "text": "The notice says the matter is being looked into and readers will be updated.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The matter is being looked into and we will update readers when more information is available."
+            }
+          ]
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "Your Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice, in support of a causal role of gut bacteria in depressive behaviour, and says your own proposal builds on this finding.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "The journal's notice says the editors were made aware of concerns about some of the data reported in the article, but it does not say which data.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "Hedge the Discussion wording, avoid building further on this finding, and cite the expression of concern next to reference [8].",
+          "kind": "advice",
+          "claims": []
+        },
+        {
+          "text": "The journal says the matter is being looked into and readers will be updated.",
+          "kind": "fact",
+          "claims": [
+            5
+          ]
+        },
+        {
+          "text": "Tracking continues, so a retraction or correction would raise a new alert.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The journal published an expression of concern about the article, saying the editors were made aware of concerns about some of the data reported in it.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The matter is being looked into and readers will be updated when more information is available.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The matter is being looked into and we will update readers when more information is available.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The notice does not say which data are concerned.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The stored paper's abstract bases its claim on Figure 3, which shows immobility time.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Figure 3 shows immobility time; Figure 4 shows bacterial counts.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft's Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice, in support of a causal role of gut bacteria in depressive behaviour.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The causal role of gut bacteria in depressive behaviour is supported by transplant studies, notably Lopez and Chen [8], who showed reduced activity in recipient mice.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The draft says its own proposal builds on this finding.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Our own proposal builds on this finding.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The stored paper reports that transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test, citing Figure 3.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test (Figure 3).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The stored paper says Figure 3 shows immobility time.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Figure 3 shows immobility time; Figure 4 shows bacterial counts.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The journal's notice says the editors were made aware of concerns about some of the data reported in the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "The notice does not say which data are concerned.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-6",
+      "kind": "impact",
+      "text": "The notice says the matter is being looked into and readers will be updated.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The matter is being looked into and we will update readers when more information is available.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The draft's Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice, in support of a causal role of gut bacteria in depressive behaviour.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The causal role of gut bacteria in depressive behaviour is supported by transplant studies, notably Lopez and Chen [8], who showed reduced activity in recipient mice.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The draft says its own proposal builds on this finding.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Our own proposal builds on this finding.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The journal's notice says the editors were made aware of concerns about some of the data reported in the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "The notice does not say which data are concerned.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-4",
+      "kind": "action",
+      "text": "The notice says the matter is being looked into and readers will be updated.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The matter is being looked into and we will update readers when more information is available.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

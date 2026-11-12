@@ -1,0 +1,340 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the retraction is for duplicate publication, not for errors or misconduct in the data",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The retraction is for duplicate publication, not for data errors; the editors found no problem with the data themselves."
+    },
+    {
+      "fact": "says the findings still stand in the original publication",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "the findings may still stand in the earlier paper; the data and findings are the same as in the earlier paper, which remains in the literature"
+    },
+    {
+      "fact": "advises keeping the citation and citing the retraction notice or the original paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Keep the citation, cite the retraction notice too, and cite the earlier original paper for the finding"
+    },
+    {
+      "fact": "says the data were fabricated or unreliable",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends deleting the sentence or the claim it supports",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier",
+      "backs": true,
+      "pass": true,
+      "reason": "States retraction at authors' request for substantial duplication."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+      "backs": true,
+      "pass": true,
+      "reason": "States data and findings same as earlier paper that remains in literature."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The editors found no problem with the data themselves.",
+      "backs": true,
+      "pass": true,
+      "reason": "States editors found no problem with the data."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft sentence states the ~5 bpm claim in the Introduction."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "(Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021).",
+      "backs": true,
+      "pass": true,
+      "reason": "Citation group includes all three sources."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract reports wrist optical sensors in 200 adults 70+ within 4.8 (text cut off, but clearly the result)."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier",
+      "backs": true,
+      "pass": true,
+      "reason": "Same retraction statement."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same earlier-paper statement."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "The editors found no problem with the data themselves.",
+      "backs": true,
+      "pass": true,
+      "reason": "Editors found no data problem."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft sentence with the claim."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "(Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021).",
+      "backs": true,
+      "pass": true,
+      "reason": "Citation group."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "This article has been retracted at the authors' request because it substantially duplicates a paper they published earlier",
+      "backs": true,
+      "pass": true,
+      "reason": "Retraction statement."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+      "backs": true,
+      "pass": true,
+      "reason": "Earlier paper statement."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The editors found no problem with the data themselves.",
+      "backs": true,
+      "pass": true,
+      "reason": "No data problem."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 shows it."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 shows it."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 shows it."
+    },
+    {
+      "claim_id": "impact-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Draft sentence and citation group together show it."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Abstract gives 200 adults aged 70+, within 4.8; unit and ECG reference are truncated but evidently continue."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 7 shows it."
+    },
+    {
+      "claim_id": "impact-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 8 and 9 show both parts."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 10 and 11 show it."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 12 shows it."
+    },
+    {
+      "claim_id": "action-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 13 and 14 show both parts."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-3",
+      "from": [
+        "change-0",
+        "change-1",
+        "change-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Duplicate-publication reason, no data problem, and findings remaining in earlier paper support a moderate level."
+    },
+    {
+      "claim_id": "impact-4",
+      "from": [
+        "impact-0",
+        "impact-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "The cited paper is retracted, so the citation in the Introduction is touched."
+    },
+    {
+      "claim_id": "impact-5",
+      "from": [
+        "impact-0",
+        "impact-2",
+        "impact-3",
+        "impact-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "One of three sources, retraction for duplication with findings in earlier paper, supports low impact."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper was retracted at the authors' request because it substantially duplicates an earlier paper by the same authors.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The data and findings are the same as in the earlier paper, which remains in the literature, and the editors found no problem with the data themselves.",
+      "covered_by": [
+        "change-1",
+        "change-2",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction is for duplicate publication, not for data errors, and findings may still stand in the earlier paper, so impact is medium.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Introduction cites Nguyen and Cole, 2020 with Alvarez et al., 2018 and Farouk, 2021 for wrist-worn sensors estimating heart rate within about 5 bpm in older adults.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper reports wrist-worn optical sensors estimating heart rate in 200 older adults to within 4.8 bpm of ECG.",
+      "covered_by": [
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper was retracted at the authors' request because it substantially duplicates an earlier paper, so this citation is touched.",
+      "covered_by": [
+        "impact-2",
+        "impact-4",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The data and findings are the same as in the earlier paper, which remains in the literature, and editors found no problem with the data.",
+      "covered_by": [
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The impact on you is low: one of three sources for a supporting claim, retraction for duplication with findings remaining in earlier paper.",
+      "covered_by": [
+        "impact-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Introduction cites Nguyen and Cole, 2020 with Alvarez et al., 2018 and Farouk, 2021 for wrist-worn sensors within about 5 bpm in older adults.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper was retracted at the authors' request because it substantially duplicates a paper they published earlier.",
+      "covered_by": [
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The data and findings are the same as in the earlier paper, which remains in the literature, and editors found no problem with the data.",
+      "covered_by": [
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

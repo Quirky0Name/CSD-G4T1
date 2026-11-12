@@ -1,0 +1,244 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the current copy of the paper carries a retraction or withdrawal banner",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The title of the current copy of the paper is marked as retracted"
+    },
+    {
+      "fact": "says the reason for the retraction is not stated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The reason for the retraction is not stated in the material."
+    },
+    {
+      "fact": "tells the researcher to stop and raise it with co-authors or supervisor because the draft's methods depend on the paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Because your methods depend on this paper, raise it with your co-authors or supervisor now rather than only editing the text of Section 2.2."
+    },
+    {
+      "fact": "states a specific reason for the retraction such as fabrication or error",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "claims a retraction notice was found or quotes one",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "the alert recorded a retraction with no notice"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "RETRACTED: Soil carbon gains after winter cover",
+      "backs": true,
+      "pass": true,
+      "reason": "Title is marked RETRACTED."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line states retraction with no notice."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "Winter cover crops raised topsoil carbon by 6% over three years.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the 6% over three years finding."
+    },
+    {
+      "claim_id": "change-5",
+      "quote": "We describe the sampling and analysis protocol in detail so that it can be reused by other field groups",
+      "backs": true,
+      "pass": true,
+      "reason": "States protocol described for reuse by other field groups."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Section 2 describes the farms and the design, and the methods used to sample and measure carbon.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft says Section 2 describes methods to sample and measure carbon."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft states cores and dry combustion following Haugen and Rao exactly."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Using an established protocol rather than designing our own lets our numbers be compared directly with that study",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft says established protocol lets numbers be compared directly."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "Soil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2.",
+      "backs": true,
+      "pass": true,
+      "reason": "Paper states dry combustion on 0-15 cm cores using its protocol in Section 2."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "We describe the sampling and analysis protocol in detail so that it can be reused by other field groups",
+      "backs": true,
+      "pass": true,
+      "reason": "Paper says protocol described for reuse by other field groups."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "RETRACTED: Soil carbon gains after winter cover",
+      "backs": true,
+      "pass": true,
+      "reason": "Title marked RETRACTED."
+    },
+    {
+      "claim_id": "impact-6",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line shows retraction, no notice, severity high."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "RETRACTED: Soil carbon gains after winter cover",
+      "backs": true,
+      "pass": true,
+      "reason": "Title marked RETRACTED."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line shows retraction with no notice."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft quote matches claim."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "Using an established protocol rather than designing our own lets our numbers be compared directly with that study",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft quote matches claim."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The title of the current copy of the paper is marked as retracted, and the alert recorded a retraction with no notice.",
+      "covered_by": [
+        "change-0",
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No retraction notice was available, and the reason for the retraction is not stated in the material.",
+      "covered_by": [
+        "change-2",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retracted copy still reports that winter cover crops raised topsoil carbon by 6% over three years, and the paper also presents a sampling and analysis protocol meant to be reused by other groups.",
+      "covered_by": [
+        "change-4",
+        "change-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Draft's Section 2 describes the methods used to sample and measure carbon, and it samples 0-15 cm cores and measures carbon by dry combustion following Haugen and Rao [5] exactly.",
+      "covered_by": [
+        "impact-0",
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft says using this established protocol lets its numbers be compared directly with that study.",
+      "covered_by": [
+        "impact-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper measured soil carbon by dry combustion on 0-15 cm cores using its own sampling protocol and presents that protocol so other field groups can reuse it.",
+      "covered_by": [
+        "impact-3",
+        "impact-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The title of the current copy of the paper is marked as retracted, and the alert recorded a retraction with no notice, rated high severity.",
+      "covered_by": [
+        "impact-5",
+        "impact-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The reason for the retraction is not stated in the material.",
+      "covered_by": [
+        "impact-7"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The title of the current copy of the paper is marked as retracted, but the alert recorded a retraction with no notice, and the reason is not stated in the material.",
+      "covered_by": [
+        "action-0",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Your draft samples 0-15 cm cores and measures carbon by dry combustion following Haugen and Rao [5] exactly, and says using this established protocol lets its numbers be compared directly with that study.",
+      "covered_by": [
+        "action-3",
+        "action-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-2",
+    "change-3",
+    "impact-7",
+    "action-2"
+  ]
+}

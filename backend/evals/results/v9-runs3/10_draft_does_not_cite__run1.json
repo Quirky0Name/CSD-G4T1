@@ -1,0 +1,199 @@
+{
+  "change_summary": "The paper \"Green roofs and urban cooling\" has been retracted. The notice gives two reasons: image manipulation in the supplementary figures, and temperature data that could not be verified. The paper's abstract reports a 4 C surface cooling in three cities.",
+  "change_severity": "high",
+  "impact_level": "none",
+  "evaluation": "Your draft doesn't cite this paper.",
+  "recommendation": "No action is needed: the draft does not cite the retracted paper, so the alert can be dismissed.",
+  "assessment": {
+    "prompt_version": 9,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 101,
+          "about_this_paper": "yes",
+          "what_changed": "The paper was retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "The retraction cites image manipulation and unverifiable temperature data, and the abstract's 4 C cooling result rests on temperature data, so the findings can't be relied on.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "This article has been retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified."
+            },
+            {
+              "source": "stored paper",
+              "quote": "Green roofs lowered surface temperature by 4 C in three cities."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "summary": "The paper \"Green roofs and urban cooling\" has been retracted. The notice gives two reasons: image manipulation in the supplementary figures, and temperature data that could not be verified. The paper's abstract reports a 4 C surface cooling in three cities.",
+      "claims": [
+        {
+          "text": "The paper has been retracted.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "This article has been retracted"
+            }
+          ]
+        },
+        {
+          "text": "The notice gives as reasons image manipulation in the supplementary figures and that the temperature data could not be verified.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "because of image manipulation in the supplementary figures and because the temperature data could not be verified"
+            }
+          ]
+        },
+        {
+          "text": "The paper's abstract reports that green roofs lowered surface temperature by 4 C in three cities.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Green roofs lowered surface temperature by 4 C in three cities."
+            }
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": false,
+      "reference_entry": null,
+      "uses": [],
+      "impact_level": "none",
+      "explanation": "Your draft doesn't cite this paper.",
+      "claims": [
+        {
+          "text": "The draft does not cite \"Green roofs and urban cooling\" by Haddad and Berg (2018), either in its reference list or in its text.",
+          "passages": []
+        }
+      ]
+    },
+    "actions": {
+      "actions": [],
+      "recommendation": "No action is needed: the draft does not cite the retracted paper, so the alert can be dismissed.",
+      "claims": [
+        {
+          "text": "The paper has been retracted.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "This article has been retracted"
+            }
+          ]
+        },
+        {
+          "text": "The draft does not cite \"Green roofs and urban cooling\" by Haddad and Berg (2018), either in its reference list or in its text.",
+          "passages": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The paper has been retracted.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The notice gives as reasons image manipulation in the supplementary figures and that the temperature data could not be verified.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "because of image manipulation in the supplementary figures and because the temperature data could not be verified",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The paper's abstract reports that green roofs lowered surface temperature by 4 C in three cities.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Green roofs lowered surface temperature by 4 C in three cities.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft does not cite \"Green roofs and urban cooling\" by Haddad and Berg (2018), either in its reference list or in its text.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The paper has been retracted.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The draft does not cite \"Green roofs and urban cooling\" by Haddad and Berg (2018), either in its reference list or in its text.",
+      "supported": false,
+      "passages": []
+    }
+  ]
+}

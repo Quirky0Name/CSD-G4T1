@@ -1,0 +1,263 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the paper was retracted because the survey data were unreliable",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The journal retracted the article Social media use and loneliness in adolescents. The retraction is because the survey data were found to be unreliable\""
+    },
+    {
+      "fact": "says the draft cites it only as background context, among other sources",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Your draft cites Ivanov and Dubois, 2017 together with Lee, 2019 and Moreau, 2020 in the Introduction, in a sentence saying many studies have examined adolescents' online lives.\" and \"your draft uses it only as background in the Introduction\""
+    },
+    {
+      "fact": "says the effect on the draft is limited, and suggests removing or replacing the citation",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The retraction touches the whole paper, but your draft uses it only as background in the Introduction, so the impact on you is low.\" and \"Remove this citation from the Introduction sentence, or replace it with a reliable source, and remove it from the reference list\""
+    },
+    {
+      "fact": "says the draft's methods or main argument depend on the paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: Social media use and loneliness in adolescents",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched title names a retraction of the article 'Social media use and loneliness in adolescents', which is what the claim states."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The journal has retracted this article because the survey data were found to be unreliable.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the journal retracted the article because the survey data were found to be unreliable."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The conclusions cannot be relied on.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the conclusions cannot be relied on."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's abstract states that heavy social media use was linked to higher loneliness in 1,000 adolescents."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Many studies have examined adolescents' online lives (Ivanov and Dubois, 2017; Lee, 2019; Moreau, 2020).",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Introduction sentence cites Ivanov and Dubois, 2017; Lee, 2019; and Moreau, 2020 for the claim that many studies have examined adolescents' online lives."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Our study asks a different question: how friendships are maintained during exams.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft states that its study asks a different question: how friendships are maintained during exams."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's abstract states that heavy social media use was linked to higher loneliness in 1,000 adolescents."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "The journal has retracted this article because the survey data were found to be unreliable.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the journal retracted the article because the survey data were found to be unreliable."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "The conclusions cannot be relied on.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the conclusions cannot be relied on."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "The journal has retracted this article because the survey data were found to be unreliable.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the journal retracted the article because the survey data were found to be unreliable."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The conclusions cannot be relied on.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched notice says the conclusions cannot be relied on."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "Many studies have examined adolescents' online lives (Ivanov and Dubois, 2017; Lee, 2019; Moreau, 2020).",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Introduction sentence cites Ivanov and Dubois, 2017; Lee, 2019; and Moreau, 2020 for the claim that many studies have examined adolescents' online lives."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "Our study asks a different question: how friendships are maintained during exams.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft states that its study asks a different question: how friendships are maintained during exams."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The journal retracted the article Social media use and loneliness in adolescents.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction is because the survey data were found to be unreliable.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the conclusions cannot be relied on.",
+      "covered_by": [
+        "change-2",
+        "impact-4",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's abstract reports that heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+      "covered_by": [
+        "change-3",
+        "impact-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft cites Ivanov and Dubois, 2017 together with Lee, 2019 and Moreau, 2020 in the Introduction, in a sentence saying many studies have examined adolescents' online lives.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft says its own study asks a different question, about how friendships are maintained during exams.",
+      "covered_by": [
+        "impact-1",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The journal retracted the article because the survey data were found to be unreliable.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice says the conclusions cannot be relied on.",
+      "covered_by": [
+        "change-2",
+        "impact-4",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper's abstract reports that heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+      "covered_by": [
+        "change-3",
+        "impact-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The retraction touches the whole paper.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft uses the retracted article only as background in the Introduction.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "The journal retracted the article because the survey data were found to be unreliable.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice says the conclusions cannot be relied on.",
+      "covered_by": [
+        "change-2",
+        "impact-4",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft cites Ivanov and Dubois, 2017 together with Lee, 2019 and Moreau, 2020 in its Introduction, in a sentence saying many studies have examined adolescents' online lives.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft says its own study asks a different question, about how friendships are maintained during exams.",
+      "covered_by": [
+        "impact-1",
+        "action-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

@@ -1,0 +1,104 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the retraction was issued in error and has been withdrawn, with the paper reinstated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"A later statement says the retraction was issued in error because the image concerns related to a different article. The retraction is withdrawn and the article is reinstated.\""
+    },
+    {
+      "fact": "says the paper's findings or data can still be relied on",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The publisher checked this article's images and data and found no problems.\""
+    },
+    {
+      "fact": "treats the paper as still retracted or tells the researcher to stop citing it",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"The retraction is withdrawn and the article is reinstated.\""
+    },
+    {
+      "fact": "says the paper's images or data were found to be duplicated or unreliable",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"The paper was retracted over concerns about duplicated images.\" This only reports that a retraction was made over such concerns; the answer then says the retraction was issued in error and that the publisher found no problems with this article's images and data."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "concerns were raised about the duplication of images. The article is therefore retracted.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says concerns were raised about duplicated images and the article is therefore retracted, which matches claim 1."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The retraction notice for the above article, published on 22 September 2026, was issued in error.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the retraction notice was issued in error, which is the core of claim 2. It does not itself give the reason, which passage 3 supplies."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The image concerns that led to the retraction relate to a different article in the same investigation",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the image concerns that led to the retraction relate to a different article, which supplies the stated reason in claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the retraction is withdrawn, the article is reinstated, and the watermark removed, which matches claim 3."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The publisher has checked the images and data of this article and found no problems with them.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the publisher checked the article's images and data and found no problems, which matches claim 4."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper was retracted over concerns about duplicated images.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "A later statement says the retraction was issued in error because the image concerns related to a different article.",
+      "covered_by": [
+        "change-1",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction is withdrawn and the article is reinstated.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The publisher checked this article's images and data and found no problems.",
+      "covered_by": [],
+      "pass": false
+    }
+  ],
+  "absent_claims": []
+}

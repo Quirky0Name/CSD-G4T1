@@ -1,0 +1,160 @@
+{
+  "change_summary": "The alert records a retraction whose notice DOI is 10.9999/fake.2020.024. The tracked paper's own DOI is 10.9999/fake.2020.024. The current copy shows no retraction watermark or banner. No notice text was provided, and the current copy's content shows no difference from the stored paper.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 10,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "pdfs": {
+      "attached": [
+        "stored paper",
+        "current copy"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 241,
+          "about_this_paper": "no",
+          "what_changed": "The alert flags a retraction, but its notice DOI is the paper's own DOI, and no notice text was fetched. The current copy has no retraction watermark or banner and its content matches the stored paper.",
+          "scope": "unclear",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "The notice carries the paper's own DOI and nothing else shows a change: the current copy reads the same as the stored paper and has no retraction marking. The retraction flag is therefore unconfirmed by anything given here.",
+          "evidence": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024"
+            },
+            {
+              "source": "stored paper",
+              "quote": "doi:10.9999/fake.2020.024"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "none",
+      "claims": [
+        {
+          "text": "The alert records a retraction whose notice DOI is 10.9999/fake.2020.024.",
+          "passages": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024"
+            }
+          ]
+        },
+        {
+          "text": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "doi:10.9999/fake.2020.024"
+            }
+          ]
+        },
+        {
+          "text": "The current copy shows no retraction watermark or banner.",
+          "passages": []
+        },
+        {
+          "text": "No notice text was provided, and the current copy's content shows no difference from the stored paper.",
+          "passages": []
+        }
+      ],
+      "summary": [
+        {
+          "text": "The alert records a retraction whose notice DOI is 10.9999/fake.2020.024.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "The current copy shows no retraction watermark or banner.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "No notice text was provided, and the current copy's content shows no difference from the stored paper.",
+          "kind": "fact",
+          "claims": [
+            4
+          ]
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The alert records a retraction whose notice DOI is 10.9999/fake.2020.024.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 241,
+          "quote": "retraction, notice 10.9999/fake.2020.024",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "doi:10.9999/fake.2020.024",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The current copy shows no retraction watermark or banner.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "No notice text was provided, and the current copy's content shows no difference from the stored paper.",
+      "supported": false,
+      "passages": []
+    }
+  ]
+}

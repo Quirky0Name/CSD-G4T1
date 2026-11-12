@@ -1,0 +1,121 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the draft does not cite the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"the draft doesn't cite this paper.\" and \"the draft doesn't cite it in its reference list or in its text\""
+    },
+    {
+      "fact": "says no action is needed for the draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"so no change is needed and the alert can be dismissed.\""
+    },
+    {
+      "fact": "says the draft cites the retracted paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing the 2021 review from the reference list",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched document's heading reads 'Retraction: High-yield ethanol extraction of curcumin from turmeric', which shows the paper has been retracted."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice says the reported yields could not be reproduced and the raw data were found to have been altered, matching the claim."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper says a single ethanol extraction recovered 94% of the curcumin, which shows the reported 94% recovery figure."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+      "backs": true,
+      "pass": true,
+      "reason": "The same fetched retraction heading shows the paper has been retracted, matching the claim."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper \"High-yield ethanol extraction of curcumin from turmeric\" has been retracted.",
+      "covered_by": [
+        "change-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's abstract reports a 94% recovery of curcumin.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft doesn't cite this paper.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper has been retracted.",
+      "covered_by": [
+        "change-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft doesn't cite the paper in its reference list or in its text.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "impact-0",
+    "action-1"
+  ]
+}

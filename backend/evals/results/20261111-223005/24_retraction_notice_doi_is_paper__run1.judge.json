@@ -1,0 +1,210 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the alert's retraction notice is the paper's own DOI, so following it leads back to the paper itself rather than to a separate retraction notice",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "the alert's retraction notice DOI is 10.9999/fake.2020.024, but the tracked paper's own DOI is 10.9999/fake.2020.024, and the Crossref title recorded for that DOI is the paper's own title, not a retraction notice title"
+    },
+    {
+      "fact": "says the alert's date (1 July 2020) is the paper's own issue publication date, not the date of a retraction",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": "The answer says the paper went online 3 April 2020 and mismatches the 2026 detection date; it does not say the alert date is 1 July 2020 issue date."
+    },
+    {
+      "fact": "says nothing else shows a retraction: the current copy has no retraction banner or watermark and its title has no RETRACTED prefix",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": "the current copy has no retraction watermark or banner, and its content does not differ from the stored paper"
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The retraction alert is not shown to be about a real change to this paper"
+    },
+    {
+      "fact": "states a reason for a retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing or replacing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line states retraction, notice DOI, and detection date."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "doi: 10.9999/fake.2020.024",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows the paper's DOI."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial",
+      "backs": false,
+      "pass": false,
+      "reason": "Shows a title, but nothing says it is the Crossref title recorded for that DOI, or that it is the paper's own title versus a notice title."
+    },
+    {
+      "claim_id": "change-6",
+      "quote": "Available online 3 April 2020.",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows online date 3 April 2020; the mismatch with 2026 follows from alert date elsewhere."
+    },
+    {
+      "claim_id": "change-7",
+      "quote": "AAD occurred in 18 participants (11.5%) given LGG and 33 (21.2%) given placebo (adjusted risk ratio 0.55, 95% CI 0.32\u20130.92).",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives the 11.5% vs 21.2% AAD result."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 shows all."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 shows it."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": false,
+      "pass": false,
+      "reason": "Only a title is quoted; no source that it is the Crossref title for that DOI."
+    },
+    {
+      "claim_id": "change-6",
+      "backed": true,
+      "pass": true,
+      "reason": "Online date shown; the alert date is in passage 1 though not cited for this claim, mismatch is evident from the two dates."
+    },
+    {
+      "claim_id": "change-7",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5 gives the figures; 'current copy' and 'main finding' are plausibly from the fetched document, LGG reduction is implied."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-8",
+      "from": [
+        "change-0",
+        "change-1",
+        "change-2",
+        "change-3",
+        "change-4",
+        "change-5"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Rests on claims including unbacked claim 3 and absence claims; but as stated, it follows from the named claims (same DOI, no banner, no difference, no notice text)."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "Alert 241 records a retraction whose notice DOI is 10.9999/fake.2020.024, detected on 2026-10-01.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The Crossref title recorded for that DOI is the paper's own title, not a retraction notice title.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No separate retraction notice text was provided.",
+      "covered_by": [
+        "change-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy has no retraction watermark or banner.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy's content does not differ from the stored paper.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper went online on 3 April 2020, which does not match the alert's 2026 detection date.",
+      "covered_by": [
+        "change-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy still reports the trial's main finding: LGG reduced antibiotic-associated diarrhoea (11.5% vs 21.2%).",
+      "covered_by": [
+        "change-7"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction alert is not shown to be about a real change to this paper, so nothing here shows its findings are affected.",
+      "covered_by": [
+        "change-8"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-3",
+    "change-5"
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the notice is about a different article (sleep quality in nurses)",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The retraction notice is titled as a retraction of an article on mindfulness training and sleep quality in nurses, while the tracked paper is about mindfulness training and exam anxiety in undergraduates."
+    },
+    {
+      "fact": "says the tracked paper is not affected",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": ""
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "RETRACTED: Mindfulness training improves sleep quality in nurses",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted title shows the notice is a retraction of an article on mindfulness training and sleep quality in nurses."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "Mindfulness training reduces exam anxiety in undergraduates",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted title says the tracked paper concerns mindfulness training and exam anxiety in undergraduates."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "This article has been retracted because the data could not be verified.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the article was retracted because its data could not be verified. It comes from the fetched notice, so it refers to the other article."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Eight weeks of mindfulness training reduced self-reported exam anxiety in 120 undergraduates.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted sentence from the tracked paper states the eight-week training result in 120 undergraduates."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The retraction notice is titled as a retraction of an article on mindfulness training and sleep quality in nurses.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The tracked paper is about mindfulness training and exam anxiety in undergraduates.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "That other article was retracted because its data could not be verified.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The tracked paper reported that eight weeks of mindfulness training reduced self-reported exam anxiety in 120 undergraduates.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No notice given here names the tracked paper's own title.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-4"
+  ]
+}

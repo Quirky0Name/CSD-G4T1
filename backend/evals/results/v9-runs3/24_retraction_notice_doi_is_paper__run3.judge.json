@@ -1,0 +1,112 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the alert's retraction notice is the paper's own DOI, so following it leads back to the paper itself rather than to a separate retraction notice",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The alert reports a retraction notice that carries the paper's own DOI.\""
+    },
+    {
+      "fact": "says the alert's date (1 July 2020) is the paper's own issue publication date, not the date of a retraction",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": ""
+    },
+    {
+      "fact": "says nothing else shows a retraction: the current copy has no retraction banner or watermark and its title has no RETRACTED prefix",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The downloaded current copy has the same content as the stored paper and shows no retraction banner or watermark.\" The answer does not mention the title or a RETRACTED prefix, so only the banner/watermark part is covered."
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"Nothing given confirms a change to the paper's content, so the retraction flag is unconfirmed.\""
+    },
+    {
+      "fact": "states a reason for a retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing or replacing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"recommendation\": null"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line reports a retraction with notice DOI 10.9999/fake.2020.024, which is the notice-DOI part of claim 1."
+    },
+    {
+      "claim_id": "change-0",
+      "quote": "doi:10.9999/fake.2020.024",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's DOI is 10.9999/fake.2020.024, which matches the notice DOI in the alert and supports the 'same DOI as the tracked paper' part of claim 1."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Version of record published in the July 2020 issue: Volume 56, Issue 1, 1 July 2020, pages 41\u201358.",
+      "backs": true,
+      "pass": true,
+      "reason": "The version of record is stated as published in the July 2020 issue (1 July 2020), which matches the publication date in claim 4."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "detected 2026-10-01",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line gives the detection date as 2026-10-01, which matches the detection date in claim 4."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The alert reports a retraction notice that carries the paper's own DOI.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No notice text was available.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The downloaded current copy has the same content as the stored paper and shows no retraction banner or watermark.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing given confirms a change to the paper's content, so the retraction flag is unconfirmed.",
+      "covered_by": [],
+      "pass": false
+    }
+  ],
+  "absent_claims": [
+    "change-1"
+  ]
+}

@@ -3,6 +3,10 @@
     python evals/all.py                              # prompts user, then runs ALL steps
     python evals/all.py 01_correction_effect_size    # specific case
     python evals/all.py --folder evals/results/<st>  # target specific folder
+    python evals/all.py --provider claude-code       # generate and grade through Claude Code
+    python evals/all.py --folder evals/results/<st> --resume   # continue a stopped run
+
+--provider, --model, --effort and --resume go on to run.py; --provider to judge.py too.
 """
 
 import argparse
@@ -17,16 +21,31 @@ import score  # Assumes this is in the same evals/ folder
 ROOT = Path(__file__).parent
 
 
-def run_step(name: str, *args: str) -> None:
-    """Executes a pipeline script via subprocess and halts on failure."""
+def run_step(name: str, *args: str, resume: str | None = None) -> None:
+    """Executes a pipeline script via subprocess and halts on failure, printing `resume`, the
+    command that continues from this step."""
     print(f"\n{'='*20} {name.upper()} {'='*20}", flush=True)
     result = subprocess.run([sys.executable, str(ROOT / f"{name}.py"), *args], check=False)
     if result.returncode != 0:
         sys.exit(
             f"\n❌ {name}.py failed (exit code {result.returncode}).\n"
-            f"Fix the error, then resume grading this folder with:\n"
-            f"    python evals/all.py --folder <folder_path> --skip-run"
+            f"Fix the error (or wait for the limit to reset), then continue with:\n"
+            f"    {resume or 'python evals/all.py --folder <folder_path> --skip-run'}"
         )
+
+
+def command(args: argparse.Namespace, folder: Path, *extra: str) -> str:
+    """An all.py command on `folder` with this run's provider settings."""
+    flags = [*args.cases, "--runs", str(args.runs), "--provider", args.provider]
+    if args.model:
+        flags += ["--model", args.model]
+    if args.effort:
+        flags += ["--effort", args.effort]
+    with_anthropic = " --with anthropic" if args.provider == "claude-api" else ""
+    return (
+        f"uv run --with fpdf2 --with rich{with_anthropic} python evals/all.py "
+        + " ".join([*flags, "--folder", f'"{folder}"', *extra])
+    )
 
 
 def get_span(scores: list[float]) -> str:
@@ -37,7 +56,7 @@ def get_span(scores: list[float]) -> str:
 
 
 def load_runs(folder: Path) -> list[dict]:
-    cases = {p.stem: json.loads(p.read_text()) for p in (ROOT / "cases").glob("*.json")}
+    cases = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in (ROOT / "cases").glob("*.json")}
     runs = []
     for path in score.run_paths(folder):
         name, _, number = path.stem.partition("__run")
@@ -109,12 +128,23 @@ def main() -> None:
     parser.add_argument("--runs", type=int, default=3, help="Runs per case (default 3)")
     parser.add_argument("--folder", help="Target an existing results folder")
     parser.add_argument("--skip-run", action="store_true", help="Skip run.py; process existing folder")
+    parser.add_argument("--provider", choices=("gemini", "claude-code", "claude-api"), default="gemini")
+    parser.add_argument("--model", help="the tested model (run.py's default per provider)")
+    parser.add_argument("--effort", help="the tested model's effort (claude providers)")
+    parser.add_argument("--resume", action="store_true", help="with --folder: only the runs not saved yet, or failed")
     args = parser.parse_args()
+    if args.resume and not args.folder:
+        parser.error("--resume needs --folder <folder>")
 
     # Interactive prompt
     do_run = not args.skip_run
     if do_run:
-        choice = input("🚀 Do you want to execute the generation step (run.py)? [Y/n]: ").strip().lower()
+        billed = (
+            " It is billed to ANTHROPIC_API_KEY." if args.provider == "claude-api" else ""
+        )
+        choice = input(
+            f"🚀 Do you want to execute the generation step (run.py, {args.provider})?{billed} [Y/n]: "
+        ).strip().lower()
         if choice in ('n', 'no'):
             do_run = False
             args.skip_run = True
@@ -136,16 +166,27 @@ def main() -> None:
 
     # Pipeline Execution
     if do_run:
-        run_step("run", *args.cases, "--runs", str(args.runs), "--into", str(folder))
-    
-    run_step("judge", str(folder))
+        flags = ["--runs", str(args.runs), "--into", str(folder), "--provider", args.provider]
+        if args.model:
+            flags += ["--model", args.model]
+        if args.effort:
+            flags += ["--effort", args.effort]
+        if args.resume:
+            flags.append("--resume")
+        # --resume, not --skip-run: the runs not made yet still need making
+        run_step("run", *args.cases, *flags, resume=command(args, folder, "--resume"))
+
+    run_step(
+        "judge", str(folder), "--provider", args.provider,
+        resume=command(args, folder, "--skip-run"),
+    )
     
     # Generate and save analytics
     summary_lines = generate_summary(folder)
     summary_text = "\n".join(summary_lines)
     
     print(f"\n{'='*20} FINAL SUMMARY {'='*20}\n{summary_text}")
-    (folder / "summary.txt").write_text(summary_text + "\n")
+    (folder / "summary.txt").write_text(summary_text + "\n", encoding="utf-8")
     print(f"\n💾 Saved summary to: {folder / 'summary.txt'}")
 
     # Always run score.py at the end: the grid, the per-category table and the diagnostics

@@ -1,0 +1,374 @@
+{
+  "change_summary": "The journal has retracted this paper on social media use and loneliness in adolescents. The reason given is that the survey data were found to be unreliable. The notice says the conclusions cannot be relied on, so the whole paper is affected, including its main finding of a link between heavy use and loneliness.",
+  "change_severity": "high",
+  "impact_level": "low",
+  "evaluation": "Your draft cites Ivanov and Dubois (2017) once, in the Introduction, together with two other papers as general background on adolescents' online lives. The journal retracted this paper because its survey data were unreliable, so the citation is affected. Your own study is a small interview study on friendships during exams and doesn't depend on this paper's finding. The impact is low: you would mainly need to remove or replace the citation.",
+  "recommendation": "Remove or replace the Ivanov and Dubois (2017) citation in the Introduction, because the journal retracted the paper over unreliable survey data. The impact is low, since the draft cites it only once, as background, and its own interview study doesn't depend on the paper.",
+  "assessment": {
+    "prompt_version": 6,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 91,
+          "about_this_paper": "yes",
+          "what_changed": "The journal retracted the article because the survey data were found to be unreliable, and says the conclusions cannot be relied on.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "A retraction for unreliable data means the findings, which rest on the survey, cannot be relied on.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2017.009r",
+              "quote": "The journal has retracted this article because the survey data were found to be unreliable."
+            },
+            {
+              "source": "10.9999/fake.2017.009r",
+              "quote": "The conclusions cannot be relied on."
+            },
+            {
+              "source": "10.9999/fake.2017.009r",
+              "quote": "Retraction: Social media use and loneliness in adolescents"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "summary": "The journal has retracted this paper on social media use and loneliness in adolescents. The reason given is that the survey data were found to be unreliable. The notice says the conclusions cannot be relied on, so the whole paper is affected, including its main finding of a link between heavy use and loneliness.",
+      "claims": [
+        {
+          "text": "The journal retracted the paper because the survey data were found to be unreliable.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2017.009r",
+              "quote": "The journal has retracted this article because the survey data were found to be unreliable."
+            }
+          ]
+        },
+        {
+          "text": "The retraction notice says the paper's conclusions cannot be relied on.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2017.009r",
+              "quote": "The conclusions cannot be relied on."
+            }
+          ]
+        },
+        {
+          "text": "The paper's main finding was that heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Heavy social media use was linked to higher loneliness in 1,000 adolescents."
+            }
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "Ivanov, K., & Dubois, C. (2017). Social media use and loneliness in adolescents. J. Fake Psychology.",
+      "uses": [
+        {
+          "section": "Introduction",
+          "quote": "Many studies have examined adolescents' online lives (Ivanov and Dubois, 2017; Lee, 2019; Moreau, 2020).",
+          "role": "background",
+          "claim_relied_on": "that adolescents' online lives have been studied by many researchers, as general context",
+          "affected": "yes",
+          "reason": "The whole paper is retracted, so this citation rests on a retracted source, though it only gives background context."
+        }
+      ],
+      "impact_level": "low",
+      "explanation": "Your draft cites Ivanov and Dubois (2017) once, in the Introduction, together with two other papers as general background on adolescents' online lives. The journal retracted this paper because its survey data were unreliable, so the citation is affected. Your own study is a small interview study on friendships during exams and doesn't depend on this paper's finding. The impact is low: you would mainly need to remove or replace the citation.",
+      "claims": [
+        {
+          "text": "The draft cites the paper once, in the Introduction, together with two other references as background on adolescents' online lives.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Many studies have examined adolescents' online lives (Ivanov and Dubois, 2017; Lee, 2019; Moreau, 2020)."
+            }
+          ]
+        },
+        {
+          "text": "The stored paper reports that heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Heavy social media use was linked to higher loneliness in 1,000 adolescents."
+            }
+          ]
+        },
+        {
+          "text": "The journal retracted the paper because the survey data were found to be unreliable.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2017.009r",
+              "quote": "The journal has retracted this article because the survey data were found to be unreliable."
+            }
+          ]
+        },
+        {
+          "text": "The retraction notice says the conclusions cannot be relied on.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2017.009r",
+              "quote": "The conclusions cannot be relied on."
+            }
+          ]
+        },
+        {
+          "text": "The draft's own study is a small interview study about how friendships are maintained during exams.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We interviewed 20 students."
+            }
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Remove the citation to Ivanov and Dubois (2017), or replace it with a reliable, non-retracted source on adolescents' online lives. Then check that the sentence still makes sense with Lee (2019) and Moreau (2020) alone.",
+          "where": "Introduction, sentence starting \"Many studies have examined adolescents' online lives\""
+        },
+        {
+          "action": "Remove the entry from the reference list too. If you keep it for any reason, cite the retraction notice alongside it.",
+          "where": "Reference list, Ivanov & Dubois (2017)"
+        }
+      ],
+      "recommendation": "Remove or replace the Ivanov and Dubois (2017) citation in the Introduction, because the journal retracted the paper over unreliable survey data. The impact is low, since the draft cites it only once, as background, and its own interview study doesn't depend on the paper.",
+      "claims": [
+        {
+          "text": "The journal retracted the paper because the survey data were found to be unreliable.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2017.009r",
+              "quote": "The journal has retracted this article because the survey data were found to be unreliable."
+            }
+          ]
+        },
+        {
+          "text": "The draft cites the paper once, in the Introduction, together with two other references as general background on adolescents' online lives.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Many studies have examined adolescents' online lives (Ivanov and Dubois, 2017; Lee, 2019; Moreau, 2020)."
+            }
+          ]
+        },
+        {
+          "text": "The draft's own study is a small interview study and does not rely on the retracted paper's finding.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We interviewed 20 students."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The journal retracted the paper because the survey data were found to be unreliable.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The journal has retracted this article because the survey data were found to be unreliable.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The retraction notice says the paper's conclusions cannot be relied on.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The conclusions cannot be relied on.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The paper's main finding was that heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft cites the paper once, in the Introduction, together with two other references as background on adolescents' online lives.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Many studies have examined adolescents' online lives (Ivanov and Dubois, 2017; Lee, 2019; Moreau, 2020).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The stored paper reports that heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The journal retracted the paper because the survey data were found to be unreliable.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The journal has retracted this article because the survey data were found to be unreliable.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The retraction notice says the conclusions cannot be relied on.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The conclusions cannot be relied on.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The draft's own study is a small interview study about how friendships are maintained during exams.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We interviewed 20 students.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The journal retracted the paper because the survey data were found to be unreliable.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The journal has retracted this article because the survey data were found to be unreliable.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The draft cites the paper once, in the Introduction, together with two other references as general background on adolescents' online lives.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Many studies have examined adolescents' online lives (Ivanov and Dubois, 2017; Lee, 2019; Moreau, 2020).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The draft's own study is a small interview study and does not rely on the retracted paper's finding.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We interviewed 20 students.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

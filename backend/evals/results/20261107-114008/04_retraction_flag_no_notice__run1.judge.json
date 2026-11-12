@@ -1,0 +1,185 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the retraction is based only on a metadata flag, with no notice or reason available",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"OpenAlex flags this paper as retracted, but no retraction notice or current copy was available to confirm it. Nothing shows what was retracted or why.\" and \"The change is only a metadata flag saying the paper was retracted. No retraction notice or current copy was found\""
+    },
+    {
+      "fact": "advises the researcher to check the journal or publisher's page to confirm the retraction",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Treat the flag as a prompt to check the journal page directly.\" and \"check the journal page for a retraction notice right away\""
+    },
+    {
+      "fact": "states a reason for the retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"Nothing shows what was retracted or why.\""
+    },
+    {
+      "fact": "quotes a retraction notice",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "No retraction notice text is quoted; the answer states that no notice was found."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The passage describes a retraction alert with no notice, which matches the claim that the only evidence is such an alert."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of",
+      "backs": true,
+      "pass": true,
+      "reason": "The passage states the paper describes a sensor under 20 USD measuring nitrate to within 5% of lab results, matching the claimed content of the stored paper. It says nothing about whether this has changed."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+      "backs": true,
+      "pass": true,
+      "reason": "The passage says the draft measured nitrate with the Novak and Silva sensor using their calibration protocol without changes, which matches the claim."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "The calibration protocol is given in Section 2.",
+      "backs": false,
+      "pass": false,
+      "reason": "The passage only says where the calibration protocol is given. It does not say the draft uses the sensor or protocol unchanged in its Methods."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The passage describes a retraction alert with no notice, matching the claim that the only evidence is a flag with no notice, so it is unclear whether the used parts are affected."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of",
+      "backs": true,
+      "pass": true,
+      "reason": "The passage states the paper describes a sensor under 20 USD accurate to within 5% of lab results, matching the claim."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "The passage describes a retraction alert with no notice. It says 'alert' rather than 'metadata flag', but the substance (only sign is a flag with no notice) matches."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+      "backs": true,
+      "pass": true,
+      "reason": "The passage says the draft measured nitrate with the Novak and Silva sensor using their calibration protocol without changes. The dependence on the paper is an inference, but the quoted use matches the core of the claim."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "OpenAlex flags this paper as retracted, but no retraction notice or current copy was available to confirm it.",
+      "covered_by": [
+        "change-0",
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing shows what was retracted or why.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "change_summary",
+      "statement": "Treat the flag as a prompt to check the journal page directly.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "change_summary",
+      "statement": "Until then, the paper's claims are unconfirmed as affected.",
+      "covered_by": [
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your draft uses the Novak and Silva sensor and its calibration protocol, unchanged, to measure nitrate (Methods).",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The change is only a metadata flag saying the paper was retracted.",
+      "covered_by": [
+        "change-0",
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No retraction notice or current copy was found, so we can't tell whether the sensor or protocol is affected.",
+      "covered_by": [
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "I counted the Methods use as possibly affected.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "Severity is low and the use is methods_or_data, so the impact is medium.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "Check the journal page for a notice before relying on it.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "Don't act on the unconfirmed flag alone, but check the journal page for a retraction notice right away.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "Because your Methods use the sensor and calibration unchanged, raise this with your co-authors or supervisor and don't build further on it until the notice is found.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    }
+  ]
+}

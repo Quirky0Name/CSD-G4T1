@@ -1,0 +1,184 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the draft does not cite the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Your draft does not cite the retracted 2018 paper.\""
+    },
+    {
+      "fact": "says no action is needed for the draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No action is needed: the draft does not cite the retracted 2018 paper, so the alert can be dismissed.\""
+    },
+    {
+      "fact": "says the draft cites the retracted paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing the 2021 review from the reference list",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched document's title is a retraction notice for the curcumin extraction paper, which shows the paper has been retracted."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "the reported yields could not be reproduced and the raw data were found to have been altered",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice text states that the reported yields could not be reproduced and the raw data were altered, matching the claim."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's sentence states that a single ethanol extraction recovered 94% of the curcumin, matching the claimed main result."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Okonkwo, C., & Eze, P. (2021). Green solvents for curcumin extraction: a review. J. Fake Chemistry, 12, 40-62.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's reference list entry is Okonkwo and Eze 2021, a review, which is not the 2018 research paper."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Extraction yields above 90% from a single ethanol step have been claimed for turmeric, although these claims have since been questioned.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says yields above 90% from a single ethanol step have been claimed, with no citation, and that these claims have since been questioned."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same quote as claim 3; the tracked paper reports 94% curcumin recovery from a single ethanol extraction."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched retraction notice for the curcumin extraction paper shows the tracked paper has been retracted."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched retraction notice concerns the tracked paper, so it shows the tracked paper has been retracted. The quoted title does not state the year 2018 itself."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Okonkwo, C., & Eze, P. (2021). Green solvents for curcumin extraction: a review. J. Fake Chemistry, 12, 40-62.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's only Okonkwo and Eze entry is the 2021 review, not the tracked 2018 paper."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper has been retracted.",
+      "covered_by": [
+        "change-0",
+        "impact-3",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the reported yields could not be reproduced and the raw data were altered.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's single result, a 94% curcumin recovery from one ethanol extraction, therefore can't be relied on.",
+      "covered_by": [
+        "change-2",
+        "impact-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your draft does not cite the retracted 2018 paper.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The only Okonkwo and Eze entry is a different paper, their 2021 review.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The other reference is by Tan.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The Introduction says yields above 90% from one ethanol step 'have been claimed' for turmeric, but it gives no citation and already says the claims were questioned.",
+      "covered_by": [
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The Introduction sentence may allude to this paper's 94% result, but nothing in the draft ties the sentence to it.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft does not cite the retracted 2018 paper.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The only Okonkwo and Eze entry is their 2021 review, a different paper.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

@@ -5,6 +5,7 @@ fixed rules, so every alert always has a complete assessment. Later stages (LLM
 investigation, meaningfulness, stance checks) revise this one instead of starting from
 nothing. Pure: no HTTP, no LLM."""
 
+import re
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
@@ -116,3 +117,14 @@ def _notice(change: Change) -> str:
     parts = [f"notice {change.notice_doi}" if change.notice_doi else None, change.notice_date]
     known = [part for part in parts if part]
     return f" ({', '.join(known)})" if known else ""
+
+
+# the date part of what `_notice` writes: ` (notice 10.x/y, 2020-07-01)` or ` (2020-07-01)`
+_NOTICE_DATE = re.compile(r"\((?:notice [^,()]+, )?(\d{4}-\d{2}-\d{2})\)")
+
+
+def notice_date(description: str) -> str | None:
+    """The notice's date that `_notice` wrote into an alert's description, or None. Storage
+    Management keeps no separate notice date, so impact reads it back from here."""
+    match = _NOTICE_DATE.search(description)
+    return match.group(1) if match else None

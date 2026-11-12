@@ -1,0 +1,109 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the retraction was issued in error and has been withdrawn, with the paper reinstated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The paper was retracted on 22 September 2026 for image duplication. The publisher later said the retraction was a mistake, because the image concerns related to a different article in the same investigation. The retraction is withdrawn, the paper is reinstated, and the watermark is removed.\""
+    },
+    {
+      "fact": "says the paper's findings or data can still be relied on",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The publisher checked this paper's images and data and found no problems, so nothing here limits reliance on it.\""
+    },
+    {
+      "fact": "treats the paper as still retracted or tells the researcher to stop citing it",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the paper's images or data were found to be duplicated or unreliable",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"The paper was retracted on 22 September 2026 for image duplication.\" The answer reports the original retraction reason, but then states the publisher found no problems with this paper's images and data."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Following an investigation by the publisher into a group of articles, concerns were raised about the duplication of images.",
+      "backs": false,
+      "pass": false,
+      "reason": "The passage says a publisher investigation into a group of articles raised concerns about duplicated images. It does not say the paper was retracted or that the retraction was for those concerns, so it says less than the claim."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The image concerns that led to the retraction relate to a different article in the same investigation",
+      "backs": false,
+      "pass": false,
+      "reason": "The passage says the image concerns that led to the retraction relate to a different article in the same investigation. That matches the second half of the claim, but it does not say the retraction was issued in error, which the claim states."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed.",
+      "backs": true,
+      "pass": true,
+      "reason": "The passage states the retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed. This matches the claim."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The publisher has checked the images and data of this article and found no problems with them.",
+      "backs": true,
+      "pass": true,
+      "reason": "The passage states the publisher checked the article's images and data and found no problems. This matches the claim."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper was retracted on 22 September 2026 for image duplication.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The publisher later said the retraction was a mistake, because the image concerns related to a different article in the same investigation.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction is withdrawn, the paper is reinstated, and the watermark is removed.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The publisher checked this paper's images and data and found no problems.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing in the publisher's check limits reliance on this paper.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The change was not meaningful, so its impact was not assessed.",
+      "covered_by": [],
+      "pass": false
+    }
+  ]
+}

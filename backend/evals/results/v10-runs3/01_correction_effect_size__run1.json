@@ -1,0 +1,490 @@
+{
+  "change_summary": "The correction says the effect size in Table 2 was reported incorrectly because of a calculation error. The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8. The stored paper's Results report a large reduction with d = 1.8, 95% CI 1.4 to 2.2, and its Discussion says the effect was large. The direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+  "change_severity": "medium",
+  "impact_level": "medium",
+  "evaluation": "Your Introduction cites [12] as finding a large effect (d = 1.8) and uses it to expect a strong reduction in anxiety. The original paper reports that figure, d = 1.8 (95% CI 1.4 to 2.2). The correction says the correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8, so the number your expectation rests on has changed. The correction says the direction of the effect and the conclusion that training reduced anxiety are unchanged, so the impact on your draft is medium: the size of the effect is much smaller, but the direction is the same.",
+  "recommendation": "Your Introduction cites [12] as finding a large effect (d = 1.8) and draws from it the expectation that mindfulness will strongly reduce anxiety. The correction says the correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8. Update the number in your Introduction, cite the correction, and re-check the \"strongly reduce\" wording. The correction says the direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+  "assessment": {
+    "prompt_version": 10,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 12,
+          "about_this_paper": "yes",
+          "what_changed": "The correction says the effect size in Table 2 was miscalculated: the correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8. The direction of the effect and the conclusion are unchanged.",
+          "scope": "specific_parts",
+          "affected_parts": [
+            {
+              "part": "Table 2 effect size, and the Results sentence reporting d = 1.8, 95% CI 1.4 to 2.2",
+              "findings_affected": "The size of the anxiety reduction, which is much smaller than reported (0.8 vs 1.8); the 'large reduction' and 'effect was large' wording; the direction of effect and the conclusion that training reduced anxiety stand"
+            }
+          ],
+          "severity": "medium",
+          "reason": "A correction that changes a main reported number (the effect size drops from 1.8 to 0.8) counts as a change to results, although the direction and the conclusion that training reduced anxiety are unchanged.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2020.001c",
+              "quote": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8."
+            },
+            {
+              "source": "10.9999/fake.2020.001c",
+              "quote": "The direction of the effect and the conclusion that training reduced anxiety are unchanged."
+            },
+            {
+              "source": "stored paper",
+              "quote": "Mindfulness training produced a large reduction in exam anxiety (d = 1.8, 95% CI 1.4 to 2.2)."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "medium",
+      "claims": [
+        {
+          "text": "The correction says the effect size in Table 2 was reported incorrectly because of a calculation error.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.001c",
+              "quote": "the effect size in Table 2 was reported incorrectly because of a calculation error."
+            }
+          ]
+        },
+        {
+          "text": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.001c",
+              "quote": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8."
+            }
+          ]
+        },
+        {
+          "text": "The direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.001c",
+              "quote": "The direction of the effect and the conclusion that training reduced anxiety are unchanged."
+            }
+          ]
+        },
+        {
+          "text": "The stored paper's Results report a large reduction with d = 1.8, 95% CI 1.4 to 2.2.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Mindfulness training produced a large reduction in exam anxiety (d = 1.8, 95% CI 1.4 to 2.2)."
+            }
+          ]
+        },
+        {
+          "text": "The stored paper's Discussion says the effect was large.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "The effect was large and was not explained by age or course."
+            }
+          ]
+        }
+      ],
+      "summary": [
+        {
+          "text": "The correction says the effect size in Table 2 was reported incorrectly because of a calculation error.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "The stored paper's Results report a large reduction with d = 1.8, 95% CI 1.4 to 2.2, and its Discussion says the effect was large.",
+          "kind": "fact",
+          "claims": [
+            4,
+            5
+          ]
+        },
+        {
+          "text": "The direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[12] Smith, J., Lee, K., Tan, M. (2020). Mindfulness training reduces exam anxiety in undergraduates. J. Fake Psychology.",
+      "uses": [
+        {
+          "section": "Introduction",
+          "quote": "Smith et al. [12] found a large effect (d = 1.8), so we expect mindfulness to strongly reduce anxiety.",
+          "role": "key_evidence",
+          "claim_relied_on": "that mindfulness training had a large effect on exam anxiety (d = 1.8), which the draft uses to expect a strong reduction in anxiety",
+          "affected": "yes",
+          "reason": "The correction changes the effect size from d = 1.8 to d = 0.8, the number the draft quotes and builds its expectation on."
+        }
+      ],
+      "impact_level": "medium",
+      "claims": [
+        {
+          "text": "The draft's Introduction cites [12] as finding a large effect (d = 1.8) and draws from it the expectation that mindfulness will strongly reduce anxiety.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Smith et al. [12] found a large effect (d = 1.8), so we expect mindfulness to strongly reduce anxiety."
+            }
+          ]
+        },
+        {
+          "text": "The stored paper reports a large reduction in exam anxiety with d = 1.8, 95% CI 1.4 to 2.2.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Mindfulness training produced a large reduction in exam anxiety (d = 1.8, 95% CI 1.4 to 2.2)."
+            }
+          ]
+        },
+        {
+          "text": "The correction says the correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.001c",
+              "quote": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8."
+            }
+          ]
+        },
+        {
+          "text": "The correction says the direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.001c",
+              "quote": "The direction of the effect and the conclusion that training reduced anxiety are unchanged."
+            }
+          ]
+        }
+      ],
+      "explanation": [
+        {
+          "text": "Your Introduction cites [12] as finding a large effect (d = 1.8) and uses it to expect a strong reduction in anxiety.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The original paper reports that figure, d = 1.8 (95% CI 1.4 to 2.2).",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "The correction says the correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8, so the number your expectation rests on has changed.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "The correction says the direction of the effect and the conclusion that training reduced anxiety are unchanged, so the impact on your draft is medium: the size of the effect is much smaller, but the direction is the same.",
+          "kind": "fact",
+          "claims": [
+            4
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Replace d = 1.8 with the corrected d = 0.8 (95% CI 0.5 to 1.1) and cite the correction notice alongside [12].",
+          "where": "Introduction: \"Smith et al. [12] found a large effect (d = 1.8), so we expect...\""
+        },
+        {
+          "action": "Re-check the wording \"large effect\" and \"strongly reduce anxiety\" against the smaller corrected effect, and soften it if it no longer fits. The direction of the effect is unchanged, so the citation can stay.",
+          "where": "Introduction: \"...so we expect mindfulness to strongly reduce anxiety.\""
+        }
+      ],
+      "claims": [
+        {
+          "text": "The draft's Introduction cites [12] as finding a large effect (d = 1.8) and draws from it the expectation that mindfulness will strongly reduce anxiety.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Smith et al. [12] found a large effect (d = 1.8), so we expect mindfulness to strongly reduce anxiety."
+            }
+          ]
+        },
+        {
+          "text": "The correction says the correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.001c",
+              "quote": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8."
+            }
+          ]
+        },
+        {
+          "text": "The correction says the direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.001c",
+              "quote": "The direction of the effect and the conclusion that training reduced anxiety are unchanged."
+            }
+          ]
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "Your Introduction cites [12] as finding a large effect (d = 1.8) and draws from it the expectation that mindfulness will strongly reduce anxiety.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The correction says the correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "Update the number in your Introduction, cite the correction, and re-check the \"strongly reduce\" wording.",
+          "kind": "advice",
+          "claims": []
+        },
+        {
+          "text": "The correction says the direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The correction says the effect size in Table 2 was reported incorrectly because of a calculation error.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the effect size in Table 2 was reported incorrectly because of a calculation error.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The stored paper's Results report a large reduction with d = 1.8, 95% CI 1.4 to 2.2.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Mindfulness training produced a large reduction in exam anxiety (d = 1.8, 95% CI 1.4 to 2.2).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The stored paper's Discussion says the effect was large.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The effect was large and was not explained by age or course.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft's Introduction cites [12] as finding a large effect (d = 1.8) and draws from it the expectation that mindfulness will strongly reduce anxiety.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Smith et al. [12] found a large effect (d = 1.8), so we expect mindfulness to strongly reduce anxiety.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The stored paper reports a large reduction in exam anxiety with d = 1.8, 95% CI 1.4 to 2.2.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Mindfulness training produced a large reduction in exam anxiety (d = 1.8, 95% CI 1.4 to 2.2).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The correction says the correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The correction says the direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The draft's Introduction cites [12] as finding a large effect (d = 1.8) and draws from it the expectation that mindfulness will strongly reduce anxiety.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Smith et al. [12] found a large effect (d = 1.8), so we expect mindfulness to strongly reduce anxiety.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The correction says the correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The correct value is d = 0.8 (95% CI 0.5 to 1.1), not d = 1.8.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The correction says the direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The direction of the effect and the conclusion that training reduced anxiety are unchanged.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

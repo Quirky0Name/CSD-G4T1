@@ -1,0 +1,122 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the alert's retraction notice is the paper's own DOI, so following it leads back to the paper itself rather than to a separate retraction notice",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Alert 241 reports a retraction whose notice DOI is 10.9999/fake.2020.024, and the tracked paper's own DOI is 10.9999/fake.2020.024.\" The answer states the two DOIs are identical but does not spell out that following the link returns to the paper itself."
+    },
+    {
+      "fact": "says the alert's date (1 July 2020) is the paper's own issue publication date, not the date of a retraction",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": ""
+    },
+    {
+      "fact": "says nothing else shows a retraction: the current copy has no retraction banner or watermark and its title has no RETRACTED prefix",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"the current copy shows no retraction watermark or banner\" and \"The current copy's Crossref title is the same as the tracked paper's title, so nothing given here shows a change to the paper.\" The answer does not explicitly mention a RETRACTED prefix, so this is only partly covered."
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "states a reason for a retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"No notice text was provided\" \u2014 no reason for retraction is given."
+    },
+    {
+      "fact": "recommends removing or replacing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"recommendation\": null"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line reports a retraction with notice DOI 10.9999/fake.2020.024, which matches what claim 1 states."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "doi:10.9999/fake.2020.024",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's DOI is given as doi:10.9999/fake.2020.024, which matches what claim 2 states."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial",
+      "backs": false,
+      "pass": false,
+      "reason": "The quote is a paper title from a fetched document. It does not show the tracked paper's title or that this is the Crossref title, so it cannot show the two titles are the same."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "Alert 241 reports a retraction whose notice DOI is 10.9999/fake.2020.024.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No notice text was provided.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy shows no retraction watermark or banner.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy's Crossref title is the same as the tracked paper's title.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing given here shows a change to the paper.",
+      "covered_by": [],
+      "pass": false
+    }
+  ],
+  "absent_claims": [
+    "change-2",
+    "change-3"
+  ]
+}

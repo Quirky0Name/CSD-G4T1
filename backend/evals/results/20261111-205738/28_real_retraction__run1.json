@@ -1,0 +1,927 @@
+{
+  "change_summary": "The PLOS One Editors have retracted the article Detecting phishing websites using machine learning technique, because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process. The editors say these concerns call into question the validity and provenance of the reported results, which include the proposed LSTM-based detector's accuracy of 97.4% on Phishtank and 96.8% on Crawler data. The author either did not respond to the editors or could not be reached.",
+  "change_severity": "high",
+  "impact_level": "high",
+  "evaluation": "In Section 3, your draft names Dutta [14] as the main evidence for its choice of detector, an RNN-LSTM URL detector called LURL, and cites [14] for LURL's accuracy of 97.4% on Phishtank and 96.8% on Crawler data, higher than both comparison detectors; the stored paper reports those accuracies. On the strength of these results the draft chose an LSTM over the two alternatives it had first considered, and it decided not to run a separate model-selection study before the pilot. In Section 4, the draft starts from the LURL settings reported by Dutta [14]: two LSTM layers, hidden size 650, learning rate 1.0 with decay 0.73, and it does not plan to tune these settings before the pilot, so that its results can be read against the published ones. The PLOS One Editors have retracted the article because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process. The editors say these concerns call into question the validity and provenance of the reported results, and those are the accuracy results your Section 3 relies on and the published results your Section 4 settings are meant to be read against, so all three uses are touched and the effect on your draft is high.",
+  "recommendation": "The PLOS One Editors have retracted the article because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process, and the editors say these concerns call into question the validity and provenance of the reported results. In Section 3, the draft names Dutta [14] as the main evidence for its choice of detector, and it cites [14] for LURL's accuracy of 97.4% on Phishtank and 96.8% on Crawler data, higher than both comparison detectors; on that basis, the draft decided not to run a separate model-selection study before the pilot. Remove or replace that citation, and re-check the LSTM choice with other evidence or the model-selection study you skipped. In Section 4, the draft starts from the LURL settings reported by Dutta [14] and does not plan to tune these settings before the pilot, so that its results can be read against the published ones. Raise this with your co-authors or supervisor before the pilot, because editing the text won't fix the planned method.",
+  "assessment": {
+    "prompt_version": 12,
+    "model": "opus",
+    "model_version": "claude-opus-5-5",
+    "answered_by": {
+      "change": "opus",
+      "impact": "opus",
+      "actions": "opus"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 281,
+          "about_this_paper": "yes",
+          "what_changed": "The PLOS One Editors retracted the article because of concerns about peer review integrity and possible manipulation of the publication process. They say these concerns call into question the validity and provenance of the reported results.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "The whole article is retracted for concerns about peer review integrity and manipulation of the publication process. The editors state that these concerns call into question the validity of the reported results, so none of the findings can be relied on.",
+          "evidence": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "The PLOS One Editors retract this article [1] because it was identified as one of a series of submissions for which we have concerns about peer review integrity"
+            },
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "These concerns call into question the validity and provenance of the reported results."
+            },
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "Retraction: Detecting phishing websites using machine learning technique"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "claims": [
+        {
+          "text": "The PLOS One Editors have retracted the article Detecting phishing websites using machine learning technique",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "Retraction: Detecting phishing websites using machine learning technique"
+            },
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "The PLOS One Editors retract this article [1]"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The article was retracted because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "because it was identified as one of a series of submissions for which we have concerns about peer review integrity and potential manipulation of the publication process"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The editors say these concerns call into question the validity and provenance of the reported results",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "These concerns call into question the validity and provenance of the reported results."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The reported results include the proposed LSTM-based detector's accuracy of 97.4% on Phishtank and 96.8% on Crawler data",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "LURL has produced an average of 97.4% and 96.8% for Phishtank and Crawler datasets respectively."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The author either did not respond to the editors or could not be reached",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "The author either did not respond directly or could not be reached."
+            }
+          ],
+          "absence": false
+        }
+      ],
+      "summary": [
+        {
+          "text": "The PLOS One Editors have retracted the article Detecting phishing websites using machine learning technique, because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "The editors say these concerns call into question the validity and provenance of the reported results, which include the proposed LSTM-based detector's accuracy of 97.4% on Phishtank and 96.8% on Crawler data.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The author either did not respond to the editors or could not be reached.",
+          "kind": "fact",
+          "claims": [
+            5
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[14] Dutta, A. K. (2021). Detecting phishing websites using machine learning technique. PLoS ONE, 16(10), e0258361. doi:10.1371/journal.pone.0258361",
+      "uses": [
+        {
+          "section": "3. Choice of detector",
+          "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL,",
+          "role": "key_evidence",
+          "claim_relied_on": "That an RNN-LSTM URL-only detector (LURL) trained on Phishtank and AlexaRank-crawled URLs beat two deep-learning comparison detectors, which justifies choosing an LSTM.",
+          "affected": "yes",
+          "reason": "The whole article is retracted, and the editors say the concerns call into question the validity of its reported results."
+        },
+        {
+          "section": "3. Choice of detector",
+          "quote": "LURL reached an accuracy of 97.4% on the Phishtank dataset and 96.8% on the Crawler dataset, higher than both comparison detectors on both datasets",
+          "role": "key_evidence",
+          "claim_relied_on": "That LURL reached 97.4% (Phishtank) and 96.8% (Crawler) accuracy and an F1-score of 96.4, higher than both comparison detectors, which led the authors to pick an LSTM and skip a model-selection study.",
+          "affected": "yes",
+          "reason": "These are the reported results whose validity and provenance the retraction notice calls into question."
+        },
+        {
+          "section": "4. Planned system and data",
+          "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73",
+          "role": "methods_or_data",
+          "claim_relied_on": "The LURL hyperparameters (two LSTM layers, hidden size 650, learning rate 1.0, decay 0.73, max 7 learning-rate epochs), used untuned as the starting configuration.",
+          "affected": "yes",
+          "reason": "The settings come from a retracted article whose results the editors say are in doubt, so the published results these settings are meant to be read against are no longer a reliable reference."
+        }
+      ],
+      "impact_level": "high",
+      "claims": [
+        {
+          "text": "In Section 3, the draft names Dutta [14] as the main evidence for its choice of detector, an RNN-LSTM URL detector called LURL",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL,"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The stored paper describes its proposed framework as using an RNN-LSTM to classify URLs as malicious or legitimate",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "The proposed framework employs RNN\u2014LSTM to identify the properties Pm and Pl in an order to declare an URL as malicious or legitimate."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The draft cites [14] for LURL's accuracy of 97.4% on Phishtank and 96.8% on Crawler data, higher than both comparison detectors",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "LURL reached an accuracy of 97.4% on the Phishtank dataset and 96.8% on the Crawler dataset, higher than both comparison detectors on both datasets"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The stored paper reports LURL accuracies of 97.4% and 96.8% on the Phishtank and Crawler datasets",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "LURL has produced an average of 97.4% and 96.8% for Phishtank and Crawler datasets respectively."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "On the strength of these results the draft chose an LSTM over the two alternatives it had first considered",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "On the strength of these results we chose an LSTM over the character-level convolutional detector and the gradient-boosted lexical classifier we had first considered [11, 13],"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The draft decided not to run a separate model-selection study before the pilot",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "and we decided not to run a separate model-selection study before the pilot."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "In Section 4, the draft starts from the LURL settings reported by Dutta [14]: two LSTM layers, hidden size 650, learning rate 1.0 with decay 0.73",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The stored paper's table of LURL settings lists a learning rate of 1.0 and at most 7 learning-rate epochs",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "LURL learning_rate = 1.0, max_lr_epoch = 7,"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The stored paper's table of LURL settings lists a hidden size of 650",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "check_batch_idx = 25, acc_check_thresh = 5, s_training = False, hidden_size = 650,"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The draft does not plan to tune these settings before the pilot, so that its results can be read against the published ones",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We do not plan to tune these settings before the pilot, so that our results can be read against the published ones"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The PLOS One Editors have retracted the article",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "Retraction: Detecting phishing websites using machine learning technique"
+            },
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "The PLOS One Editors retract this article [1]"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The article was retracted because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "because it was identified as one of a series of submissions for which we have concerns about peer review integrity and potential manipulation of the publication process"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The editors say these concerns call into question the validity and provenance of the reported results",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "These concerns call into question the validity and provenance of the reported results."
+            }
+          ],
+          "absence": false
+        }
+      ],
+      "explanation": [
+        {
+          "text": "In Section 3, your draft names Dutta [14] as the main evidence for its choice of detector, an RNN-LSTM URL detector called LURL, and cites [14] for LURL's accuracy of 97.4% on Phishtank and 96.8% on Crawler data, higher than both comparison detectors; the stored paper reports those accuracies.",
+          "kind": "fact",
+          "claims": [
+            1,
+            3,
+            4
+          ]
+        },
+        {
+          "text": "On the strength of these results the draft chose an LSTM over the two alternatives it had first considered, and it decided not to run a separate model-selection study before the pilot.",
+          "kind": "fact",
+          "claims": [
+            5,
+            6
+          ]
+        },
+        {
+          "text": "In Section 4, the draft starts from the LURL settings reported by Dutta [14]: two LSTM layers, hidden size 650, learning rate 1.0 with decay 0.73, and it does not plan to tune these settings before the pilot, so that its results can be read against the published ones.",
+          "kind": "fact",
+          "claims": [
+            7,
+            10
+          ]
+        },
+        {
+          "text": "The PLOS One Editors have retracted the article because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process.",
+          "kind": "fact",
+          "claims": [
+            11,
+            12
+          ]
+        },
+        {
+          "text": "The editors say these concerns call into question the validity and provenance of the reported results, and those are the accuracy results your Section 3 relies on and the published results your Section 4 settings are meant to be read against, so all three uses are touched and the effect on your draft is high.",
+          "kind": "fact",
+          "claims": [
+            13,
+            4,
+            10
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Remove or replace Dutta [14] as the main evidence for choosing an LSTM detector. Then re-check whether that choice still holds without it, for example by citing other evidence or running the model-selection study you had skipped.",
+          "where": "Section 3. Choice of detector, sentences starting \"The main evidence for our choice comes from Dutta [14]\" and \"LURL reached an accuracy of 97.4%\""
+        },
+        {
+          "action": "Revisit the decision to skip a separate model-selection study before the pilot, because that decision rested on the retracted results.",
+          "where": "Section 3. Choice of detector, sentence starting \"On the strength of these results we chose an LSTM\""
+        },
+        {
+          "action": "Stop and raise this with your co-authors or supervisor before the pilot. Your starting configuration uses the retracted paper's LURL settings untuned, so that your results can be read against its published results. Editing the text alone won't fix this.",
+          "where": "Section 4. Planned system and data, sentences starting \"We start from the LURL settings reported by Dutta [14]\" and \"We do not plan to tune these settings before the pilot\""
+        }
+      ],
+      "claims": [
+        {
+          "text": "The PLOS One Editors have retracted the article",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "Retraction: Detecting phishing websites using machine learning technique"
+            },
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "The PLOS One Editors retract this article [1]"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The article was retracted because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "because it was identified as one of a series of submissions for which we have concerns about peer review integrity and potential manipulation of the publication process"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The editors say these concerns call into question the validity and provenance of the reported results",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "These concerns call into question the validity and provenance of the reported results."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "In Section 3, the draft names Dutta [14] as the main evidence for its choice of detector, an RNN-LSTM URL detector called LURL",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL,"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The draft cites [14] for LURL's accuracy of 97.4% on Phishtank and 96.8% on Crawler data, higher than both comparison detectors",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "LURL reached an accuracy of 97.4% on the Phishtank dataset and 96.8% on the Crawler dataset, higher than both comparison detectors on both datasets"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The draft decided not to run a separate model-selection study before the pilot",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "and we decided not to run a separate model-selection study before the pilot."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "In Section 4, the draft starts from the LURL settings reported by Dutta [14]: two LSTM layers, hidden size 650, learning rate 1.0 with decay 0.73",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The draft does not plan to tune these settings before the pilot, so that its results can be read against the published ones",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We do not plan to tune these settings before the pilot, so that our results can be read against the published ones"
+            }
+          ],
+          "absence": false
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "The PLOS One Editors have retracted the article because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process, and the editors say these concerns call into question the validity and provenance of the reported results.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "In Section 3, the draft names Dutta [14] as the main evidence for its choice of detector, and it cites [14] for LURL's accuracy of 97.4% on Phishtank and 96.8% on Crawler data, higher than both comparison detectors; on that basis, the draft decided not to run a separate model-selection study before the pilot.",
+          "kind": "fact",
+          "claims": [
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "text": "Remove or replace that citation, and re-check the LSTM choice with other evidence or the model-selection study you skipped.",
+          "kind": "advice",
+          "claims": []
+        },
+        {
+          "text": "In Section 4, the draft starts from the LURL settings reported by Dutta [14] and does not plan to tune these settings before the pilot, so that its results can be read against the published ones. Raise this with your co-authors or supervisor before the pilot, because editing the text won't fix the planned method.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The PLOS One Editors have retracted the article Detecting phishing websites using machine learning technique",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: Detecting phishing websites using machine learning technique",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The PLOS One Editors retract this article [1]",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The article was retracted because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "because it was identified as one of a series of submissions for which we have concerns about peer review integrity and potential manipulation of the publication process",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The editors say these concerns call into question the validity and provenance of the reported results",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "These concerns call into question the validity and provenance of the reported results.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The reported results include the proposed LSTM-based detector's accuracy of 97.4% on Phishtank and 96.8% on Crawler data",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "LURL has produced an average of 97.4% and 96.8% for Phishtank and Crawler datasets respectively.",
+          "page": 13,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The author either did not respond to the editors or could not be reached",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The author either did not respond directly or could not be reached.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "In Section 3, the draft names Dutta [14] as the main evidence for its choice of detector, an RNN-LSTM URL detector called LURL",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL,",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The stored paper describes its proposed framework as using an RNN-LSTM to classify URLs as malicious or legitimate",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The proposed framework employs RNN\u2014LSTM to identify the properties Pm and Pl in an order to declare an URL as malicious or legitimate.",
+          "page": 7,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The draft cites [14] for LURL's accuracy of 97.4% on Phishtank and 96.8% on Crawler data, higher than both comparison detectors",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "LURL reached an accuracy of 97.4% on the Phishtank dataset and 96.8% on the Crawler dataset, higher than both comparison detectors on both datasets",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The stored paper reports LURL accuracies of 97.4% and 96.8% on the Phishtank and Crawler datasets",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "LURL has produced an average of 97.4% and 96.8% for Phishtank and Crawler datasets respectively.",
+          "page": 13,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "On the strength of these results the draft chose an LSTM over the two alternatives it had first considered",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "On the strength of these results we chose an LSTM over the character-level convolutional detector and the gradient-boosted lexical classifier we had first considered [11, 13],",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "The draft decided not to run a separate model-selection study before the pilot",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "and we decided not to run a separate model-selection study before the pilot.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-6",
+      "kind": "impact",
+      "text": "In Section 4, the draft starts from the LURL settings reported by Dutta [14]: two LSTM layers, hidden size 650, learning rate 1.0 with decay 0.73",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-7",
+      "kind": "impact",
+      "text": "The stored paper's table of LURL settings lists a learning rate of 1.0 and at most 7 learning-rate epochs",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "LURL learning_rate = 1.0, max_lr_epoch = 7,",
+          "page": 12,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-8",
+      "kind": "impact",
+      "text": "The stored paper's table of LURL settings lists a hidden size of 650",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "check_batch_idx = 25, acc_check_thresh = 5, s_training = False, hidden_size = 650,",
+          "page": 12,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-9",
+      "kind": "impact",
+      "text": "The draft does not plan to tune these settings before the pilot, so that its results can be read against the published ones",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We do not plan to tune these settings before the pilot, so that our results can be read against the published ones",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-10",
+      "kind": "impact",
+      "text": "The PLOS One Editors have retracted the article",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: Detecting phishing websites using machine learning technique",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The PLOS One Editors retract this article [1]",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-11",
+      "kind": "impact",
+      "text": "The article was retracted because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "because it was identified as one of a series of submissions for which we have concerns about peer review integrity and potential manipulation of the publication process",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-12",
+      "kind": "impact",
+      "text": "The editors say these concerns call into question the validity and provenance of the reported results",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "These concerns call into question the validity and provenance of the reported results.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The PLOS One Editors have retracted the article",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: Detecting phishing websites using machine learning technique",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The PLOS One Editors retract this article [1]",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The article was retracted because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "because it was identified as one of a series of submissions for which we have concerns about peer review integrity and potential manipulation of the publication process",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The editors say these concerns call into question the validity and provenance of the reported results",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "These concerns call into question the validity and provenance of the reported results.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "In Section 3, the draft names Dutta [14] as the main evidence for its choice of detector, an RNN-LSTM URL detector called LURL",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL,",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-4",
+      "kind": "action",
+      "text": "The draft cites [14] for LURL's accuracy of 97.4% on Phishtank and 96.8% on Crawler data, higher than both comparison detectors",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "LURL reached an accuracy of 97.4% on the Phishtank dataset and 96.8% on the Crawler dataset, higher than both comparison detectors on both datasets",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-5",
+      "kind": "action",
+      "text": "The draft decided not to run a separate model-selection study before the pilot",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "and we decided not to run a separate model-selection study before the pilot.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-6",
+      "kind": "action",
+      "text": "In Section 4, the draft starts from the LURL settings reported by Dutta [14]: two LSTM layers, hidden size 650, learning rate 1.0 with decay 0.73",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-7",
+      "kind": "action",
+      "text": "The draft does not plan to tune these settings before the pilot, so that its results can be read against the published ones",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We do not plan to tune these settings before the pilot, so that our results can be read against the published ones",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

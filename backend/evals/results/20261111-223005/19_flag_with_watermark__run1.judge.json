@@ -1,0 +1,433 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the current copy of the paper carries a retraction or withdrawal banner",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "in the current copy the paper's title begins with \"RETRACTED:\""
+    },
+    {
+      "fact": "says the reason for the retraction is not stated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "No retraction notice is available, so no reason for the retraction is given"
+    },
+    {
+      "fact": "tells the researcher to stop and raise it with co-authors or supervisor because the draft's methods depend on the paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Raise this with your co-authors or supervisor before going further, because editing the citation text alone won't fix a method your measurements are built on."
+    },
+    {
+      "fact": "states a specific reason for the retraction such as fabrication or error",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "claims a retraction notice was found or quotes one",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "OpenAlex recorded a retraction for the paper, with no retraction notice"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, no notice, detected 2026-10-01",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line shows retraction, no notice."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "RETRACTED: Soil carbon gains after winter cover",
+      "backs": true,
+      "pass": true,
+      "reason": "Title begins with RETRACTED:."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Soil carbon gains after winter cover cropping",
+      "backs": true,
+      "pass": true,
+      "reason": "Title shown without retraction marking."
+    },
+    {
+      "claim_id": "change-5",
+      "quote": "Winter cover crops raised topsoil carbon by 6% over three years.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the 6% over three years result in abstract."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft cites protocol followed exactly, with 0-15 cm and dry combustion; Haugen and Rao [5] is named."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Using an established protocol rather than designing our own lets our numbers be compared directly with that study",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft says established protocol allows direct comparison."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Soil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2.",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows dry combustion on 0-15 cm cores using sampling protocol."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "We describe the sampling and analysis protocol in detail so that it can be reused by other field groups",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract says protocol described in detail for reuse by other field groups."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "retraction, no notice, detected 2026-10-01",
+      "backs": true,
+      "pass": true,
+      "reason": "Same alert line."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "RETRACTED: Soil carbon gains after winter cover",
+      "backs": true,
+      "pass": true,
+      "reason": "Title begins with RETRACTED:."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft cites protocol exactly."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Using an established protocol rather than designing our own lets our numbers be compared directly with that study",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft says direct comparison."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "retraction, no notice, detected 2026-10-01",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line retraction no notice."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "RETRACTED: Soil carbon gains after winter cover",
+      "backs": true,
+      "pass": true,
+      "reason": "Title RETRACTED:."
+    },
+    {
+      "claim_id": "action-5",
+      "quote": "Soil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2.",
+      "backs": true,
+      "pass": true,
+      "reason": "Measured by dry combustion on 0-15 cm cores with own protocol."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 supports."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 supports."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 supports."
+    },
+    {
+      "claim_id": "change-5",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4 supports."
+    },
+    {
+      "claim_id": "impact-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5 supports."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 6 supports."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 7 supports."
+    },
+    {
+      "claim_id": "impact-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 8 supports."
+    },
+    {
+      "claim_id": "impact-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 9 supports."
+    },
+    {
+      "claim_id": "impact-5",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 10 supports."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 11 supports."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 12 supports."
+    },
+    {
+      "claim_id": "action-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 13 supports."
+    },
+    {
+      "claim_id": "action-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 14 supports."
+    },
+    {
+      "claim_id": "action-5",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 15 supports."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-6",
+      "from": [
+        "change-1",
+        "change-5"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Title marked retracted applies to whole paper; headline result is in the paper."
+    },
+    {
+      "claim_id": "change-7",
+      "from": [
+        "change-0",
+        "change-1",
+        "change-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Retraction confirmed, no reason given; unreliability is a reasonable inference."
+    },
+    {
+      "claim_id": "impact-7",
+      "from": [
+        "impact-2",
+        "impact-4",
+        "impact-5"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Retracted paper includes its protocol, given claims 11, 13, 14."
+    },
+    {
+      "claim_id": "impact-8",
+      "from": [
+        "impact-0",
+        "impact-7"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft follows the protocol, which is within the retracted paper."
+    },
+    {
+      "claim_id": "impact-9",
+      "from": [
+        "impact-0",
+        "impact-4",
+        "impact-5",
+        "impact-8"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft takes its method from the retracted paper; high level rests on these facts."
+    },
+    {
+      "claim_id": "action-6",
+      "from": [
+        "action-5",
+        "action-2",
+        "action-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Same as 16 using claims 24, 21, 22."
+    },
+    {
+      "claim_id": "action-7",
+      "from": [
+        "action-0",
+        "action-6"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft follows protocol of retracted paper."
+    },
+    {
+      "claim_id": "action-8",
+      "from": [
+        "action-0",
+        "action-2",
+        "action-3",
+        "action-7"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Method from fully retracted paper supports high."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "OpenAlex recorded a retraction with no notice; current copy title begins with RETRACTED:, stored title has no marking.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No retraction notice is available, so reason not given; apart from the marking, no text difference found.",
+      "covered_by": [
+        "change-3",
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Headline result is 6% topsoil carbon rise over three years, and retraction marks whole paper including it.",
+      "covered_by": [
+        "change-5",
+        "change-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Because retraction is confirmed and no reason narrows it, findings cannot be relied on.",
+      "covered_by": [
+        "change-7"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Draft Methods 2.2 cites Haugen and Rao [5] as protocol followed exactly for 0-15 cm cores and dry combustion, enabling direct comparison.",
+      "covered_by": [
+        "impact-0",
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Stored paper measured soil carbon by dry combustion on 0-15 cm cores using its own protocol, set out in detail for reuse.",
+      "covered_by": [
+        "impact-2",
+        "impact-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "OpenAlex recorded retraction with no notice; title begins RETRACTED:; whole paper retracted including protocol.",
+      "covered_by": [
+        "impact-4",
+        "impact-5",
+        "impact-7"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No notice available so no reason given; draft's use of protocol is touched by retraction.",
+      "covered_by": [
+        "impact-6",
+        "impact-8"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Impact on draft is high.",
+      "covered_by": [
+        "impact-9"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Draft cites Haugen and Rao [5] as protocol followed exactly, and the retraction marks whole paper including protocol.",
+      "covered_by": [
+        "action-0",
+        "action-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No retraction notice is available, so no reason given.",
+      "covered_by": [
+        "action-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-3",
+    "impact-6",
+    "action-4"
+  ]
+}

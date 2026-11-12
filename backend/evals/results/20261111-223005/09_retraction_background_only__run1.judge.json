@@ -1,0 +1,419 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the paper was retracted because the survey data were unreliable",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The journal has retracted the paper because the survey data were found to be unreliable"
+    },
+    {
+      "fact": "says the draft cites it only as background context, among other sources",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The draft uses the paper as background: it is one of several examples of earlier work"
+    },
+    {
+      "fact": "says the effect on the draft is limited, and suggests removing or replacing the citation",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The impact on the draft is low. ... Remove the Ivanov and Dubois citation from that Introduction sentence and keep Lee (2019) and Moreau (2020) as support."
+    },
+    {
+      "fact": "says the draft's methods or main argument depend on the paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "the draft's own question does not draw on the paper's specific finding"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: Social media use and loneliness in adolescents",
+      "backs": true,
+      "pass": true,
+      "reason": "Title shows retraction of the paper."
+    },
+    {
+      "claim_id": "change-0",
+      "quote": "The journal has retracted this article",
+      "backs": true,
+      "pass": true,
+      "reason": "States journal retracted the article."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The journal has retracted this article because the survey data were found to be unreliable.",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives reason: unreliable survey data."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The conclusions cannot be relied on.",
+      "backs": true,
+      "pass": true,
+      "reason": "Conclusions cannot be relied on."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract states the finding."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Many studies have examined adolescents' online lives (Ivanov and Dubois, 2017; Lee, 2019; Moreau, 2020).",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows the citation with Lee and Moreau for the general point."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Our study asks a different question: how friendships are maintained during exams.",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows the different question about friendships during exams."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract states the finding."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "The journal has retracted this article because the survey data were found to be unreliable.",
+      "backs": true,
+      "pass": true,
+      "reason": "States retraction and reason."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "The conclusions cannot be relied on.",
+      "backs": true,
+      "pass": true,
+      "reason": "Conclusions cannot be relied on."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Many studies have examined adolescents' online lives (Ivanov and Dubois, 2017; Lee, 2019; Moreau, 2020).",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows the citation."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The journal has retracted this article because the survey data were found to be unreliable.",
+      "backs": true,
+      "pass": true,
+      "reason": "States retraction and reason."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The conclusions cannot be relied on.",
+      "backs": true,
+      "pass": true,
+      "reason": "Conclusions cannot be relied on."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "Our study asks a different question: how friendships are maintained during exams.",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows the different question."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "Heavy social media use was linked to higher loneliness in 1,000 adolescents.",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract states the finding."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 1, 2."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Abstract states the finding; 'main' is a reasonable reading."
+    },
+    {
+      "claim_id": "impact-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 6."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 7."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 8."
+    },
+    {
+      "claim_id": "impact-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 9."
+    },
+    {
+      "claim_id": "impact-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 10."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 11."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 12."
+    },
+    {
+      "claim_id": "action-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 13."
+    },
+    {
+      "claim_id": "action-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 14."
+    },
+    {
+      "claim_id": "action-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 15."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-4",
+      "from": [
+        "change-0",
+        "change-1",
+        "change-2",
+        "change-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Retraction, unreliable data, unreliable conclusions and the finding are given; consistent."
+    },
+    {
+      "claim_id": "impact-5",
+      "from": [
+        "impact-0",
+        "impact-3",
+        "impact-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from citation plus retraction and unreliable conclusions."
+    },
+    {
+      "claim_id": "impact-6",
+      "from": [
+        "impact-0",
+        "impact-1",
+        "impact-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Citation among several, different question, and paper's finding given."
+    },
+    {
+      "claim_id": "impact-7",
+      "from": [
+        "impact-3",
+        "impact-5",
+        "impact-6"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Low level rests on the retraction, the citation being touched, and background use."
+    },
+    {
+      "claim_id": "action-5",
+      "from": [
+        "action-0",
+        "action-1",
+        "action-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from claims 14, 15, 16."
+    },
+    {
+      "claim_id": "action-6",
+      "from": [
+        "action-0",
+        "action-3",
+        "action-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from claims 14, 17, 18."
+    },
+    {
+      "claim_id": "action-7",
+      "from": [
+        "action-1",
+        "action-5",
+        "action-6"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Level rests on the facts given in 15, 19, 20."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The journal has retracted the paper because the survey data were found to be unreliable.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "impact-3",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice states that the conclusions cannot be relied on, and the paper's main finding was heavy social media use linked to higher loneliness in 1,000 adolescents.",
+      "covered_by": [
+        "change-2",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction affects the whole paper, including its link, so its findings cannot be relied on.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's Introduction cites Ivanov and Dubois 2017 alongside Lee 2019 and Moreau 2020 for the general point; next sentence says its study asks a different question about friendships during exams.",
+      "covered_by": [
+        "impact-0",
+        "impact-1",
+        "action-0",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The journal retracted the paper because the survey data were unreliable, and the notice says conclusions cannot be relied on.",
+      "covered_by": [
+        "impact-3",
+        "impact-4",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The Introduction citation is touched by the retraction.",
+      "covered_by": [
+        "impact-5",
+        "action-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft uses the paper as background, one of several examples, and its question does not draw on the specific finding.",
+      "covered_by": [
+        "impact-6",
+        "action-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The impact on the draft is low.",
+      "covered_by": [
+        "impact-7",
+        "action-7"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The journal retracted the paper because survey data were unreliable, and the notice says conclusions cannot be relied on.",
+      "covered_by": [
+        "impact-3",
+        "impact-4",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft cites Ivanov and Dubois alongside Lee and Moreau in the Introduction, and the citation is touched by the retraction.",
+      "covered_by": [
+        "impact-0",
+        "action-0",
+        "impact-5",
+        "action-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft uses the paper as background, one of several examples, its question does not draw on the finding, so impact is low.",
+      "covered_by": [
+        "impact-6",
+        "action-6",
+        "impact-7",
+        "action-7"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

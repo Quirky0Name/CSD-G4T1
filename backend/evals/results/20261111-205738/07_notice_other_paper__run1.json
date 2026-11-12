@@ -1,0 +1,202 @@
+{
+  "change_summary": "The retraction notice is titled as a retraction of an article on mindfulness training and sleep quality in nurses, while the tracked paper is about mindfulness training and exam anxiety in undergraduates. That other article was retracted because its data could not be verified. The tracked paper reported that eight weeks of mindfulness training reduced self-reported exam anxiety in 120 undergraduates, and no notice given here names the tracked paper's own title.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 12,
+    "model": "opus",
+    "model_version": "claude-opus-5-5",
+    "answered_by": {
+      "change": "opus",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 71,
+          "about_this_paper": "no",
+          "what_changed": "The retraction notice is for a different article, \"Mindfulness training improves sleep quality in nurses\", which was retracted because its data could not be verified. Its Crossref record links it to the tracked paper, but the title shows it is about another study.",
+          "scope": "unclear",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "The notice's title names a study of sleep quality in nurses, not the tracked paper on exam anxiety in undergraduates, so it is about another article. Nothing given shows any change to the tracked paper.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2021.700r",
+              "quote": "RETRACTED: Mindfulness training improves sleep quality in nurses"
+            },
+            {
+              "source": "10.9999/fake.2021.700r",
+              "quote": "This article has been retracted because the data could not be verified."
+            },
+            {
+              "source": "stored paper",
+              "quote": "Mindfulness training reduces exam anxiety in undergraduates"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "none",
+      "claims": [
+        {
+          "text": "The retraction notice is titled as a retraction of an article on mindfulness training and sleep quality in nurses",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.700r",
+              "quote": "RETRACTED: Mindfulness training improves sleep quality in nurses"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "the tracked paper is about mindfulness training and exam anxiety in undergraduates",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Mindfulness training reduces exam anxiety in undergraduates"
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "That other article was retracted because its data could not be verified",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.700r",
+              "quote": "This article has been retracted because the data could not be verified."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "The tracked paper reported that eight weeks of mindfulness training reduced self-reported exam anxiety in 120 undergraduates",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Eight weeks of mindfulness training reduced self-reported exam anxiety in 120 undergraduates."
+            }
+          ],
+          "absence": false
+        },
+        {
+          "text": "No notice given here names the tracked paper's own title",
+          "passages": [],
+          "absence": true
+        }
+      ],
+      "summary": [
+        {
+          "text": "The retraction notice is titled as a retraction of an article on mindfulness training and sleep quality in nurses, while the tracked paper is about mindfulness training and exam anxiety in undergraduates.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "That other article was retracted because its data could not be verified.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "The tracked paper reported that eight weeks of mindfulness training reduced self-reported exam anxiety in 120 undergraduates, and no notice given here names the tracked paper's own title.",
+          "kind": "fact",
+          "claims": [
+            4,
+            5
+          ]
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The retraction notice is titled as a retraction of an article on mindfulness training and sleep quality in nurses",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "RETRACTED: Mindfulness training improves sleep quality in nurses",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "the tracked paper is about mindfulness training and exam anxiety in undergraduates",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Mindfulness training reduces exam anxiety in undergraduates",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "That other article was retracted because its data could not be verified",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted because the data could not be verified.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The tracked paper reported that eight weeks of mindfulness training reduced self-reported exam anxiety in 120 undergraduates",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Eight weeks of mindfulness training reduced self-reported exam anxiety in 120 undergraduates.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "No notice given here names the tracked paper's own title",
+      "supported": false,
+      "passages": []
+    }
+  ]
+}

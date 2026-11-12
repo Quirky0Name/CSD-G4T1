@@ -1,0 +1,89 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the draft does not cite the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"evaluation\": \"The draft does not cite the tracked paper, either in its reference list or in its text.\""
+    },
+    {
+      "fact": "says no action is needed for the draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"recommendation\": \"The draft does not cite the tracked paper, either in its reference list or in its text. No action is needed; you can dismiss this alert.\""
+    },
+    {
+      "fact": "says the draft cites the retracted paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing the 2021 review from the reference list",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted fetched-document sentence states that the article was retracted because yields could not be reproduced and raw data were altered, matching claim 1."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted sentence from the tracked paper states that a single ethanol extraction recovered 94% of the curcumin in turmeric powder, matching claim 2."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's abstract reports that a single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft does not cite the tracked paper, either in its reference list or in its text.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft does not cite the tracked paper, either in its reference list or in its text.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "impact-0",
+    "action-0"
+  ]
+}

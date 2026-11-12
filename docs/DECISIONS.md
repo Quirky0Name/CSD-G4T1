@@ -116,6 +116,45 @@ narrows "No token revocation" to the access token.
 - **An edit applies to reports assessed after it.** Nothing re-assesses an
   earlier report.
 
+## 2026-11-07 — Evals can run on Claude, through Claude Code on a subscription or the Claude API; production stays on Gemini
+
+- **The evals can generate and grade through Claude Code** (`claude -p`) on
+  a claude.ai subscription, so they can run without API spend. An API key
+  is never used for it: the key variables are removed from its
+  environment, `backend/.env` isn't read, and a call that reports an API
+  key stops the run.
+- **The model goes through the same `assess`** and gets only the prompts it
+  builds: no tools, no settings, an empty working directory. It never reads
+  a case file, because a case holds its expected answer; for the same
+  reason agents or subagents never act as the tested model.
+- **With Claude the judge defaults to Sonnet, the tested model too**, and
+  may grade its own answers; **it shares the subscription's limits**, unlike a separate
+  Gemini key. Hitting the limit stops the run without saving it, and
+  `--resume` continues.
+- **A Claude API provider exists for paid runs** (the official SDK, billed
+  to the key, added per command with `--with anthropic`, so it stays a dev
+  tool and not a project dependency).
+- **No eval falls back to another model**, on any provider: a failed run
+  is marked (a placeholder) and re-run with `--resume`, so a score always
+  belongs to the model named. Production's Gemini fallback is unchanged.
+- **Production stays on Gemini.** Claude results measure Claude, so
+  `compare.py` across providers shows the model change, not a regression.
+- Each results folder records the prompt texts it ran with
+  (`prompts.json`, keyed by their hash), so a run can be traced after
+  `prompts.py` changes.
+
+## 2026-11-07 — The judge grades the answer against the statements only (amends 2026-10-27)
+
+- **The fact grading gets two JSON documents: the answer and the numbered
+  statements**, never the case's paper, notices or draft. The statements
+  are the reference; whether the answer is true of the sources is checked
+  in code (the tags and the quote check), not by the judge.
+- Each statement states one fact checkable from the answer alone, and every
+  case's statements are checked against a fixed contract before grading.
+- The judge still reports and the code decides (2026-10-27): it isn't told
+  which statements must or must not be present. Text scores from before
+  this change aren't comparable with later ones.
+
 ## 2026-11-06 — Claims carry quoted passages, verified in code, and are never dropped
 
 - **Each step's answer lists claims**, one per factual statement, each with
@@ -311,8 +350,8 @@ narrows "No token revocation" to the access token.
   `must_not_include`) is worked out in code, so the judge can't be lenient
   and length or style earns nothing.
 - **The judge has its own key and model** (`JUDGE_API_KEY`, `JUDGE_MODEL`),
-  so it doesn't use up the tested model's daily free-tier quota and
-  doesn't grade its own answers.
+  so it doesn't use up the tested model's daily free-tier quota. It may
+  be the tested model.
 - **Several runs per case, and their spread is the noise floor**: the
   answers vary between runs, so a change smaller than the spread means
   nothing.
