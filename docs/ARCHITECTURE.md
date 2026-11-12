@@ -74,6 +74,7 @@ Frontend ──/api──▶ Storage Management ◀──/internal── Researc
                      └─▶ Crossref, OpenAlex
 
 Research Evaluation ──/internal/users/{id}/profile──▶ User Management (impact's steps 2 and 3)
+Storage Management ──POST /embed/feedback──▶ Research Evaluation (after a researcher saves or deletes feedback)
 ```
 
 One poll, end to end:
@@ -96,6 +97,14 @@ One poll, end to end:
    stored, the report's, its alerts' and its documents' chunks are embedded
    (Gemini) and stored (`PUT /internal/chunks`), so a later report's impact
    finds them. Research Evaluation sends no notification.
+   **Feedback:** a researcher rates an assessed report (`PUT
+   /papers/{id}/reports/{reportId}/feedback`). Storage Management stores the
+   verdict and note on the report and, after commit, nudges Research
+   Evaluation's `POST /embed/feedback` (fire-and-forget); Research Evaluation
+   embeds the report's evaluation with the verdict and note as one `feedback`
+   chunk and stores it (`PUT /internal/chunks`). When impact later assesses a
+   report of any of the same researcher's papers, it searches those chunks
+   and gives the nearest to steps 2 and 3.
 5. The **frontend** reads alerts and reports from Storage Management; the
    researcher acknowledges or dismisses them. The shared refresh of
    papers, alerts and reports runs every 30 s only while a user is signed
@@ -123,9 +132,10 @@ Rules that hold across the flow:
   (`GET /internal/users/{id}/profile`, its service token), after the gate and
   only for impact's steps 2 and 3. Which user comes from `owner_id` on
   Storage Management's report. A failed read never fails a report.
-- **Only Updating calls Research Evaluation** (the nudge), plus a manual
-  `POST /evaluate/reports` with a service token. Storage Management and
-  the frontend never call it.
+- **Research Evaluation is called by Updating** (the nudge), by **Storage
+  Management** (`POST /embed/feedback` after feedback is saved or deleted,
+  with its own `svc:storage` token) and by hand (`POST /evaluate/reports`
+  with a service token). The frontend never calls it.
 - **Storage Management fetches nothing on its own** except what ingest and
   document storage need (GROBID, Crossref/OpenAlex metadata, open-access
   PDF downloads). It stores what it's sent.
@@ -155,7 +165,8 @@ Rules that hold across the flow:
 - **Service tokens:** Updating (`svc:updating`) and Research Evaluation
   (`svc:research-evaluation`) mint short-lived tokens with `role=service`
   (`common/service_token.py`), and so does User Management (`svc:users`)
-  to clear a deleted project or account. Storage Management's `/internal/**` takes
+  to clear a deleted project or account, and Storage Management
+  (`svc:storage`, `security/ServiceTokens`) for the feedback nudge. Storage Management's `/internal/**` takes
   only service tokens; everything else takes only user tokens. User
   Management's `/internal/**` takes only service tokens too, and
   `/auth/me/**` only user tokens (`SecurityConfig`).
@@ -211,12 +222,11 @@ diagram, up to V9: [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html); V
 | `alerts` | detected change on a paper (type, `change_key`, rule-based alert severity and text, the researcher's status, `report_id`) | V3, V7, V9 |
 | `snapshots` | snapshot Updating sent (insert-only, the full snapshot history per paper) | V4, V9 |
 | `drafts` | project's draft PDF | V6, V9 |
-| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation, the `context_chunks` impact added to its prompt) | V7, V8, V14 |
+| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation, the `context_chunks` impact added to its prompt, the researcher's feedback verdict, note and time) | V7, V8, V14, V15 |
 | `report_documents` | DOI fetched for a report (notice, new version, related document, current copy) | V7 |
-| `chunks` | embedded piece of an alert's, report's, document's or profile's text (`vector(1536)`, HNSW cosine index); `paper_id` null for profile chunks | V13 |
+| `chunks` | embedded piece of an alert's, report's, document's or report-feedback text (`vector(1536)`, HNSW cosine index); always has a `paper_id` | V13, V16 |
 
-Everything referring to a paper is deleted with it (a profile's chunks, which
-have no paper, with their user). PDFs are files in
+Everything referring to a paper is deleted with it, its chunks included. PDFs are files in
 `UPLOAD_DIR`, never in Postgres.
 
 Updating's own schema (`updating`, Alembic): `tracked_papers` (`paper_id`,

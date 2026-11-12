@@ -3,7 +3,8 @@
 The team's persistence service: Postgres and every PDF. Java 25 + Spring
 Boot, `storage/`. The frontend reads and acts on everything through it;
 Updating and Research Evaluation read and write through its `/internal/**`
-endpoints. It never calls Research Evaluation. Endpoint shapes and every
+endpoints. Its one call to Research Evaluation is the feedback nudge (see
+"Report feedback"). Endpoint shapes and every
 error are in CONTRACTS.md; running it is in SETUP.md; the schema diagram
 is [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html).
 
@@ -20,22 +21,23 @@ Spring Data repository, the entity, and response records.
 |---|---|
 | `paper/` | tracked papers: upload, track by DOI, list, delete (`PaperService`), the internal list and PDF read, deleting a paper with everything that refers to it (`PaperDeletion`) |
 | `project/` | clearing a project User Management deleted: its papers and its draft (`ProjectService`, `DELETE /internal/projects/{id}`) |
-| `user/` | clearing an account User Management deleted: the user's papers and drafts in every project, and the user's profile chunks (`UserService`, `DELETE /internal/users/{id}`) |
+| `user/` | clearing an account User Management deleted: the user's papers and drafts in every project (`UserService`, `DELETE /internal/users/{id}`); their chunks go with their papers |
 | `chunk/` | embedded chunks: store a source's chunks, search a paper's (`InternalChunkController`, `ChunkService`, `ChunkRepository` on `JdbcTemplate`) |
 | `snapshot/` | `snapshots`: store a snapshot, read the snapshot history (`after_id`, `last`, `limit`) |
 | `alert/` | alerts (internal store, change keys; user list, status); `LowercaseEnumConverter` |
-| `report/` | reports and documents: open, read, mark investigated, store the evaluation (`ReportService`), store a document and download its PDF (`ReportDocumentService`), the user's report list |
+| `report/` | reports and documents: open, read, mark investigated, store the evaluation (`ReportService`), store a document and download its PDF (`ReportDocumentService`), the user's report list, the researcher's feedback on a report (`ReportService.saveFeedback`, `deleteFeedback`, `FeedbackChanged`) |
+| `evaluation/` | Storage Management's call to Research Evaluation: `ResearchEvaluationClient` (`POST /embed/feedback`, 5 s connect and read timeouts) and `FeedbackNudger` |
 | `draft/` | the researcher's draft per project (`DraftService`) |
 | `dev/` | demo tools (`DevController`, `DevService`) and Swagger config |
 | `admin/` | dev mode: the admin's snapshot edit (`SnapshotEditRequest`, `AdminSnapshotService`, `AdminSnapshotController`), reads and clear history (`AdminController`, `AdminService`, `AdminPaperResponse`), fake reports (`FakeReportExample`, `FakeReportPdfController`) |
 | `file/` | `LocalFileStore` (`save`, `read`, `delete` in `UPLOAD_DIR`), `Pdfs` (the `%PDF-` check) |
 | `metadata/` | `MetadataClient` (Crossref/OpenAlex metadata, DOI normalising), `OpenAccessPdfClient` |
 | `grobid/` | `GrobidClient` (DOI and title from an uploaded PDF) |
-| `security/` | `JwtAuthFilter`, `SecurityConfig`: `/internal/**` needs a service token, everything else a user token |
+| `security/` | `JwtAuthFilter`, `SecurityConfig`: `/internal/**` needs a service token, everything else a user token; `ServiceTokens` mints Storage Management's own (`svc:storage`) |
 
 Config: `src/main/resources/application.yml` (snake_case JSON, problem
 details on, `ddl-auto: validate`, 25 MB PDF limit). Migrations:
-`src/main/resources/db/migration/`, and V13 (chunks) per database in
+`src/main/resources/db/migration/`, and V13 (chunks) and V16 (feedback chunks) per database in
 `db/vendor/postgresql` and `db/vendor/h2` (`spring.flyway.locations`). Tests: `src/test/java/.../<package>/`.
 
 ## Papers and their PDFs
@@ -170,53 +172,96 @@ investigation fetched (documents) and impact's evaluation. Status:
   alerts (its retraction moved to a later report), and a document can
   match no alert (two retraction notices in one window).
 
+## Report feedback
+
+A researcher rates an `assessed` report of their own paper `fair`,
+`overstated` or `understated` (labels Fair / Overstated / Understated) and
+may add a note. The verdict rates how serious the report as a whole made the
+change out to be. It is stored on the report itself; the `feedback` chunk
+(see "Chunks") is a derived, searchable copy.
+
+- **Columns on `reports`** (V15): `feedback_verdict varchar(16)`,
+  `feedback_note varchar(500)`, `feedback_updated_at timestamptz`. All null
+  when there is no feedback; otherwise the verdict and time are both set.
+  `ck_reports_feedback_verdict` allows only the three values, and
+  `ck_reports_feedback` ties verdict and time together and allows a note
+  only with a verdict, so half-written feedback can't be stored.
+- **Rules** (`ReportService`): only an `assessed` report takes feedback
+  (`409` otherwise); saving again replaces verdict, note and time; the note
+  is optional, trimmed, blank is null, at most 500 characters
+  (`MAX_FEEDBACK_NOTE`, the limit of `response_preferences`); delete nulls
+  all three columns and is `204` also when there is none. Feedback never
+  changes `impact_level` or change severity. There is no feedback on a
+  single alert or action.
+- **The nudge:** `ReportService` publishes a `FeedbackChanged(reportId)`
+  event in the save's or delete's transaction. `FeedbackNudger`
+  (`@TransactionalEventListener`, after commit) runs
+  `ResearchEvaluationClient.nudgeFeedback` on Spring's `TaskExecutor`, so
+  the answer never waits for Research Evaluation and a rolled-back change
+  sends nothing. The client posts `POST /embed/feedback` to
+  `storage.re-base-url` (`RE_BASE_URL`, default `http://localhost:8000`) with
+  a service token from `ServiceTokens` (`svc:storage`, five minutes, HS256),
+  and logs a failure with the report id and exception class only. A
+  failure never fails the save or delete. Failed embeds aren't backfilled:
+  saving again re-embeds.
+- **Compose:** storage gets `RE_BASE_URL: http://research-evaluation:8000`
+  with no `depends_on`, since Research Evaluation already depends on
+  storage.
+
 ## Chunks (`chunks`)
 
-A chunk is a piece of an alert's, report's, report document's or profile's
-text stored with its embedding (1536 numbers) for similarity search.
+A chunk is a piece of an alert's, report's, report document's or a report's
+feedback text stored with its embedding (1536 numbers) for similarity search.
 Research Evaluation embeds; Storage Management stores and searches
-(`chunk/`). It never looks inside `content`, and knows only that a `profile`
-chunk is a profile's and whose (`user_id`), never what fields it holds.
-Nothing writes profile chunks yet (ROADMAP.md).
+(`chunk/`). It never looks inside `content`. `feedback` replaced the unused
+`profile` source type in V16, which deleted any `profile` rows; the profile
+is not embedded.
 
 - **One table for every source**, filtered with `where` and then ordered by
   cosine distance. Columns: `id`; nullable `alert_id`, `report_id`,
-  `document_id` (each a foreign key `on delete cascade`) and `user_id`
-  (a uuid, no FK: users live in User Management), exactly one set;
-  `paper_id` (FK `on delete cascade`), set for alert, report and document
-  chunks and null for profile chunks (a check ties it to `source_type`);
-  `source_type` (`alert`, `report`, `document`, `profile`, checked);
+  `document_id` (each a foreign key `on delete cascade`), exactly one set
+  (`feedback` uses `report_id`); `paper_id` (FK `on delete cascade`), always
+  set (`ck_chunks_paper`) and copied from the source row;
+  `source_type` (`alert`, `report`, `document`, `feedback`, checked, with the
+  matching id set);
   `chunk_index`, `content`, `page`, `embedding vector(1536)`, `embed_model`,
   `created_at`. `page` is null or at least 1 (a check). Every chunk from a
   PDF has a `page`, so what went into a prompt can be shown by opening the
   document's PDF at that page; chunks from Europe PMC text, alerts, reports
-  and profiles have none. `embed_model` is at most 64 characters (a `400`
+  and feedback have none. `embed_model` is at most 64 characters (a `400`
   above that), the column's size.
-- **Replace, not append:** `PUT /internal/chunks` deletes the source's
-  chunks and inserts the new ones in one transaction; an empty list only
-  deletes.
+- **Replace, not append:** `PUT /internal/chunks` deletes the chunks of
+  that source type and source id and inserts the new ones in one
+  transaction; an empty list only deletes. It filters by `source_type` too,
+  since a report's `report` and `feedback` chunks share `report_id`: storing
+  one never removes the other.
 - **`paper_id` is copied from the source row**, never from the request. The
   owner and project are read from `papers` by join, so `chunks` stores
   neither.
 - **Constraints and indexes:** unique on (`source_type`, source id,
-  `chunk_index`), declared `nulls not distinct` because only one of the four
-  source ids is ever set and plain `unique` would let duplicates through;
-  an HNSW index with `vector_cosine_ops`; indexes on (`paper_id`,
-  `source_type`) and `user_id`, for search's filters and the user delete.
+  `chunk_index`), declared `nulls not distinct` because only one of the
+  three source ids is ever set and plain `unique` would let duplicates
+  through; an HNSW index with `vector_cosine_ops`; an index on (`paper_id`,
+  `source_type`) for search's filters.
 - **The cascade:** deleting an alert, report, document or paper deletes its
-  chunks. `DELETE /internal/users/{id}` deletes that user's profile chunks
-  in `UserService`, since there is no FK.
+  chunks. A deleted user's chunks go with their papers (`UserService` no
+  longer deletes any itself).
 - **Search** (`POST /internal/chunks/search`) is per paper and source type,
   ranked by similarity only: no date, order or exclusion filter, no recency.
   Every chunk of the paper is a candidate because a report's chunks are
-  written only after impact has assessed it. With `profile`, the candidates
-  are the profile chunks of the paper's owner (`papers.owner_id`). Search
+  written only after impact has assessed it. With `feedback`, the scope joins
+  `papers` on `owner_id`: the candidates are the feedback chunks of every
+  paper of the given paper's owner, so a user's feedback chunks go when
+  their papers are deleted. It leaves out chunks whose report has no
+  `feedback_updated_at` (feedback deleted, chunk kept by a failed delete
+  nudge), so they never take one of the `limit` slots. Search
   sets `hnsw.iterative_scan = strict_order` for its transaction, because the
   HNSW index with a `where` filter otherwise stops at `ef_search`
   candidates and can return fewer than `limit` matches. `report_id` and
   `source_date` are picked by `source_type` with a `case` over the joined
-  source row; a profile chunk has a null `report_id` and its own
-  `created_at`. An unknown `source_type` and a user token are `400` and
+  source row (for `feedback`, the report and `feedback_updated_at`). Each
+  match also carries `paper_id` and `paper_title` from the joined `papers`
+  row, right after `report_id`. An unknown `source_type` and a user token are `400` and
   `403` on search too, like the store endpoint.
 - **`JdbcTemplate`, no JPA entity,** because tests run the real Flyway
   migrations on H2, which has no `vector` type: the pgvector migration is

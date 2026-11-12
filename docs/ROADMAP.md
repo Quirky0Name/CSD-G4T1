@@ -49,9 +49,6 @@ most needed first within each.
 
 ## Chunks and the paper's past
 
-- [ ] **Writing and using profile chunks.** Storage Management stores and
-  searches `profile` chunks, but nothing writes them and impact doesn't
-  search them. Which service embeds a profile, and when, is undecided.
 - [ ] **Draft chunks**: a `draft_id` column and source type, by migration.
 - [ ] **Retrieved chunks in place of whole PDFs.** Step 1 still attaches the
   current report's PDFs; the past is added beside them.

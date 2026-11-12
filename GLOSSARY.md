@@ -63,10 +63,17 @@ _Avoid_: Preferences (for the whole), user settings, questionnaire (for the save
 The `<document kind="researcher_profile">` block that gives a profile to impact's steps 2 and 3.
 _Avoid_: Profile prompt, user context
 
+**Feedback**:
+A researcher's verdict (fair, overstated, understated) and optional note on one assessed report.
+_Avoid_: Rating, review, comment
+
+**Feedback block**:
+The `<document kind="researcher_feedback">` block that gives one piece of feedback to impact's steps 2 and 3.
+
 ### Search over the past
 
 **Chunk**:
-A piece of an alert's, report's, report document's or profile's text, stored with its embedding for search.
+A piece of an alert's, report's, report document's or report feedback's text, stored with its embedding for search.
 
 **Past timeline**:
 A tracked paper's earlier alerts, reports and report documents, found by vector search, that impact's steps 1 and 2 read beside the current report.
