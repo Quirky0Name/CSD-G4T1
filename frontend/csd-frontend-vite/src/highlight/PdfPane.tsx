@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { locate } from './locate'
 import { scrollMotion } from './motion'
 import { pageText, type ItemSlice, type PageText, type TextPiece } from './pageText'
+import { getToken } from '../session'
 import './pdf.css'
 
 GlobalWorkerOptions.workerSrc = workerUrl
@@ -15,12 +16,15 @@ export type PaneResult = 'found' | 'not_on_page' | 'unavailable'
 // seq: bumped by the caller each time the reader selects it, so selecting it again scrolls back to it
 export type PdfHighlight = { quote: string; page: number; seq?: number }
 
-// each PDF is read once while the app is open; a failed read is forgotten, so a retry reads it again
+// each PDF is read once while the app is open; a failed read is forgotten, so a retry reads it again.
+// A researcher's own PDFs (GET /documents/{id}/pdf and the like) need the session's token; the dev
+// mode example's public route doesn't.
 const documents = new Map<string, Promise<PDFDocumentProxy>>()
 function loadDocument(url: string): Promise<PDFDocumentProxy> {
   let pending = documents.get(url)
   if (!pending) {
-    pending = getDocument({ url }).promise
+    const token = url.startsWith('/api/') && !url.startsWith('/api/public/') ? getToken() : null
+    pending = getDocument({ url, httpHeaders: token ? { Authorization: `Bearer ${token}` } : undefined }).promise
     pending.catch(() => documents.delete(url))
     documents.set(url, pending)
   }
@@ -40,10 +44,13 @@ type Loaded = { url: string; pdf: PDFDocumentProxy; sizes: Size[] } | { url: str
 export default function PdfPane({
   url,
   highlight,
+  focus,
   onResult,
 }: {
   url: string
   highlight: PdfHighlight | null
+  // with no highlight: a page to scroll to and mark as the one being shown (seq as for a highlight)
+  focus?: { page: number; seq?: number } | null
   onResult?: (result: PaneResult) => void
 }) {
   const scroller = useRef<HTMLDivElement>(null)
@@ -123,6 +130,17 @@ export default function PdfPane({
     box.scrollTo({ top: Math.max(0, top - box.clientHeight / 3), behavior: scrollMotion() })
   }
 
+  // a focused page is scrolled to once its sheet is laid out, and again when it is chosen again
+  const focusPage = !highlight && focus ? focus.page : null
+  const focusKey = focusPage !== null ? `${url}#${focusPage}#${focus?.seq ?? 0}` : null
+  useEffect(() => {
+    if (!focusKey || focusPage === null || scrolled.current === focusKey || width === 0) return
+    const page = pages.current.get(focusPage)
+    if (!page) return
+    scrolled.current = focusKey
+    scrollToPage(scroller.current, page)
+  })
+
   const slices = located && located.key === key ? located.slices : null
   const firstPage = highlight && slices?.size ? highlight.page : null
 
@@ -148,6 +166,7 @@ export default function PdfPane({
               size={size}
               width={width}
               slices={slices?.get(i + 1) ?? null}
+              focused={i + 1 === focusPage}
               onDrawn={i + 1 === firstPage ? onDrawn : undefined}
               register={(element) => {
                 if (element) pages.current.set(i + 1, element)
@@ -194,6 +213,7 @@ function PdfPage({
   size,
   width,
   slices,
+  focused,
   onDrawn,
   register,
 }: {
@@ -202,6 +222,7 @@ function PdfPage({
   size: Size
   width: number
   slices: ItemSlice[] | null
+  focused: boolean
   onDrawn?: (mark: HTMLElement) => void
   register: (element: HTMLDivElement | null) => void
 }) {
@@ -216,7 +237,7 @@ function PdfPage({
   const pageWidth = Math.round(size.width * scale)
   const height = Math.round(size.height * scale)
   // a page with a highlight is drawn even before it scrolls near
-  const show = near || slices !== null
+  const show = near || slices !== null || focused
 
   useEffect(() => {
     const element = frame.current
@@ -281,9 +302,10 @@ function PdfPage({
         frame.current = element
         register(element)
       }}
-      className="pdf-page relative mx-auto mb-3 bg-white shadow-md shadow-black/40"
+      className={`pdf-page relative mx-auto mb-3 bg-white shadow-md shadow-black/40 ${focused ? 'outline-2 outline-offset-4 outline-indigo-400/70' : ''}`}
       style={{ width, height }}
-      aria-label={`Page ${number}`}
+      aria-label={focused ? `Page ${number}, the page that was read` : `Page ${number}`}
+      aria-current={focused ? 'page' : undefined}
       role="group"
     >
       <div ref={layers} className="absolute top-0" style={{ left: Math.floor((width - pageWidth) / 2), width: pageWidth, height }} />

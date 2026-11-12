@@ -26,6 +26,7 @@ function report(id: number, createdAt: string, alerts: Alert[] = [], paperId = P
     status: 'assessed',
     created_at: createdAt,
     investigated_at: null,
+    context_chunks: null,
     evaluation: null,
     recommendation: null,
     evaluated_at: null,

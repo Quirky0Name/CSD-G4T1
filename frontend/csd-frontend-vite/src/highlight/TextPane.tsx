@@ -5,10 +5,25 @@ import { scrollMotion } from './motion'
 import { findQuote } from './normalise'
 import './pdf.css'
 
-export default function TextPane({ text, quote, seq = 0 }: { text: string; quote: string | null; seq?: number }) {
+// range: an exact span of the text to mark instead of a quote to find (a retrieved chunk's place in it)
+export default function TextPane({
+  text,
+  quote,
+  range = null,
+  seq = 0,
+}: {
+  text: string
+  quote: string | null
+  range?: { start: number; end: number } | null
+  seq?: number
+}) {
   const mark = useRef<HTMLElement>(null)
   const scroller = useRef<HTMLDivElement>(null)
-  const match = quote ? findQuote(quote, text) : null
+  const match = range
+    ? { start: Math.max(0, Math.min(range.start, text.length)), end: Math.max(0, Math.min(range.end, text.length)) }
+    : quote
+      ? findQuote(quote, text)
+      : null
 
   useEffect(() => {
     const box = scroller.current
@@ -16,7 +31,7 @@ export default function TextPane({ text, quote, seq = 0 }: { text: string; quote
     if (!box || !marked) return
     const top = marked.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop
     box.scrollTo({ top: Math.max(0, top - box.clientHeight / 3), behavior: scrollMotion() })
-  }, [text, quote, seq])
+  }, [text, quote, range?.start, range?.end, seq])
 
   return (
     <div

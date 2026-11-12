@@ -2,8 +2,14 @@
 // draft beside the passage in the source it relies on. The report comes from the tracking state, which
 // already loads every report; the selected claim is kept in ?claim= so a reload opens it again.
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react'
-import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, MinusCircleIcon } from '@heroicons/react/20/solid'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  ArrowLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MinusCircleIcon,
+  Square3Stack3DIcon,
+} from '@heroicons/react/20/solid'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { Claim, ClaimKind, Passage, Paper, UserReport } from '../api'
 import { LEVEL_LABEL, LEVEL_STYLES, REPORT_STATUS_LABEL, REPORT_STATUS_STYLES } from '../format'
@@ -14,6 +20,9 @@ import { sourceFor } from '../highlight/sources'
 import TextPane from '../highlight/TextPane'
 import { useTracking } from '../tracking'
 import { NotFound, Page } from '../components/Page'
+import { ContextList, ContextPane } from '../components/ReportContext'
+import { entryTitle } from '../context/describe'
+import { resolveContext, type ContextEntry } from '../context/resolve'
 import { badge, errorPanel, pageColumn } from '../ui'
 
 const KIND_ORDER: ClaimKind[] = ['change', 'impact', 'action']
@@ -56,7 +65,7 @@ export default function ReportView() {
       <NotFound message="This report doesn't exist or isn't yours." back={{ to: '/reports', label: 'Back to reports' }} />
     )
   }
-  return <ReportBody key={report.id} report={report} paper={paper} />
+  return <ReportBody key={report.id} report={report} paper={paper} reports={state.reports} />
 }
 
 
@@ -72,7 +81,8 @@ function BackLink({ to }: { to: string }) {
   )
 }
 
-function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
+// reports: every loaded report, where the items impact read beside this one are found again
+function ReportBody({ report, paper, reports }: { report: UserReport; paper: Paper; reports: UserReport[] }) {
   const [params, setParams] = useSearchParams()
   const [picked, setPicked] = useState<Picked | null>(null)
   // bumped on every selection, so choosing the same passage again scrolls back to it
@@ -88,7 +98,13 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
 
   const noImpact = report.change_severity === 'none'
   const claims = (report.claims ?? []).filter((claim) => !noImpact || claim.kind === 'change')
-  const selected = claims.find((c) => c.id === params.get('claim')) ?? defaultClaim(claims)
+  const context = useMemo(
+    () => resolveContext(report.context_chunks ?? [], reports, report.paper_id),
+    [report.context_chunks, reports, report.paper_id],
+  )
+  // ?context= names an item impact read; it wins over a claim, so the pane shows that item instead
+  const contextEntry = context.find((entry) => entry.key === params.get('context'))
+  const selected = contextEntry ? undefined : (claims.find((c) => c.id === params.get('claim')) ?? defaultClaim(claims))
 
   const pickClaim = (claim: Claim) => {
     setParams({ claim: claim.id }, { replace: true })
@@ -97,12 +113,24 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
     setTab(null)
   }
 
-  // below lg the panes sit under the claim list, so choosing a claim moves down to its quotes
-  const openClaim = (claim: Claim) => {
-    pickClaim(claim)
+  const pickContext = (entry: ContextEntry) => {
+    setParams({ context: entry.key }, { replace: true })
+    setSeq((n) => n + 1)
+  }
+
+  // below lg the panes sit under the claim list, so choosing a claim or an item moves down to its pane
+  const moveToPanes = () => {
     if (!window.matchMedia('(min-width: 64rem)').matches) {
       passages.current?.scrollIntoView({ behavior: scrollMotion(), block: 'start' })
     }
+  }
+  const openClaim = (claim: Claim) => {
+    pickClaim(claim)
+    moveToPanes()
+  }
+  const openContext = (entry: ContextEntry) => {
+    pickContext(entry)
+    moveToPanes()
   }
 
   const pickPassage = (pane: PaneName, passage: Passage) => {
@@ -114,9 +142,9 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
   const chosen = picked && picked.claim === selected?.id ? picked : null
   const draftPassage = chosen?.draft ?? panePassage(selected, 'draft')
   const sourcePassage = chosen?.source ?? panePassage(selected, 'source')
-  const both = Boolean(draftPassage && sourcePassage)
+  const both = !contextEntry && Boolean(draftPassage && sourcePassage)
   const tab = chosenTab ?? (draftPassage ? 'draft' : 'source')
-  const showClaims = report.status === 'assessed' && report.claims !== null
+  const showClaims = report.status === 'assessed' && (report.claims !== null || context.length > 0)
 
   return (
     // the same column as every other page; on a wide screen the claims and quotes fill the window's
@@ -152,15 +180,34 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
 
       {report.status !== 'assessed' ? (
         <p className="mt-8 text-sm/6 text-gray-400">This report is still being assessed.</p>
-      ) : report.claims === null ? (
+      ) : !showClaims ? (
         <NoClaims report={report} />
       ) : (
-        <div className="mt-4 grid gap-6 lg:mt-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)] lg:gap-4">
+        <div className="mt-4 grid gap-6 lg:mt-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)] lg:gap-4">
           <div className="min-w-0 lg:overflow-y-auto">
-            <ClaimList claims={claims} summary={report.change_summary} selected={selected} onTab={pickClaim} onClaim={openClaim} />
+            <ClaimList
+              claims={claims}
+              summary={report.change_summary}
+              selected={selected}
+              onTab={pickClaim}
+              onClaim={openClaim}
+              context={context}
+              contextEntry={contextEntry}
+              onContextTab={pickContext}
+              onContext={openContext}
+            />
           </div>
 
-          <section ref={passages} aria-label="Quotes" className="flex min-w-0 scroll-mt-16 flex-col lg:min-h-0">
+          <section
+            ref={passages}
+            aria-label={contextEntry ? 'What was read' : 'Quotes'}
+            className="flex min-w-0 scroll-mt-16 flex-col lg:min-h-0"
+          >
+            {contextEntry && (
+              <p aria-live="polite" className="mb-3 line-clamp-2 text-sm/6 text-gray-200 lg:sr-only">
+                {entryTitle(contextEntry)}
+              </p>
+            )}
             {selected && (
               <p aria-live="polite" title={selected.text} className="mb-3 line-clamp-2 text-sm/6 text-gray-200 lg:sr-only">
                 {selected.text}
@@ -182,7 +229,8 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
               </div>
             )}
             <div className="flex flex-col gap-4 lg:min-h-0 lg:flex-1 lg:gap-3">
-              {draftPassage && (
+              {contextEntry && <ContextPane key={contextEntry.key} entry={contextEntry} seq={seq} />}
+              {!contextEntry && draftPassage && (
                 <PassagePane
                   name="Your draft"
                   hidden={both && tab !== 'draft'}
@@ -193,7 +241,7 @@ function ReportBody({ report, paper }: { report: UserReport; paper: Paper }) {
                   seq={seq}
                 />
               )}
-              {sourcePassage && (
+              {!contextEntry && sourcePassage && (
                 <PassagePane
                   name="Cited source"
                   hidden={both && tab !== 'source'}
@@ -303,41 +351,74 @@ function ClaimList({
   selected,
   onTab,
   onClaim,
+  context,
+  contextEntry,
+  onContextTab,
+  onContext,
 }: {
   claims: Claim[]
   summary: string | null
   selected: Claim | undefined
   onTab: (claim: Claim) => void
   onClaim: (claim: Claim) => void
+  // what impact read beside the report: a last tab, after the claims
+  context: ContextEntry[]
+  contextEntry: ContextEntry | undefined
+  onContextTab: (entry: ContextEntry) => void
+  onContext: (entry: ContextEntry) => void
 }) {
   const lead = summary && <Summary text={summary} />
-  if (claims.length === 0) {
+  if (claims.length === 0 && context.length === 0) {
     return lead ?? <p className="text-sm/6 text-gray-400">Nothing to show in this report.</p>
   }
   const kinds = KIND_ORDER.filter((kind) => claims.some((c) => c.kind === kind))
+  const tabs: (ClaimKind | 'context')[] = context.length > 0 ? [...kinds, 'context'] : kinds
   const groupOf = (kind: ClaimKind) => claims.filter((c) => c.kind === kind)
   const selectTab = (index: number) => {
-    const claim = firstClaim(groupOf(kinds[index]))
+    const tab = tabs[index]
+    if (tab === 'context') {
+      onContextTab(context[0])
+      return
+    }
+    const claim = firstClaim(groupOf(tab))
     if (claim) onTab(claim)
   }
+  const selectedIndex = contextEntry ? tabs.indexOf('context') : selected ? tabs.indexOf(selected.kind) : 0
 
   return (
-    <TabGroup selectedIndex={selected ? kinds.indexOf(selected.kind) : 0} onChange={selectTab}>
+    <TabGroup selectedIndex={selectedIndex} onChange={selectTab}>
       <TabList className="flex gap-1 rounded-full bg-white/5 p-1 outline-1 -outline-offset-1 outline-white/10">
-        {kinds.map((kind) => (
-          <Tab
-            key={kind}
-            className="flex-auto rounded-full px-3 py-1.5 whitespace-nowrap text-gray-400 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-400 data-selected:bg-indigo-500 data-selected:text-white data-selected:shadow-[0_8px_20px_-8px_rgba(99,102,241,0.8)]"
-          >
-            <span className="text-sm/5 font-semibold">{KIND_TAB[kind]}</span>{' '}
-            <span className="text-xs/5 tabular-nums opacity-70">{groupOf(kind).length}</span>
-          </Tab>
-        ))}
+        {tabs.map((kind) =>
+          // beside the claim tabs there's no room for a fourth word, so Context is its icon and count
+          kind === 'context' && kinds.length > 0 ? (
+            <Tab
+              key={kind}
+              title="Context: what the assessment read"
+              aria-label={`Context, ${context.length}`}
+              className="flex flex-none items-center gap-1 rounded-full px-2.5 py-1.5 whitespace-nowrap text-gray-400 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-400 data-selected:bg-indigo-500 data-selected:text-white data-selected:shadow-[0_8px_20px_-8px_rgba(99,102,241,0.8)]"
+            >
+              <Square3Stack3DIcon aria-hidden="true" className="size-4" />
+              <span className="text-xs/5 tabular-nums opacity-70">{context.length}</span>
+            </Tab>
+          ) : (
+            <Tab
+              key={kind}
+              className="flex min-w-0 flex-auto items-baseline justify-center gap-1 rounded-full px-2.5 py-1.5 whitespace-nowrap text-gray-400 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-400 data-selected:bg-indigo-500 data-selected:text-white data-selected:shadow-[0_8px_20px_-8px_rgba(99,102,241,0.8)]"
+            >
+              <span className="truncate text-sm/5 font-semibold">{kind === 'context' ? 'Context' : KIND_TAB[kind]}</span>{' '}
+              <span className="text-xs/5 tabular-nums opacity-70">
+                {kind === 'context' ? context.length : groupOf(kind).length}
+              </span>
+            </Tab>
+          ),
+        )}
       </TabList>
       <TabPanels className="mt-3">
         {kinds.map((kind) => (
           <TabPanel key={kind} className="focus-visible:outline-none">
-            {kind === (kinds.includes('change') ? 'change' : kinds[0]) && lead && <div className="mb-3 px-3">{lead}</div>}
+            {kind === (kinds.includes('change') ? 'change' : kinds[0]) && lead && (
+              <div className="mb-3 px-3">{lead}</div>
+            )}
             <ul role="list" className="space-y-1">
               {groupOf(kind).map((claim) => (
                 <ClaimItem
@@ -350,6 +431,12 @@ function ClaimList({
             </ul>
           </TabPanel>
         ))}
+        {context.length > 0 && (
+          <TabPanel className="focus-visible:outline-none">
+            {kinds.length === 0 && lead && <div className="mb-3 px-3">{lead}</div>}
+            <ContextList entries={context} selected={contextEntry} onPick={onContext} />
+          </TabPanel>
+        )}
       </TabPanels>
     </TabGroup>
   )
