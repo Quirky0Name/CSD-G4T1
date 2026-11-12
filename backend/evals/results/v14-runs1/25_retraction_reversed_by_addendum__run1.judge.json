@@ -1,0 +1,167 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the retraction was issued in error and has been withdrawn, with the paper reinstated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "the retraction was issued in error ... the retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed"
+    },
+    {
+      "fact": "says the paper's findings or data can still be relied on",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The paper's findings can be relied on again as they were before the retraction."
+    },
+    {
+      "fact": "treats the paper as still retracted or tells the researcher to stop citing it",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the paper's images or data were found to be duplicated or unreliable",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The publisher checked this article's images and data and found no problems with them"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "We, the Editor and Publisher of J. Fake Bioengineering, have retracted the above article.",
+      "backs": true,
+      "pass": true,
+      "reason": "States editor and publisher retracted the article."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "Following an investigation by the publisher into a group of articles, concerns were raised about the duplication of images.",
+      "backs": true,
+      "pass": true,
+      "reason": "States concerns about image duplication following publisher investigation into group of articles."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The retraction notice for the above article, published on 22 September 2026, was issued in error.",
+      "backs": true,
+      "pass": true,
+      "reason": "States retraction notice was issued in error."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The image concerns that led to the retraction relate to a different article in the same investigation, and this article was included by mistake.",
+      "backs": true,
+      "pass": true,
+      "reason": "States image concerns relate to a different article; this one included by mistake."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "The publisher has checked the images and data of this article and found no problems with them.",
+      "backs": true,
+      "pass": true,
+      "reason": "States publisher checked images and data, found no problems."
+    },
+    {
+      "claim_id": "change-5",
+      "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed.",
+      "backs": true,
+      "pass": true,
+      "reason": "States retraction withdrawn, reinstated, watermark removed."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 shows it."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 shows it."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 shows it."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4 shows it."
+    },
+    {
+      "claim_id": "change-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5 shows it."
+    },
+    {
+      "claim_id": "change-5",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 6 shows it."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-6",
+      "from": [
+        "change-2",
+        "change-3",
+        "change-4",
+        "change-5"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Error retraction, no problems found, and reinstatement support that findings stand as before; reasonable inference."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The journal's editor and publisher retracted the paper after concerns about duplicated images were raised in a publisher investigation into a group of articles.",
+      "covered_by": [
+        "change-0",
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "A later statement says the retraction was issued in error, and that the image concerns relate to a different article in the same investigation, with this article included by mistake.",
+      "covered_by": [
+        "change-2",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The publisher checked this article's images and data and found no problems with them, and the retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed.",
+      "covered_by": [
+        "change-4",
+        "change-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's findings can be relied on again as they were before the retraction.",
+      "covered_by": [
+        "change-6"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

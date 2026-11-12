@@ -1,0 +1,308 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the alert is about a rise in citations and not a change to the paper's content",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The change is new attention to the paper, not a change to its content, so its findings are not affected."
+    },
+    {
+      "fact": "says no change to the draft is needed or the alert can be dismissed",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "You don't need to change the draft, and you can dismiss this alert."
+    },
+    {
+      "fact": "suggests the paper's findings or methods are in doubt",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends replacing or removing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+      "backs": true,
+      "pass": true,
+      "reason": "States 61 vs 4 citing works in 30-day windows."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "We present StructCompare, an open-source tool that scores the similarity of predicted protein structures.",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract says StructCompare is open-source tool scoring similarity of predicted structures."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3].",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft Methods says exactly this."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "We present StructCompare, an open-source tool that scores the similarity of predicted protein structures.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same abstract sentence; backs claim."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same alert line; backs the rise."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3].",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft Methods quote matches claim."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same alert line; backs the rise."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 shows it."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 shows it."
+    },
+    {
+      "claim_id": "impact-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 shows it."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4 shows it."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5 shows it."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 6 shows it."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 7 shows it."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-3",
+      "from": [
+        "change-0",
+        "change-1"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Claims 1 and 2 give a citation rise and no notice; together they support that nothing changed in content, a reasonable inference of attention only."
+    },
+    {
+      "claim_id": "impact-4",
+      "from": [
+        "impact-0",
+        "impact-2",
+        "impact-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from the citation rise, no notice, and the draft's use of StructCompare defaults."
+    },
+    {
+      "claim_id": "impact-5",
+      "from": [
+        "impact-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Impact none follows from the Methods use not being touched."
+    },
+    {
+      "claim_id": "action-3",
+      "from": [
+        "action-0",
+        "action-1",
+        "action-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Same reasoning as 9 from claims 11, 12, 13."
+    },
+    {
+      "claim_id": "action-4",
+      "from": [
+        "action-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from claim 14."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The alert reports a rise in works citing the paper, from 4 to 61 in 30 days.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No notice was recorded for this alert.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper presents StructCompare, an open-source tool for scoring how similar predicted protein structures are.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The change is new attention to the paper, not a change to its content, so its findings are not affected.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your Methods scores predicted structures with StructCompare using the default parameters of Mensah [3].",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper presents StructCompare, an open-source tool for scoring how similar predicted protein structures are.",
+      "covered_by": [
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert reports a rise in works citing the paper, from 4 to 61 in 30 days.",
+      "covered_by": [
+        "impact-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No notice was recorded for this alert.",
+      "covered_by": [
+        "impact-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The change is new attention to the paper rather than a change to the tool, so the Methods use of StructCompare is not touched.",
+      "covered_by": [
+        "impact-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The impact on the draft is none.",
+      "covered_by": [
+        "impact-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert reports a rise in works citing the paper, from 4 to 61 in 30 days.",
+      "covered_by": [
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No notice was recorded for this alert.",
+      "covered_by": [
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Your Methods scores predicted structures with StructCompare using the default parameters of Mensah [3].",
+      "covered_by": [
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The change is new attention to the paper rather than a change to the tool, so the Methods use of StructCompare is not touched.",
+      "covered_by": [
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The impact on the draft is none.",
+      "covered_by": [
+        "action-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-1",
+    "impact-3",
+    "action-2"
+  ]
+}

@@ -1,0 +1,212 @@
+{
+  "change_summary": "A correction notice was published for School start times and teenage sleep, and it changes the first author's affiliation from University of Northfield to Northfield Institute of Education. The notice states that the change does not affect the results or conclusions of the article. The change is administrative and is not meaningful for anyone relying on the findings.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 14,
+    "model": "opus",
+    "model_version": "claude-opus-5-5",
+    "answered_by": {
+      "change": "opus",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "profile": "not_needed",
+    "history": "none",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 31,
+          "about_this_paper": "yes",
+          "what_changed": "A correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education. The notice says this does not affect the results or conclusions.",
+          "scope": "administrative",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "The correction only fixes an author affiliation. The notice states that the results and conclusions are unaffected.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education."
+            },
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "This does not affect the results or conclusions of the article."
+            },
+            {
+              "source": "stored paper",
+              "quote": "Garcia, M. (University of Northfield), Okafor, T."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "none",
+      "claims": [
+        {
+          "text": "A correction notice was published for School start times and teenage sleep.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "Correction to: School start times and teenage sleep"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The notice states that the change does not affect the results or conclusions of the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "This does not affect the results or conclusions of the article."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The paper's finding that delaying school start by 45 minutes added 31 minutes of sleep per night stands as published.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Delaying school start by 45 minutes added 31 minutes of sleep per night in 600 students."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The change is administrative and is not meaningful for anyone relying on the findings.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            2,
+            3
+          ]
+        }
+      ],
+      "summary": [
+        {
+          "text": "A correction notice was published for School start times and teenage sleep, and it changes the first author's affiliation from University of Northfield to Northfield Institute of Education.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "The notice states that the change does not affect the results or conclusions of the article.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "The change is administrative and is not meaningful for anyone relying on the findings.",
+          "kind": "fact",
+          "claims": [
+            5
+          ]
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "A correction notice was published for School start times and teenage sleep.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Correction to: School start times and teenage sleep",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The notice states that the change does not affect the results or conclusions of the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This does not affect the results or conclusions of the article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The paper's finding that delaying school start by 45 minutes added 31 minutes of sleep per night stands as published.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Delaying school start by 45 minutes added 31 minutes of sleep per night in 600 students.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The change is administrative and is not meaningful for anyone relying on the findings.",
+      "supported": false,
+      "passages": []
+    }
+  ],
+  "context_chunks": []
+}

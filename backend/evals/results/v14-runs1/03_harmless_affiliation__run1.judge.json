@@ -1,0 +1,129 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the change is only to the author's affiliation",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "changes the first author's affiliation from University of Northfield to Northfield Institute of Education... The change is administrative"
+    },
+    {
+      "fact": "says the results and conclusions are unaffected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The notice states that the change does not affect the results or conclusions of the article."
+    },
+    {
+      "fact": "recommends changing the draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "describes a change to any result or number",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Correction to: School start times and teenage sleep",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows a correction was published to the named article."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the affiliation change from University of Northfield to Northfield Institute of Education for the first author."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "This does not affect the results or conclusions of the article.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the change does not affect results or conclusions."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Delaying school start by 45 minutes added 31 minutes of sleep per night in 600 students.",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract states the finding of 31 extra minutes from a 45-minute delay."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 shows the correction."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 shows it."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 shows it."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4 gives the finding as published; 'stands as published' is supported by the abstract plus the notice not affecting results (claim 3 passage not cited here, but abstract shows the published finding). Reasonably backed."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-4",
+      "from": [
+        "change-1",
+        "change-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Claims 2 and 3 show an affiliation change with no effect on results; 'administrative' and 'not meaningful' are a mild inference, plausibly following."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "A correction notice was published for School start times and teenage sleep, changing the first author's affiliation from University of Northfield to Northfield Institute of Education.",
+      "covered_by": [
+        "change-0",
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice states that the change does not affect the results or conclusions of the article.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The change is administrative and is not meaningful for anyone relying on the findings.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

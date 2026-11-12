@@ -1,0 +1,170 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the alert's retraction notice is the paper's own DOI, so following it leads back to the paper itself rather than to a separate retraction notice",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The retraction alert's notice has the same DOI as the tracked paper itself, and no retraction notice text was provided."
+    },
+    {
+      "fact": "says the alert's date (1 July 2020) is the paper's own issue publication date, not the date of a retraction",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": ""
+    },
+    {
+      "fact": "says nothing else shows a retraction: the current copy has no retraction banner or watermark and its title has no RETRACTED prefix",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The current copy of the paper shows no retraction watermark or banner"
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "nothing given shows that the paper has actually been retracted or changed"
+    },
+    {
+      "fact": "states a reason for a retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing or replacing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "alert 241: retraction, notice 10.9999/fake.2020.024, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert gives notice DOI 10.9999/fake.2020.024."
+    },
+    {
+      "claim_id": "change-0",
+      "quote": "doi: 10.9999/fake.2020.024",
+      "backs": true,
+      "pass": true,
+      "reason": "Tracked paper DOI is 10.9999/fake.2020.024, matching the notice."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "L. rhamnosus GG given alongside the antibiotic course reduced AAD and was well tolerated.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the paper's conclusion that LGG reduced AAD and was well tolerated."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Both DOIs shown and identical."
+    },
+    {
+      "claim_id": "change-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage shows the conclusion; it is from a fetched document, taken as the current copy."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-5",
+      "from": [
+        "change-0",
+        "change-1",
+        "change-2",
+        "change-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Claims 1-4 are absences and a DOI match; they don't show retraction, so this follows as a statement of what is given."
+    },
+    {
+      "claim_id": "change-6",
+      "from": [
+        "change-4",
+        "change-5"
+      ],
+      "follows": false,
+      "pass": false,
+      "reason": "Claim that findings are unaffected goes beyond: absence of evidence of retraction doesn't establish findings are unaffected; the alert has a high severity and same DOI."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The retraction alert's notice has the same DOI as the tracked paper itself.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No retraction notice text was provided.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy of the paper shows no retraction watermark or banner.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "There is no difference in content between the current copy and the stored paper.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy still concludes that L. rhamnosus GG reduced antibiotic-associated diarrhoea and was well tolerated.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing given shows that the paper has actually been retracted or changed.",
+      "covered_by": [
+        "change-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The trial's reported findings are not affected by this alert.",
+      "covered_by": [
+        "change-6"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-1",
+    "change-2"
+  ]
+}

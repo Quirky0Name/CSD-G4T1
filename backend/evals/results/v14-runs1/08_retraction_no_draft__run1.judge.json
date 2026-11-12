@@ -1,0 +1,288 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the paper was retracted because of an analysis error that invalidates the main result",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The tracked paper has been retracted because the authors found a coding error in the analysis that invalidates the main result."
+    },
+    {
+      "fact": "says the impact judgment is general because there is no draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "No draft was uploaded for this project, so this judgment is general"
+    },
+    {
+      "fact": "recommends uploading the draft so future changes can be judged against it",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "upload your draft for this project so the next change can be judged against it"
+    },
+    {
+      "fact": "names a section of the researcher's draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the draft cites the paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "If your draft cites this paper as evidence, remove or replace the citation"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: Vitamin D supplements and bone density in older women",
+      "backs": true,
+      "pass": true,
+      "reason": "Title says retraction of the paper."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "States retraction due to coding error invalidating main result."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the 2.1% increase was not reproducible."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract gives the same finding as claim."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same as claim 7 text."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "Matches claim 8."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": true,
+      "pass": true,
+      "reason": "Matches claim 9."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "Matches claim 13."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "Matches claim 14."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": true,
+      "pass": true,
+      "reason": "Matches claim 15."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Retraction title shows it."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage states exactly this."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage states it."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Abstract quote matches."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage states it."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage states it."
+    },
+    {
+      "claim_id": "impact-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Abstract matches."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage states it."
+    },
+    {
+      "claim_id": "action-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage states it."
+    },
+    {
+      "claim_id": "action-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Abstract matches."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-4",
+      "from": [
+        "change-1",
+        "change-2",
+        "change-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Coding error invalidating main result and non-reproducibility support that the headline can't be relied on."
+    },
+    {
+      "claim_id": "impact-4",
+      "from": [
+        "impact-0"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from no draft being uploaded; the general framing is just a consequence."
+    },
+    {
+      "claim_id": "impact-5",
+      "from": [
+        "impact-1",
+        "impact-2",
+        "impact-3",
+        "impact-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Retracted paper with invalid main result implies high effect on a researcher citing it as key evidence."
+    },
+    {
+      "claim_id": "action-4",
+      "from": [
+        "action-0"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from no draft uploaded."
+    },
+    {
+      "claim_id": "action-5",
+      "from": [
+        "action-1",
+        "action-2",
+        "action-3",
+        "action-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from the retraction facts and general framing."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The tracked paper has been retracted, because the authors found a coding error that invalidates the main result.",
+      "covered_by": [
+        "change-0",
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The abstract reports that in 300 women aged 65+, 1000 IU vitamin D a day raised hip bone density by 2.1% over a year, but the increase could not be reproduced.",
+      "covered_by": [
+        "change-2",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's headline finding can no longer be relied on.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The tracked paper has been retracted because of a coding error invalidating the main result.",
+      "covered_by": [
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper reports 300 women aged 65+, 1000 IU vitamin D raised hip bone density by 2.1%, which could not be reproduced.",
+      "covered_by": [
+        "action-2",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No draft was uploaded, so the judgment is general: a researcher citing this paper as key evidence would be highly affected.",
+      "covered_by": [
+        "action-0",
+        "action-4",
+        "action-5"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "impact-0",
+    "action-0"
+  ]
+}

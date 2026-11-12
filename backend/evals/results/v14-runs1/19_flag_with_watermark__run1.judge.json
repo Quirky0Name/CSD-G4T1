@@ -1,0 +1,441 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the current copy of the paper carries a retraction or withdrawal banner",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "the current copy of the paper is marked as retracted in its title"
+    },
+    {
+      "fact": "says the reason for the retraction is not stated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "No retraction notice was available, so no reason is given, and it is not known whether the protocol itself is at fault."
+    },
+    {
+      "fact": "tells the researcher to stop and raise it with co-authors or supervisor because the draft's methods depend on the paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Before changing the text, talk to your co-authors or supervisor about how to handle a method that comes from a retracted paper"
+    },
+    {
+      "fact": "states a specific reason for the retraction such as fabrication or error",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "claims a retraction notice was found or quotes one",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, no notice, detected 2026-10-01",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line shows retraction, no notice."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "RETRACTED: Soil carbon gains after winter cover",
+      "backs": true,
+      "pass": true,
+      "reason": "Fetched title marked RETRACTED."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Soil carbon gains after winter cover cropping",
+      "backs": true,
+      "pass": true,
+      "reason": "Stored title has no retraction marking."
+    },
+    {
+      "claim_id": "change-5",
+      "quote": "Winter cover crops raised topsoil carbon by 6% over three years.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the 6% finding over three years."
+    },
+    {
+      "claim_id": "change-6",
+      "quote": "A detailed, reusable protocol for sampling and measuring soil carbon is provided so that other studies can produce comparable estimates.",
+      "backs": true,
+      "pass": true,
+      "reason": "States reusable protocol for sampling and measuring soil carbon."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft Methods quote matches claim."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Otherwise no step of the protocol has been changed.",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows no step changed, 'otherwise' implies an exception but the cracked-core step isn't in the quote."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Soil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2.",
+      "backs": true,
+      "pass": true,
+      "reason": "Matches claim 12."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "retraction, no notice, detected 2026-10-01",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line shows retraction with no notice."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "RETRACTED: Soil carbon gains after winter cover",
+      "backs": true,
+      "pass": true,
+      "reason": "Title marked RETRACTED."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+      "backs": true,
+      "pass": true,
+      "reason": "Matches claim 19."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Otherwise no step of the protocol has been changed.",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows no step changed otherwise."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "Soil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2.",
+      "backs": true,
+      "pass": true,
+      "reason": "Matches claim 21."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "retraction, no notice, detected 2026-10-01",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line retraction no notice."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "RETRACTED: Soil carbon gains after winter cover",
+      "backs": true,
+      "pass": true,
+      "reason": "Title marked RETRACTED."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 supports."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 supports."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 supports."
+    },
+    {
+      "claim_id": "change-5",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4 supports."
+    },
+    {
+      "claim_id": "change-6",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5 supports."
+    },
+    {
+      "claim_id": "impact-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 6 supports."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": false,
+      "pass": false,
+      "reason": "Quote says 'Otherwise no step changed'; the cracked-core added step is not in the quote, so that part is missing."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 8 supports."
+    },
+    {
+      "claim_id": "impact-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 9 supports."
+    },
+    {
+      "claim_id": "impact-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 10 supports."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 11 supports."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": false,
+      "pass": false,
+      "reason": "Cracked-core step not shown in the quote."
+    },
+    {
+      "claim_id": "action-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 13 supports."
+    },
+    {
+      "claim_id": "action-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 14 supports."
+    },
+    {
+      "claim_id": "action-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 15 supports."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-7",
+      "from": [
+        "change-0",
+        "change-1",
+        "change-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Retraction confirmed by title mark; reason unknown since no notice."
+    },
+    {
+      "claim_id": "change-8",
+      "from": [
+        "change-1",
+        "change-5",
+        "change-6"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Claims give the title retracted and the finding and protocol, but not that the retraction covers the whole paper including those; it's a reasonable inference from paper-level retraction."
+    },
+    {
+      "claim_id": "impact-6",
+      "from": [
+        "impact-0",
+        "impact-2",
+        "impact-3",
+        "impact-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft follows the paper's protocol, which is retracted."
+    },
+    {
+      "claim_id": "impact-7",
+      "from": [
+        "impact-5"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "No reason given implies unknown whether protocol is at fault."
+    },
+    {
+      "claim_id": "impact-8",
+      "from": [
+        "impact-0",
+        "impact-1",
+        "impact-6"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft relies on the retracted paper's protocol; 'high' rests on that, though 'core method' is reasonable."
+    },
+    {
+      "claim_id": "action-6",
+      "from": [
+        "action-0",
+        "action-2",
+        "action-3",
+        "action-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Same as 16."
+    },
+    {
+      "claim_id": "action-7",
+      "from": [
+        "action-5"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Same as 17."
+    },
+    {
+      "claim_id": "action-8",
+      "from": [
+        "action-0",
+        "action-1",
+        "action-6"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Same as 18."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The alert records a retraction of the paper with no notice attached, and the current copy is marked as retracted in its title.",
+      "covered_by": [
+        "change-0",
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The stored paper's title carries no retraction marking.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Apart from that marking no difference in the text was found between stored and current copy.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction applies to the whole paper, including the 6% finding and the reusable sampling protocol.",
+      "covered_by": [
+        "change-8",
+        "change-5",
+        "change-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction is confirmed by the current copy, but no notice was available so the reason is unknown.",
+      "covered_by": [
+        "change-7",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Draft Methods 2.2 cites [5] as the protocol followed exactly for 0-15 cm cores and dry combustion; apart from one added step for cracked cores no step changed.",
+      "covered_by": [
+        "impact-0",
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The tracked paper measured soil carbon by dry combustion on 0-15 cm cores using its own protocol, and the alert records retraction with no notice while the copy is marked retracted.",
+      "covered_by": [
+        "impact-2",
+        "impact-3",
+        "impact-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The retraction covers the paper whose protocol the Methods follow, so this use is touched.",
+      "covered_by": [
+        "impact-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No notice was available, so no reason is given, and it is not known whether the protocol is at fault.",
+      "covered_by": [
+        "change-3",
+        "impact-7"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The impact on the draft is high because it relies on the retracted paper for its core method.",
+      "covered_by": [
+        "impact-8"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Draft Methods 2.2 cites [5] as the protocol followed exactly, and the retraction covers that paper so this use is touched.",
+      "covered_by": [
+        "impact-0",
+        "impact-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert records a retraction with no notice, and no reason is given, so it is not known whether the protocol is at fault.",
+      "covered_by": [
+        "change-0",
+        "change-3",
+        "impact-7"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-3",
+    "impact-5",
+    "action-5"
+  ]
+}

@@ -1,0 +1,185 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the draft does not cite the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "the draft's text does not cite or name it."
+    },
+    {
+      "fact": "says no action is needed for the draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "You don't need to change the draft, and you can dismiss this alert"
+    },
+    {
+      "fact": "says the draft cites the retracted paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing the 2021 review from the reference list",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows notice is a retraction of that titled article."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "High-yield ethanol extraction of curcumin from turmeric",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows the tracked paper's title."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the retraction reason exactly."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract states the 94% recovery."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+      "backs": true,
+      "pass": true,
+      "reason": "Same as passage 1; shows retraction of that title."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the retraction reason exactly."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 shows the retraction title."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 gives the title."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 gives the reason."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4 states it."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5 shows it."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 6 shows it."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-4",
+      "from": [
+        "change-2",
+        "change-3"
+      ],
+      "follows": false,
+      "pass": false,
+      "reason": "Claims 3 and 4 give the reason and the 94% figure, but nothing says the retraction applies to the whole paper; that scope is added, though the unreliability is a plausible inference."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The notice is a retraction titled with the name of the paper, and the tracked paper has that same title.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The article was retracted because the reported yields could not be reproduced and the raw data were altered.",
+      "covered_by": [
+        "change-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The abstract reports a single ethanol extraction recovered 94% of curcumin; retraction applies to the whole paper so yields cannot be relied on.",
+      "covered_by": [
+        "change-3",
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's reference list has no entry for the paper and the text does not cite or name it.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The article was retracted because the reported yields could not be reproduced and the raw data were altered.",
+      "covered_by": [
+        "change-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft's reference list has no entry for the paper and the text does not cite or name it.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

@@ -1,0 +1,437 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the p-value changed from 0.03 to 0.21",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "changes the p-value for the primary outcome in Table 2 from p = 0.03 to p = 0.21"
+    },
+    {
+      "fact": "says the primary result is no longer statistically significant or is now in doubt",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "the corrected confidence interval includes zero ... the main efficacy finding is in doubt."
+    },
+    {
+      "fact": "tells the researcher to remove or hedge the claim that drug X significantly reduces migraine days",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "remove or hedge 'significantly' in that Discussion sentence, update the numbers to the corrected values and cite the correction"
+    },
+    {
+      "fact": "says the change is only typographical and does not matter",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The notice calls this a minor typographical correction, and the authors say it does not affect the overall conclusions... Whatever the notice calls it, remove or hedge"
+    },
+    {
+      "fact": "says the paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "without withdrawing the paper"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Correction to: Drug X reduces monthly migraine days: a randomised trial",
+      "backs": true,
+      "pass": true,
+      "reason": "Title shows a correction to the drug X paper exists."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "In Table 2, the p-value for the primary outcome should read p = 0.21 rather than p = 0.03",
+      "backs": true,
+      "pass": true,
+      "reason": "States p-value change exactly."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0",
+      "backs": true,
+      "pass": true,
+      "reason": "States CI change exactly."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "This is a minor typographical correction.",
+      "backs": true,
+      "pass": true,
+      "reason": "Says minor typographical correction."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "The authors note that this typographical change does not affect the overall conclusions of the article.",
+      "backs": true,
+      "pass": true,
+      "reason": "Authors say no effect on conclusions."
+    },
+    {
+      "claim_id": "change-5",
+      "quote": "In a randomised trial of 240 adults, drug X reduced monthly migraine days by 2.1 compared with placebo (p = 0.03).",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract gives 2.1 reduction, p=0.03."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Drug X is an appropriate comparator because it was shown to significantly reduce monthly migraine days (Reyes et al. [9], p = 0.03).",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft Discussion cites Reyes [9], p=0.03 for appropriate comparator and significant reduction."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "In a randomised trial of 240 adults, drug X reduced monthly migraine days by 2.1 compared with placebo (p = 0.03).",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract gives 2.1 reduction, p=0.03."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "In Table 2, the p-value for the primary outcome should read p = 0.21 rather than p = 0.03",
+      "backs": true,
+      "pass": true,
+      "reason": "States p-value change."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0",
+      "backs": true,
+      "pass": true,
+      "reason": "States CI change."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "This is a minor typographical correction.",
+      "backs": true,
+      "pass": true,
+      "reason": "Minor typographical correction."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "The authors note that this typographical change does not affect the overall conclusions of the article.",
+      "backs": true,
+      "pass": true,
+      "reason": "Authors say no effect on overall conclusions."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Drug X is an appropriate comparator because it was shown to significantly reduce monthly migraine days (Reyes et al. [9], p = 0.03).",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft quote matches claim."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "In Table 2, the p-value for the primary outcome should read p = 0.21 rather than p = 0.03",
+      "backs": true,
+      "pass": true,
+      "reason": "States p-value change."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0",
+      "backs": true,
+      "pass": true,
+      "reason": "States CI change."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "This is a minor typographical correction.",
+      "backs": true,
+      "pass": true,
+      "reason": "Minor typographical correction."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "The authors note that this typographical change does not affect the overall conclusions of the article.",
+      "backs": true,
+      "pass": true,
+      "reason": "Authors' statement on conclusions."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Correction title shown."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 shows it."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 shows it."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4."
+    },
+    {
+      "claim_id": "change-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5."
+    },
+    {
+      "claim_id": "change-5",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 6."
+    },
+    {
+      "claim_id": "impact-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 7 shows it."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 8."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 9."
+    },
+    {
+      "claim_id": "impact-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 10."
+    },
+    {
+      "claim_id": "impact-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 11 and 12 cover both parts."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 13."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 14."
+    },
+    {
+      "claim_id": "action-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 15."
+    },
+    {
+      "claim_id": "action-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 16 and 17 cover both parts."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-6",
+      "from": [
+        "change-1",
+        "change-2",
+        "change-5"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "-1.2 to 5.4 spans zero; 0.21 replaces 0.03 which abstract reports."
+    },
+    {
+      "claim_id": "change-7",
+      "from": [
+        "change-1",
+        "change-2",
+        "change-3",
+        "change-6"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Claims give the numeric changes and the typographical label, but 'main efficacy finding is in doubt' is an added judgment; still, a CI including zero and p=0.21 reasonably supports doubt."
+    },
+    {
+      "claim_id": "impact-5",
+      "from": [
+        "impact-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Interval -1.2 to 5.4 includes zero."
+    },
+    {
+      "claim_id": "impact-6",
+      "from": [
+        "impact-0",
+        "impact-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft quotes p=0.03 and correction replaces it with 0.21."
+    },
+    {
+      "claim_id": "impact-7",
+      "from": [
+        "impact-0",
+        "impact-2",
+        "impact-3",
+        "impact-6"
+      ],
+      "follows": false,
+      "pass": false,
+      "reason": "The 'main evidence' for the Discussion's argument and 'without withdrawing the paper' are not given by the named claims; the draft cites only this p-value but nothing says it is the main evidence or that the paper isn't withdrawn."
+    },
+    {
+      "claim_id": "action-3",
+      "from": [
+        "action-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Interval -1.2 to 5.4 includes zero."
+    },
+    {
+      "claim_id": "action-5",
+      "from": [
+        "action-0",
+        "action-1"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from claims 17 and 18."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "A correction to the tracked paper has been published, changing p from 0.03 to 0.21.",
+      "covered_by": [
+        "change-0",
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "It changes the CI from 0.2 to 4.0 to -1.2 to 5.4.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The stored abstract reports 2.1 reduction, p=0.03; corrected CI includes zero and 0.21 replaces 0.03.",
+      "covered_by": [
+        "change-5",
+        "change-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice calls it minor typographical and authors say it doesn't affect conclusions; main efficacy finding is in doubt.",
+      "covered_by": [
+        "change-3",
+        "change-4",
+        "change-7"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Discussion cites Reyes et al. [9], p=0.03, for drug X as appropriate comparator; paper reports 2.1-day reduction p=0.03.",
+      "covered_by": [
+        "impact-0",
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Correction changes p and CI; corrected interval includes zero.",
+      "covered_by": [
+        "impact-2",
+        "impact-3",
+        "impact-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The p=0.03 is the value the correction replaces, so use is touched.",
+      "covered_by": [
+        "impact-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Notice calls it minor typographical; authors say no effect on conclusions.",
+      "covered_by": [
+        "impact-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Impact is medium; touched use is main evidence, paper not withdrawn.",
+      "covered_by": [
+        "impact-7"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Draft Discussion cites Reyes [9] p=0.03; correction changes p to 0.21, so use touched.",
+      "covered_by": [
+        "action-0",
+        "action-1",
+        "action-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Correction changes CI; corrected CI includes zero.",
+      "covered_by": [
+        "action-2",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Notice calls it minor typographical; authors say no effect on overall conclusions.",
+      "covered_by": [
+        "action-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}
