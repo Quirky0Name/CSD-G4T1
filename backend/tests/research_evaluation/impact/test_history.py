@@ -407,7 +407,7 @@ async def test_feedback_whose_feedback_was_deleted_is_left_out(sm, mock_sm):
     assert [item.chunk.source_id for item in history.feedback] == ["41"]
 
 
-async def test_feedback_reaches_steps_2_and_3_and_the_evaluation(sm, mock_sm):
+async def test_feedback_reaches_every_step_and_the_evaluation(sm, mock_sm):
     mock_sm.feedback = [FEEDBACK_CHUNK]
     llm = RecordingLlm()
 
@@ -416,9 +416,8 @@ async def test_feedback_reaches_steps_2_and_3_and_the_evaluation(sm, mock_sm):
     body = sent_evaluation(mock_sm)
     assert body["assessment"]["feedback"] == "read"
     assert body["context_chunks"][-1]["source_type"] == "feedback"
-    for schema in (ImpactAssessment, RecommendedActions):
+    for schema in (ChangeAssessment, ImpactAssessment, RecommendedActions):
         assert any("researcher_feedback" in part for part in texts(llm.parts[schema]))
-    assert not any("researcher_feedback" in part for part in texts(llm.parts[ChangeAssessment]))
 
 
 def test_context_chunk_range_matches_text():

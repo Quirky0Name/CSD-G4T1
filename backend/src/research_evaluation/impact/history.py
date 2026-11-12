@@ -7,8 +7,8 @@ assessed it (research_evaluation.chunks), so the report being assessed is never 
 is by similarity only. Reading the past never fails the report: `failed` is recorded instead.
 
 With the same query, one more search finds the researcher's nearest past feedback, across every
-paper they track (this one included). It is kept apart from the past: steps 2 and 3 get it, never
-step 1, and its own status is recorded. A note's text is never logged."""
+paper they track (this one included). It is kept apart from the past: every step gets it as its
+own section, and its own status is recorded. A note's text is never logged."""
 
 import logging
 import re
