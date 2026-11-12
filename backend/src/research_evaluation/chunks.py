@@ -29,6 +29,7 @@ from pypdf import PdfReader
 from pypdf.errors import PyPdfError
 
 from research_evaluation.embedding import Embedder, chunk_text
+from research_evaluation.impact.history import FEEDBACK_HEAD, NOTE_LINE, UNKNOWN, VERDICT_LINE
 from research_evaluation.impact.inputs import ReportInputs
 from research_evaluation.impact.schemas import Evaluation
 from research_evaluation.storage import (
@@ -88,8 +89,8 @@ def feedback_piece(report: Report, paper: PaperDetails) -> Piece:
     feedback = report.feedback
     if feedback is None:
         raise ValueError(f"report {report.id} has no feedback")
-    date = report.created_at.date().isoformat() if report.created_at else "unknown"
-    head = f'feedback on report of {date}: "{paper.title or paper.doi or "unknown paper"}"'
+    date = report.created_at.date().isoformat() if report.created_at else UNKNOWN
+    head = f'{FEEDBACK_HEAD} {date}: "{paper.title or paper.doi or "unknown paper"}"'
     change_types = ", ".join(dict.fromkeys(alert.change_type for alert in report.alerts))
     fields = [
         ("changes", change_types),
@@ -100,11 +101,10 @@ def feedback_piece(report: Report, paper: PaperDetails) -> Piece:
         ("recommendation", report.recommendation),
     ]
     middle = "\n".join(f"{name}: {value}" for name, value in fields if value)
-    tail = f"researcher's verdict: {feedback.verdict}"
+    tail = f"{VERDICT_LINE}{feedback.verdict}"
     if feedback.note:
-        tail += f"\nresearcher's note: {feedback.note}"
-    # what's left for the middle once the head, the tail and the two newlines around it are in
-    room = PAGE_LIMIT - len(head) - len(tail) - 2
+        tail += f"\n{NOTE_LINE}{feedback.note}"
+    room = PAGE_LIMIT - len(f"{head}\n\n{tail}")
     middle = middle[: max(room, 0)].rstrip()
     return Piece("\n".join(part for part in (head, middle, tail) if part))
 

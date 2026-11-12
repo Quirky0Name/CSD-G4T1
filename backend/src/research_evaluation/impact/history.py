@@ -29,9 +29,12 @@ FEEDBACK_LIMIT = 3
 MAX_QUERY_CHARS = 8000
 
 VERDICTS = ("fair", "overstated", "understated")
-_REPORT_DATE = re.compile(r"^feedback on report of (\d{4}-\d{2}-\d{2}|unknown):")
-_VERDICT = "researcher's verdict: "
-_NOTE = "researcher's note: "
+# a feedback chunk's labels: research_evaluation.chunks.feedback_piece writes them, past_feedback reads
+FEEDBACK_HEAD = "feedback on report of"
+VERDICT_LINE = "researcher's verdict: "
+NOTE_LINE = "researcher's note: "
+UNKNOWN = "unknown"
+_REPORT_DATE = re.compile(rf"^{re.escape(FEEDBACK_HEAD)} (\d{{4}}-\d{{2}}-\d{{2}}|{UNKNOWN}):")
 
 
 @dataclass(frozen=True)
@@ -49,10 +52,12 @@ def past_feedback(chunk: Chunk) -> PastFeedback:
     The verdict is the last verdict line before the note, so a note can't put one of its own."""
     lines = chunk.content.splitlines()
     date = _REPORT_DATE.match(lines[0]) if lines else None
-    before_note = next((i for i, line in enumerate(lines) if line.startswith(_NOTE)), len(lines))
-    verdicts = [line.removeprefix(_VERDICT) for line in lines[:before_note] if line.startswith(_VERDICT)]
-    verdict = verdicts[-1] if verdicts and verdicts[-1] in VERDICTS else "unknown"
-    return PastFeedback(chunk, date.group(1) if date else "unknown", verdict)
+    before_note = next((i for i, line in enumerate(lines) if line.startswith(NOTE_LINE)), len(lines))
+    verdicts = [
+        line.removeprefix(VERDICT_LINE) for line in lines[:before_note] if line.startswith(VERDICT_LINE)
+    ]
+    verdict = verdicts[-1] if verdicts and verdicts[-1] in VERDICTS else UNKNOWN
+    return PastFeedback(chunk, date.group(1) if date else UNKNOWN, verdict)
 
 
 @dataclass(frozen=True)
