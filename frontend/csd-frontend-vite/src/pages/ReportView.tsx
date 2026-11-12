@@ -21,6 +21,7 @@ import TextPane from '../highlight/TextPane'
 import { useTracking } from '../tracking'
 import { NotFound, Page } from '../components/Page'
 import { ContextList, ContextPane } from '../components/ReportContext'
+import ReportFeedback from '../components/ReportFeedback'
 import { entryTitle } from '../context/describe'
 import { resolveContext, type ContextEntry } from '../context/resolve'
 import { badge, errorPanel, pageColumn } from '../ui'
@@ -183,8 +184,10 @@ function ReportBody({ report, paper, reports }: { report: UserReport; paper: Pap
       ) : !showClaims ? (
         <NoClaims report={report} />
       ) : (
-        <div className="mt-4 grid gap-6 lg:mt-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)] lg:gap-4">
-          <div className="min-w-0 lg:overflow-y-auto">
+        // from lg the verdict sits under the claim list, which scrolls above it; below lg it comes last,
+        // after the panes, so it closes the report
+        <div className="mt-4 grid gap-6 lg:mt-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)_auto] lg:gap-4">
+          <div className="min-w-0 lg:col-start-1 lg:row-start-1 lg:min-h-0 lg:overflow-y-auto">
             <ClaimList
               claims={claims}
               summary={report.change_summary}
@@ -201,7 +204,7 @@ function ReportBody({ report, paper, reports }: { report: UserReport; paper: Pap
           <section
             ref={passages}
             aria-label={contextEntry ? 'What was read' : 'Quotes'}
-            className="flex min-w-0 scroll-mt-16 flex-col lg:min-h-0"
+            className="flex min-w-0 scroll-mt-16 flex-col lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:min-h-0"
           >
             {contextEntry && (
               <p aria-live="polite" className="mb-3 line-clamp-2 text-sm/6 text-gray-200 lg:sr-only">
@@ -259,6 +262,8 @@ function ReportBody({ report, paper, reports }: { report: UserReport; paper: Pap
               )}
             </div>
           </section>
+
+          <ReportFeedback report={report} className="lg:col-start-1 lg:row-start-2" />
         </div>
       )}
     </main>
@@ -340,6 +345,7 @@ function NoClaims({ report }: { report: UserReport }) {
           <p className="mt-1 text-gray-300">{report.recommendation}</p>
         </div>
       )}
+      <ReportFeedback report={report} className="mt-8" />
     </div>
   )
 }
