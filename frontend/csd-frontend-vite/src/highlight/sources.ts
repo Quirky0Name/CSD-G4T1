@@ -19,7 +19,8 @@ const DOCUMENT_LABEL: Record<DocumentKind, string> = {
   related: 'Related document',
 }
 
-const NOT_YET: PassageSource = { kind: 'none', label: 'Not available yet' }
+// no viewer for this source yet: the pane shows just the quote, with no label
+const NOT_YET: PassageSource = { kind: 'none', label: '' }
 
 export function sourceFor(report: UserReport, passage: Passage): PassageSource {
   const fake = isFake(report)

@@ -149,7 +149,7 @@ describe('sourceFor', () => {
 
   it("has no draft or paper for a report that isn't fake", () => {
     const real = { ...report, documents: report.documents.map((d) => ({ ...d, pdf_source_url: d.pdf_source_url && 'https://example.org/x.pdf' })) }
-    expect(sourceFor(real, passage('impact-0', 0))).toEqual({ kind: 'none', label: 'Not available yet' })
-    expect(sourceFor(real, passage('impact-0', 1))).toEqual({ kind: 'none', label: 'Not available yet' })
+    expect(sourceFor(real, passage('impact-0', 0))).toEqual({ kind: 'none', label: '' })
+    expect(sourceFor(real, passage('impact-0', 1))).toEqual({ kind: 'none', label: '' })
   })
 })

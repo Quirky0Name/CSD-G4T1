@@ -286,6 +286,13 @@ function FeedbackBody({ entry }: { entry: Extract<ContextEntry, { kind: 'feedbac
           </Fact>
         )}
       </dl>
+      {/* the item carries no note, so it's read off the report it names (its source id): the note as
+          saved now, which may have been edited since the assessment read it */}
+      {entry.report?.feedback?.note && (
+        <Field label="Your note">
+          <Inset>{entry.report.feedback.note}</Inset>
+        </Field>
+      )}
       {entry.report?.change_summary && (
         <Field label="That report said">
           <p>{entry.report.change_summary}</p>
