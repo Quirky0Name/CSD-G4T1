@@ -8,6 +8,28 @@ owned that story made.
 
 ---
 
+## 2026-11-12 — Impact tries Claude Sonnet first, with Gemini behind it
+
+Impact's three steps run on `claude-sonnet-5-5` (`CLAUDE_MODEL`) when
+`ANTHROPIC_API_KEY` is set, then fall back to `GEMINI_MODEL` and
+`GEMINI_FALLBACK_MODELS` as before (the user's call: "sonnet should be the
+primary one"). Without the Anthropic key nothing changes.
+
+- **Why:** a researcher waits on all three steps, and free-tier Gemini is
+  often `503` or out of its daily requests. The prompts have also been
+  tuned and scored on Claude since v10. Sonnet is paid per token, which was
+  accepted.
+- **Gemini stays for embeddings.** Anthropic has no embeddings API, and a
+  different embedder would change the `vector(1536)` column and need
+  everything re-embedded.
+- **Effort `low`**, for speed. Not yet measured against the evals'
+  default `medium`.
+- **No SDK retries** (`max_retries=0`): the fallback chain is the retry, so
+  an overloaded Sonnet moves straight on to Gemini. A refusal counts as a
+  model failure.
+- **The placeholder text was replaced** (the user's call): every text of a
+  placeholder evaluation is shown on the report page.
+
 ## 2026-11-12 — Report feedback is embedded as one chunk and retrieved across the researcher's papers
 
 A researcher can rate an assessed report `fair`, `overstated` or

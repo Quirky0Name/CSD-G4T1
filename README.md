@@ -15,7 +15,7 @@ login). See
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The system map: week-7 scope, services and ownership, data flow, auth, projects, data model, deployment |
 | [docs/STORAGE.md](docs/STORAGE.md) | Storage Management inside: papers and PDFs, drafts, snapshots, alerts, reports and documents, demo tools, code layout, gotchas |
-| [docs/EVALUATION.md](docs/EVALUATION.md) | Research Evaluation inside: detection and rules, investigation, Gemini impact and its fallback, the impact evals (purpose, how to run, reading the scores), code layout, gotchas |
+| [docs/EVALUATION.md](docs/EVALUATION.md) | Research Evaluation inside: detection and rules, investigation, impact (Sonnet, falling back to Gemini), the impact evals (purpose, how to run, reading the scores), code layout, gotchas |
 | [docs/UPDATING.md](docs/UPDATING.md) | Updating inside: the poll, the outage gate, when it nudges, the schedule, snapshots, code layout, gotchas |
 | [docs/CONTRACTS.md](docs/CONTRACTS.md) | Every endpoint between services and the frontend: request and response shapes, errors, auth |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Dated log of design decisions and why they were made |

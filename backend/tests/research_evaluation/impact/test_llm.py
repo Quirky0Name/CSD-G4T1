@@ -16,7 +16,6 @@ from research_evaluation.impact.llm import (
     GeminiLlm,
     ModelFailure,
     Pdf,
-    generate,
     to_parts,
 )
 
@@ -44,9 +43,7 @@ def fake_client(models: FakeModels):
 async def test_a_call_sends_the_system_the_parts_and_the_schema_with_no_tools():
     models = FakeModels('{"severity": "high", "summary": "Retracted."}')
 
-    answer = await generate(
-        fake_client(models),
-        "gemini-flash-latest",
+    answer = await GeminiLlm(fake_client(models), "gemini-flash-latest").generate(
         system="the rules",
         parts=["some text", Pdf(b"%PDF-1.7 paper"), "the task"],
         schema=Verdict,
@@ -74,24 +71,14 @@ async def test_a_call_sends_the_system_the_parts_and_the_schema_with_no_tools():
 async def test_an_answer_that_doesnt_fit_the_schema_raises():
     models = FakeModels('{"severity": "high"}')
     with pytest.raises(ValidationError):
-        await generate(fake_client(models), "m", system="s", parts=["p"], schema=Verdict)
+        await GeminiLlm(fake_client(models), "m").generate(system="s", parts=["p"], schema=Verdict)
 
 
 @pytest.mark.parametrize("text", [None, ""])
 async def test_no_text_at_all_raises(text):
     models = FakeModels(text)
     with pytest.raises(ValueError, match="no text"):
-        await generate(fake_client(models), "m", system="s", parts=["p"], schema=Verdict)
-
-
-async def test_the_gemini_llm_passes_its_model_through():
-    models = FakeModels('{"severity": "low", "summary": "A typo."}')
-    llm = GeminiLlm(client=fake_client(models), model="gemini-flash-latest")
-
-    answer = await llm.generate(system="s", parts=["p"], schema=Verdict)
-
-    assert answer.value.severity == "low"
-    assert models.calls[0]["model"] == "gemini-flash-latest"
+        await GeminiLlm(fake_client(models), "m").generate(system="s", parts=["p"], schema=Verdict)
 
 
 class ScriptedModels:
@@ -119,6 +106,10 @@ def overloaded() -> genai_errors.APIError:
     )
 
 
+def chain(models: ScriptedModels, names: tuple[str, ...]) -> FallbackLlm:
+    return FallbackLlm(tuple(GeminiLlm(fake_client(models), name) for name in names))
+
+
 async def ask(llm: FallbackLlm):
     return await llm.generate(system="s", parts=["the secret draft text"], schema=Verdict)
 
@@ -126,7 +117,7 @@ async def ask(llm: FallbackLlm):
 async def test_the_first_model_answering_means_one_call():
     models = ScriptedModels({"a": OK, "b": OK})
 
-    answer = await ask(FallbackLlm(fake_client(models), ("a", "b")))
+    answer = await ask(chain(models, ("a", "b")))
 
     assert models.calls == ["a"]
     assert answer.model == "a" and answer.model_version == "a-001"
@@ -147,7 +138,7 @@ async def test_the_first_model_answering_means_one_call():
 async def test_each_kind_of_failure_moves_on_to_the_next_model(failure):
     models = ScriptedModels({"a": failure, "b": OK})
 
-    answer = await ask(FallbackLlm(fake_client(models), ("a", "b")))
+    answer = await ask(chain(models, ("a", "b")))
 
     assert models.calls == ["a", "b"]
     assert answer.model == "b"
@@ -157,7 +148,7 @@ async def test_each_kind_of_failure_moves_on_to_the_next_model(failure):
 async def test_models_are_tried_in_order_until_one_answers():
     models = ScriptedModels({"a": overloaded(), "b": overloaded(), "c": OK, "d": OK})
 
-    answer = await ask(FallbackLlm(fake_client(models), ("a", "b", "c", "d")))
+    answer = await ask(chain(models, ("a", "b", "c", "d")))
 
     assert models.calls == ["a", "b", "c"]
     assert answer.model == "c"
@@ -169,7 +160,7 @@ async def test_every_model_failing_raises_with_each_model_and_its_cause():
     )
 
     with pytest.raises(AllModelsFailed) as raised:
-        await ask(FallbackLlm(fake_client(models), ("a", "b", "c", "d")))
+        await ask(chain(models, ("a", "b", "c", "d")))
 
     assert models.calls == ["a", "b", "c", "d"]
     assert raised.value.failures == [
@@ -187,7 +178,7 @@ async def test_another_value_error_moves_on_and_is_recorded_by_its_class_only():
     models = ScriptedModels({"a": SdkComplaint("the model said: secret"), "b": None})
 
     with pytest.raises(AllModelsFailed) as raised:
-        await ask(FallbackLlm(fake_client(models), ("a", "b")))
+        await ask(chain(models, ("a", "b")))
 
     assert raised.value.failures == [
         ModelFailure("a", "SdkComplaint"),
@@ -197,7 +188,7 @@ async def test_another_value_error_moves_on_and_is_recorded_by_its_class_only():
 
 async def test_each_call_starts_again_from_the_first_model():
     models = ScriptedModels({"a": overloaded(), "b": OK})
-    llm = FallbackLlm(fake_client(models), ("a", "b"))
+    llm = chain(models, ("a", "b"))
 
     await ask(llm)
     models.script["a"] = OK
@@ -211,7 +202,7 @@ async def test_an_error_that_isnt_a_model_failure_is_raised_straight_away():
     models = ScriptedModels({"a": KeyError("bug"), "b": OK})
 
     with pytest.raises(KeyError):
-        await ask(FallbackLlm(fake_client(models), ("a", "b")))
+        await ask(chain(models, ("a", "b")))
 
     assert models.calls == ["a"]
 
@@ -220,17 +211,17 @@ async def test_a_fallback_logs_the_model_and_cause_but_no_prompt_text(caplog):
     models = ScriptedModels({"a": overloaded(), "b": OK})
 
     with caplog.at_level(logging.WARNING, logger="research_evaluation.impact.llm"):
-        await ask(FallbackLlm(fake_client(models), ("a", "b")))
+        await ask(chain(models, ("a", "b")))
 
     [record] = caplog.records
-    assert record.getMessage() == "Gemini model a failed (Gemini answered 503 (UNAVAILABLE))"
+    assert record.getMessage() == "model a failed (Gemini answered 503 (UNAVAILABLE))"
     assert "secret draft" not in caplog.text
 
 
 def test_the_fallback_llm_is_named_after_its_first_model_and_needs_one():
-    assert FallbackLlm(fake_client(ScriptedModels({})), ("a", "b")).model == "a"
+    assert chain(ScriptedModels({}), ("a", "b")).model == "a"
     with pytest.raises(ValueError, match="at least one model"):
-        FallbackLlm(fake_client(ScriptedModels({})), ())
+        FallbackLlm(())
 
 
 def test_text_and_pdfs_become_their_own_parts():

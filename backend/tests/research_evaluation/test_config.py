@@ -184,7 +184,41 @@ def test_startup_makes_impact_a_gemini_model_with_the_timeout(tmp_path, monkeypa
         assert llm.model == "gemini-test"
         assert llm.models == ("gemini-test", "gemini-older", "gemini-oldest")
         # the SDK takes milliseconds
-        assert llm.client._api_client._http_options.timeout == 45_000
+        assert llm.llms[0].client._api_client._http_options.timeout == 45_000
+
+
+def test_startup_puts_sonnet_before_the_gemini_models_when_an_anthropic_key_is_set(
+    tmp_path, monkeypatch
+):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-key")
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setenv("IMPACT_LLM_TIMEOUT_SECONDS", "45")
+    app = create_app()
+
+    with TestClient(app):
+        llm = app.state.impact.llm
+        assert llm.models == ("claude-sonnet-5-5", "gemini-flash-latest", "gemini-flash-lite-latest")
+        sonnet = llm.llms[0].client
+        assert sonnet.api_key == "test-anthropic-key"
+        assert sonnet.timeout == 45
+        # the fallback chain is the retry: an overloaded sonnet moves straight on to gemini
+        assert sonnet.max_retries == 0
+
+
+def test_with_only_an_anthropic_key_impact_runs_on_sonnet_alone_and_embeds_nothing(
+    tmp_path, monkeypatch
+):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-key")
+    app = create_app()
+
+    with TestClient(app):
+        assert app.state.impact.llm.models == ("claude-sonnet-5-5",)
+        # the embedder is Gemini's: without its key the paper's past is neither searched nor stored
+        assert app.state.impact.embedder is None
 
 
 def test_the_fallback_models_default_to_flash_lite():
@@ -262,4 +296,4 @@ def test_startup_gives_impact_an_embedder_on_the_same_gemini_client(tmp_path, mo
     with TestClient(app):
         embedder = app.state.impact.embedder
         assert embedder.model == "gemini-embedding-test"
-        assert embedder.client is app.state.impact.llm.client
+        assert embedder.client is app.state.impact.llm.llms[0].client
