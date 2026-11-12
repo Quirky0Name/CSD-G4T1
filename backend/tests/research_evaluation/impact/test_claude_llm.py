@@ -4,6 +4,7 @@ answer is read."""
 import base64
 from types import SimpleNamespace
 
+import pytest
 from pydantic import BaseModel
 
 from research_evaluation.impact.llm import ClaudeLlm, Pdf
@@ -66,3 +67,11 @@ async def test_a_call_sends_the_system_the_text_and_pdfs_in_order_and_the_schema
     assert call["output_format"] is Verdict
     assert call["output_config"] == {"effort": "low"}
     assert "tools" not in call
+
+
+async def test_a_refusal_raises_so_the_next_model_is_tried():
+    messages = FakeMessages(parsed_output=None, stop_reason="refusal")
+    llm = ClaudeLlm(client=fake_client(messages), model="claude-sonnet-5-5")
+
+    with pytest.raises(ValueError, match="refused"):
+        await llm.generate(system="s", parts=["p"], schema=Verdict)
