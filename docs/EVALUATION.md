@@ -313,14 +313,20 @@ Per report:
    paper isn't attached. What was attached or left out is recorded in
    `assessment.impact_pdfs`, shaped like `assessment.pdfs`. Step 1's task says what a RELATED document is
    (reached by following a notice's or new version's links; no alert of its
-   own). A citation jump has no document: its alert line carries the rule's
+   own). A notice's alert line carries its notice date when the rule's
+   description has one (`rules.notice_date`; Storage Management keeps no
+   separate date), and step 1's task says that for a notice whose DOI is the
+   paper's own it is the paper's date, not a retraction's. A citation jump has no document: its alert line carries the rule's
    description (the counts), and step 1's task says to judge it as new
    attention, scope `citations_only`, severity `low`, so the gate lets it
-   through to steps 2 and 3. `PROMPT_VERSION` is 12 since each claim says whether it states only
-   an absence, `absence` (11: free text as sentences that name their claims; 7: conclusions,
+   through to steps 2 and 3. `PROMPT_VERSION` is 14 since the alert line carries the notice date and a
+   derived claim may use only facts its named claims state (13: a conclusion drawn from other claims
+   is a derived claim (`from_claims`), a claim's quotes may show it together, and a place is
+   shown by quoting its sentence, never a heading (12: each claim says whether it states only
+   an absence, `absence`; 11: free text as sentences that name their claims; 7: conclusions,
    widening words and absences get their own claims, and step 3 adds no fact of its own; 6: each
    claim states one fact that each of its quotes shows on its own; 5 added claims and step 2's
-   stored paper).
+   stored paper)).
 4. `PUT /internal/reports/{id}/evaluation`, once; the report becomes
    `assessed`. Nothing is written between steps, so an `assessed` report is
    always complete.
@@ -469,7 +475,7 @@ uv run --with fpdf2 --with rich python evals/all.py                  # asks, the
 uv run --with fpdf2 --with rich python evals/all.py 01_correction_effect_size --runs 1
 uv run --with fpdf2 --with rich python evals/all.py --skip-run       # re-judge and re-score the newest results, no generation
 uv run --with fpdf2 --with rich python evals/all.py --folder evals/results/<stamp> --skip-run
-uv run --with fpdf2 --with rich python evals/all.py --provider claude-code                       # Claude Code on your subscription: Sonnet tested, Haiku judging
+uv run --with fpdf2 --with rich python evals/all.py --provider claude-code                       # Claude Code on your subscription: Sonnet tested and judging
 uv run --with fpdf2 --with rich python evals/all.py --provider claude-code --folder evals/results/<stamp> --resume   # continue a run stopped at the usage limit
 ```
 
@@ -500,9 +506,8 @@ reads `JUDGE_API_KEY` (falling back to `GEMINI_API_KEY`) and `JUDGE_MODEL`
 separate key, so the judge doesn't use up the tested model's free-tier
 quota.
 
-`judge.py` exits with a usage error, before any call, when the judge model
-is the tested model of a run in the folder (`assessment.model`), so a
-model never grades its own answers. It checks every case's
+The judge model may be the tested model of the runs it grades. `judge.py`
+checks every case's
 `expected.facts` against the rubric contract (`judge.Rubric`) before its
 first call and exits non-zero naming the case on a violation. A judge call
 that fails (a schema mismatch, a placeholder-type failure) leaves that run
@@ -529,7 +534,7 @@ billed to the key. `evals/results/` is tracked in git.
   must report `"authMethod": "claude.ai"`, or it exits before any call; if
   `claude` isn't on `PATH` (`shutil.which`, so an npm `claude.cmd` works
   too) it exits and says to install Claude Code and log in. Defaults:
-  `--model sonnet --effort medium` tested, `haiku` at effort medium judging
+  `--model sonnet --effort medium` tested, `sonnet` at effort medium judging
   (`JUDGE_MODEL` overrides it). The command is
   `claude -p --verbose --input-format stream-json --output-format stream-json --model <m> --effort <e> --system-prompt <system> --tools "" --strict-mcp-config --disable-slash-commands --no-session-persistence --setting-sources= --json-schema <schema>`,
   run in a new empty temp folder that is removed afterwards. So the model
@@ -558,7 +563,7 @@ billed to the key. `evals/results/` is tracked in git.
   `backend/.env` for this provider only). `anthropic` isn't a project
   dependency: add `--with anthropic` to the command; the other providers
   never import it. Defaults: `claude-sonnet-5-5` at effort `medium` tested
-  (`--model`, `--effort`), `claude-haiku-5-5` at effort `medium` judging
+  (`--model`, `--effort`), `claude-sonnet-5-5` at effort `medium` judging
   (`JUDGE_MODEL`). Each call is `messages.parse` with the step's schema as
   `output_format`, `system`, `max_tokens` 16000, one user message (parts in
   order, PDFs as base64 `document` blocks after their label),
@@ -638,7 +643,9 @@ It returns `Verdicts`:
 {"items": [{"n": 1, "evidence": "<words of the answer, or empty>", "present": true}]}
 ```
 
-The judge reports `present`; the code decides pass or fail. Whether an
+The judge reports `present`; the code decides pass or fail. It judges
+meaning, not wording: a statement is present when the answer gives its core
+point in any words, even without an example or a detail in parentheses. Whether an
 answer is true of the sources is checked by the statements, the tags and
 the quote check, not by the judge. Text scores from before this contract
 (when the judge also read the case material) aren't comparable with later
@@ -688,19 +695,38 @@ ones.
     (`PROMPT_VERSION` 12 on) or the judge lists in `absences`: it states
     only that something is missing from the material (a notice, its text, a
     banner), and nothing can be quoted for that. The model's flag is taken
-    as given; the judge's list covers runs from before the flag. `unlinked_claim` counts the
-    evaluation's `claims`.
-  - **unbacked passage**: the judge says the passage doesn't back its claim.
+    as given; the judge's list covers runs from before the flag. A derived
+    claim (`from_claims` naming other claims of its step, `PROMPT_VERSION` 13
+    on) is exempt too: it is graded on whether it follows instead.
+    `unlinked_claim` counts the evaluation's `claims`.
+  - **unbacked passage**: one count each for a passage the judge says shows
+    none of its claim, a quoted claim whose passages together don't show its
+    substance (each number, name, date, place, direction, reason and scope
+    word), and a derived claim a careful reader wouldn't accept from the
+    claims it names plus the plain meaning of their words (a level follows
+    when those claims give the facts it rests on). Rewording and words that
+    sum up what the passages show ("headline", "key") are not gaps; the judge
+    gives the benefit of the doubt and fails only a clear gap or a
+    contradiction. A fact the source splits can be quoted in pieces: only the
+    claim as a whole must be shown.
   - **uncovered statement**: the judge finds a factual statement in
     `change_summary`, `evaluation` or `recommendation` that no claim covers.
     Code can't prove coverage, so it is measured this way. A factual statement
     is one the sources could show true or false: the judge doesn't list advice,
-    which no quote can prove. For a run with sentence lists (`PROMPT_VERSION`
+    which no quote can prove, what the assistant itself does (keeps tracking,
+    raises a new alert) or general knowledge. For a run with sentence lists (`PROMPT_VERSION`
     11 on), the judge sees each field as the sentences the stored text kept,
     each marked `[fact]` or `[advice]`, and skips the `[advice]` ones whole.
+    With no draft read, the `evaluation`'s statements aren't graded: it is a
+    general judgment, as for unlinked.
 
   The claims grading shows the judge each passage's source (its stored
-  `target`), so it can tell a quote of the draft from a quote of the paper.
+  `target`), so it can tell a quote of the draft from a quote of the paper,
+  and, for a draft or paper the case gives as `*_text` or `*_doc`, the
+  heading of the section the quote sits in (`case_text.section_of`), so a
+  claim can name its section without quoting a heading. It also shows the
+  case's tracked paper (title, DOI, journal, year) as given facts, and says a
+  fetched document's passage may come from its Crossref record.
 
   The judge reports, the code decides: a passage the judge skipped counts as
   unbacked, a `covered_by` number that isn't a claim covers nothing, and an

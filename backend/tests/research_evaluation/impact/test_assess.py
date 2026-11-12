@@ -535,6 +535,22 @@ def test_a_citation_jumps_alert_line_carries_its_counts_and_a_notices_does_not_c
     )
 
 
+def test_a_notices_alert_line_carries_the_notice_date_from_its_description():
+    alert = AlertInReport(
+        id=241,
+        change_type="retraction",
+        change_key="retraction:10.9/x",
+        alert_severity="high",
+        description="This paper has been retracted (notice 10.9/x, 2020-07-01). Its findings should no longer be relied on.",
+        notice_doi="10.9/x",
+        detected_at=datetime(2026, 10, 1, tzinfo=UTC),
+    )
+
+    line = prompts.alerts_block([alert]).splitlines()[1]
+
+    assert line == "- alert 241: retraction, notice 10.9/x, notice dated 2020-07-01, detected 2026-10-01, alert severity high"
+
+
 def test_gemini_may_judge_a_citation_jump_as_about_citations_only():
     answer = change_answer(severity="low").model_dump()
     answer["alerts"][0]["scope"] = "citations_only"
@@ -626,12 +642,12 @@ def test_a_citation_jumps_empty_evidence_is_still_accepted():
     assert ChangeAssessment.model_validate(jump).alerts[0].evidence == []
 
 
-async def test_the_result_records_prompt_version_13_and_reads_the_draft_only_after_the_gate(sm):
+async def test_the_result_records_prompt_version_14_and_reads_the_draft_only_after_the_gate(sm):
     llm = fake(sm)
 
     evaluation = await assess(llm, sm.client, await inputs_for(sm))
 
-    assert evaluation.assessment["prompt_version"] == 13
+    assert evaluation.assessment["prompt_version"] == 14
     assert [call["drafts_read_before"] for call in llm.calls] == [0, 1, 1]
 
 

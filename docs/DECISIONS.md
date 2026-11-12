@@ -19,8 +19,8 @@ owned that story made.
   builds: no tools, no settings, an empty working directory. It never reads
   a case file, because a case holds its expected answer; for the same
   reason agents or subagents never act as the tested model.
-- **With Claude the judge has its own model** (Haiku, the tested model
-  Sonnet) **but shares the subscription's limits**, unlike a separate
+- **With Claude the judge defaults to Sonnet, the tested model too**, and
+  may grade its own answers; **it shares the subscription's limits**, unlike a separate
   Gemini key. Hitting the limit stops the run without saving it, and
   `--resume` continues.
 - **A Claude API provider exists for paid runs** (the official SDK, billed
@@ -204,8 +204,8 @@ owned that story made.
   `must_not_include`) is worked out in code, so the judge can't be lenient
   and length or style earns nothing.
 - **The judge has its own key and model** (`JUDGE_API_KEY`, `JUDGE_MODEL`),
-  so it doesn't use up the tested model's daily free-tier quota and
-  doesn't grade its own answers.
+  so it doesn't use up the tested model's daily free-tier quota. It may
+  be the tested model.
 - **Several runs per case, and their spread is the noise floor**: the
   answers vary between runs, so a change smaller than the spread means
   nothing.

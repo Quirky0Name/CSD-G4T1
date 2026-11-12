@@ -67,8 +67,11 @@ SYSTEM = """You check an AI assistant's written answer against a numbered list o
 You get two JSON documents: first the ANSWER (its change_summary, evaluation and recommendation; \
 null where it gave none), then the STATEMENTS, each with its number `n` and `text`. Use only the \
 ANSWER; do not use outside knowledge, and do not decide whether the answer is true. For each \
-statement, decide whether the ANSWER says it or does it (paraphrase counts; silence does not). \
-First quote the words of the ANSWER that show it (empty if there are none), then give `present`: \
+statement, decide whether the ANSWER says it or does it. Judge meaning, not wording: a \
+paraphrase, synonyms, a summary, or a more specific or slightly more general version of the same \
+point counts. A statement with several parts is present when the answer gives its core point: a \
+missing example, a detail in parentheses or a minor qualifier doesn't make it absent. Only \
+silence on the core point, or saying something different, makes it absent. First quote the words of the ANSWER that show it (empty if there are none), then give `present`: \
 true if the answer says or does what the statement describes, false if it doesn't. Return one \
 item per statement number. You are only reporting what the answer contains, not whether that is \
 good or bad. Do not reward length or style."""
@@ -103,23 +106,37 @@ class Verdicts(BaseModel):
 
 
 PASSAGE_SYSTEM = """You check an AI assistant's claims and the passages it quoted for them. \
-Use only what is given; do not use outside knowledge. For each numbered PASSAGE, give a short \
+Use only what is given, plus the plain meaning of words; do not use outside knowledge of the \
+paper. Read as a fair, careful reader would: give the benefit of the doubt, and say false only \
+for a clear gap (a fact that nothing given shows) or a contradiction, never for wording. The \
+TRACKED PAPER's details are given facts: a claim may name its title, DOI, journal or year without \
+a passage. A passage from a fetched document may come from its Crossref record (its title or \
+type) as well as its text. For each numbered PASSAGE, give a short \
 reason, then `backs`: true if the quoted words, read on their own and knowing where they come \
 from, show all or part of what the claim states, false if they show none of it (they are about \
 something else, only on the same topic, or contradict it). A quote from the researcher's draft \
 can show what the draft says. A passage shown "under" a heading sits in that part of its \
 document, so a claim may name that part. Then, for each claim listed under QUOTED CLAIMS, give a \
-short reason and `backed`: true if its passages together show everything the claim states, \
-false if any part of it (a number, a place, a reason, a word such as "only" or "whole") is in \
-none of them. Then, for each claim listed under DERIVED CLAIMS, give a short reason and \
-`follows`: true if it follows from the claims it names, adding no fact they don't give, false \
-if it says more than they support. A level (none, low, medium, high) comes from the \
+short reason and `backed`: true if its passages together show the substance of the claim: \
+each number, name, date, place, direction of an effect, reason, and scope word (such as "only" \
+or "whole"). Rewording is not a gap, and neither is a word that sums up what the passages show: \
+a result stated in an abstract or conclusion is the paper's main or headline result, and a \
+value the draft builds its work on is key to it. false only if a substantive part is in none of \
+them, or a passage contradicts it. Then, for each claim listed under DERIVED CLAIMS, give a short reason and \
+`follows`: true if a careful reader would accept it from the claims it names together with the \
+plain meaning of their words, false if it adds a fact they don't give. Plain-meaning steps are \
+not added facts: a temperature finding rests on the temperature data; a notice about a \
+different article doesn't change what the tracked paper says; a result a notice says can't be \
+relied on is touched wherever the draft uses it. A level (none, low, medium, high) comes from the \
 assistant's own rubric, which you don't have: accept one when the named claims give the facts \
 it rests on (how the draft uses the paper, what changed). Then list \
 each factual statement in the ANSWER's change_summary, evaluation and recommendation, with its \
 field, and `covered_by`: the numbers of the CLAIMS that state it (empty if no claim does). A \
 factual statement is one the source documents could show true or false. Advice, instructions and \
-opinions on what to do are not factual statements: do not list them. A field given as a list of \
+opinions on what to do are not factual statements: do not list them, and neither are statements \
+about what this assistant itself does (it keeps tracking the paper, it will raise a new alert) \
+or general knowledge any reader has (what a retraction or an expression of concern is). A \
+statement is covered by the claims that state it in any wording, or that state it together. A field given as a list of \
 sentences marks each one [fact] or [advice]: list statements only from its [fact] sentences, and \
 skip its [advice] sentences whole. A field shown as (none) \
 has no statements. Then give `absences`: the numbers of the CLAIMS marked (no passages) that \
@@ -255,13 +272,16 @@ def passage_prompt(ev: dict, case: dict | None = None) -> str:
         return f'{source}, under "{heading}"' if heading else source
 
     claims = [f"{n}. {c['text']}{label(c)}" for n, c in enumerate(ev["claims"], 1)]
+    paper = (case or {}).get("paper") or {}
+    known = [f"{k}: {paper[k]}" for k in ("title", "doi", "journal", "publication_year") if paper.get(k)]
     passages = [
         f"{n}. for claim {i + 1}, from {where(p)}: \"{p['quote']}\""
         for n, (i, p) in enumerate(numbered_passages(ev), 1)
     ]
     quoted = [str(number[c["id"]]) for c in ev["claims"] if c["passages"]]
     return (
-        f"ANSWER\n{answer(ev)}\n\n"
+        ("TRACKED PAPER\n" + "\n".join(known) + "\n\n" if known else "")
+        + f"ANSWER\n{answer(ev)}\n\n"
         "CLAIMS\n" + "\n".join(claims) + "\n\n"
         "PASSAGES (return one item per number)\n" + ("\n".join(passages) or "(none)") + "\n\n"
         "QUOTED CLAIMS (return one item per number): " + (", ".join(quoted) or "(none)") + "\n"

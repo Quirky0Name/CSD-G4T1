@@ -15,10 +15,11 @@ from pydantic import BaseModel
 from research_evaluation.changes import ChangeType
 from research_evaluation.impact.inputs import MissingPdf, ReportInputs, label
 from research_evaluation.impact.llm import Part, Pdf
+from research_evaluation.rules import notice_date
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 13
+PROMPT_VERSION = 14
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -64,7 +65,11 @@ Rules:
   claims), each of them quoted or an absence, and its passages stay empty.
   Word it no wider than those claims and this prompt's rules allow: "this
   use is touched" from the draft's citing sentence and the notice's
-  retraction of that result. Every other claim has from_claims empty.
+  retraction of that result. A derived claim uses only facts its named
+  claims state: when it needs another (that a value is key or the headline
+  result, what the draft plans to do with it), quote that as its own claim
+  first and name it, and when a quote ends before the words you need, quote
+  the next sentence too. Every other claim has from_claims empty.
 - Words that widen a fact (only, once, twice, both, every, the whole,
   nothing else) are part of the fact: keep them only if the quotes show
   them. Don't write "the draft cites it once" or "this is the only place
@@ -117,6 +122,9 @@ anyone relying on it.
 
 The ALERTS were raised by fixed rules from Crossref (the DOI registry) and
 OpenAlex metadata: they say a notice exists, not what it says. The
+notice date on an alert line is the date Crossref records for the notice;
+when the notice's DOI is the paper's own, it is a date of the paper itself
+(such as its issue date), not of a retraction. The
 DOCUMENTS are what was fetched for them: each notice's Crossref record and,
 when it is open access, its text; and, when one could be downloaded, the
 paper as it is now (CURRENT COPY) or its NEW VERSION. A RELATED document was
@@ -383,6 +391,8 @@ def alerts_block(alerts: list[AlertInReport]) -> str:
     ]
     for alert in alerts:
         notice = f"notice {alert.notice_doi}" if alert.notice_doi else "no notice"
+        if dated := notice_date(alert.description):
+            notice += f", notice dated {dated}"
         line = (
             f"- alert {alert.id}: {alert.change_type}, {notice}, "
             f"detected {alert.detected_at.date().isoformat()}, alert severity {alert.alert_severity}"

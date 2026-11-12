@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 import pytest
 
 from research_evaluation.changes import Change, ChangeType
-from research_evaluation.rules import AlertSeverity, assess
+from research_evaluation.rules import AlertSeverity, assess, notice_date
 
 DETECTED = datetime(2026, 9, 2, 12, 0, tzinfo=UTC)
 
@@ -52,6 +52,20 @@ def test_the_notice_doi_and_date_are_in_the_description(kind):
 
 def test_a_notice_with_only_a_date_says_just_the_date():
     assert "(2024-12-16)" in assess(change(ChangeType.CORRECTION, notice_date="2024-12-16")).description
+
+
+@pytest.mark.parametrize(
+    ("doi", "date", "expected"),
+    [("10.1/notice", "2024-12-16", "2024-12-16"), (None, "2024-12-16", "2024-12-16"), ("10.1/notice", None, None)],
+)
+def test_the_notice_date_reads_back_from_the_description(doi, date, expected):
+    description = assess(change(ChangeType.RETRACTION, notice_doi=doi, notice_date=date)).description
+
+    assert notice_date(description) == expected
+
+
+def test_a_citation_rise_has_no_notice_date():
+    assert notice_date("OpenAlex counted 300 new citations of this paper (from 952 to 1252).") is None
 
 
 def test_a_retraction_says_the_paper_was_retracted():
