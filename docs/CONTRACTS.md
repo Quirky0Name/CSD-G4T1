@@ -1789,8 +1789,9 @@ right after the evaluation is stored, each to the report's owner (`POST
 Management"); a placeholder evaluation is not posted, and a failed post
 changes nothing. User Management decides whether and how to tell the
 researcher. Nothing in it changes the reply, and Updating never waits for
-it. Without `GEMINI_API_KEY` reports stay `investigated`. When every
-Gemini model fails a step, the stored evaluation is a placeholder:
+it. Without `ANTHROPIC_API_KEY` or `GEMINI_API_KEY` reports stay
+`investigated`. When every model (Sonnet, then the Gemini ones) fails a
+step, the stored evaluation is a placeholder:
 `change_severity` and `impact_level` `low`, the three texts
 `PLACEHOLDER_TEXT` (`impact/schemas.py`), `assessment.placeholder` `true`.
 A failure leaves the report `investigating` or `investigated`; nothing
@@ -1820,13 +1821,14 @@ runs on them in the background, one after another, after the reply.
 
 Only an `investigated` report is assessed; an `investigating` or
 `assessed` report, or an unknown id, is skipped (logged) before any PDF is
-fetched or Gemini called. A report that fails stays `investigated`. A
-report whose Gemini models all failed is not a failure here: it is stored
+fetched or a model called. A report that fails stays `investigated`. A
+report whose models all failed is not a failure here: it is stored
 `assessed` with the placeholder evaluation (above), so this endpoint
 skips it from then on.
 
-Errors: `503` with `detail` `Gemini isn't configured` when
-`GEMINI_API_KEY` isn't set (nothing runs); `422` a body that isn't that
+Errors: `503` with `detail` `Gemini isn't configured` when neither
+`ANTHROPIC_API_KEY` nor `GEMINI_API_KEY` is set (nothing runs; the detail
+predates Sonnet and is kept as it is); `422` a body that isn't that
 shape.
 
 ### Under review: `/evaluate/snapshot`, `/evaluate/citation-neighbourhood`, `/evaluate/stance`
