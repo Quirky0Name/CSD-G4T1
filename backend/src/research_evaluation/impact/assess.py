@@ -8,6 +8,8 @@
 
 The profile tailors the text of steps 2 and 3, never a level; step 1 never gets it. Reading it
 can't fail the report: `assessment["profile"]` records what happened, never the profile's values.
+The researcher's past feedback (read with the past, impact.history) goes to steps 2 and 3 the same
+way, after the profile: `assessment["feedback"]` records how reading it went, never a note.
 
 It returns the body for `PUT /internal/reports/{id}/evaluation`; storing it is the caller's job.
 A model answer that doesn't fit its schema raises, and nothing is returned for the report
@@ -39,6 +41,7 @@ from research_evaluation.impact.schemas import (
     ChangeAssessment,
     ContextChunk,
     Evaluation,
+    FeedbackContextChunk,
     ImpactAssessment,
     RecommendedActions,
     prose,
@@ -55,12 +58,15 @@ async def assess(
     inputs: ReportInputs,
     um: httpx.AsyncClient | None = None,
     history: str | None = None,
+    feedback: str | None = None,
 ) -> Evaluation:
-    """`history` is how reading the paper's past went (impact.history: read, none or failed);
-    None works it out from `inputs.chunks`, as the evals do."""
+    """`history` and `feedback` are how reading the paper's past and the researcher's feedback
+    went (impact.history: read, none or failed); None works each out from `inputs`, as the evals
+    do."""
     prompt = change_prompt(inputs)
-    # the past chunks steps 1 and 2 get, in prompt order, for the frontend to show (I5)
-    context = [context_chunk(c) for c in inputs.chunks]
+    # the past chunks steps 1 and 2 get, in prompt order, for the frontend to show (I5); the
+    # feedback steps 2 and 3 get is added once step 2 is reached
+    context: list[ContextChunk | FeedbackContextChunk] = [context_chunk(c) for c in inputs.chunks]
     assessment: dict[str, Any] = {
         "prompt_version": PROMPT_VERSION,
         "model": llm.model,
@@ -70,6 +76,7 @@ async def assess(
         "draft": "not_needed",
         "profile": "not_needed",
         "history": history or ("read" if inputs.chunks else "none"),
+        "feedback": feedback or ("read" if inputs.feedback else "none"),
         "pdfs": pdfs_record(prompt),
         # step 2's PDFs (the draft, then the stored paper), shaped like pdfs; null until step 2
         "impact_pdfs": None,
@@ -101,8 +108,24 @@ async def assess(
         assessment["draft"] = "read" if draft is not None else "none"
         assessment["profile"], profile = await _read_profile(um, inputs.report)
         step = "impact"
+        context += [
+            FeedbackContextChunk(
+                source_id=item.chunk.source_id,
+                paper_id=item.chunk.paper_id,
+                paper_title=item.chunk.paper_title,
+                source_date=item.chunk.source_date,
+                verdict=item.verdict,
+            )
+            for item in inputs.feedback
+        ]
         step_two = impact_prompt(
-            inputs.paper, change.value, draft, inputs.paper_pdf, profile, inputs.chunks
+            inputs.paper,
+            change.value,
+            draft,
+            inputs.paper_pdf,
+            profile,
+            inputs.chunks,
+            inputs.feedback,
         )
         assessment["impact_pdfs"] = pdfs_record(step_two)
         impact = await llm.generate(system=SYSTEM, parts=step_two.parts, schema=ImpactAssessment)
@@ -112,7 +135,9 @@ async def assess(
         step = "actions"
         actions = await llm.generate(
             system=SYSTEM,
-            parts=actions_prompt(inputs.paper, change.value, impact.value, draft is not None, profile),
+            parts=actions_prompt(
+                inputs.paper, change.value, impact.value, draft is not None, profile, inputs.feedback
+            ),
             schema=RecommendedActions,
         )
         assessment["answered_by"]["actions"] = actions.model

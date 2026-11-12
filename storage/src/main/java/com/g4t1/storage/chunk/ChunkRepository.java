@@ -31,18 +31,17 @@ public class ChunkRepository {
     public Optional<UUID> paperOf(SourceType type, long sourceId) {
         String sql = switch (type) {
             case ALERT -> "select paper_id from alerts where id = ?";
-            case REPORT -> "select paper_id from reports where id = ?";
+            case REPORT, FEEDBACK -> "select paper_id from reports where id = ?";
             case DOCUMENT -> "select r.paper_id from report_documents d join reports r on r.id = d.report_id where d.id = ?";
-            case PROFILE -> throw new IllegalArgumentException("A profile has no paper");
         };
         return jdbc.queryForList(sql, UUID.class, sourceId).stream().findFirst();
     }
 
-    // sourceId is a Long, or a UUID for a profile; paperId is null for a profile
-    public void replace(SourceType type, Object sourceId, UUID paperId, String embedModel,
+    // a report's report and feedback chunks share report_id, so the delete filters by source type too
+    public void replace(SourceType type, long sourceId, UUID paperId, String embedModel,
                         List<StoreChunksRequest.Chunk> chunks) {
         String column = sourceColumn(type);
-        jdbc.update("delete from chunks where " + column + " = ?", sourceId);
+        jdbc.update("delete from chunks where source_type = ? and " + column + " = ?", type.value(), sourceId);
         String sql = "insert into chunks (source_type, " + column + ", paper_id, chunk_index, content, page, embedding,"
                 + " embed_model, created_at) values (?, ?, ?, ?, ?, ?, " + vectorParameter() + ", ?, ?)";
         Timestamp now = Timestamp.from(Instant.now().truncatedTo(ChronoUnit.MICROS));
@@ -53,24 +52,29 @@ public class ChunkRepository {
         }
     }
 
-    // The paper's chunks of one source type (the owner's, for a profile), nearest first by cosine
-    // distance. Postgres only: H2 has no vector distance. Runs inside a transaction, for set local.
+    // The paper's chunks of one source type (for feedback, those of every paper of the paper's owner whose
+    // feedback still exists), nearest first by cosine distance, each with its paper's id and title. Postgres
+    // only: H2 has no vector distance. Runs inside a transaction, for set local.
     public List<ChunkMatch> search(UUID paperId, SourceType type, List<Double> embedding, int limit) {
         // the HNSW index with a where filter otherwise stops at ef_search candidates and can return fewer
         // than limit; iterative scan keeps going until the filter has found enough, still nearest first
         jdbc.execute("set local hnsw.iterative_scan = strict_order");
-        String scope = type == SourceType.PROFILE
-                ? "c.source_type = 'profile' and c.user_id = (select owner_id from papers where id = ?)"
+        // a deleted feedback's chunk outlives it when the delete nudge fails; it must not take a slot
+        String scope = type == SourceType.FEEDBACK
+                ? "p.owner_id = (select owner_id from papers where id = ?) and c.source_type = ?"
+                        + " and r.feedback_updated_at is not null"
                 : "c.paper_id = ? and c.source_type = ?";
         String sql = """
-                select c.source_type, c.alert_id, c.report_id, c.document_id, c.user_id, c.chunk_index, c.page,
-                       c.content,
-                       case c.source_type when 'alert' then a.report_id when 'report' then c.report_id
-                                          when 'document' then d.report_id end as source_report_id,
+                select c.source_type, c.alert_id, c.report_id, c.document_id, c.chunk_index, c.page, c.content,
+                       c.paper_id, p.title as paper_title,
+                       case c.source_type when 'alert' then a.report_id when 'document' then d.report_id
+                                          else c.report_id end as source_report_id,
                        case c.source_type when 'alert' then a.detected_at when 'report' then r.evaluated_at
-                                          when 'document' then d.created_at else c.created_at end as source_date,
+                                          when 'document' then d.created_at
+                                          when 'feedback' then r.feedback_updated_at end as source_date,
                        1 - (c.embedding <=> cast(? as vector)) as score
                 from chunks c
+                join papers p on p.id = c.paper_id
                 left join alerts a on a.id = c.alert_id
                 left join reports r on r.id = c.report_id
                 left join report_documents d on d.id = c.document_id
@@ -78,9 +82,7 @@ public class ChunkRepository {
                 order by c.embedding <=> cast(? as vector)
                 limit ?""".formatted(scope);
         String vector = (String) vector(embedding);
-        Object[] args = type == SourceType.PROFILE
-                ? new Object[]{vector, paperId, vector, limit}
-                : new Object[]{vector, paperId, type.value(), vector, limit};
+        Object[] args = {vector, paperId, type.value(), vector, limit};
         return jdbc.query(sql, (rs, row) -> {
             SourceType source = SourceType.of(rs.getString("source_type"));
             Object sourceId = rs.getObject(sourceColumn(source));
@@ -88,17 +90,14 @@ public class ChunkRepository {
             Long report = rs.wasNull() ? null : reportId;
             Timestamp date = rs.getTimestamp("source_date");
             return new ChunkMatch(source, sourceId.toString(), rs.getInt("chunk_index"),
-                    (Integer) rs.getObject("page"), report, date == null ? null : date.toInstant(),
+                    (Integer) rs.getObject("page"), report, rs.getObject("paper_id", UUID.class),
+                    rs.getString("paper_title"), date == null ? null : date.toInstant(),
                     rs.getString("content"), rs.getDouble("score"));
         }, args);
     }
 
     public boolean paperExists(UUID paperId) {
         return !jdbc.queryForList("select 1 from papers where id = ?", Integer.class, paperId).isEmpty();
-    }
-
-    public void deleteProfile(UUID userId) {
-        jdbc.update("delete from chunks where user_id = ?", userId);
     }
 
     // pgvector reads a vector from its text form; H2's real array takes a Java array
@@ -124,9 +123,8 @@ public class ChunkRepository {
     private static String sourceColumn(SourceType type) {
         return switch (type) {
             case ALERT -> "alert_id";
-            case REPORT -> "report_id";
+            case REPORT, FEEDBACK -> "report_id";
             case DOCUMENT -> "document_id";
-            case PROFILE -> "user_id";
         };
     }
 }

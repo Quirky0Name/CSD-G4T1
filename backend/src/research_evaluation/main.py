@@ -1,7 +1,8 @@
 """
 create app
 handle POST /evaluate/changes for Updatigns nudge
-handle POST /evaluate/reports, assessing reports by id on request"""
+handle POST /evaluate/reports, assessing reports by id on request
+handle POST /embed/feedback, Storage Management's nudge to embed a report's feedback"""
 
 import logging
 from collections.abc import AsyncIterator
@@ -19,6 +20,7 @@ from research_evaluation.auth import require_service_token
 from research_evaluation.config import ResearchEvaluationSettings
 from research_evaluation.embedding import GeminiEmbedder
 from research_evaluation.evaluate import EvaluationResult, evaluate_papers
+from research_evaluation.feedback import store_feedback_chunk
 from research_evaluation.impact.llm import FallbackLlm, gemini_configured, make_client
 from research_evaluation.impact.run import ImpactContext, assess_reports
 from research_evaluation.investigation.run import (
@@ -43,6 +45,11 @@ class ReportsRequest(BaseModel):
 
 class AcceptedReports(BaseModel):
     report_ids: list[int]
+
+
+class FeedbackRequest(BaseModel):
+    # strict: "12" or 12.0 is a bad request, not report 12
+    report_id: StrictInt
 
 
 router = APIRouter()
@@ -130,6 +137,22 @@ async def evaluate_reports(
     report_ids = list(dict.fromkeys(request.report_ids))
     background.add_task(assess_reports, sm, impact, report_ids)
     return AcceptedReports(report_ids=report_ids)
+
+
+@router.post("/embed/feedback", status_code=202, dependencies=[Depends(require_service_token)])
+async def embed_feedback(
+    request: FeedbackRequest,
+    sm: Annotated[httpx.AsyncClient, Depends(sm_client)],
+    impact: Annotated[ImpactContext | None, Depends(impact_context)],
+    background: BackgroundTasks,
+) -> FeedbackRequest:
+    """Storage Management's nudge after the researcher saves or deletes a report's feedback: 202,
+    then the report's feedback chunk is built and stored in the background (an empty list when
+    the report has none, which deletes it). 503 when GEMINI_API_KEY isn't set, and nothing runs."""
+    if impact is None or impact.embedder is None:
+        raise HTTPException(503, "Gemini isn't configured")
+    background.add_task(store_feedback_chunk, sm, impact.embedder, request.report_id)
+    return request
 
 
 def configure_logging() -> None:

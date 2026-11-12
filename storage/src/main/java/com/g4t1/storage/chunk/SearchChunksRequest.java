@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 // The body of POST /internal/chunks/search: the paper's chunks of one source type nearest to embedding.
-// With profile, the paper owner's profile chunks.
+// With feedback, the feedback chunks of every paper of the paper's owner.
 public record SearchChunksRequest(
         @NotNull UUID paperId,
         @NotNull @Size(min = ChunkRepository.DIMENSIONS, max = ChunkRepository.DIMENSIONS)

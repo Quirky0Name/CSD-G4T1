@@ -18,22 +18,19 @@ public class ChunkService {
     }
 
     // Replaces every chunk of the source in one transaction. paper_id is copied from the source row,
-    // never taken from the caller. A profile is never 404: its user lives in User Management.
+    // never taken from the caller.
     @Transactional
     public void store(StoreChunksRequest request) {
         SourceType type = request.sourceType();
-        if (type == SourceType.PROFILE) {
-            chunks.replace(type, parseUuid(request.sourceId()), null, request.embedModel(), request.chunks());
-            return;
-        }
         long sourceId = parseId(request.sourceId());
         UUID paperId = chunks.paperOf(type, sourceId).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "No " + type.value() + " " + sourceId));
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "No " + noun(type) + " " + sourceId));
         chunks.replace(type, sourceId, paperId, request.embedModel(), request.chunks());
     }
 
-    // every chunk of the paper of that source type is a candidate: there's no date, order or exclusion
-    // filter, since a report's chunks are only written once impact has assessed it. Ranked by similarity only.
+    // Every chunk of that source type is a candidate, of the paper or, for feedback, of every paper of
+    // its owner: there's no date, order or exclusion filter, since a report's chunks are only written once
+    // impact has assessed it and feedback only on an assessed report. Ranked by similarity only.
     @Transactional(readOnly = true)
     public List<ChunkMatch> search(SearchChunksRequest request) {
         if (!chunks.paperExists(request.paperId())) {
@@ -42,10 +39,9 @@ public class ChunkService {
         return chunks.search(request.paperId(), request.sourceType(), request.embedding(), request.limit());
     }
 
-    // a user's profile chunks, which have no foreign key to cascade from
-    @Transactional
-    public void deleteProfile(UUID userId) {
-        chunks.deleteProfile(userId);
+    // a feedback chunk's source is its report
+    private static String noun(SourceType type) {
+        return type == SourceType.FEEDBACK ? "report" : type.value();
     }
 
     private static long parseId(String sourceId) {
@@ -53,14 +49,6 @@ public class ChunkService {
             return Long.parseLong(sourceId);
         } catch (NumberFormatException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "source_id must be a decimal id");
-        }
-    }
-
-    private static UUID parseUuid(String sourceId) {
-        try {
-            return UUID.fromString(sourceId);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "source_id must be a user's uuid");
         }
     }
 }

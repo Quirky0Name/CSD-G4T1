@@ -148,9 +148,9 @@ class ChunkControllerTest {
         notAnId.put("source_id", "abc");
         store(notAnId).andExpect(status().isBadRequest());
 
-        Map<String, Object> notAUuid = body("profile", alert, chunk("text", null));
-        notAUuid.put("source_id", "42");
-        store(notAUuid).andExpect(status().isBadRequest());
+        Map<String, Object> notAReportId = body("feedback", report, chunk("text", null));
+        notAReportId.put("source_id", owner.toString());
+        store(notAReportId).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -185,6 +185,7 @@ class ChunkControllerTest {
         store(body("alert", 999_999, chunk("text", null))).andExpect(status().isNotFound());
         store(body("report", 999_999, chunk("text", null))).andExpect(status().isNotFound());
         store(body("document", 999_999, chunk("text", null))).andExpect(status().isNotFound());
+        store(body("feedback", 999_999, chunk("text", null))).andExpect(status().isNotFound());
     }
 
     @Test
@@ -201,6 +202,7 @@ class ChunkControllerTest {
         store(body("alert", alert, chunk("alert", null))).andExpect(status().isNoContent());
         store(body("report", report, chunk("report", null))).andExpect(status().isNoContent());
         store(body("document", document, chunk("document", 1))).andExpect(status().isNoContent());
+        store(body("feedback", report, chunk("feedback", null))).andExpect(status().isNoContent());
 
         mvc.perform(delete("/papers/{id}", paper).header(HttpHeaders.AUTHORIZATION, TestTokens.user(owner)))
                 .andExpect(status().isNoContent());
@@ -209,31 +211,57 @@ class ChunkControllerTest {
     }
 
     @Test
-    void replacesProfileChunks() throws Exception {
-        store(profile(owner, chunk("expertise: a", null), chunk("interests: b", null), chunk("fields: c", null)))
-                .andExpect(status().isNoContent());
-        store(profile(owner, chunk("expertise: x", null), chunk("interests: y", null))).andExpect(status().isNoContent());
+    void storesOneFeedbackChunkWithThePaperOfItsReport() throws Exception {
+        store(body("feedback", report, chunk("feedback on report", null))).andExpect(status().isNoContent());
 
         List<Map<String, Object>> rows = jdbc.queryForList(
-                "select content, paper_id from chunks where user_id = ? order by chunk_index", owner);
-        assertThat(rows).extracting(row -> row.get("content")).containsExactly("expertise: x", "interests: y");
-        assertThat(rows).extracting(row -> row.get("paper_id")).containsOnlyNulls();
+                "select source_type, report_id, paper_id, chunk_index, content from chunks");
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0)).containsEntry("source_type", "feedback").containsEntry("report_id", report)
+                .containsEntry("paper_id", paper).containsEntry("chunk_index", 0)
+                .containsEntry("content", "feedback on report");
+    }
+
+    @Test
+    void aReportsFeedbackAndReportChunksReplaceOnlyThemselves() throws Exception {
+        store(body("report", report, chunk("the report", null))).andExpect(status().isNoContent());
+        store(body("feedback", report, chunk("old feedback", null))).andExpect(status().isNoContent());
+
+        store(body("feedback", report, chunk("new feedback", null))).andExpect(status().isNoContent());
+        assertThat(jdbc.queryForList("select content from chunks where report_id = ? order by content",
+                String.class, report)).containsExactly("new feedback", "the report");
+
+        store(body("feedback", report)).andExpect(status().isNoContent());
+        store(body("report", report, chunk("the report again", null))).andExpect(status().isNoContent());
+        assertThat(jdbc.queryForList("select content from chunks where report_id = ?", String.class, report))
+                .containsExactly("the report again");
+    }
+
+    @Test
+    void profileIsNoLongerASourceType() throws Exception {
+        Map<String, Object> profile = body("profile", 0, chunk("expertise: a", null));
+        profile.put("source_id", owner.toString());
+        store(profile).andExpect(status().isBadRequest());
+
+        Map<String, Object> search = searchBody(paper);
+        search.put("source_type", "profile");
+        search(search).andExpect(status().isBadRequest());
     }
 
     @Test
     void deletedWithUser() throws Exception {
         UUID someoneElse = UUID.randomUUID();
-        store(profile(owner, chunk("expertise: a", null))).andExpect(status().isNoContent());
+        UUID theirPaper = savePaper(someoneElse);
+        jdbc.update("insert into reports (paper_id, created_at) values (?, current_timestamp)", theirPaper);
+        long theirReport = jdbc.queryForObject("select id from reports where paper_id = ?", Long.class, theirPaper);
+        store(body("feedback", report, chunk("mine", null))).andExpect(status().isNoContent());
         store(body("alert", alert, chunk("alert", null))).andExpect(status().isNoContent());
-        store(profile(someoneElse, chunk("expertise: b", null))).andExpect(status().isNoContent());
+        store(body("feedback", theirReport, chunk("theirs", null))).andExpect(status().isNoContent());
 
         mvc.perform(delete("/internal/users/{id}", owner).header(HttpHeaders.AUTHORIZATION, TestTokens.service()))
                 .andExpect(status().isNoContent());
 
-        assertThat(jdbc.queryForObject("select count(*) from chunks where user_id = ?", Integer.class, owner)).isZero();
-        assertThat(jdbc.queryForObject("select count(*) from chunks where alert_id = ?", Integer.class, alert)).isZero();
-        assertThat(jdbc.queryForObject("select count(*) from chunks where user_id = ?", Integer.class, someoneElse))
-                .isEqualTo(1);
+        assertThat(jdbc.queryForList("select content from chunks", String.class)).containsExactly("theirs");
     }
 
     // POST /internal/chunks/search answers before any distance is computed, so H2 can check these;
@@ -298,13 +326,6 @@ class ChunkControllerTest {
         body.put("source_id", String.valueOf(sourceId));
         body.put("embed_model", "gemini-embedding-001");
         body.put("chunks", List.of(chunks));
-        return body;
-    }
-
-    @SafeVarargs
-    private static Map<String, Object> profile(UUID user, Map<String, Object>... chunks) {
-        Map<String, Object> body = body("profile", 0, chunks);
-        body.put("source_id", user.toString());
         return body;
     }
 

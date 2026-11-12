@@ -5,9 +5,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.util.Locale;
 
-// what a chunk's text came from. A profile's chunks belong to a user, not a paper
+// what a chunk's text came from. A feedback chunk is a report's evaluation with the researcher's feedback
+// on it, keyed by the report like the report's own chunks
 public enum SourceType {
-    ALERT, REPORT, DOCUMENT, PROFILE;
+    ALERT, REPORT, DOCUMENT, FEEDBACK;
 
     @JsonValue
     public String value() {
