@@ -10,7 +10,8 @@ User Management 8080, Storage Management 8081, Postgres 5432 (backend),
 
 | Service | Needed for | Notes |
 |---|---|---|
-| **Gemini** | impact's LLM (Research Evaluation) | aistudio.google.com → "Get API key"; the free tier is enough (about 20 requests per model per day). Without it impact doesn't run |
+| **Anthropic** | impact's first model, Claude Sonnet (Research Evaluation) | console.anthropic.com → API keys; paid per token, no free tier. Without it impact runs on Gemini only |
+| **Gemini** | impact's fallback models and the RAG embedder (Research Evaluation) | aistudio.google.com → "Get API key"; the free tier is enough (about 20 requests per model per day). Without it impact runs on Sonnet alone with no embedder; without either key impact doesn't run |
 | **OpenAlex** | retraction status, DOAJ, journal, authors (Updating); metadata and open-access PDF links (Storage Management) | Free account and key; keyless calls get 1/10 of the $1/day budget. Passed as the `api_key` query param. The two services share the budget if they use one key, so Updating fetches each DOI once per poll |
 | **Crossref** | notices (Updating), metadata (Storage Management), each notice's record (Research Evaluation) | No key. Set a contact email as `CROSSREF_MAILTO` for the polite pool |
 | **Semantic Scholar** | open-access PDF links when Storage Management tracks by DOI | Optional key (`S2_API_KEY`, header `x-api-key`); keyless calls hit 429s more often |
@@ -47,11 +48,13 @@ comments into the value.
 | `POLL_INTERVAL_HOURS` | Updating | `24` |
 | `EVALUATION_SNAPSHOT_WINDOW` | RE | `5`, at least `2`: how many newest snapshots each nudge compares. A change is lost after N − 2 failed nudges in a row; raise it (e.g. `30`) before deployment |
 | `INVESTIGATION_PDF_TIMEOUT_SECONDS` | RE | `120`: how long investigation waits for Storage Management to store a document (it downloads the PDF first) |
-| `GEMINI_API_KEY` | RE | aistudio.google.com. Optional: the service starts without it, impact doesn't run |
+| `ANTHROPIC_API_KEY` | RE | console.anthropic.com. Optional: with it impact tries `CLAUDE_MODEL` first, then the Gemini models |
+| `CLAUDE_MODEL` | RE | `claude-sonnet-5-5` |
+| `GEMINI_API_KEY` | RE | aistudio.google.com. Optional: the service starts without it; impact then runs on Sonnet alone with no embedder, or not at all without `ANTHROPIC_API_KEY` |
 | `GEMINI_MODEL` | RE | `gemini-flash-latest` |
 | `EMBED_MODEL` | RE | `gemini-embedding-001`: the Gemini model chunks and queries are embedded with, at 1536 dimensions; uses `GEMINI_API_KEY` |
 | `GEMINI_FALLBACK_MODELS` | RE | `gemini-flash-lite-latest`: comma-separated models tried in order when a call fails; empty for none |
-| `IMPACT_LLM_TIMEOUT_SECONDS` | RE | `120`, per Gemini call |
+| `IMPACT_LLM_TIMEOUT_SECONDS` | RE | `120`, per model call (Claude or Gemini) |
 | `JUDGE_API_KEY` | `evals/judge.py` only | a second aistudio.google.com key (ideally another Google project) for the eval judge; empty falls back to `GEMINI_API_KEY` |
 | `JUDGE_MODEL` | `evals/judge.py` only | `gemini-flash-lite-latest`; better a different model from the one being tested |
 
