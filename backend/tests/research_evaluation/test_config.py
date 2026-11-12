@@ -187,6 +187,26 @@ def test_startup_makes_impact_a_gemini_model_with_the_timeout(tmp_path, monkeypa
         assert llm.llms[0].client._api_client._http_options.timeout == 45_000
 
 
+def test_startup_puts_sonnet_before_the_gemini_models_when_an_anthropic_key_is_set(
+    tmp_path, monkeypatch
+):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-key")
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setenv("IMPACT_LLM_TIMEOUT_SECONDS", "45")
+    app = create_app()
+
+    with TestClient(app):
+        llm = app.state.impact.llm
+        assert llm.models == ("claude-sonnet-5-5", "gemini-flash-latest", "gemini-flash-lite-latest")
+        sonnet = llm.llms[0].client
+        assert sonnet.api_key == "test-anthropic-key"
+        assert sonnet.timeout == 45
+        # the fallback chain is the retry: an overloaded sonnet moves straight on to gemini
+        assert sonnet.max_retries == 0
+
+
 def test_the_fallback_models_default_to_flash_lite():
     settings = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
     assert settings.gemini_fallback_models == ["gemini-flash-lite-latest"]
