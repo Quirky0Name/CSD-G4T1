@@ -1,6 +1,7 @@
 """A report's feedback as one chunk (research_evaluation.chunks.feedback_piece) and storing it
 (research_evaluation.feedback.store_feedback_chunk) against the stub Storage Management."""
 
+import asyncio
 import logging
 from datetime import UTC, datetime
 from uuid import uuid4
@@ -130,6 +131,43 @@ async def test_a_report_with_no_feedback_stores_an_empty_list(sm):
 
     assert (await stored(sm, report_id))["chunks"] == []
     assert embedder.calls == []
+
+
+class HeldEmbedder(FakeEmbedder):
+    """Holds its first call until `release` is set; later calls answer at once."""
+
+    def __init__(self):
+        super().__init__()
+        self.release = asyncio.Event()
+
+    async def embed(self, texts, task):
+        first = not self.calls
+        vectors = await super().embed(texts, task)
+        if first:
+            await self.release.wait()
+        return vectors
+
+
+async def test_of_two_quick_saves_the_later_one_is_stored(sm):
+    report_id = await stub_report(
+        sm, {"verdict": "fair", "note": "first note", "updated_at": "2026-10-04T08:00:00Z"}
+    )
+    embedder = HeldEmbedder()
+    first = asyncio.create_task(store_feedback_chunk(sm.client, embedder, report_id))
+    while not embedder.calls:
+        await asyncio.sleep(0)
+    await sm.client.put(
+        f"/dev/reports/{report_id}/feedback",
+        json={"verdict": "overstated", "note": "second note", "updated_at": "2026-10-04T08:01:00Z"},
+    )
+    second = asyncio.create_task(store_feedback_chunk(sm.client, embedder, report_id))
+    await asyncio.wait({second}, timeout=0.2)
+
+    embedder.release.set()
+    await asyncio.gather(first, second)
+
+    [chunk] = (await stored(sm, report_id))["chunks"]
+    assert chunk["content"].endswith("researcher's verdict: overstated\nresearcher's note: second note")
 
 
 async def test_an_embedder_error_is_logged_without_the_note_and_not_raised(sm, caplog):
