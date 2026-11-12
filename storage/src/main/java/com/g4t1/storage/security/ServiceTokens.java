@@ -35,7 +35,9 @@ public class ServiceTokens {
                 .claim("role", "service")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(LIFETIME)))
-                .signWith(key)
+                // HS256 forced: the key's length would otherwise pick it, and a 48+ byte JWT_SECRET would give
+                // HS384 or HS512, which the Python services reject (docs/DECISIONS.md)
+                .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
 }

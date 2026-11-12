@@ -148,6 +148,9 @@ class FeedbackNudgeTest {
         assertThat(nudge.authorization()).startsWith("Bearer ");
         Claims claims = Jwts.parser().verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET))).build()
                 .parseSignedClaims(nudge.authorization().substring("Bearer ".length())).getPayload();
+        assertThat(Jwts.parser().verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET))).build()
+                .parseSignedClaims(nudge.authorization().substring("Bearer ".length())).getHeader().getAlgorithm())
+                .isEqualTo("HS256");
         assertThat(claims.getSubject()).isEqualTo("svc:storage");
         assertThat(claims.get("role", String.class)).isEqualTo("service");
         assertThat(Duration.between(claims.getIssuedAt().toInstant(), claims.getExpiration().toInstant()))
