@@ -33,6 +33,10 @@ class NoText(ValueError):
     """The model's response had no text to parse."""
 
 
+class Refused(ValueError):
+    """Claude's safety classifiers declined the request (stop_reason "refusal")."""
+
+
 @dataclass(frozen=True)
 class Pdf:
     """A PDF part of a prompt, sent to the model as the file itself."""
@@ -159,6 +163,8 @@ class ClaudeLlm:
             output_format=schema,
             output_config={"effort": "low"},
         )
+        if response.stop_reason == "refusal":
+            raise Refused("the model refused")
         return Answer(response.parsed_output, response.model, self.model)
 
 
