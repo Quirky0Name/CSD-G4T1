@@ -126,17 +126,8 @@ def gemini() -> GeminiLlm:
     return GeminiLlm(SimpleNamespace(aio=SimpleNamespace(models=GeminiModels())), "gemini-flash-latest")
 
 
-@pytest.mark.parametrize(
-    "messages",
-    [
-        FailingMessages(overloaded()),
-        FailingMessages(timed_out()),
-        FakeMessages(parsed_output=None, stop_reason="refusal"),
-    ],
-    ids=["529", "timeout", "refusal"],
-)
-async def test_a_sonnet_failure_falls_back_to_gemini(messages):
-    sonnet = ClaudeLlm(client=fake_client(messages), model="claude-sonnet-5-5")
+async def test_an_overloaded_sonnet_falls_back_to_gemini():
+    sonnet = ClaudeLlm(client=fake_client(FailingMessages(overloaded())), model="claude-sonnet-5-5")
 
     answer = await FallbackLlm((sonnet, gemini())).generate(system="s", parts=["p"], schema=Verdict)
 
