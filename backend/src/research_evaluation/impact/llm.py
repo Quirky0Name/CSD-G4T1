@@ -189,7 +189,7 @@ class AllModelsFailed(RuntimeError):
     """Every model in the list failed the same call; `failures` says how, in order."""
 
     def __init__(self, failures: list[ModelFailure]):
-        super().__init__("every Gemini model failed: " + "; ".join(f"{f.model}: {f.cause}" for f in failures))
+        super().__init__("every model failed: " + "; ".join(f"{f.model}: {f.cause}" for f in failures))
         self.failures = failures
 
 
@@ -222,13 +222,19 @@ class FallbackLlm:
                 return await llm.generate(system=system, parts=parts, schema=schema)
             except MODEL_FAILURES as exc:
                 failures.append(ModelFailure(llm.model, failure_cause(exc)))
-                log.warning("Gemini model %s failed (%s)", llm.model, failures[-1].cause)
+                log.warning("model %s failed (%s)", llm.model, failures[-1].cause)
         raise AllModelsFailed(failures)
 
 
 def failure_cause(exc: Exception) -> str:
     """What went wrong with one model's call, without response bodies or prompt text."""
     match exc:
+        case anthropic.APIStatusError():
+            return f"Claude answered {exc.status_code}"
+        case anthropic.APITimeoutError():
+            return f"timed out ({type(exc).__name__})"
+        case anthropic.APIConnectionError():
+            return f"request failed ({type(exc).__name__})"
         case genai_errors.APIError():
             return f"Gemini answered {exc.code} ({exc.status})"
         case httpx.TimeoutException():
@@ -239,6 +245,8 @@ def failure_cause(exc: Exception) -> str:
             return f"answer didn't fit its schema ({exc.error_count()} errors)"
         case NoText():
             return "no text in the answer"
+        case Refused():
+            return "the model refused"
         case _:
             # the class only: a message could carry the model's text
             return type(exc).__name__

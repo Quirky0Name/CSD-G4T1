@@ -227,7 +227,7 @@ async def test_a_fallback_logs_the_model_and_cause_but_no_prompt_text(caplog):
         await ask(chain(models, ("a", "b")))
 
     [record] = caplog.records
-    assert record.getMessage() == "Gemini model a failed (Gemini answered 503 (UNAVAILABLE))"
+    assert record.getMessage() == "model a failed (Gemini answered 503 (UNAVAILABLE))"
     assert "secret draft" not in caplog.text
 
 

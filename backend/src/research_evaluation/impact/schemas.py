@@ -16,7 +16,7 @@ Role = Literal[
     "methods_or_data", "key_evidence", "supporting", "comparison", "background", "critical"
 ]
 
-# every text of the evaluation stored when every Gemini model failed a step
+# every text of the evaluation stored when every model failed a step
 # (docs/EVALUATION.md, "Impact"); the researcher sees it on the report page
 PLACEHOLDER_TEXT = "Not assessed: the AI model didn't answer. This report can be assessed again later."
 
