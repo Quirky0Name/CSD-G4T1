@@ -207,6 +207,20 @@ def test_startup_puts_sonnet_before_the_gemini_models_when_an_anthropic_key_is_s
         assert sonnet.max_retries == 0
 
 
+def test_with_only_an_anthropic_key_impact_runs_on_sonnet_alone_and_embeds_nothing(
+    tmp_path, monkeypatch
+):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-key")
+    app = create_app()
+
+    with TestClient(app):
+        assert app.state.impact.llm.models == ("claude-sonnet-5-5",)
+        # the embedder is Gemini's: without its key the paper's past is neither searched nor stored
+        assert app.state.impact.embedder is None
+
+
 def test_the_fallback_models_default_to_flash_lite():
     settings = ResearchEvaluationSettings(_env_file=None, jwt_secret=TEST_JWT_SECRET)
     assert settings.gemini_fallback_models == ["gemini-flash-lite-latest"]
