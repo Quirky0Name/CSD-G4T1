@@ -165,6 +165,8 @@ class ClaudeLlm:
         )
         if response.stop_reason == "refusal":
             raise Refused("the model refused")
+        if response.parsed_output is None:
+            raise NoText("the model returned no text")
         return Answer(response.parsed_output, response.model, self.model)
 
 
