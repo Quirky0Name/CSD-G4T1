@@ -75,3 +75,11 @@ async def test_a_refusal_raises_so_the_next_model_is_tried():
 
     with pytest.raises(ValueError, match="refused"):
         await llm.generate(system="s", parts=["p"], schema=Verdict)
+
+
+async def test_an_answer_with_nothing_parsed_raises():
+    messages = FakeMessages(parsed_output=None, stop_reason="end_turn")
+    llm = ClaudeLlm(client=fake_client(messages), model="claude-sonnet-5-5")
+
+    with pytest.raises(ValueError, match="no text"):
+        await llm.generate(system="s", parts=["p"], schema=Verdict)
