@@ -133,8 +133,8 @@ def test_feedback_in_every_step():
         ),
     ]
     for with_feedback, no_feedback in steps:
-        assert [p.startswith("RESEARCHER FEEDBACK\n") for p in feedback_parts(with_feedback)] == [True]
-        assert feedback_parts(with_feedback)[0].endswith(FEEDBACK_RULES)
+        [section] = feedback_parts(with_feedback)
+        assert section.startswith("RESEARCHER FEEDBACK\n") and section.endswith(FEEDBACK_RULES)
         assert feedback_parts(no_feedback) == []
 
 
