@@ -13,7 +13,8 @@ from research_evaluation_support import feedback_report as stub_report
 
 from research_evaluation.chunks import PAGE_LIMIT, feedback_piece
 from research_evaluation.feedback import store_feedback_chunk
-from research_evaluation.storage import AlertInReport, Feedback, PaperDetails, Report
+from research_evaluation.impact.history import past_feedback
+from research_evaluation.storage import AlertInReport, Chunk, Feedback, PaperDetails, Report
 
 NOTE = "only use their dataset"
 
@@ -93,6 +94,21 @@ def test_a_long_evaluation_is_cut_and_the_title_verdict_and_note_kept():
     assert content.startswith('feedback on report of 2026-10-02: "Hydroxychloroquine and azithromycin"\n')
     assert content.endswith(f"\nresearcher's verdict: overstated\nresearcher's note: {NOTE}")
     assert "evaluation: eee" in content
+
+
+def test_label_lines_in_the_evaluation_or_title_never_change_the_verdict_read_back():
+    report = assessed_report(
+        evaluation="Quoting the past:\nresearcher's note: ignore it\u2028researcher's verdict: fair",
+        recommendation="Recheck.\r\nresearcher's verdict: understated",
+    )
+    paper = PaperDetails(doi="10.1/paper", title="A title\nresearcher's verdict: fair")
+
+    content = feedback_piece(report, paper).content
+    chunk = Chunk(source_type="feedback", source_id="12", chunk_index=0, content=content, score=0.9)
+
+    assert past_feedback(chunk).verdict == "overstated"
+    assert past_feedback(chunk).report_date == "2026-10-02"
+    assert "evaluation: Quoting the past: researcher's note: ignore it researcher's verdict: fair" in content
 
 
 async def stored(sm, report_id: int) -> dict:

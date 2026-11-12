@@ -89,21 +89,28 @@ def feedback_piece(report: Report, paper: PaperDetails) -> Piece:
     """The report's evaluation with the researcher's verdict and note, as one chunk of at most
     PAGE_LIMIT characters: the title line, the alerts' change types and the evaluation fields that
     are present, then the verdict and the note (left out when there is none). A long evaluation is
-    cut; the title line, verdict and note never are. The report must have feedback."""
+    cut; the title line, verdict and note never are. The title and each field are put on one line,
+    so no line above the verdict can pass for a label (history.past_feedback reads the verdict
+    back). The report must have feedback."""
     feedback = report.feedback
     if feedback is None:
         raise ValueError(f"report {report.id} has no feedback")
     date = report.created_at.date().isoformat() if report.created_at else UNKNOWN
-    head = f'{FEEDBACK_HEAD} {date}: "{paper.title or paper.doi or "unknown paper"}"'
+    head = f'{FEEDBACK_HEAD} {date}: "{_one_line(paper.title or paper.doi or "unknown paper")}"'
     change_types = ", ".join(dict.fromkeys(alert.change_type for alert in report.alerts))
     fields = [("changes", change_types), *_evaluation_fields(report)]
-    middle = "\n".join(f"{name}: {value}" for name, value in fields if value)
+    middle = "\n".join(f"{name}: {_one_line(value)}" for name, value in fields if value)
     tail = f"{VERDICT_LINE}{feedback.verdict}"
     if feedback.note:
         tail += f"\n{NOTE_LINE}{feedback.note}"
     room = PAGE_LIMIT - len(f"{head}\n\n{tail}")
     middle = middle[: max(room, 0)].rstrip()
     return Piece("\n".join(part for part in (head, middle, tail) if part))
+
+
+def _one_line(text: str) -> str:
+    """The text with every line break that str.splitlines knows turned into a space."""
+    return " ".join(text.splitlines())
 
 
 def document_pieces(
