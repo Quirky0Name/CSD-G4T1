@@ -1,5 +1,5 @@
 """Claude as the evals' tested model or judge (docs/EVALUATION.md, "Evals"). Dev only: no service
-imports it, and production stays on Gemini.
+imports it; production's own Claude call is `ClaudeLlm` in impact/llm.py.
 
 `ClaudeLlm` runs each call through Claude Code (`claude -p`) on the user's subscription login,
 never an API key: no tools, no MCP servers, no slash commands, no user or project settings, and

@@ -48,7 +48,7 @@ type Part = str | Pdf
 @dataclass(frozen=True)
 class Answer[T: BaseModel]:
     value: T
-    # the model that answered, as Gemini reports it (an alias such as gemini-flash-latest moves)
+    # the model that answered, as its provider reports it (an alias such as gemini-flash-latest moves)
     model_version: str | None
     # the model name the answer was asked of (FallbackLlm may have moved past the first)
     model: str | None = None
