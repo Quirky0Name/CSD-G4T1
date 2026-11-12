@@ -27,7 +27,6 @@ public class ServiceTokens {
         this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(base64Secret));
     }
 
-    // a fresh token for one request
     public String mint() {
         Instant now = Instant.now();
         return Jwts.builder()

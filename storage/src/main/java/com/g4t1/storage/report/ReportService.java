@@ -216,8 +216,8 @@ public class ReportService {
 
     /**
      * Saves the owner's verdict and note on an assessed report of their paper, replacing any earlier
-     * feedback. The note is trimmed, blank is null, and over 500 characters is a 400. Another user's
-     * paper is the same 404 as a missing one, as for the report list. Once committed, Research
+     * feedback. The note is trimmed, blank is null, and longer than MAX_FEEDBACK_NOTE is a 400. Another
+     * user's paper is the same 404 as a missing one, as for the report list. Once committed, Research
      * Evaluation is nudged to embed it (FeedbackNudger).
      */
     @Transactional
