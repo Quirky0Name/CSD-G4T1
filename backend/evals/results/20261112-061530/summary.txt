@@ -1,0 +1,16 @@
+Results: D:\SMU\CS203\project\CSD-G4T1-allowance\backend\evals\results\20261112-061530
+
+Case                                Runs  Pass  Target  Unj  Err    Tag      Spread   Text  Hard  Fail  Inv  Mis  Unk
+---------------------------------------------------------------------------------------------------------------------
+04_retraction_flag_no_notice           3   3/3   meets    0    0   1.00        1.00   1.00     0     0    0    0    0
+12_misleading_typographical_notice     3   2/3   meets    0    0   1.00        1.00   1.00     0     0    0    0    0
+---------------------------------------------------------------------------------------------------------------------
+
+Pass rate by category (counted runs only):
+  misleading notice: 2/3 (67%), not counted: 0 unjudged, 0 error
+  missing notice: 3/3 (100%), not counted: 0 unjudged, 0 error
+Overall pass rate: 5/6 (83%), not counted: 0 unjudged, 0 error
+Failure types (in failed runs): hard_fail 0, wrong_tag 0, missed_fact 0, wrong_fact 0, invented_quote 0, misattributed_quote 0, unlinked_claim 0, unbacked_passage 1, uncovered_statement 0
+
+Overall tag score by run: run1: 1.00   run2: 1.00   run3: 1.00
+Baseline spread (Noise Floor): 0.00

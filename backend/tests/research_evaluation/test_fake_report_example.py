@@ -12,6 +12,7 @@ from research_evaluation.impact.schemas import (
     ChangeAssessment,
     ImpactAssessment,
     RecommendedActions,
+    prose,
 )
 
 REPO = Path(__file__).parents[3]
@@ -67,11 +68,16 @@ def test_the_stored_fields_are_what_the_answers_say(report: dict[str, Any]) -> N
     evaluation = report["evaluation"]
     assessment = evaluation["assessment"]
 
-    assert evaluation["change_summary"] == assessment["change"]["summary"]
-    assert evaluation["change_severity"] == assessment["change"]["severity"]
-    assert evaluation["impact_level"] == assessment["impact"]["impact_level"]
-    assert evaluation["evaluation"] == assessment["impact"]["explanation"]
-    assert evaluation["recommendation"] == assessment["actions"]["recommendation"]
+    change = ChangeAssessment.model_validate(assessment["change"])
+    impact = ImpactAssessment.model_validate(assessment["impact"])
+    actions = RecommendedActions.model_validate(assessment["actions"])
+
+    # the stored text is the kept sentences joined (impact/schemas.py, prose)
+    assert evaluation["change_summary"] == prose(change.summary, change.claims)
+    assert evaluation["change_severity"] == change.severity
+    assert evaluation["impact_level"] == impact.impact_level
+    assert evaluation["evaluation"] == prose(impact.explanation, impact.claims)
+    assert evaluation["recommendation"] == prose(actions.recommendation, actions.claims)
 
 
 def test_it_has_two_alerts_and_four_documents(report: dict[str, Any]) -> None:

@@ -1,0 +1,261 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the paper was retracted because the data were fabricated or unreliable",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The journal has retracted the caffeine and working memory paper. An institutional investigation found that the data in Figures 2 to 4 were fabricated."
+    },
+    {
+      "fact": "says the draft's Introduction relies on the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The draft cites the paper once, in the Introduction, to justify using a 200 mg dose: it says the paper showed a 12% working memory gain at that dose."
+    },
+    {
+      "fact": "tells the researcher to remove or replace the citation and re-check the dose choice or claim",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Raise this with your co-authors or supervisor, and remove or replace the Brown and Kim citation. ... your draft uses its 12% result to justify the 200 mg dose."
+    },
+    {
+      "fact": "says the findings may still stand",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The 12% result therefore cannot support the dose choice."
+    },
+    {
+      "fact": "says no action is needed",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "Because the dose is a core design parameter of the experiment, this matters a lot for the draft."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The journal has retracted this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states the journal retracted the article, which is what claim 1 says."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "An institutional investigation found that the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states the investigation found the Figures 2 to 4 data fabricated and the conclusions unreliable, matching claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Figures 2 to 4 show accuracy by dose.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says Figures 2 to 4 show accuracy by dose. This supports the figure content in claim 3; the 'primary outcome' wording is not in the quote itself."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The authors have not responded.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states the authors have not responded, which is what claim 4 says."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Brown and Kim [3] showed that 200 mg of caffeine improves working memory by 12%, which is why we chose a 200 mg dose for our experiment.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft quote says Brown and Kim's 12% working memory result is why the draft chose a 200 mg dose, matching claim 5."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "200 mg caffeine improved n-back accuracy by 12% compared with placebo.",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper quote says 200 mg improved n-back accuracy by 12% versus placebo, matching claim 6."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "The journal has retracted this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states the journal retracted the article, matching claim 7."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states the Figures 2 to 4 data were fabricated and the conclusions cannot be relied on, matching claim 8."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "Figures 2 to 4 show accuracy by dose.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says Figures 2 to 4 show accuracy by dose, matching claim 9."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "The journal has retracted this article.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states the journal retracted the article. It does not name Brown and Kim, but it comes from a fetched document about this paper, so it supports the claim."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states the Figures 2 to 4 data were fabricated and the conclusions cannot be relied on, matching claim 11."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "Figures 2 to 4 show accuracy by dose.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says Figures 2 to 4 show accuracy by dose, matching claim 12."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "Brown and Kim [3] showed that 200 mg of caffeine improves working memory by 12%, which is why we chose a 200 mg dose for our experiment.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft quote says Brown and Kim's 12% working memory improvement is why the 200 mg dose was chosen, matching claim 13."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The journal has retracted the caffeine and working memory paper.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "An institutional investigation found that the data in Figures 2 to 4 were fabricated.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Figures 2 to 4 show the paper's primary result, n-back accuracy by dose.",
+      "covered_by": [
+        "change-2",
+        "impact-4",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's conclusions can't be relied on.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The authors have not responded.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft cites the paper once.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft cites the paper in the Introduction to justify using a 200 mg dose.",
+      "covered_by": [
+        "impact-0",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft says the paper showed a 12% working memory gain at 200 mg.",
+      "covered_by": [
+        "impact-0",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper has been retracted because the data in Figures 2 to 4, which show the accuracy results, were fabricated.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "change-2",
+        "impact-2",
+        "impact-3",
+        "impact-4",
+        "action-0",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The 12% result cannot support the dose choice.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The dose is a core design parameter of the experiment.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "The journal retracted the paper because its accuracy figures were fabricated.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "change-2",
+        "impact-2",
+        "impact-3",
+        "impact-4",
+        "action-0",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft uses the paper's 12% result to justify the 200 mg dose.",
+      "covered_by": [
+        "impact-0",
+        "action-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

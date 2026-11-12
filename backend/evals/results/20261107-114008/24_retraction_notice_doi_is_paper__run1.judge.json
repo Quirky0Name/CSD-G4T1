@@ -1,0 +1,120 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the alert's retraction notice is the paper's own DOI, so following it leads back to the paper itself rather than to a separate retraction notice",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"the \\\"notice\\\" has the same DOI as the paper itself\""
+    },
+    {
+      "fact": "says the alert's date (1 July 2020) is the paper's own issue publication date, not the date of a retraction",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": ""
+    },
+    {
+      "fact": "says nothing else shows a retraction: the current copy has no retraction banner or watermark and its title has no RETRACTED prefix",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The downloaded current copy matches the stored paper and has no retraction banner or watermark. Nothing shown here confirms a change, so I rate it none.\" The answer does not mention the title or a RETRACTED prefix."
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"Nothing shown here confirms a change, so I rate it none. Check the journal page directly, because a real retraction would be high severity.\""
+    },
+    {
+      "fact": "states a reason for a retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing or replacing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"Check the journal page directly, because a real retraction would be high severity.\" The answer gives no advice about the citation."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01, alert severity high",
+      "backs": false,
+      "pass": false,
+      "reason": "The passage gives a notice DOI (10.9999/fake.2020.024) and an alert severity, but does not state the paper's own DOI and does not say whether notice text was provided. It cannot show that the notice DOI matches the paper's DOI or that no notice text existed."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "Lactobacillus rhamnosus GG reduces",
+      "backs": false,
+      "pass": false,
+      "reason": "The phrase is about the content of Lactobacillus rhamnosus GG reducing something. It says nothing about the current copy matching the stored paper or about retraction marking."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "reduced AAD and was well tolerated.",
+      "backs": false,
+      "pass": false,
+      "reason": "The phrase says the intervention reduced AAD and was well tolerated. It is about treatment outcomes, not about whether the current copy matches the stored paper or lacks retraction marking."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "A retraction alert was raised for this paper, but the \"notice\" has the same DOI as the paper itself.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No notice text or notice title was available.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The downloaded current copy matches the stored paper and has no retraction banner or watermark.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing shown here confirms a change, so I rate it none.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "change_summary",
+      "statement": "A real retraction would be high severity.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The change was not meaningful, so impact was not assessed.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "Check the journal page directly.",
+      "covered_by": [],
+      "pass": false
+    }
+  ]
+}

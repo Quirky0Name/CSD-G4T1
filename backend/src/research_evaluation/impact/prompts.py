@@ -19,11 +19,12 @@ from research_evaluation.changes import ChangeType
 from research_evaluation.impact.history import PastFeedback
 from research_evaluation.impact.inputs import MissingPdf, ReportInputs, label
 from research_evaluation.impact.llm import Part, Pdf
+from research_evaluation.rules import notice_date
 from research_evaluation.storage import AlertInReport, Chunk, DocumentInReport, PaperDetails
 from research_evaluation.users import ResearcherProfile
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 8
+PROMPT_VERSION = 17
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -48,9 +49,86 @@ Rules:
   short (at most 30 words). A quote is one unbroken stretch of the text:
   never join pieces with "...".
 - Back what you state: each step's claims list its factual statements,
-  each with the quotes from the given material that show it. Quote only
-  the material itself (notices, PDFs, alert lines, the draft), never an
-  earlier step's own wording.
+  each with the quotes from the given material that show it. Anything this
+  prompt gives you is material you may quote: the tracked paper's details,
+  alert lines, each document's lines (its Crossref record, text, links,
+  update_to_includes_paper line), a PDF's label and the PDFs, and the
+  draft. Never quote an earlier step's own wording; to use an earlier
+  step's conclusion, derive from its claims (below).
+- A claim states one fact, and its quotes together must show that whole fact
+  to someone who reads only the claim and the quotes; each quote shows some
+  of it. When one quote can't hold the whole fact (it would run past 30
+  words, or the source splits it, such as a notice naming "the following
+  result" and then quoting it), give each piece as its own quote, or split
+  the claim into one claim per piece. A reason, a consequence or a second
+  fact is another claim: "retracted because the data were fabricated" needs
+  the sentence that gives the reason, not only "has been retracted".
+- Your own conclusions are facts to back too ("the whole paper is affected",
+  "the main findings stand", "this use is touched", "the impact is low"),
+  and so is every "so" or "because" clause. Give each its own claim. When a
+  quote states it, quote that. When it is drawn from other facts rather
+  than stated anywhere, make it a derived claim: from_claims lists the
+  numbers of the claims it follows from (counting from 1 in this step's
+  claims), each of them quoted or an absence, and its passages stay empty.
+  Word it no wider than those claims and this prompt's rules allow: "this
+  use is touched" from the draft's citing sentence and the notice's
+  retraction of that result. A derived claim uses only facts its named
+  claims state: when it needs another (that a value is key or the headline
+  result, what the draft plans to do with it), quote that as its own claim
+  first and name it, and when a quote ends before the words you need, quote
+  the next sentence too. Every other claim has from_claims empty.
+- A later step may build on an earlier step's conclusions by deriving from
+  its claims: from_change lists the numbers of CHANGE's claims (counting
+  from 1 in CHANGE's claims), and, in the actions step, from_impact lists
+  IMPACT's the same way. Use this for a fact an earlier step concluded
+  rather than quoted (the change's severity, that a result is no longer
+  significant, that a use is touched): name the claims that conclude it,
+  never quote that step's wording. Each link of the chain must follow
+  plainly from the claims it names. A derived claim may name claims of its
+  own step and earlier steps together. In the change step, from_change and
+  from_impact stay empty; in the impact step, from_impact stays empty.
+- Words that widen a fact (only, once, twice, both, every, the whole,
+  nothing else) are part of the fact: keep them only if the quotes show
+  them. Don't write "the draft cites it once" or "this is the only place
+  the draft cites it": no quote shows a citation is the only one, so say
+  where it cites it and stop there.
+- To show where something is (a section, the abstract, Table 2), quote the
+  sentence itself, never a heading or a label on its own. A claim may name
+  the section of the draft or paper its quoted sentence sits in; any other
+  place (a table, a figure, "the abstract" for a sentence outside it) needs
+  a quote that names it, or leave the place out.
+- A quote that is only on the same topic backs nothing, so never add one to
+  fill passages.
+- A statement that something is missing (no notice, no banner, no reason
+  given, no current copy, no draft, no other citation in the draft, no entry
+  in the reference list, no difference between the current copy and the
+  stored paper) is a claim of its own with empty passages and
+  absence true, saying only that. A consequence of it is another claim.
+  Never quote what is there to show what isn't: a reference list's entries
+  don't show another is missing. Every other claim has absence false.
+- A comparison between two documents (a notice's DOI and the paper's) is one
+  claim per side, each with its quote.
+- Each step's answer gives its claims first, then its free text as a list
+  of sentences. A sentence is kind "fact" or "advice". A fact lists the
+  numbers of the claims that state it (counting from 1 in this step's
+  claims) and joins their texts, changing only pronouns and joining words
+  ("and", "but", "while"). A fact that lists no claim is removed before the
+  researcher reads it, so every fact you need has its claim. Advice (what
+  to do or check) lists no claims.
+- A verdict is a fact: "the draft is not affected", "the impact is low",
+  "both depend on it", "the headline result rests on that data". It needs a
+  claim: one whose quotes show it, or a derived claim naming the claims it
+  follows from. Never drop a fact the task asks for: when no quote states
+  it, derive it.
+- Link a change to the draft by naming the shared fact, not by a verdict:
+  "your Introduction quotes the d = 1.8 that the correction changes to
+  0.8", which is two claims (the draft's sentence, the notice's), not "the
+  correction affects your Introduction", which no single quote shows.
+- Check before you answer: read each fact sentence clause by clause,
+  including what this prompt tells you to say (what is missing, that a
+  judgment is general, that findings may still stand). If the claims it
+  lists don't state all of it, add the claim it needs or narrow the
+  sentence.
 - Write for a researcher who knows their field but not publishing
   metadata: plain words, and no DOIs in prose unless needed to tell two
   documents apart."""
@@ -61,6 +139,9 @@ anyone relying on it.
 
 The ALERTS were raised by fixed rules from Crossref (the DOI registry) and
 OpenAlex metadata: they say a notice exists, not what it says. The
+notice date on an alert line is the date Crossref records for the notice;
+when the notice's DOI is the paper's own, it is a date of the paper itself
+(such as its issue date), not of a retraction. The
 DOCUMENTS are what was fetched for them: each notice's Crossref record and,
 when it is open access, its text; and, when one could be downloaded, the
 paper as it is now (CURRENT COPY) or its NEW VERSION. A RELATED document was
@@ -73,14 +154,18 @@ A citation_jump alert is different: OpenAlex counted a sudden rise in the
 works citing the paper, and its line gives the counts. It has no notice and
 no document, and it means new attention, not a change to the paper's
 content: about_this_paper "yes", what_changed the rise, scope
-citations_only, severity low, evidence empty.
+citations_only, severity low, evidence empty. Word its claim from the line
+("the alert reports a rise in citing works, from 4 to 61"), so the quote
+shows it; that there is no notice is a separate claim with no passages.
 
 For each alert:
 1. about_this_paper: is it really about the tracked paper?
    - "no" when the notice's DOI is the paper's own DOI and nothing else
      shows a change, or when the notice's Crossref title shows it is about
      another article (for example "RETRACTED: <a different title>"). Its
-     update-to may still list this paper; the title decides.
+     update-to may still list this paper; the title decides. A notice with
+     the paper's own DOI has no text of its own to fetch, so missing notice
+     text doesn't make it "unclear".
    - A retraction alert with no notice comes from OpenAlex's flag alone,
      which is weak evidence: "unclear", unless the current copy shows a
      retraction watermark or banner.
@@ -106,7 +191,9 @@ For each alert:
      changes results, numbers, figures or conclusions; a retraction and
      replacement where a corrected version exists; a retraction for
      duplicate publication or authorship reasons (the findings may still
-     stand in the original copy: say so).
+     stand in the original copy: say so); a retraction flag with no notice,
+     watermark or banner, since it is unconfirmed but may be a real
+     retraction.
    - low: something a careful reader should know, but the main findings
      stand: a correction to a secondary number, figure or method detail; a
      clarification; a new version with minor changes; a journal-level
@@ -114,7 +201,11 @@ For each alert:
    - none (not meaningful): typos, author names or affiliations, funding or
      conflict-of-interest statements, formatting; a notice about another
      article; a notice whose DOI is the paper's own with no other sign of a
-     change; a concern lifted by a later notice in this report.
+     change (compare the alert's dates with the paper's own publication
+     date in its Crossref record, and say when they match); a concern lifted
+     by a later notice in this report; a retraction reversed by a later
+     notice that reinstates the paper (say that its findings can be relied
+     on again, quoting the notice that reinstates it).
    When the evidence is only metadata, pick the level the notice type
    usually has and say so in reason.
    reason: why, in one or two sentences.
@@ -132,16 +223,18 @@ Then, for the report as a whole:
   usually the highest of its alerts, but lower when a later notice resolves
   an earlier one (a lifted concern is none), and none when no alert is
   about this paper.
-- summary: a summary of the changes in two to four sentences, which a
-  researcher can read on its own: what happened to the paper, which parts
-  it touches, and why it is or isn't serious.
-- claims: one claim per factual statement in your summary. text: the
+- claims: one claim per factual statement your summary will make. text: the
   statement; passages: the quotes that back it, each with its source: a
   notice's DOI, "stored paper" (the STORED PAPER or the TRACKED PAPER's
   details), "current copy", "new version", or "alert <id>" for an alert's
   line in ALERTS. A citation jump, or a retraction flag with no notice, has
   nothing else to quote: quote its alert's line, with source "alert <id>".
-  Leave passages empty only when nothing given shows the statement."""
+  Leave passages empty only when nothing given shows the statement.
+- summary: two to four fact sentences, each listing its claims, which a
+  researcher can read on its own: what happened to the paper, which parts
+  it touches, and why it is or isn't serious. Give the facts, not a level
+  ("severity is medium"), and no advice on what anyone should do or check:
+  the actions step gives that."""
 
 IMPACT_TASK = """\
 TASK: work out how the researcher's draft (the attached PDF) uses the
@@ -166,11 +259,14 @@ uses, and how much the researcher is affected overall.
      - methods_or_data: the draft uses the paper's method, protocol,
        dataset, reagent, code or parameter values;
      - key_evidence: a claim the draft argues for, or its interpretation of
-       its own results, rests mainly on the paper's findings;
+       its own results, rests mainly on the paper's findings. This includes
+       a sentence in any section, the Introduction too, that draws an
+       expectation, hypothesis or rationale from a specific finding of the
+       paper ("found a large effect, so we expect...");
      - supporting: the paper is one of several sources for a claim;
      - comparison: the draft compares its own results with the paper's;
      - background: context or motivation; the argument doesn't depend on
-       it;
+       it. Go by what the sentence does, not by the section it is in;
      - critical: the draft disputes or criticises the paper, or discusses it
        as an example (for example of a controversy or of retracted work);
    - claim_relied_on: in your own words, what the researcher uses the paper
@@ -193,21 +289,39 @@ uses, and how much the researcher is affected overall.
    | background, critical            | low           | low    | low    |
 
    none when no use is affected or the draft doesn't cite the paper.
-5. explanation: two to five sentences for the researcher: how their draft
-   uses the paper, which of those uses the change touches and why, and how
-   much it matters, naming the sections.
-6. claims: one claim per factual statement in your explanation. text: the
+5. claims: one claim per factual statement your explanation will make. text: the
    statement; passages: the quotes that back it, each with its source:
    "draft" for the researcher's draft, "stored paper" for the attached
    STORED PAPER, or a quote CHANGE's claims give, copied with its source.
-   For each use, write a claim about it that quotes the draft's citing
-   sentence (source "draft") and, when the STORED PAPER is attached, the
-   passage of it that sentence relies on (source "stored paper").
+   For each use, write one claim on how the draft uses the paper, quoting
+   the draft's citing sentence (source "draft"), and, when the STORED PAPER
+   is attached, a separate claim on what the paper reports, quoting the
+   passage of it that sentence relies on (source "stored paper"). Word the
+   use claim with the citation as the draft writes it ("cites [12]", "cites
+   Lee, 2019") and only what the citing sentence shows; don't claim that a
+   reference entry is the tracked paper, which no quote can show. Then
+   write one claim on what changed in the part that use relies on, worded
+   as CHANGE's quote words it and copying that quote ("the notice says the
+   conclusions cannot be relied on"), and whether the change touches the
+   use as a derived claim from the use claim and that one. The impact level
+   is a derived claim too, from the claims on the uses and the change, by
+   the table above. When you copy from
+   CHANGE's claims, copy only a quote that shows your claim's fact. A paper
+   the draft doesn't cite is a missing-entry claim, with empty passages, and
+   the explanation then says only that the draft doesn't cite it: no
+   "so the draft is not affected", and nothing about who wrote the paper.
+6. explanation: two to five fact sentences for the researcher, each listing
+   its claims: how their draft uses the paper, which of those uses the
+   change touches and why, and how much it matters, naming the sections.
+   Say how much it matters in plain words, without working through the
+   table ("supporting and medium, so low"), and give no advice: the actions
+   step gives that.
 
 If there is NO DRAFT: leave the uses empty and cited false, judge the
 impact for a typical researcher who cites the paper as key_evidence, and
 say in the explanation that the judgment is general; its claims quote what
-CHANGE's claims quote, or have no passages."""
+CHANGE's claims quote, or have no passages. "No draft was uploaded" is a
+claim too, with no passages."""
 
 ACTIONS_TASK = """\
 TASK: recommend what the researcher should do about this change.
@@ -220,26 +334,44 @@ pick from what fits:
   and re-check the claim it supported;
 - the draft's own methods, data or code depend on the paper: stop and raise
   it with co-authors or the supervisor; editing the text won't fix it;
+- a correction takes away a finding the draft states (no longer significant,
+  reversed), whatever the notice calls the correction: remove or hedge that
+  claim, update the numbers and cite the correction;
 - a correction or erratum changed numbers or figures the draft quotes:
   update them and cite the correction;
 - an expression of concern about something the draft relies on: hedge the
-  wording and don't build new work on it; tracking continues, so a
-  retraction would raise a new alert;
+  wording and don't build new work on it; that tracking continues, so a
+  retraction would raise a new alert, is about this assistant, not the
+  paper: write it as an advice sentence, never as a fact or a claim;
 - a retraction and replacement, or a new version: cite the corrected or new
   version, after checking the finding still holds there;
+- a retraction known only from a flag, with no notice: check the journal's
+  or publisher's page for the paper to confirm it before changing the draft;
 - critical or historical discussion, or a retraction for duplication or
   authorship reasons: keep the citation and cite the notice too (for
   duplication, cite the original copy);
 - a use the change doesn't touch, or a paper the draft doesn't cite: no
   action; the alert can be dismissed.
 If there is no draft, add an action to upload the draft for this project,
-so the next change can be judged against it.
+so the next change can be judged against it, and give that reason in the
+recommendation too.
 
-recommendation: one or two sentences with the gist of the actions.
+claims: one claim per factual statement your recommendation will make,
+including the facts its advice rests on. text: the statement; passages: the
+quotes from the CHANGE and IMPACT claims that show that statement, copied
+with their sources; leave out the ones that don't. Copy only those claims'
+passages, never IMPACT's explanation or a use's reason. A claim of theirs
+with no passages (something missing) is copied with none. A derived claim
+of theirs is copied as a derived claim whose from_claims names your copies
+of the claims it follows from. A fact that follows from their claims
+without being one of them is a derived claim naming them in from_change
+and from_impact.
 
-claims: one claim per factual statement in your recommendation. text: the
-statement; passages: the quotes that the CHANGE and IMPACT claims it rests
-on give, copied with their sources (an action to upload the draft too)."""
+recommendation: two to four sentences with the gist of the actions: each
+piece of advice is an advice sentence, and the fact it rests on is a fact
+sentence listing its claim, in the words of a CHANGE or IMPACT claim. It
+adds no fact those claims don't state. The advice to upload a draft is
+advice and needs no claim."""
 
 NO_DRAFT = "NO DRAFT: the researcher hasn't uploaded their paper for this project."
 
@@ -329,6 +461,8 @@ def alerts_block(alerts: list[AlertInReport]) -> str:
     ]
     for alert in alerts:
         notice = f"notice {alert.notice_doi}" if alert.notice_doi else "no notice"
+        if dated := notice_date(alert.description):
+            notice += f", notice dated {dated}"
         line = (
             f"- alert {alert.id}: {alert.change_type}, {notice}, "
             f"detected {alert.detected_at.date().isoformat()}, alert severity {alert.alert_severity}"
@@ -364,11 +498,7 @@ def document_block(
     else:
         lines.append(f"crossref: none ({document.crossref_status})")
     if document.kind == "notice":
-        included = document.update_to_includes_paper
-        lines.append(
-            "update_to_includes_paper: "
-            + ("unknown" if included is None else str(included).lower())
-        )
+        lines.append(update_to_line(document))
     if document.text:
         truncated = " (cut short)" if document.text_truncated else ""
         lines.append(f"text{truncated}: {_defuse(document.text)}")
@@ -385,7 +515,13 @@ def document_block(
     return "\n".join(lines)
 
 
-def _pdf_label(document: DocumentInReport) -> str:
+def update_to_line(document: DocumentInReport) -> str:
+    """A notice's line saying whether its Crossref record names the tracked paper."""
+    included = document.update_to_includes_paper
+    return "update_to_includes_paper: " + ("unknown" if included is None else str(included).lower())
+
+
+def pdf_label(document: DocumentInReport) -> str:
     if document.kind == "current_version":
         fetched = document.pdf_fetched_at.date().isoformat() if document.pdf_fetched_at else "?"
         return (
@@ -430,7 +566,7 @@ def change_prompt(inputs: ReportInputs) -> Prompt:
         )
     pdf_order = {"new_version": 0, "related": 1}  # then the current copy
     ordered = sorted(inputs.document_pdfs, key=lambda pair: pdf_order.get(pair[0].kind, 2))
-    pdfs += [(label(document), _pdf_label(document), data) for document, data in ordered]
+    pdfs += [(label(document), pdf_label(document), data) for document, data in ordered]
 
     attached_pdfs: list[tuple[str, bytes]] = []
     for name, model_label, data in pdfs:

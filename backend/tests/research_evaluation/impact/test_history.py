@@ -23,6 +23,7 @@ from research_evaluation.impact.schemas import (
     Claim,
     ImpactAssessment,
     RecommendedActions,
+    Sentence,
 )
 from research_evaluation.storage import Chunk
 
@@ -68,11 +69,12 @@ class RecordingLlm:
             ChangeAssessment: CHANGE,
             ImpactAssessment: ImpactAssessment(
                 cited=True, reference_entry=None, uses=[], impact_level="medium",
-                explanation="Your Discussion relies on it.",
+                explanation=[Sentence(text="Your Discussion relies on it.", kind="fact", claims=[1])],
                 claims=[Claim(text="Your Discussion relies on it.", passages=[])],
             ),
             RecommendedActions: RecommendedActions(
-                actions=[], recommendation="Replace it.", claims=[Claim(text="Replace it.", passages=[])]
+                actions=[], recommendation=[Sentence(text="Replace it.", kind="advice", claims=[1])],
+                claims=[Claim(text="Replace it.", passages=[])],
             ),
         }
         return Answer(answers[schema], "fake-gemini-001", self.model)

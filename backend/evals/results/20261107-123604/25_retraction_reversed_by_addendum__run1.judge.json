@@ -1,0 +1,104 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the retraction was issued in error and has been withdrawn, with the paper reinstated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The change_summary says: \"A later statement says the retraction was issued in error, because the image concerns belonged to a different article in the same investigation. The publisher rechecked this paper's images and data, found no problems, withdrew the retraction and reinstated the paper.\""
+    },
+    {
+      "fact": "says the paper's findings or data can still be relied on",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The change_summary says: \"The findings are not affected.\""
+    },
+    {
+      "fact": "treats the paper as still retracted or tells the researcher to stop citing it",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the paper's images or data were found to be duplicated or unreliable",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The change_summary says the retraction was over \"concerns about duplicated images\" and that the publisher \"found no problems\" with this paper's images and data. It describes the duplication as belonging to a different article, not this paper."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "concerns were raised about the duplication of images. The article is therefore retracted.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text says concerns were raised about duplicated images and the article is therefore retracted, which matches the claim."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The image concerns that led to the retraction relate to a different article in the same investigation, and this article was included by mistake.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text says the image concerns that led to the retraction relate to a different article in the same investigation and this article was included by mistake, which matches the claim."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The publisher has checked the images and data of this article and found no problems with them.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text says the publisher checked this article's images and data and found no problems, which matches the claim."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted text says the retraction is withdrawn, the article is reinstated and the RETRACTED watermark removed, which matches the claim."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper was retracted over concerns about duplicated images.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "A later statement says the retraction was issued in error, because the image concerns belonged to a different article in the same investigation.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The publisher rechecked this paper's images and data and found no problems.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The publisher withdrew the retraction and reinstated the paper.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The findings are not affected.",
+      "covered_by": [],
+      "pass": false
+    }
+  ],
+  "absent_claims": []
+}

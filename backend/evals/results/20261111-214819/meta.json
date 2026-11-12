@@ -1,0 +1,18 @@
+{
+  "runs": {
+    "29_real_expression_of_concern__run1": {
+      "started_at": "2026-11-11T21:48:21.260856+00:00",
+      "prompt_version": 12,
+      "prompt_sha256": "9f68407022bc890a48a249706d1351aa0a92e541061261a42614a5e394600dbc",
+      "provider": "claude-code",
+      "models": [
+        "opus"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "8653ab636e5924c3958c880280a36f75b36b9f2319e174066214ee64c5a0d28e"
+    }
+  }
+}

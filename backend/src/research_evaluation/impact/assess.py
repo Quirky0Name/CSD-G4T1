@@ -44,6 +44,7 @@ from research_evaluation.impact.schemas import (
     FeedbackContextChunk,
     ImpactAssessment,
     RecommendedActions,
+    prose,
 )
 from research_evaluation.storage import Report, draft_pdf
 from research_evaluation.users import ResearcherProfile, researcher_profile
@@ -95,7 +96,7 @@ async def assess(
         done["change"] = change.value
         if change.value.severity == "none":
             return Evaluation(
-                change_summary=change.value.summary,
+                change_summary=prose(change.value.summary, change.value.claims),
                 change_severity="none",
                 assessment=assessment,
                 claims=await build_claims(inputs, None, **done),
@@ -147,11 +148,11 @@ async def assess(
         evaluation.claims = await build_claims(inputs, draft, **done)
         return evaluation
     return Evaluation(
-        change_summary=change.value.summary,
+        change_summary=prose(change.value.summary, change.value.claims),
         change_severity=change.value.severity,
         impact_level=impact.value.impact_level,
-        evaluation=impact.value.explanation,
-        recommendation=actions.value.recommendation,
+        evaluation=prose(impact.value.explanation, impact.value.claims),
+        recommendation=prose(actions.value.recommendation, actions.value.claims),
         assessment=assessment,
         claims=await build_claims(inputs, draft, **done),
         context_chunks=context,

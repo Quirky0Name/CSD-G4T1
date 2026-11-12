@@ -1,0 +1,557 @@
+{
+  "change_summary": "On 2026-10-01, an alert recorded a retraction for the paper with no notice. No retraction notice text and no current copy of the paper were available to check, so the retraction is unconfirmed but may be real. The paper's headline claim is a sensor costing under 20 USD that measures river nitrate to within 5% of lab results.",
+  "change_severity": "medium",
+  "impact_level": "high",
+  "evaluation": "Your Methods cites Novak and Silva [2] as the source of the sensor and calibration protocol you used unchanged to measure nitrate, and the stored paper describes that sensor (under 20 USD, within 5% of lab results) and gives its calibration protocol. On 2026-10-01, an alert recorded a retraction for the paper with no notice, and no retraction notice text and no current copy of the paper were available to check, so the retraction is unconfirmed but may be real. Whether your Methods use of the sensor and calibration protocol is touched is unclear, since a confirmed retraction would cover the whole paper but none is confirmed. The impact on your draft is high but uncertain, because your own measurements depend on the paper's method and the possible retraction is unconfirmed.",
+  "recommendation": "Your Methods cites Novak and Silva [2] as the source of the sensor and calibration protocol you used unchanged to measure nitrate. On 2026-10-01, an alert recorded a retraction for the paper with no notice, and no retraction notice text and no current copy of the paper were available to check, so the retraction is unconfirmed but may be real. Whether your Methods use of the sensor and calibration protocol is touched is unclear, since a confirmed retraction would cover the whole paper but none is confirmed. Before changing the draft, check the journal's or publisher's page for the paper to confirm the retraction. If it is confirmed, raise it with your co-authors or supervisor, because your own measurements would need to be reconsidered, not just reworded.",
+  "assessment": {
+    "prompt_version": 13,
+    "model": "opus",
+    "model_version": "claude-opus-5-5",
+    "answered_by": {
+      "change": "opus",
+      "impact": "opus",
+      "actions": "opus"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 41,
+          "about_this_paper": "unclear",
+          "what_changed": "OpenAlex metadata flags the paper as retracted, but no retraction notice was found. No current copy was available to check for a retraction watermark or banner. Only metadata is available.",
+          "scope": "unclear",
+          "affected_parts": [],
+          "severity": "medium",
+          "reason": "The only evidence is a retraction flag with no notice, watermark or banner, so the retraction is unconfirmed. It may still be real, and a real retraction would put the paper's findings in doubt.",
+          "evidence": [
+            {
+              "source": "alert 41",
+              "quote": "retraction, no notice, detected 2026-10-01, alert severity high"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "medium",
+      "claims": [
+        {
+          "text": "On 2026-10-01, an alert recorded a retraction for the paper with no notice.",
+          "passages": [
+            {
+              "source": "alert 41",
+              "quote": "retraction, no notice, detected 2026-10-01"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "No retraction notice text and no current copy of the paper were available to check.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "The retraction is unconfirmed but may be real.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "The paper's headline claim is a sensor costing under 20 USD that measures river nitrate to within 5% of lab results.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        }
+      ],
+      "summary": [
+        {
+          "text": "On 2026-10-01, an alert recorded a retraction for the paper with no notice.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "No retraction notice text and no current copy of the paper were available to check, so the retraction is unconfirmed but may be real.",
+          "kind": "fact",
+          "claims": [
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The paper's headline claim is a sensor costing under 20 USD that measures river nitrate to within 5% of lab results.",
+          "kind": "fact",
+          "claims": [
+            4
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[2] Novak, P., Silva, R. (2018). A low-cost sensor for river nitrate. J. Fake Environmental Science.",
+      "uses": [
+        {
+          "section": "Methods",
+          "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+          "role": "methods_or_data",
+          "claim_relied_on": "The nitrate sensor design and its calibration protocol, used unchanged to take the draft's own nitrate measurements, and the paper's report that the sensor matches lab results to within 5%.",
+          "affected": "unclear",
+          "reason": "A retraction flag was recorded with no notice and no current copy to check, so it is unconfirmed whether the paper, including the sensor and calibration protocol, has been retracted."
+        }
+      ],
+      "impact_level": "high",
+      "claims": [
+        {
+          "text": "The draft's Methods cites Novak and Silva [2] as the source of the sensor and calibration protocol it used unchanged to measure nitrate.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The stored paper describes a sensor costing under 20 USD that measures river nitrate to within 5% of lab results, and gives a calibration protocol.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results."
+            },
+            {
+              "source": "stored paper",
+              "quote": "The calibration protocol is given in Section 2."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "On 2026-10-01, an alert recorded a retraction for the paper with no notice.",
+          "passages": [
+            {
+              "source": "alert 41",
+              "quote": "retraction, no notice, detected 2026-10-01"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "No retraction notice text and no current copy of the paper were available to check.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "The retraction is unconfirmed but may be real.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "Whether the draft's Methods use of the sensor and calibration protocol is touched is unclear, since a confirmed retraction would cover the whole paper but none is confirmed.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "text": "The impact on the draft is high but uncertain, because the draft's own measurements depend on the paper's method and the possible retraction is unconfirmed.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            5,
+            6
+          ]
+        }
+      ],
+      "explanation": [
+        {
+          "text": "Your Methods cites Novak and Silva [2] as the source of the sensor and calibration protocol you used unchanged to measure nitrate, and the stored paper describes that sensor (under 20 USD, within 5% of lab results) and gives its calibration protocol.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "On 2026-10-01, an alert recorded a retraction for the paper with no notice, and no retraction notice text and no current copy of the paper were available to check, so the retraction is unconfirmed but may be real.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "text": "Whether your Methods use of the sensor and calibration protocol is touched is unclear, since a confirmed retraction would cover the whole paper but none is confirmed.",
+          "kind": "fact",
+          "claims": [
+            6
+          ]
+        },
+        {
+          "text": "The impact on your draft is high but uncertain, because your own measurements depend on the paper's method and the possible retraction is unconfirmed.",
+          "kind": "fact",
+          "claims": [
+            7
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Check the journal's or publisher's page for the paper (Novak & Silva 2018, J. Fake Environmental Science) to confirm whether it has really been retracted, and look for a notice giving the reason, before you change the draft.",
+          "where": null
+        },
+        {
+          "action": "If the retraction is confirmed, stop and raise it with your co-authors or supervisor. Your nitrate measurements rely on this sensor and its calibration protocol, so editing the text won't fix the problem.",
+          "where": "Methods: \"We measured nitrate with the sensor of Novak and Silva [2]...\""
+        }
+      ],
+      "claims": [
+        {
+          "text": "The draft's Methods cites Novak and Silva [2] as the source of the sensor and calibration protocol it used unchanged to measure nitrate.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The stored paper describes a sensor costing under 20 USD that measures river nitrate to within 5% of lab results, and gives a calibration protocol.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results."
+            },
+            {
+              "source": "stored paper",
+              "quote": "The calibration protocol is given in Section 2."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "On 2026-10-01, an alert recorded a retraction for the paper with no notice.",
+          "passages": [
+            {
+              "source": "alert 41",
+              "quote": "retraction, no notice, detected 2026-10-01"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "No retraction notice text and no current copy of the paper were available to check.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "The retraction is unconfirmed but may be real.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "Whether the draft's Methods use of the sensor and calibration protocol is touched is unclear, since a confirmed retraction would cover the whole paper but none is confirmed.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "Your Methods cites Novak and Silva [2] as the source of the sensor and calibration protocol you used unchanged to measure nitrate.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "On 2026-10-01, an alert recorded a retraction for the paper with no notice, and no retraction notice text and no current copy of the paper were available to check, so the retraction is unconfirmed but may be real.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "text": "Whether your Methods use of the sensor and calibration protocol is touched is unclear, since a confirmed retraction would cover the whole paper but none is confirmed.",
+          "kind": "fact",
+          "claims": [
+            6
+          ]
+        },
+        {
+          "text": "Before changing the draft, check the journal's or publisher's page for the paper to confirm the retraction. If it is confirmed, raise it with your co-authors or supervisor, because your own measurements would need to be reconsidered, not just reworded.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "On 2026-10-01, an alert recorded a retraction for the paper with no notice.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 41,
+          "quote": "retraction, no notice, detected 2026-10-01",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "No retraction notice text and no current copy of the paper were available to check.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The retraction is unconfirmed but may be real.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The paper's headline claim is a sensor costing under 20 USD that measures river nitrate to within 5% of lab results.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft's Methods cites Novak and Silva [2] as the source of the sensor and calibration protocol it used unchanged to measure nitrate.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The stored paper describes a sensor costing under 20 USD that measures river nitrate to within 5% of lab results, and gives a calibration protocol.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results.",
+          "page": 1,
+          "verified": "verbatim"
+        },
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The calibration protocol is given in Section 2.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "On 2026-10-01, an alert recorded a retraction for the paper with no notice.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 41,
+          "quote": "retraction, no notice, detected 2026-10-01",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "No retraction notice text and no current copy of the paper were available to check.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The retraction is unconfirmed but may be real.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "Whether the draft's Methods use of the sensor and calibration protocol is touched is unclear, since a confirmed retraction would cover the whole paper but none is confirmed.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-6",
+      "kind": "impact",
+      "text": "The impact on the draft is high but uncertain, because the draft's own measurements depend on the paper's method and the possible retraction is unconfirmed.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The draft's Methods cites Novak and Silva [2] as the source of the sensor and calibration protocol it used unchanged to measure nitrate.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The stored paper describes a sensor costing under 20 USD that measures river nitrate to within 5% of lab results, and gives a calibration protocol.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results.",
+          "page": 1,
+          "verified": "verbatim"
+        },
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The calibration protocol is given in Section 2.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "On 2026-10-01, an alert recorded a retraction for the paper with no notice.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 41,
+          "quote": "retraction, no notice, detected 2026-10-01",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "No retraction notice text and no current copy of the paper were available to check.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-4",
+      "kind": "action",
+      "text": "The retraction is unconfirmed but may be real.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-5",
+      "kind": "action",
+      "text": "Whether the draft's Methods use of the sensor and calibration protocol is touched is unclear, since a confirmed retraction would cover the whole paper but none is confirmed.",
+      "supported": false,
+      "passages": []
+    }
+  ]
+}

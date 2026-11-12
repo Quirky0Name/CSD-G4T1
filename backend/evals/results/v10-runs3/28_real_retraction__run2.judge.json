@@ -1,0 +1,298 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the paper was retracted because of concerns about peer review integrity or manipulation of the publication process, which call the validity of its reported results into question",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The editors retracted the article because of concerns about peer review integrity and potential manipulation of the publication process, and they say these concerns call into question the validity and provenance of the reported results.\""
+    },
+    {
+      "fact": "says the draft's choice of an LSTM detector in Section 3, and the model settings in Section 4, rest on the retracted paper's reported results",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Both uses, the model choice in Section 3 and the starting settings in Section 4, rely on this retracted paper, so the impact on your draft is high.\""
+    },
+    {
+      "fact": "tells the researcher to remove or replace the citation and to re-justify or re-check the choice of detector and its settings, for example with their own model comparison",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"replace the Section 3 evidence, and validate the Section 4 settings independently before building on them.\""
+    },
+    {
+      "fact": "says the paper was retracted for data fabrication, plagiarism or image problems",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the reported results can still be relied on",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says no action is needed",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The PLOS One Editors retract this article [1] because it was identified as one of a series of submissions for which we have concerns about peer review integrity and potential manipulation of the publication process.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says the editors retract the article because it was one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process. This matches claim 1."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "These concerns call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says the concerns call into question the validity and provenance of the reported results, matching claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Retraction: Detecting phishing websites using machine learning technique",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice title is 'Retraction: Detecting phishing websites using machine learning technique', which is this paper's title."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The author either did not respond directly or could not be reached.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice sentence says the author either did not respond directly or could not be reached."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "[14] Dutta, A. K. (2021). Detecting phishing websites using machine learning technique. PLoS ONE, 16(10), e0258361.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's reference entry for [14] matches the author, year, title, journal, volume, issue and article number stated in claim 5."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "LURL reached an accuracy of 97.4% on the Phishtank dataset and 96.8% on the Crawler dataset,",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft states LURL's accuracy of 97.4% on Phishtank and 96.8% on Crawler, which is the numeric part of claim 6. The quote does not show the '[14]' citation itself, but the reference list (claim 5) identifies [14] as Dutta."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "On the strength of these results we chose an LSTM over the character-level convolutional detector",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says 'On the strength of these results we chose an LSTM', which supports the claim that the LSTM choice rested on these results."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "LURL has produced an average of 97.4% and 96.8% for Phishtank and Crawler datasets respectively.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper states LURL's average accuracy as 97.4% for Phishtank and 96.8% for Crawler, matching claim 7."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73, and at most 7 learning-rate epochs.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Section 4 sentence gives the LURL settings: two LSTM layers, hidden size 650, learning rate 1.0, decay 0.73, and at most 7 learning-rate epochs, matching claim 8."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "learning_rate = 1.0, max_lr_epoch = 7,",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's settings include learning_rate = 1.0 and max_lr_epoch = 7, matching claim 9's values. The 'Table 2' label is not visible in the quote."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "hidden_size = 650,",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's settings include hidden_size = 650, matching the hidden size stated in claim 9. The 'Table 2' label is not visible in the quote."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "The PLOS One Editors retract this article [1] because it was identified as one of a series of submissions for which we have concerns about peer review integrity",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice gives peer review integrity as the reason for retraction. The quote is cut off before the words 'and potential manipulation', but it does not contradict the claim and states the core reason."
+    },
+    {
+      "claim_id": "impact-6",
+      "quote": "These concerns call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says these concerns call into question the validity and provenance of the reported results, matching claim 11."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "The PLOS One Editors retract this article [1] because it was identified as one of a series of submissions for which we have concerns about peer review integrity and potential manipulation of the publication process.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice gives the retraction reason (peer review integrity and potential manipulation of the publication process), matching claim 12."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "These concerns call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "The notice says the concerns call into question the validity and provenance of the reported results, matching claim 13."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "LURL reached an accuracy of 97.4% on the Phishtank dataset and 96.8% on the Crawler dataset,",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft states LURL's accuracy of 97.4% on Phishtank and 96.8% on Crawler, matching the numeric part of claim 14."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "On the strength of these results we chose an LSTM over the character-level convolutional detector",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says it chose an LSTM 'on the strength of these results', matching claim 14's reliance on the accuracy results."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73, and at most 7 learning-rate epochs.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Section 4 sentence gives the same LURL settings listed in claim 15: two LSTM layers, hidden size 650, learning rate 1.0, decay 0.73, and at most 7 learning-rate epochs."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The PLOS ONE editors retracted the article because it was identified as one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process.",
+      "covered_by": [
+        "change-0",
+        "impact-5",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The editors say these concerns call into question the validity and provenance of the reported results.",
+      "covered_by": [
+        "change-1",
+        "impact-6",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice is titled as a retraction of this paper's title.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the author either did not respond directly or could not be reached.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "In Section 3 the draft cites Dutta [14] for LURL's 97.4% and 96.8% accuracy and says it chose an LSTM on the strength of these results.",
+      "covered_by": [
+        "impact-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper reports LURL's 97.4% and 96.8% accuracy results that the Section 3 draft relies on.",
+      "covered_by": [
+        "impact-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "In Section 4 the draft starts from the LURL settings reported by Dutta [14]: two LSTM layers, hidden size 650, learning rate 1.0 with decay 0.73, and at most 7 epochs.",
+      "covered_by": [
+        "impact-3",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper's Table 2 lists these LURL settings.",
+      "covered_by": [
+        "impact-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The editors retracted the article because of concerns about peer review integrity and potential manipulation of the publication process, and the notice says these concerns call into question the validity and provenance of the reported results.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "impact-5",
+        "impact-6",
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Both uses, the model choice in Section 3 and the starting settings in Section 4, rely on this retracted paper.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "The editors retracted the article because of concerns about peer review integrity and potential manipulation of the publication process, and they say these concerns call into question the validity and provenance of the reported results.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "impact-5",
+        "impact-6",
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "In Section 3 the draft says it chose an LSTM on the strength of LURL's 97.4% and 96.8% accuracy results from Dutta [14].",
+      "covered_by": [
+        "impact-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "In Section 4 the draft starts from the LURL settings reported by Dutta [14]: two LSTM layers, hidden size 650, learning rate 1.0 with decay 0.73, and at most 7 learning-rate epochs.",
+      "covered_by": [
+        "impact-3",
+        "action-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

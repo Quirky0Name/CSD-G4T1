@@ -1,0 +1,94 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the notice is about a different article (sleep quality in nurses)",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The retraction notice's Crossref title names a different article, \\\"Mindfulness training improves sleep quality in nurses\\\", which was retracted because its data could not be verified.\""
+    },
+    {
+      "fact": "says the tracked paper is not affected",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": "\"Nothing given shows a change to the tracked paper.\" This only says no change is shown; it does not state the tracked paper is unaffected."
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The answer says the sleep-quality-in-nurses article was retracted and that the tracked paper is \"Mindfulness training reduces exam anxiety in undergraduates\"; it does not say the tracked paper was retracted."
+    },
+    {
+      "fact": "recommends removing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"recommendation\": null"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "RETRACTED: Mindfulness training improves sleep quality in nurses",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted fetched title matches claim 1 word for word, and it is the notice's title as the claim states."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This article has been retracted because the data could not be verified.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice says the article was retracted because the data could not be verified, which is what claim 2 states."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Mindfulness training reduces exam anxiety in undergraduates",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted title of the tracked paper matches claim 3 exactly."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The retraction notice's Crossref title names a different article, \"Mindfulness training improves sleep quality in nurses\".",
+      "covered_by": [
+        "change-0",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retracted article was retracted because its data could not be verified.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The tracked paper is \"Mindfulness training reduces exam anxiety in undergraduates\".",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing given shows a change to the tracked paper.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-3"
+  ]
+}

@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
+import { NotFound } from './components/Page'
 import Sidebar from './components/Sidebar'
 import { ToastProvider } from './components/Toasts'
 import { TrackingProvider } from './tracking'
@@ -24,9 +25,10 @@ function AppLayout() {
   const { session } = useAuth()
   return (
     <TrackingProvider key={session?.user.id}>
-      <div className="flex min-h-screen flex-col sm:flex-row">
+      <div className="flex min-h-svh flex-col">
         <Sidebar />
-        <section className="min-h-screen w-full min-w-0 flex-1 bg-gray-950">
+        {/* on a phone the tab bar is fixed along the bottom, so the page keeps clear of it */}
+        <section className="w-full min-w-0 flex-1 bg-gray-950 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:pb-0">
           <Outlet />
         </section>
       </div>
@@ -54,6 +56,7 @@ function App() {
                   <Route path="/alerts" element={<Alerts />} />
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="*" element={<NotFound />} />
                   <Route
                     path="/reports/:paperId/:reportId"
                     element={

@@ -1,0 +1,381 @@
+{
+  "change_summary": "The journal's editors issued an expression of concern about the paper. They say concerns have been raised about some of the data and that the matter is being looked into. The notice doesn't say which data, so it's unclear whether the forced-swim result in Figure 3 or the bacterial counts in Figure 4 are involved.",
+  "change_severity": "medium",
+  "impact_level": "medium",
+  "evaluation": "Your Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice, and says your own proposal builds on this finding. The paper's abstract reports that result from a forced-swim test (Figure 3). The editors have been made aware of concerns regarding some of the data reported in the article, and the notice does not say which data. It is therefore uncertain whether the result you rely on is involved. Because your Discussion and proposal lean on this finding, the impact is moderate.",
+  "recommendation": "Hedge the Discussion sentence that cites Lopez and Chen [8] and avoid building new work on it, because the editors say they have been made aware of concerns regarding some of the data reported in the article and the notice does not say which data. Keep tracking, since the matter is being looked into.",
+  "assessment": {
+    "prompt_version": 9,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 51,
+          "about_this_paper": "yes",
+          "what_changed": "The journal's editors published an expression of concern saying they have been made aware of concerns about some of the data in the article, and that the matter is being looked into. It doesn't say which data.",
+          "scope": "unclear",
+          "affected_parts": [],
+          "severity": "medium",
+          "reason": "An expression of concern about data puts the findings in doubt, but the notice names no figure or dataset and no outcome yet, so the affected parts can't be identified.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The editors have been made aware of concerns regarding some of the data reported in this article."
+            },
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The matter is being looked into and we will update readers when more information is available."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "medium",
+      "summary": "The journal's editors issued an expression of concern about the paper. They say concerns have been raised about some of the data and that the matter is being looked into. The notice doesn't say which data, so it's unclear whether the forced-swim result in Figure 3 or the bacterial counts in Figure 4 are involved.",
+      "claims": [
+        {
+          "text": "The editors issued an expression of concern saying concerns have been raised about some of the data reported in the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The editors have been made aware of concerns regarding some of the data reported in this article."
+            }
+          ]
+        },
+        {
+          "text": "The editors say the matter is being looked into and readers will be updated when more information is available.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The matter is being looked into and we will update readers when more information is available."
+            }
+          ]
+        },
+        {
+          "text": "The notice does not say which data are concerned.",
+          "passages": []
+        },
+        {
+          "text": "The paper's abstract reports the forced-swim result in Figure 3, and its Results section says Figure 4 shows bacterial counts.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Figure 3 shows immobility time; Figure 4 shows bacterial counts."
+            },
+            {
+              "source": "stored paper",
+              "quote": "made recipient mice less active in a forced-swim test (Figure 3)."
+            }
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[8] Lopez, D., Chen, W. (2022). Gut bacteria and mood in mice. J. Fake Microbiology.",
+      "uses": [
+        {
+          "section": "1. Discussion",
+          "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice. Our own proposal builds on this finding.",
+          "role": "key_evidence",
+          "claim_relied_on": "that transplanting gut bacteria reduced activity in recipient mice, supporting a causal role of gut bacteria in depressive behaviour and underpinning the researcher's own proposal",
+          "affected": "unclear",
+          "reason": "The notice raises concerns about unspecified data in the article, so it is unclear whether the forced-swim result the draft relies on is involved."
+        }
+      ],
+      "impact_level": "medium",
+      "explanation": "Your Discussion cites Lopez and Chen [8] as showing reduced activity in recipient mice, and says your own proposal builds on this finding. The paper's abstract reports that result from a forced-swim test (Figure 3). The editors have been made aware of concerns regarding some of the data reported in the article, and the notice does not say which data. It is therefore uncertain whether the result you rely on is involved. Because your Discussion and proposal lean on this finding, the impact is moderate.",
+      "claims": [
+        {
+          "text": "The draft's Discussion cites Lopez and Chen [8] as having shown reduced activity in recipient mice, and says its own proposal builds on this finding.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice. Our own proposal builds on this finding."
+            }
+          ]
+        },
+        {
+          "text": "The stored paper's abstract reports that transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test (Figure 3).",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Transplanting gut bacteria from depressed donors made recipient mice less active in a"
+            },
+            {
+              "source": "stored paper",
+              "quote": "forced-swim test (Figure 3)."
+            }
+          ]
+        },
+        {
+          "text": "The editors say they have been made aware of concerns regarding some of the data reported in the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The editors have been made aware of concerns regarding some of the data reported in this article."
+            }
+          ]
+        },
+        {
+          "text": "The notice does not say which data are concerned.",
+          "passages": []
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Hedge the wording of the sentence that cites Lopez and Chen [8] as having shown reduced activity in recipient mice (for example, say the result is under an expression of concern), and cite the editors' notice alongside it.",
+          "where": "1. Discussion, 'notably Lopez and Chen [8], who showed reduced activity in recipient mice.'"
+        },
+        {
+          "action": "Do not build new work on this finding: soften or rework the statement that your proposal builds on it, and discuss with your co-authors or supervisor whether the proposal can stand without it.",
+          "where": "1. Discussion, 'Our own proposal builds on this finding.'"
+        },
+        {
+          "action": "Keep tracking the paper; a retraction or an outcome of the editors' inquiry would raise a new alert, and then re-check the claim.",
+          "where": null
+        }
+      ],
+      "recommendation": "Hedge the Discussion sentence that cites Lopez and Chen [8] and avoid building new work on it, because the editors say they have been made aware of concerns regarding some of the data reported in the article and the notice does not say which data. Keep tracking, since the matter is being looked into.",
+      "claims": [
+        {
+          "text": "The draft's Discussion cites Lopez and Chen [8] as having shown reduced activity in recipient mice, and says its own proposal builds on this finding.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice. Our own proposal builds on this finding."
+            }
+          ]
+        },
+        {
+          "text": "The editors say they have been made aware of concerns regarding some of the data reported in the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The editors have been made aware of concerns regarding some of the data reported in this article."
+            }
+          ]
+        },
+        {
+          "text": "The notice does not say which data are concerned.",
+          "passages": []
+        },
+        {
+          "text": "The editors say the matter is being looked into and readers will be updated when more information is available.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2022.005e",
+              "quote": "The matter is being looked into and we will update readers when more information is available."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The editors issued an expression of concern saying concerns have been raised about some of the data reported in the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The editors say the matter is being looked into and readers will be updated when more information is available.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The matter is being looked into and we will update readers when more information is available.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The notice does not say which data are concerned.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The paper's abstract reports the forced-swim result in Figure 3, and its Results section says Figure 4 shows bacterial counts.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Figure 3 shows immobility time; Figure 4 shows bacterial counts.",
+          "page": 1,
+          "verified": "verbatim"
+        },
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "made recipient mice less active in a forced-swim test (Figure 3).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft's Discussion cites Lopez and Chen [8] as having shown reduced activity in recipient mice, and says its own proposal builds on this finding.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice. Our own proposal builds on this finding.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The stored paper's abstract reports that transplanting gut bacteria from depressed donors made recipient mice less active in a forced-swim test (Figure 3).",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Transplanting gut bacteria from depressed donors made recipient mice less active in a",
+          "page": 1,
+          "verified": "verbatim"
+        },
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "forced-swim test (Figure 3).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The editors say they have been made aware of concerns regarding some of the data reported in the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The notice does not say which data are concerned.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The draft's Discussion cites Lopez and Chen [8] as having shown reduced activity in recipient mice, and says its own proposal builds on this finding.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "notably Lopez and Chen [8], who showed reduced activity in recipient mice. Our own proposal builds on this finding.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The editors say they have been made aware of concerns regarding some of the data reported in the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The editors have been made aware of concerns regarding some of the data reported in this article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The notice does not say which data are concerned.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "The editors say the matter is being looked into and readers will be updated when more information is available.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The matter is being looked into and we will update readers when more information is available.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

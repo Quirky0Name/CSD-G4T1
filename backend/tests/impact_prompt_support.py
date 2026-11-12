@@ -79,7 +79,7 @@ CHANGE = ChangeAssessment.model_validate(
         "alerts": [],
         "relations": None,
         "severity": "high",
-        "summary": "The paper was retracted.",
+        "summary": [{"text": "The paper was retracted.", "kind": "fact", "claims": [1]}],
         "claims": [
             {
                 "text": "The paper was retracted.",
@@ -96,7 +96,9 @@ IMPACT = ImpactAssessment.model_validate(
         "reference_entry": "Gautret P, et al. Int J Antimicrob Agents. 2020.",
         "uses": [],
         "impact_level": "medium",
-        "explanation": "Your Discussion relies on its viral clearance results.",
+        "explanation": [
+            {"text": "Your Discussion relies on its viral clearance results.", "kind": "fact", "claims": [1]}
+        ],
         "claims": [{"text": "Your Discussion relies on its viral clearance results.", "passages": []}],
     }
 )

@@ -1,0 +1,88 @@
+{
+  "runs": {
+    "04_retraction_flag_no_notice__run1": {
+      "started_at": "2026-11-12T06:15:34.192673+00:00",
+      "prompt_version": 15,
+      "prompt_sha256": "0d0ba2bee70eb2d258ed45cfa51981735f412d792767630927352b07dbe52cdb",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "035a36c911b70ad7603e1dc940f593286b9dd14d7ae6619cb73b91510ce0582b"
+    },
+    "04_retraction_flag_no_notice__run2": {
+      "started_at": "2026-11-12T06:16:02.886155+00:00",
+      "prompt_version": 15,
+      "prompt_sha256": "0d0ba2bee70eb2d258ed45cfa51981735f412d792767630927352b07dbe52cdb",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "035a36c911b70ad7603e1dc940f593286b9dd14d7ae6619cb73b91510ce0582b"
+    },
+    "04_retraction_flag_no_notice__run3": {
+      "started_at": "2026-11-12T06:16:27.693349+00:00",
+      "prompt_version": 15,
+      "prompt_sha256": "0d0ba2bee70eb2d258ed45cfa51981735f412d792767630927352b07dbe52cdb",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "035a36c911b70ad7603e1dc940f593286b9dd14d7ae6619cb73b91510ce0582b"
+    },
+    "12_misleading_typographical_notice__run1": {
+      "started_at": "2026-11-12T06:16:52.147139+00:00",
+      "prompt_version": 15,
+      "prompt_sha256": "0d0ba2bee70eb2d258ed45cfa51981735f412d792767630927352b07dbe52cdb",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "6989e76084bc29cfb764806be06a3fe3f6fc49f820ec5fe2fc6ba63932deb3c2"
+    },
+    "12_misleading_typographical_notice__run2": {
+      "started_at": "2026-11-12T06:17:35.370387+00:00",
+      "prompt_version": 15,
+      "prompt_sha256": "0d0ba2bee70eb2d258ed45cfa51981735f412d792767630927352b07dbe52cdb",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "6989e76084bc29cfb764806be06a3fe3f6fc49f820ec5fe2fc6ba63932deb3c2"
+    },
+    "12_misleading_typographical_notice__run3": {
+      "started_at": "2026-11-12T06:18:13.169512+00:00",
+      "prompt_version": 15,
+      "prompt_sha256": "0d0ba2bee70eb2d258ed45cfa51981735f412d792767630927352b07dbe52cdb",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "6989e76084bc29cfb764806be06a3fe3f6fc49f820ec5fe2fc6ba63932deb3c2"
+    }
+  }
+}

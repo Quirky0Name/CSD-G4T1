@@ -125,6 +125,6 @@
         "says the paper's images or data were found to be duplicated or unreliable"
       ]
     },
-    "why": "Rubric: the report's severity is lower than its highest alert when a later notice resolves an earlier one. The later notice says the retraction \"was issued in error\", that \"the article is reinstated\" and that the publisher \"found no problems\" with its images and data, so the retraction is resolved like a lifted concern (case 17) and the report is none. Crossref has no reinstatement type, so the pipeline keeps the high retraction alert (key retraction) and raises the reinstatement only as a medium other:addendum alert; a model that just takes the highest alert says high (RE-changes-explained.md §1, R8; §7 item 13). Severity none stops the pipeline before the draft is read."
+    "why": "Rubric: the report's severity is lower than its highest alert when a later notice resolves an earlier one. The later notice says the retraction \"was issued in error\", that \"the article is reinstated\" and that the publisher \"found no problems\" with its images and data, so the retraction is resolved like a lifted concern and the report is none. Crossref has no reinstatement type, so the pipeline keeps the high retraction alert (key retraction) and raises the reinstatement only as a medium other:addendum alert; a model that just takes the highest alert says high (RE-changes-explained.md §1, R8; §7 item 13). Severity none stops the pipeline before the draft is read."
   }
 }

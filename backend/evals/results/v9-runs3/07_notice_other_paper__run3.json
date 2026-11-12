@@ -1,0 +1,144 @@
+{
+  "change_summary": "The retraction notice retracts \"Mindfulness training improves sleep quality in nurses\", not the tracked exam-anxiety paper. The notice says it was retracted because the data could not be verified. Nothing given shows a change to the tracked paper.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 9,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 71,
+          "about_this_paper": "no",
+          "what_changed": "The notice is a retraction of a different article, 'Mindfulness training improves sleep quality in nurses', not the tracked paper on exam anxiety in undergraduates.",
+          "scope": "administrative",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "The notice's Crossref title names a different article than the tracked paper, so the title shows it is about another article, even though its update-to data lists this paper.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2021.700r",
+              "quote": "RETRACTED: Mindfulness training improves sleep quality in nurses"
+            },
+            {
+              "source": "stored paper",
+              "quote": "Mindfulness training reduces exam anxiety in undergraduates"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "none",
+      "summary": "The retraction notice retracts \"Mindfulness training improves sleep quality in nurses\", not the tracked exam-anxiety paper. The notice says it was retracted because the data could not be verified. Nothing given shows a change to the tracked paper.",
+      "claims": [
+        {
+          "text": "The notice's Crossref title is 'RETRACTED: Mindfulness training improves sleep quality in nurses'.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.700r",
+              "quote": "RETRACTED: Mindfulness training improves sleep quality in nurses"
+            }
+          ]
+        },
+        {
+          "text": "The tracked paper is titled 'Mindfulness training reduces exam anxiety in undergraduates'.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Mindfulness training reduces exam anxiety in undergraduates"
+            }
+          ]
+        },
+        {
+          "text": "The notice says the article was retracted because the data could not be verified.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.700r",
+              "quote": "This article has been retracted because the data could not be verified."
+            }
+          ]
+        },
+        {
+          "text": "No notice or document given shows a change to the tracked paper.",
+          "passages": []
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The notice's Crossref title is 'RETRACTED: Mindfulness training improves sleep quality in nurses'.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "RETRACTED: Mindfulness training improves sleep quality in nurses",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The tracked paper is titled 'Mindfulness training reduces exam anxiety in undergraduates'.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Mindfulness training reduces exam anxiety in undergraduates",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The notice says the article was retracted because the data could not be verified.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted because the data could not be verified.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "No notice or document given shows a change to the tracked paper.",
+      "supported": false,
+      "passages": []
+    }
+  ]
+}

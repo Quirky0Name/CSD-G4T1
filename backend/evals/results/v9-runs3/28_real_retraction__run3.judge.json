@@ -1,0 +1,249 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the paper was retracted because of concerns about peer review integrity or manipulation of the publication process, which call the validity of its reported results into question",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"PLOS ONE retracted this article because of concerns about peer review integrity and possible manipulation of the publication process. The editors say these concerns call into question the validity and provenance of the reported results.\""
+    },
+    {
+      "fact": "says the draft's choice of an LSTM detector in Section 3, and the model settings in Section 4, rest on the retracted paper's reported results",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Your draft cites Dutta [14] as the main evidence for choosing an LSTM in Section 3 and takes its model settings as the starting configuration in Section 4.\" and \"your model choice and your starting settings rest on this paper.\""
+    },
+    {
+      "fact": "tells the researcher to remove or replace the citation and to re-justify or re-check the choice of detector and its settings, for example with their own model comparison",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Replace the evidence and don't rely on the reported settings without another source.\""
+    },
+    {
+      "fact": "says the paper was retracted for data fabrication, plagiarism or image problems",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the reported results can still be relied on",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The answer says the concerns \"call into question the validity and provenance of the reported results\" and advises not relying on the reported settings without another source."
+    },
+    {
+      "fact": "says no action is needed",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The PLOS One Editors retract this article [1] because it was identified as one of a series of submissions for which we have concerns about peer review integrity",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states the retraction is because of concerns about peer review integrity, matching the core of the claim. It does not mention manipulation of the publication process, but the reason it gives is the same."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "These concerns call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the concerns call into question the validity and provenance of the reported results. 'These concerns' refers back to the stated peer review concerns, so this matches the claim."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The author either did not respond directly or could not be reached.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the author either did not respond directly or could not be reached, which matches the claim."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Retraction: Detecting phishing websites using machine learning technique",
+      "backs": true,
+      "pass": true,
+      "reason": "The title identifies the notice as a retraction of this article. It shows the retraction is of this article, though not explicitly that it covers the whole article; that is the usual reading of a titled retraction of the article."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says the main evidence for its choice comes from Dutta [14], who built the LURL RNN-LSTM detector. This matches the claim."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "LURL has produced an average of\n97.4% and 96.8% for Phishtank and Crawler datasets respectively.",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper says LURL produced averages of 97.4% and 96.8% for Phishtank and Crawler datasets. The quote does not say 'accuracy' explicitly, but the figures match the claim."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says it starts from Dutta's LURL settings: two LSTM layers, hidden size 650, learning rate 1.0, decay 0.73. This matches the claim."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "lr_decay = 0.73batch_size = 2, num_steps = 31,",
+      "backs": false,
+      "pass": false,
+      "reason": "The quote shows only lr_decay = 0.73, batch_size and num_steps. It does not show learning rate 1.0 or hidden size 650, and does not refer to Table 2, so it does not back the full claim."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "The PLOS One Editors retract this article [1] because it was identified as one of a series of submissions for which we have concerns about peer review integrity",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states the retraction is because of concerns about peer review integrity, matching the claim."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "These concerns call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the concerns call into question the validity and provenance of the reported results, matching the claim."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "The PLOS One Editors retract this article [1] because it was identified as one of a series of submissions for which we have concerns about peer review integrity",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states the retraction is because of concerns about peer review integrity, matching the claim."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "These concerns call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the concerns call into question the validity and provenance of the reported results, matching the claim."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says the main evidence for its LSTM choice comes from Dutta [14], who built the LURL detector. This matches the claim."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says it starts from Dutta's LURL settings: hidden size 650, learning rate 1.0, decay 0.73. This matches the claim."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "PLOS ONE retracted this article because of concerns about peer review integrity and possible manipulation of the publication process.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The editors say these concerns call into question the validity and provenance of the reported results.",
+      "covered_by": [
+        "change-1",
+        "impact-5",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The author did not respond or could not be reached.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction covers the whole article, not a single part.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your draft cites Dutta [14] as the main evidence for choosing an LSTM in Section 3 and takes its model settings as the starting configuration in Section 4.",
+      "covered_by": [
+        "impact-0",
+        "impact-2",
+        "action-2",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper has been retracted over concerns about peer review integrity, and the editors say these concerns call into question the validity and provenance of the reported results.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "impact-4",
+        "impact-5",
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Both uses (the Section 3 LSTM choice and the Section 4 starting settings) are touched by the retraction.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your model choice and your starting settings rest on this paper.",
+      "covered_by": [
+        "impact-0",
+        "impact-2",
+        "action-2",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "PLOS ONE retracted the article and the editors say the concerns \"call into question the validity and provenance of the reported results\".",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "impact-4",
+        "impact-5",
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The Section 3 choice and the Section 4 starting settings rest on this paper.",
+      "covered_by": [
+        "impact-0",
+        "impact-2",
+        "action-2",
+        "action-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

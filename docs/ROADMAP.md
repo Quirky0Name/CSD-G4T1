@@ -145,6 +145,9 @@ most needed first within each.
   each prompt change. Add
   cases from real PDFs (the cases are text turned into simple PDFs) and
   for the investigation side (which documents get fetched).
+- [ ] Evals: add a case for a `new_version` alert (none since the eval set
+  was cut to 24 cases on 2026-11-07; case 11 only has a `new_version`
+  document), ideally comparing two real PDFs.
 
 ## Original scope not built
 

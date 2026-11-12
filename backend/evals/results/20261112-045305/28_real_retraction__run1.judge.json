@@ -1,0 +1,403 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the paper was retracted because of concerns about peer review integrity or manipulation of the publication process, which call the validity of its reported results into question",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "retracted because it was identified as one of a series of submissions with concerns about peer review integrity and potential manipulation of the publication process... call into question the validity and provenance of the reported results"
+    },
+    {
+      "fact": "says the draft's choice of an LSTM detector in Section 3, and the model settings in Section 4, rest on the retracted paper's reported results",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Section 3 calls Dutta [14] \"the main evidence\" for choosing an LSTM... Section 4 also starts from the LURL settings in [14]"
+    },
+    {
+      "fact": "tells the researcher to remove or replace the citation and to re-justify or re-check the choice of detector and its settings, for example with their own model comparison",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Replace or remove the citation in Section 3 and re-check the detector choice. Raise the Section 4 settings with your co-authors or supervisor"
+    },
+    {
+      "fact": "says the paper was retracted for data fabrication, plagiarism or image problems",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the reported results can still be relied on",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "its findings cannot be relied on"
+    },
+    {
+      "fact": "says no action is needed",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "Replace or remove the citation in Section 3 and re-check the detector choice."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: Detecting phishing websites using machine learning technique",
+      "backs": true,
+      "pass": true,
+      "reason": "Title is a retraction of the same-titled paper."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The PLOS One Editors retract this article [1] because it was identified as one of a series of submissions for which we have concerns about peer review integrity and potential manipulation of the publication process.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the retraction reason."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "These concerns call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the concerns question validity and provenance."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The author either did not respond directly or could not be reached.",
+      "backs": true,
+      "pass": true,
+      "reason": "States author did not respond or could not be reached."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft calls Dutta main evidence, LURL."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "On the strength of these results we chose an LSTM over the character-level convolutional detector",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft chose LSTM on the strength of results, showing reliance on reported results."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "LURL has produced an average of 97.4% and 96.8% for Phishtank and Crawler datasets respectively.",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives both accuracies."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft states the settings from Dutta [14]."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "hidden_size = 650,",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows hidden size 650."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "vocab_size = vocabulary, num_layers = 2",
+      "backs": true,
+      "pass": true,
+      "reason": "Shows num_layers = 2."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "Retraction: Detecting phishing websites using machine learning technique",
+      "backs": true,
+      "pass": true,
+      "reason": "Retraction title."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "These concerns call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "Concerns question validity and provenance."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL",
+      "backs": true,
+      "pass": true,
+      "reason": "Same as passage 5."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "On the strength of these results we chose an LSTM over the character-level convolutional detector",
+      "backs": true,
+      "pass": true,
+      "reason": "Same as passage 6."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73",
+      "backs": true,
+      "pass": true,
+      "reason": "Same as passage 8."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "Retraction: Detecting phishing websites using machine learning technique",
+      "backs": true,
+      "pass": true,
+      "reason": "Retraction title."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "These concerns call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "Validity concern sentence."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 shows it."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 matches."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 matches."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4 matches."
+    },
+    {
+      "claim_id": "impact-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages show main evidence and reliance on results; the accuracy is implied by 'these results'."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 7 matches."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 8 has hidden size 650, rate 1.0, decay 0.73."
+    },
+    {
+      "claim_id": "impact-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 9 and 10 show it."
+    },
+    {
+      "claim_id": "impact-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 11 and 12 show it."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Same as claim 6."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 15 matches."
+    },
+    {
+      "claim_id": "action-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 16, 17 show it."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-4",
+      "from": [
+        "change-0",
+        "change-1",
+        "change-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Retraction of the paper with doubted validity of results; reasonably follows that findings can't be relied on."
+    },
+    {
+      "claim_id": "impact-5",
+      "from": [
+        "impact-0",
+        "impact-1",
+        "impact-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft relies on reported accuracy, which the retraction questions."
+    },
+    {
+      "claim_id": "impact-6",
+      "from": [
+        "impact-2",
+        "impact-3",
+        "impact-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Settings come from the retracted paper, so touched."
+    },
+    {
+      "claim_id": "impact-7",
+      "from": [
+        "impact-5",
+        "impact-6",
+        "impact-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Both uses touched and are central to the draft; high follows."
+    },
+    {
+      "claim_id": "action-3",
+      "from": [
+        "action-0",
+        "action-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from claims 14 and 16."
+    },
+    {
+      "claim_id": "action-4",
+      "from": [
+        "action-1",
+        "action-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Settings are from the retracted paper whose results are questioned."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "PLOS ONE retracted the paper due to peer review integrity concerns and potential manipulation of publication process.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Concerns call into question validity and provenance; author did not respond or could not be reached.",
+      "covered_by": [
+        "change-2",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction covers the whole paper and casts doubt on results so findings cannot be relied on.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Section 3 calls Dutta [14] main evidence for LSTM and relies on LURL accuracy of 97.4% and 96.8%.",
+      "covered_by": [
+        "impact-0",
+        "impact-1",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Section 4 starts from LURL settings in [14] such as hidden size 650, learning rate 1.0 decay 0.73.",
+      "covered_by": [
+        "impact-2",
+        "action-1",
+        "impact-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice retracts the paper and questions validity and provenance.",
+      "covered_by": [
+        "impact-4",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Section 3 and Section 4 uses are touched.",
+      "covered_by": [
+        "impact-5",
+        "impact-6",
+        "action-3",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Impact is high since both justification and starting configuration rest on this paper.",
+      "covered_by": [
+        "impact-7"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Section 3 cites Dutta [14] as main evidence and the notice questions validity, so use is touched.",
+      "covered_by": [
+        "action-0",
+        "action-2",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Section 4 starts from LURL settings in [14] and that use is touched.",
+      "covered_by": [
+        "action-1",
+        "action-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

@@ -1,0 +1,344 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the paper was retracted because of an analysis error that invalidates the main result",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The retraction followed the authors finding a coding error in the analysis that invalidates the main result."
+    },
+    {
+      "fact": "says the impact judgment is general because there is no draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "No draft was uploaded for this project, so this judgment is general rather than based on the researcher's own draft."
+    },
+    {
+      "fact": "recommends uploading the draft so future changes can be judged against it",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Upload your draft for this project so the next change can be judged against how you actually cite each paper."
+    },
+    {
+      "fact": "names a section of the researcher's draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the draft cites the paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "Only conditional: \"if your draft uses it that way\"; it states no draft was uploaded."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: Vitamin D supplements and bone density in older women",
+      "backs": true,
+      "pass": true,
+      "reason": "Title says retraction of the paper."
+    },
+    {
+      "claim_id": "change-0",
+      "quote": "This article has been retracted",
+      "backs": true,
+      "pass": true,
+      "reason": "States article retracted."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "States cause: coding error invalidating main result."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract states the finding."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Retraction: Vitamin D supplements and bone density in older women",
+      "backs": true,
+      "pass": true,
+      "reason": "Retraction title."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "This article has been retracted",
+      "backs": true,
+      "pass": true,
+      "reason": "Retracted."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "Coding error statement."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "Not reproducible statement."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract finding."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Retraction: Vitamin D supplements and bone density in older women",
+      "backs": true,
+      "pass": true,
+      "reason": "Retraction title."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "This article has been retracted",
+      "backs": true,
+      "pass": true,
+      "reason": "Retracted."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "Coding error statement."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "Not reproducible statement."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract finding."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages say retracted."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 matches."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4 matches."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5 matches."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Retracted."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Matches."
+    },
+    {
+      "claim_id": "impact-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Matches."
+    },
+    {
+      "claim_id": "impact-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Matches abstract."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Retracted."
+    },
+    {
+      "claim_id": "action-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Matches."
+    },
+    {
+      "claim_id": "action-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Matches."
+    },
+    {
+      "claim_id": "action-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Matches abstract."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-4",
+      "from": [
+        "change-1",
+        "change-2",
+        "change-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Coding error invalidates main result and not reproducible; so cannot be relied on."
+    },
+    {
+      "claim_id": "impact-5",
+      "from": [
+        "impact-2",
+        "impact-3",
+        "impact-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from the invalidation, non-reproducibility, and the paper's claimed result."
+    },
+    {
+      "claim_id": "impact-6",
+      "from": [
+        "impact-1",
+        "impact-5"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Impact level rests on the retraction and reliance on invalid result; acceptable."
+    },
+    {
+      "claim_id": "impact-7",
+      "from": [
+        "impact-0"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "No draft uploaded implies the judgment is not based on the draft."
+    },
+    {
+      "claim_id": "action-5",
+      "from": [
+        "action-2",
+        "action-3",
+        "action-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from the named claims."
+    },
+    {
+      "claim_id": "action-6",
+      "from": [
+        "action-1",
+        "action-5"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Level rests on retraction and reliance on invalid result."
+    },
+    {
+      "claim_id": "action-7",
+      "from": [
+        "action-0"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "No draft implies general judgment."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper has been retracted.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction followed the authors finding a coding error that invalidates the main result, and the notice says the 2.1% increase was not reproducible.",
+      "covered_by": [
+        "change-1",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The abstract reports 1000 IU daily vitamin D raised hip bone density by 2.1% over a year in 300 women 65+, so the main finding cannot be relied on.",
+      "covered_by": [
+        "change-3",
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper has been retracted, following a coding error that invalidates the main result.",
+      "covered_by": [
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No draft was uploaded for this project, so this judgment is general.",
+      "covered_by": [
+        "action-0",
+        "action-7"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "impact-0",
+    "action-0"
+  ]
+}

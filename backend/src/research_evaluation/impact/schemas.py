@@ -44,14 +44,51 @@ class Evidence(_Answer):
 class Claim(_Answer):
     """One factual statement of a step's answer and the quotes behind it (docs/EVALUATION.md,
     "Impact"). A claim is about anything the step says, not tied to an alert, use or action;
-    a statement with nothing to quote has no passages."""
+    a statement with nothing to quote has no passages. `absence` is the model saying the claim
+    states only that something is missing from the material, so it has nothing to quote.
+    `from_claims` makes it a derived claim: a conclusion (a level, "this use is touched") drawn
+    from the claims it names, numbered from 1 in the same step's list, rather than quoted.
+    `from_change` and `from_impact` name an earlier step's claims the same way (numbered from 1
+    in that step's list), so a later step can build a logical chain on an earlier step's
+    conclusions (impact may name CHANGE's claims; actions CHANGE's and IMPACT's)."""
 
     text: str
     passages: list[Evidence]
+    absence: bool = False
+    from_claims: list[int] = []
+    from_change: list[int] = []
+    from_impact: list[int] = []
 
 
 # every step states at least one thing, so an empty list is an answer that doesn't fit
 Claims = Annotated[list[Claim], Field(min_length=1)]
+
+
+class Sentence(_Answer):
+    """One sentence of a step's free text. A fact names the claims (numbered from 1 in the same
+    step's list) that state it; advice states nothing a quote could show, so it needs none."""
+
+    text: str
+    kind: Literal["fact", "advice"]
+    claims: list[int]
+
+
+Sentences = Annotated[list[Sentence], Field(min_length=1)]
+
+
+def kept(sentences: list[Sentence], claims: list[Claim]) -> list[Sentence]:
+    """The sentences the stored text keeps, in order, leaving out a fact that names no existing
+    claim, since nothing backs it. If that would leave nothing, every sentence is kept."""
+    backed = [
+        s for s in sentences
+        if s.kind == "advice" or any(1 <= n <= len(claims) for n in s.claims)
+    ]
+    return backed or sentences
+
+
+def prose(sentences: list[Sentence], claims: list[Claim]) -> str:
+    """The free text as stored: the kept sentences joined."""
+    return " ".join(s.text.strip() for s in kept(sentences, claims))
 
 
 class AlertJudgment(_Answer):
@@ -69,8 +106,9 @@ class ChangeAssessment(_Answer):
     alerts: list[AlertJudgment]
     relations: str | None
     severity: Level
-    summary: str
+    # claims before the text, so the model writes what it can back before it writes prose
     claims: Claims
+    summary: Sentences
 
 
 # Step 2: how does it impact the researcher?
@@ -90,8 +128,8 @@ class ImpactAssessment(_Answer):
     reference_entry: str | None
     uses: list[Use]
     impact_level: Level
-    explanation: str
     claims: Claims
+    explanation: Sentences
 
 
 # Step 3: what should the researcher do?
@@ -104,8 +142,8 @@ class Action(_Answer):
 
 class RecommendedActions(_Answer):
     actions: list[Action]
-    recommendation: str
     claims: Claims
+    recommendation: Sentences
 
 
 # What the evaluation carries: each step's claims, each quote checked in code (impact/claims.py;

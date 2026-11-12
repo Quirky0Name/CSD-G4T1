@@ -1,8 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { errorMessage, getProfile, saveProfile } from '../api'
 import { ActionButton } from '../components/ActionButton'
+import NotificationSettings from '../components/NotificationSettings'
 import ProfileQuestions from '../components/ProfileQuestions'
 import { useToast } from '../components/Toasts'
+import { Loading, Page, PageHero, Section } from '../components/Page'
+import { PencilSquareIcon, UserIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '../auth'
+import { OTHER } from '../profile/options'
+import { errorPanel, primaryPill, signalLink } from '../ui'
 import { emptyAnswers, fromProfile, toProfile, validateAnswers, type AnswerErrors, type Answers } from '../profile/profileForm'
 
 // The researcher's profile: the sign-up questions, to view, edit or clear. An account with no
@@ -12,9 +18,11 @@ import { emptyAnswers, fromProfile, toProfile, validateAnswers, type AnswerError
 type Load =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; answers: Answers; hasProfile: boolean }
+  // saved is what the server holds, shown in the summary cards; answers is the form, edited in place
+  | { status: 'ready'; answers: Answers; saved: Answers; hasProfile: boolean }
 
 function Profile() {
+  const { session } = useAuth()
   const showToast = useToast()
   const [load, setLoad] = useState<Load>({ status: 'loading' })
   const [errors, setErrors] = useState<AnswerErrors>({})
@@ -30,8 +38,8 @@ function Profile() {
         if (!active) return
         setLoad(
           profile
-            ? { status: 'ready', answers: fromProfile(profile), hasProfile: true }
-            : { status: 'ready', answers: emptyAnswers(), hasProfile: false },
+            ? { status: 'ready', answers: fromProfile(profile), saved: fromProfile(profile), hasProfile: true }
+            : { status: 'ready', answers: emptyAnswers(), saved: emptyAnswers(), hasProfile: false },
         )
       })
       .catch((err: unknown) => {
@@ -61,7 +69,7 @@ function Profile() {
     try {
       // the reply is the profile as stored (trimmed, blanks cleared), so the form shows exactly that
       const saved = await saveProfile(toProfile(load.answers))
-      setLoad({ status: 'ready', answers: fromProfile(saved), hasProfile: true })
+      setLoad({ status: 'ready', answers: fromProfile(saved), saved: fromProfile(saved), hasProfile: true })
       showToast({ tone: 'success', message: 'Your profile is saved.' })
     } catch (err) {
       // the edits stay, so the researcher can fix what the server refused
@@ -71,20 +79,30 @@ function Profile() {
     }
   }
 
-  return (
-    <main className="px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-6 max-w-2xl">
-        <h1 className="text-2xl/7 font-bold text-white sm:text-3xl sm:tracking-tight">Your profile</h1>
-        <p className="mt-2 text-sm/6 text-gray-400">
-          Your answers shape how your reports are written. Every question is optional, and changes apply to reports
-          assessed from now on.
-        </p>
-      </div>
+  const saved = load.status === 'ready' ? load.saved : null
+  const occupation = saved ? (saved.occupation === OTHER ? saved.occupationOther.trim() || OTHER : saved.occupation) : ''
+  const joined = session?.user.created_at && !Number.isNaN(Date.parse(session.user.created_at)) ? formatDate(session.user.created_at) : null
 
-      {load.status === 'loading' && <p className="text-sm text-gray-400">Loading your profile…</p>}
+  return (
+    <Page
+      hero={
+        <PageHero
+          tag="Researcher"
+          initial={(session?.user.email?.[0] ?? 'U').toUpperCase()}
+          title="Your profile"
+          description="Your answers shape how your reports are written. Every question is optional, and changes apply to reports assessed from now on."
+          facts={[
+            { label: 'Email', value: session?.user.email ?? 'Not available' },
+            { label: 'Occupation', value: occupation || 'Not set' },
+          ]}
+          factsEnd={joined && <span>Member since {joined}</span>}
+        />
+      }
+    >
+      {load.status === 'loading' && <Loading label="Loading your profile…" />}
 
       {load.status === 'error' && (
-        <div className="flex max-w-2xl flex-wrap items-center gap-3 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">
+        <div className={`flex flex-wrap items-center gap-3 ${errorPanel}`}>
           <p role="alert" className="min-w-0 flex-1">
             Couldn't load your profile: {load.message}
           </p>
@@ -93,28 +111,68 @@ function Profile() {
       )}
 
       {load.status === 'ready' && (
-        <form onSubmit={handleSave} className="max-w-2xl space-y-8">
-          {!load.hasProfile && (
-            <p className="rounded-md bg-indigo-500/10 px-3 py-2 text-sm text-indigo-300 outline outline-indigo-500/20">
-              You haven't filled in your profile yet.
-            </p>
-          )}
+        <div className="space-y-5 sm:space-y-6">
+          <div className="grid items-stretch gap-5 sm:gap-6 md:grid-cols-[minmax(0,1fr)_17rem]">
+            <Section id="about-work" title="About your work" icon={UserIcon} index={1}>
+              <dl className="space-y-2.5 text-sm/6">
+                <Line label="Research fields" value={load.saved.researchFields.join(', ')} />
+                <Line label="Research interests" value={load.saved.researchInterests.join(', ')} />
+                <Line label="Type of work" value={load.saved.workTypes.join(', ')} />
+              </dl>
+            </Section>
 
-          <ProfileQuestions answers={load.answers} onChange={edit} errors={errors} />
+            {/* the narrow card: how reports are written, or a pointer to the question when nothing is set */}
+            <Section id="report-voice" title="Report voice" index={2} className="flex flex-col">
+              {load.saved.responsePreferences.trim() ? (
+                <p className="line-clamp-6 text-sm/6 text-gray-300">{load.saved.responsePreferences.trim()}</p>
+              ) : (
+                <p className="text-sm/6 text-gray-400">
+                  No preference yet, so reports use their default voice.{' '}
+                  <a href="#edit-answers" className={signalLink}>
+                    Set one below
+                  </a>
+                </p>
+              )}
+            </Section>
+          </div>
 
-          {saveError && (
-            <p role="alert" className="text-sm text-red-400">
-              {saveError}
-            </p>
-          )}
+          <NotificationSettings index={3} />
 
-          <ActionButton type="submit" tone="primary" disabled={saving}>
-            {saving ? 'Saving…' : 'Save'}
-          </ActionButton>
-        </form>
+          <Section id="edit-answers" title="Edit your answers" icon={PencilSquareIcon} index={4}>
+            <form onSubmit={handleSave} className="max-w-3xl space-y-8">
+              <ProfileQuestions answers={load.answers} onChange={edit} errors={errors} />
+
+              {saveError && (
+                <p role="alert" className={errorPanel}>
+                  {saveError}
+                </p>
+              )}
+
+              <div className="border-t border-white/10 pt-6">
+                <button type="submit" disabled={saving} className={`w-full sm:w-auto ${primaryPill}`}>
+                  {saving ? 'Saving…' : 'Save profile'}
+                </button>
+              </div>
+            </form>
+          </Section>
+        </div>
       )}
-    </main>
+    </Page>
   )
+}
+
+// "Label: value", the reference's About lines; an empty answer says so rather than leaving a gap
+function Line({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-wrap gap-x-1.5">
+      <dt className="font-semibold text-gray-200">{label}:</dt>
+      <dd className={value ? 'text-gray-400' : 'text-gray-500 italic'}>{value || 'Not answered'}</dd>
+    </div>
+  )
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { dateStyle: 'medium' })
 }
 
 export default Profile

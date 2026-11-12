@@ -1,0 +1,121 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the draft does not cite the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The draft does not cite the tracked paper, High-yield ethanol extraction of curcumin from turmeric, in its reference list or in its text.\" (evaluation)"
+    },
+    {
+      "fact": "says no action is needed for the draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No action is needed for this draft, and you can dismiss the alert.\" (recommendation)"
+    },
+    {
+      "fact": "says the draft cites the retracted paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing the 2021 review from the reference list",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted title reads 'Retraction: High-yield ethanol extraction of curcumin from turmeric', which shows the notice is a retraction of that paper."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice says the article was retracted because the reported yields could not be reproduced and the raw data were found to have been altered, which matches the claim."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted sentence from the tracked paper says a single ethanol extraction recovered 94% of the curcumin in turmeric powder, a yield result as the claim describes."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted notice gives the same retraction reason (irreproducible yields and altered raw data), which matches the claim."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The notice is titled as a retraction of the tracked paper, High-yield ethanol extraction of curcumin from turmeric.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "covered_by": [
+        "change-1",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's abstract reports that a single ethanol extraction recovered 94% of the curcumin in turmeric powder, a yield result.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft does not cite the tracked paper, High-yield ethanol extraction of curcumin from turmeric, in its reference list or in its text.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft does not cite the tracked paper, High-yield ethanol extraction of curcumin from turmeric, in its reference list or in its text.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "covered_by": [
+        "change-1",
+        "action-1"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "impact-0",
+    "action-0"
+  ]
+}

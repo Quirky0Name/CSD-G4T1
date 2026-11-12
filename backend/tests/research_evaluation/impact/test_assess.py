@@ -41,6 +41,7 @@ from research_evaluation.impact.schemas import (
     ChangeAssessment,
     ImpactAssessment,
     RecommendedActions,
+    Sentence,
 )
 from research_evaluation.investigation.crossref import CrossrefRecord, fetch_record
 from research_evaluation.storage import AlertInReport, Chunk, DocumentInReport, PaperDetails, Report
@@ -73,7 +74,7 @@ def change_answer(severity: str = "high", alert_severity: str | None = None) -> 
             ],
             "relations": None,
             "severity": severity,
-            "summary": "The paper was retracted because its results can't be relied on.",
+            "summary": [{"text": "The paper was retracted because its results can't be relied on.", "kind": "fact", "claims": [1]}],
             "claims": [
                 {
                     "text": "The paper was retracted.",
@@ -99,7 +100,7 @@ IMPACT = ImpactAssessment.model_validate(
             }
         ],
         "impact_level": "high",
-        "explanation": "Your Discussion rests on a retracted result.",
+        "explanation": [{"text": "Your Discussion rests on a retracted result.", "kind": "fact", "claims": [1]}],
         "claims": [
             {
                 "text": "Your Discussion rests on the retracted result.",
@@ -113,7 +114,7 @@ IMPACT = ImpactAssessment.model_validate(
 ACTIONS = RecommendedActions.model_validate(
     {
         "actions": [{"action": "Remove the citation and re-check the claim.", "where": "Discussion"}],
-        "recommendation": "Replace the citation in the Discussion.",
+        "recommendation": [{"text": "Replace the citation in the Discussion.", "kind": "fact", "claims": [1]}],
         "claims": [
             {
                 "text": "The citation in the Discussion should be replaced.",
@@ -313,7 +314,7 @@ async def test_severity_none_stops_after_one_call_and_never_reads_the_draft(sm):
     assert len(llm.calls) == 1
     assert sm.calls("GET", "/draft") == 0
     body = evaluation.model_dump(mode="json")
-    assert body["change_summary"] == change_answer("none").summary
+    assert body["change_summary"] == change_answer("none").summary[0].text
     assert body["change_severity"] == "none"
     assert body["impact_level"] is None
     assert body["evaluation"] is None and body["recommendation"] is None
@@ -378,7 +379,7 @@ async def test_step_three_gets_steps_one_and_two_and_no_pdfs(sm):
     assert parts[-1] == ACTIONS_TASK
     text = texts(parts)
     assert "CHANGE" in text and "IMPACT" in text
-    assert IMPACT.explanation in text and change_answer().summary in text
+    assert IMPACT.explanation[0].text in text and change_answer().summary[0].text in text
     assert "The researcher's draft was read." in text
     assert pdfs(parts) == []
     assert llm.calls[2]["system"] == SYSTEM
@@ -402,11 +403,11 @@ async def test_the_body_maps_each_steps_answer_to_its_field(sm):
     evaluation = await assess(llm, sm.client, await inputs_for(sm))
 
     body = evaluation.model_dump(mode="json")
-    assert body["change_summary"] == change_answer("medium").summary
+    assert body["change_summary"] == "The paper was retracted because its results can't be relied on."
     assert body["change_severity"] == "medium"
     assert body["impact_level"] == IMPACT.impact_level
-    assert body["evaluation"] == IMPACT.explanation
-    assert body["recommendation"] == ACTIONS.recommendation
+    assert body["evaluation"] == "Your Discussion rests on a retracted result."
+    assert body["recommendation"] == "Replace the citation in the Discussion."
     assessment = body["assessment"]
     assert assessment["draft"] == "read"
     assert assessment["change"] == change_answer("medium").model_dump(mode="json")
@@ -416,6 +417,24 @@ async def test_the_body_maps_each_steps_answer_to_its_field(sm):
         "attached": ["stored paper", "current copy"],
         "left_out": [{"pdf": "new version 10.1/v2", "why": "not stored (not_found)"}],
     }
+
+
+async def test_a_stored_text_leaves_out_a_fact_sentence_that_names_no_claim(sm):
+    impact = IMPACT.model_copy(
+        update={
+            "explanation": [
+                Sentence(text="Your Discussion rests on a retracted result.", kind="fact", claims=[1]),
+                Sentence(text="So your whole argument fails.", kind="fact", claims=[]),
+            ]
+        }
+    )
+    llm = fake(sm, overrides={ImpactAssessment: impact})
+
+    evaluation = await assess(llm, sm.client, await inputs_for(sm))
+
+    assert evaluation.evaluation == "Your Discussion rests on a retracted result."
+    # the model's own answer is kept whole in the assessment, so what was left out can be seen
+    assert len(evaluation.assessment["impact"]["explanation"]) == 2
 
 
 async def test_pdfs_over_the_budget_are_left_out_in_priority_order(sm, monkeypatch):
@@ -518,6 +537,22 @@ def test_a_citation_jumps_alert_line_carries_its_counts_and_a_notices_does_not_c
         "- alert 8: citation_jump, no notice, detected 2026-09-24, alert severity low: "
         "OpenAlex counted 300 new citations of this paper (from 952 to 1252)."
     )
+
+
+def test_a_notices_alert_line_carries_the_notice_date_from_its_description():
+    alert = AlertInReport(
+        id=241,
+        change_type="retraction",
+        change_key="retraction:10.9/x",
+        alert_severity="high",
+        description="This paper has been retracted (notice 10.9/x, 2020-07-01). Its findings should no longer be relied on.",
+        notice_doi="10.9/x",
+        detected_at=datetime(2026, 10, 1, tzinfo=UTC),
+    )
+
+    line = prompts.alerts_block([alert]).splitlines()[1]
+
+    assert line == "- alert 241: retraction, notice 10.9/x, notice dated 2020-07-01, detected 2026-10-01, alert severity high"
 
 
 def test_gemini_may_judge_a_citation_jump_as_about_citations_only():
@@ -926,8 +961,8 @@ def test_non_ascii_answers_are_written_as_they_are():
     assert 'research_interests: ["épidémiologie"]' in block
 
 
-def test_the_prompt_version_is_8():
-    assert PROMPT_VERSION == 8
+def test_the_prompt_version_is_17():
+    assert PROMPT_VERSION == 17
 
 
 # Reading the profile in assess: after the gate, next to the draft; a failed read never fails the

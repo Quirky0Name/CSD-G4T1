@@ -1,0 +1,117 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the notice is about a different article (sleep quality in nurses)",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The retraction notice is for a different article, 'Mindfulness training improves sleep quality in nurses'"
+    },
+    {
+      "fact": "says the tracked paper is not affected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Because the notice is about another article, it does not change the tracked paper."
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "RETRACTED: Mindfulness training improves sleep quality in nurses",
+      "backs": true,
+      "pass": true,
+      "reason": "Title of fetched notice names the retracted article about sleep quality in nurses."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "Mindfulness training reduces exam anxiety in undergraduates",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives the tracked paper's title."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "This article has been retracted because the data could not be verified.",
+      "backs": true,
+      "pass": true,
+      "reason": "States retraction reason: data could not be verified."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 shows the retracted title."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 matches the tracked paper title."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 states the reason."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-3",
+      "from": [
+        "change-0",
+        "change-1"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Titles differ, so the notice concerns another article; follows from claims 1 and 2."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The retraction notice is for a different article, 'Mindfulness training improves sleep quality in nurses', not the tracked exam-anxiety paper.",
+      "covered_by": [
+        "change-0",
+        "change-1",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says that article was retracted because its data could not be verified.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Because the notice is about another article, it does not change the tracked paper.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

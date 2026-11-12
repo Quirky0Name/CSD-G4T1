@@ -1,0 +1,674 @@
+{
+  "change_summary": "The paper has been retracted. The retraction followed the authors finding a coding error in the analysis that invalidates the main result, and the notice says the reported 2.1% increase in bone density was not reproducible. The paper's abstract reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year in 300 women aged 65+, so the paper's main finding cannot be relied on.",
+  "change_severity": "high",
+  "impact_level": "high",
+  "evaluation": "No draft was uploaded for this project, so this judgment is general rather than based on the researcher's own draft. The paper has been retracted, and the retraction followed the authors finding a coding error in the analysis that invalidates the main result. The paper reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year in 300 women aged 65+, while the notice says the reported 2.1% increase in bone density was not reproducible. A researcher who cites the paper as key evidence for its 2.1% hip bone density increase is relying on a result the retraction says is invalid and not reproducible, so for a typical researcher who cites it that way the impact is high.",
+  "recommendation": "The paper has been retracted, and the retraction followed the authors finding a coding error in the analysis that invalidates the main result. A researcher who cites the paper as key evidence for its 2.1% hip bone density increase is relying on a result the retraction says is invalid and not reproducible, so if your draft uses it that way, remove or replace the citation and re-check the claim it supported. No draft was uploaded for this project, so this judgment is general rather than based on the researcher's own draft. Upload your draft for this project so the next change can be judged against how you actually cite each paper.",
+  "assessment": {
+    "prompt_version": 13,
+    "model": "opus",
+    "model_version": "claude-opus-5-5",
+    "answered_by": {
+      "change": "opus",
+      "impact": "opus",
+      "actions": "opus"
+    },
+    "placeholder": false,
+    "draft": "none",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 81,
+          "about_this_paper": "yes",
+          "what_changed": "The paper was retracted after the authors found a coding error in the analysis that invalidates the main result; the reported 2.1% increase in bone density was not reproducible.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "A retraction for an analysis error that invalidates the main result means the paper's findings, including the 2.1% hip bone density increase, cannot be relied on.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "Retraction: Vitamin D supplements and bone density in older women"
+            },
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result."
+            },
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "The reported 2.1% increase in bone density was not reproducible."
+            },
+            {
+              "source": "stored paper",
+              "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "claims": [
+        {
+          "text": "The paper has been retracted.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "Retraction: Vitamin D supplements and bone density in older women"
+            },
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "This article has been retracted"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The retraction followed the authors finding a coding error in the analysis that invalidates the main result.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The notice says the reported 2.1% increase in bone density was not reproducible.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "The reported 2.1% increase in bone density was not reproducible."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The paper's abstract reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year in 300 women aged 65+.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The paper's main finding cannot be relied on.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            2,
+            3,
+            4
+          ]
+        }
+      ],
+      "summary": [
+        {
+          "text": "The paper has been retracted.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The retraction followed the authors finding a coding error in the analysis that invalidates the main result, and the notice says the reported 2.1% increase in bone density was not reproducible.",
+          "kind": "fact",
+          "claims": [
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The paper's abstract reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year in 300 women aged 65+, so the paper's main finding cannot be relied on.",
+          "kind": "fact",
+          "claims": [
+            4,
+            5
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": false,
+      "reference_entry": null,
+      "uses": [],
+      "impact_level": "high",
+      "claims": [
+        {
+          "text": "No draft was uploaded for this project.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "The paper has been retracted.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "Retraction: Vitamin D supplements and bone density in older women"
+            },
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "This article has been retracted"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The retraction followed the authors finding a coding error in the analysis that invalidates the main result.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The notice says the reported 2.1% increase in bone density was not reproducible.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "The reported 2.1% increase in bone density was not reproducible."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The paper reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year in 300 women aged 65+.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "A researcher who cites the paper as key evidence for its 2.1% hip bone density increase is relying on a result the retraction says is invalid and not reproducible.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "text": "For a typical researcher who cites the paper as key evidence, the impact is high.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            2,
+            6
+          ]
+        },
+        {
+          "text": "This judgment is general rather than based on the researcher's own draft.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1
+          ]
+        }
+      ],
+      "explanation": [
+        {
+          "text": "No draft was uploaded for this project, so this judgment is general rather than based on the researcher's own draft.",
+          "kind": "fact",
+          "claims": [
+            1,
+            8
+          ]
+        },
+        {
+          "text": "The paper has been retracted, and the retraction followed the authors finding a coding error in the analysis that invalidates the main result.",
+          "kind": "fact",
+          "claims": [
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The paper reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year in 300 women aged 65+, while the notice says the reported 2.1% increase in bone density was not reproducible.",
+          "kind": "fact",
+          "claims": [
+            5,
+            4
+          ]
+        },
+        {
+          "text": "A researcher who cites the paper as key evidence for its 2.1% hip bone density increase is relying on a result the retraction says is invalid and not reproducible, so for a typical researcher who cites it that way the impact is high.",
+          "kind": "fact",
+          "claims": [
+            6,
+            7
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "If your draft cites this paper as evidence that vitamin D supplements raise bone density, remove or replace the citation and re-check the claim it supported against other studies.",
+          "where": null
+        },
+        {
+          "action": "Upload your draft for this project so the next change can be judged against how you actually use each paper.",
+          "where": null
+        }
+      ],
+      "claims": [
+        {
+          "text": "No draft was uploaded for this project.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "The paper has been retracted.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "Retraction: Vitamin D supplements and bone density in older women"
+            },
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "This article has been retracted"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The retraction followed the authors finding a coding error in the analysis that invalidates the main result.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The notice says the reported 2.1% increase in bone density was not reproducible.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.008r",
+              "quote": "The reported 2.1% increase in bone density was not reproducible."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The paper reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year in 300 women aged 65+.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "A researcher who cites the paper as key evidence for its 2.1% hip bone density increase is relying on a result the retraction says is invalid and not reproducible.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "text": "For a typical researcher who cites the paper as key evidence, the impact is high.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            2,
+            6
+          ]
+        },
+        {
+          "text": "This judgment is general rather than based on the researcher's own draft.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1
+          ]
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "The paper has been retracted, and the retraction followed the authors finding a coding error in the analysis that invalidates the main result.",
+          "kind": "fact",
+          "claims": [
+            2,
+            3
+          ]
+        },
+        {
+          "text": "A researcher who cites the paper as key evidence for its 2.1% hip bone density increase is relying on a result the retraction says is invalid and not reproducible, so if your draft uses it that way, remove or replace the citation and re-check the claim it supported.",
+          "kind": "advice",
+          "claims": []
+        },
+        {
+          "text": "No draft was uploaded for this project, so this judgment is general rather than based on the researcher's own draft.",
+          "kind": "fact",
+          "claims": [
+            1,
+            8
+          ]
+        },
+        {
+          "text": "Upload your draft for this project so the next change can be judged against how you actually cite each paper.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The paper has been retracted.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: Vitamin D supplements and bone density in older women",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The retraction followed the authors finding a coding error in the analysis that invalidates the main result.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The notice says the reported 2.1% increase in bone density was not reproducible.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The reported 2.1% increase in bone density was not reproducible.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The paper's abstract reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year in 300 women aged 65+.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The paper's main finding cannot be relied on.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "No draft was uploaded for this project.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The paper has been retracted.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: Vitamin D supplements and bone density in older women",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The retraction followed the authors finding a coding error in the analysis that invalidates the main result.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The notice says the reported 2.1% increase in bone density was not reproducible.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The reported 2.1% increase in bone density was not reproducible.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The paper reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year in 300 women aged 65+.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "A researcher who cites the paper as key evidence for its 2.1% hip bone density increase is relying on a result the retraction says is invalid and not reproducible.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-6",
+      "kind": "impact",
+      "text": "For a typical researcher who cites the paper as key evidence, the impact is high.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-7",
+      "kind": "impact",
+      "text": "This judgment is general rather than based on the researcher's own draft.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "No draft was uploaded for this project.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The paper has been retracted.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: Vitamin D supplements and bone density in older women",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The retraction followed the authors finding a coding error in the analysis that invalidates the main result.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "The notice says the reported 2.1% increase in bone density was not reproducible.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The reported 2.1% increase in bone density was not reproducible.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-4",
+      "kind": "action",
+      "text": "The paper reports that 1000 IU daily vitamin D raised hip bone density by 2.1% over a year in 300 women aged 65+.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-5",
+      "kind": "action",
+      "text": "A researcher who cites the paper as key evidence for its 2.1% hip bone density increase is relying on a result the retraction says is invalid and not reproducible.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-6",
+      "kind": "action",
+      "text": "For a typical researcher who cites the paper as key evidence, the impact is high.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-7",
+      "kind": "action",
+      "text": "This judgment is general rather than based on the researcher's own draft.",
+      "supported": false,
+      "passages": []
+    }
+  ]
+}

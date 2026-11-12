@@ -1,0 +1,262 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the current copy of the paper carries a retraction or withdrawal banner",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"the current copy's title is marked 'RETRACTED:', which confirms the flag\""
+    },
+    {
+      "fact": "says the reason for the retraction is not stated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No notice or reason for the retraction was provided.\""
+    },
+    {
+      "fact": "tells the researcher to stop and raise it with co-authors or supervisor because the draft's methods depend on the paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"First confirm the retraction on the journal's or publisher's page, then raise it with your co-authors or supervisor, because your own methods depend on this protocol\". The answer does not use the word \"stop\", but it gives the same advice to raise it with co-authors or supervisor because the methods depend on the paper."
+    },
+    {
+      "fact": "states a specific reason for the retraction such as fabrication or error",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "claims a retraction notice was found or quotes one",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The answer says the opposite: \"No retraction notice or stated reason for the retraction was provided.\""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, no notice",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line 'retraction, no notice' shows the alert records a retraction with no notice."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "RETRACTED: Soil carbon gains after winter cover cropping",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched title 'RETRACTED: Soil carbon gains after winter cover cropping' shows the current copy's title is marked 'RETRACTED:'."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Winter cover crops raised topsoil carbon by 6% over three years.",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched current copy's abstract sentence reports the 6% topsoil carbon gain over three years, matching the claim that it still reports this."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Winter cover crops raised topsoil carbon by 6% over three years.",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked (stored) paper contains the same 6% three-year sentence, showing the stored paper matches the abstract claim."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+      "backs": true,
+      "pass": true,
+      "reason": "The researcher's draft says it follows the protocol of Haugen and Rao [5] exactly for soil coring and dry-combustion measurement, matching the claim about the draft citing [5] in Section 2.2. The quote itself does not show the section number, but it is the draft's own text for this passage."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "We describe the sampling and analysis protocol in detail so that it can be reused by other field groups",
+      "backs": true,
+      "pass": true,
+      "reason": "The stored paper says it describes the sampling and analysis protocol in detail so other field groups can reuse it, matching the claim."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "retraction, no notice",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line 'retraction, no notice' shows the alert records a retraction with no notice."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "RETRACTED: Soil carbon gains after winter cover cropping",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched title 'RETRACTED: Soil carbon gains after winter cover cropping' shows the current copy's title is marked 'RETRACTED:'."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's sentence about following Haugen and Rao [5] exactly shows the draft cites that protocol as the one it follows for soil coring and dry combustion."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "retraction, no notice",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line 'retraction, no notice' shows the alert records a retraction with no notice."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "RETRACTED: Soil carbon gains after winter cover cropping",
+      "backs": true,
+      "pass": true,
+      "reason": "The fetched title 'RETRACTED: Soil carbon gains after winter cover cropping' shows the current copy's title is marked 'RETRACTED:'."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The alert records a retraction with no notice.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy's title is marked 'RETRACTED:', which confirms the flag.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No notice or reason for the retraction was provided.",
+      "covered_by": [
+        "change-2",
+        "impact-4",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy's abstract still reports that winter cover crops raised topsoil carbon by 6% over three years, the same as the stored paper.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your draft cites [5] in Section 2.2 as the protocol you follow exactly for soil coring and dry-combustion carbon measurement.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper describes a sampling and analysis protocol in detail for reuse by other field groups.",
+      "covered_by": [
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert records a retraction with no notice.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The current copy's title is marked 'RETRACTED:'.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No notice or reason for the retraction was provided.",
+      "covered_by": [
+        "change-2",
+        "impact-4",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The retraction flag covers the whole paper including the protocol, so this methods use is affected and the impact on your draft is high.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "Your draft cites Haugen and Rao [5] in Section 2.2 as the protocol it follows exactly for soil coring and dry-combustion carbon measurement.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert records a retraction with no notice.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The current copy's title is marked 'RETRACTED:'.",
+      "covered_by": [
+        "change-1",
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No retraction notice or stated reason for the retraction was provided.",
+      "covered_by": [
+        "change-2",
+        "impact-4",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Your own methods depend on this protocol.",
+      "covered_by": [],
+      "pass": false
+    }
+  ],
+  "absent_claims": [
+    "change-2",
+    "impact-4",
+    "action-3"
+  ]
+}

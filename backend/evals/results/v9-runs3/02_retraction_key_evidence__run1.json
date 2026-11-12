@@ -1,0 +1,428 @@
+{
+  "change_summary": "The journal has retracted \"Caffeine improves working memory in adults\". An institutional investigation found that the data in Figures 2 to 4 had been fabricated, and the notice says the conclusions cannot be relied on. The stored paper's results section presents Figures 2 to 4 as showing accuracy by dose, so its headline accuracy finding rests on the fabricated figures. The authors have not responded.",
+  "change_severity": "high",
+  "impact_level": "high",
+  "evaluation": "Your Introduction cites Brown and Kim [3] as showing that 200 mg of caffeine improves working memory by 12%, which is why you chose a 200 mg dose. The stored paper reports that 200 mg caffeine improved n-back accuracy by 12% compared with placebo. The journal has retracted the article, and the notice says the data in Figures 2 to 4 were fabricated and the conclusions cannot be relied on. This is the only citation of it, but it is the stated reason for your dose, so the impact on your draft is high.",
+  "recommendation": "Remove or replace the citation to Brown and Kim [3] in the Introduction, because the journal has retracted the article and the notice says the data in Figures 2 to 4 had been fabricated and the conclusions cannot be relied on. Also re-check the 12% claim your draft uses as the reason for the 200 mg dose.",
+  "assessment": {
+    "prompt_version": 9,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 21,
+          "about_this_paper": "yes",
+          "what_changed": "The journal retracted the article after an institutional investigation found the data in Figures 2 to 4 had been fabricated. The authors have not responded.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "The retraction is for fabricated data in Figures 2 to 4, which show the accuracy results the paper's conclusion rests on, and the notice says the conclusions cannot be relied on.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2019.002r",
+              "quote": "The journal has retracted this article."
+            },
+            {
+              "source": "10.9999/fake.2019.002r",
+              "quote": "the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on"
+            },
+            {
+              "source": "10.9999/fake.2019.002r",
+              "quote": "The authors have not responded."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "summary": "The journal has retracted \"Caffeine improves working memory in adults\". An institutional investigation found that the data in Figures 2 to 4 had been fabricated, and the notice says the conclusions cannot be relied on. The stored paper's results section presents Figures 2 to 4 as showing accuracy by dose, so its headline accuracy finding rests on the fabricated figures. The authors have not responded.",
+      "claims": [
+        {
+          "text": "The journal has retracted the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.002r",
+              "quote": "The journal has retracted this article."
+            }
+          ]
+        },
+        {
+          "text": "An institutional investigation found that the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.002r",
+              "quote": "An institutional investigation found that the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on."
+            }
+          ]
+        },
+        {
+          "text": "The stored paper's results section says Figures 2 to 4 show accuracy by dose.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Figures 2 to 4 show accuracy by dose."
+            }
+          ]
+        },
+        {
+          "text": "The stored paper reports that 200 mg caffeine improved n-back accuracy by 12% compared with placebo.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "200 mg caffeine improved n-back accuracy by 12% compared with placebo."
+            }
+          ]
+        },
+        {
+          "text": "The authors have not responded.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.002r",
+              "quote": "The authors have not responded."
+            }
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[3] Brown, A., Kim, S. (2019). Caffeine improves working memory in adults. J. Fake Neuroscience. doi:10.9999/fake.2019.002",
+      "uses": [
+        {
+          "section": "Introduction",
+          "quote": "Brown and Kim [3] showed that 200 mg of caffeine improves working memory by 12%, which is why we chose a 200 mg dose for our experiment.",
+          "role": "key_evidence",
+          "claim_relied_on": "that 200 mg of caffeine improved working memory by 12%, used as the reason for choosing the 200 mg dose",
+          "affected": "yes",
+          "reason": "The 12% finding at 200 mg comes from the retracted paper, whose data were found fabricated and whose conclusions cannot be relied on."
+        }
+      ],
+      "impact_level": "high",
+      "explanation": "Your Introduction cites Brown and Kim [3] as showing that 200 mg of caffeine improves working memory by 12%, which is why you chose a 200 mg dose. The stored paper reports that 200 mg caffeine improved n-back accuracy by 12% compared with placebo. The journal has retracted the article, and the notice says the data in Figures 2 to 4 were fabricated and the conclusions cannot be relied on. This is the only citation of it, but it is the stated reason for your dose, so the impact on your draft is high.",
+      "claims": [
+        {
+          "text": "The draft's Introduction cites Brown and Kim [3] as showing that 200 mg of caffeine improves working memory by 12%, which is why the authors chose a 200 mg dose.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Brown and Kim [3] showed that 200 mg of caffeine improves working memory by 12%, which is why we chose a 200 mg dose for our experiment."
+            }
+          ]
+        },
+        {
+          "text": "The stored paper reports that 200 mg caffeine improved n-back accuracy by 12% compared with placebo.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "200 mg caffeine improved n-back accuracy by 12% compared with placebo."
+            }
+          ]
+        },
+        {
+          "text": "The journal has retracted the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.002r",
+              "quote": "The journal has retracted this article."
+            }
+          ]
+        },
+        {
+          "text": "The notice says the data in Figures 2 to 4 had been fabricated and the conclusions cannot be relied on.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.002r",
+              "quote": "the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on"
+            }
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Remove the citation to Brown and Kim [3] as the reason for the 200 mg dose, and replace it with a source that has not been retracted, or state the dose choice on other grounds. Then re-check the claim that 200 mg improves working memory by 12%.",
+          "where": "Introduction, sentence beginning \"Brown and Kim [3] showed that 200 mg of caffeine improves working memory by 12%\""
+        },
+        {
+          "action": "Check whether your dose choice or any other part of your experiment design depended on this finding. If so, raise it with your co-authors or supervisor.",
+          "where": "Introduction and methods (dose choice)"
+        },
+        {
+          "action": "Remove or replace the reference entry for [3] once the citation is gone.",
+          "where": "Reference list, entry [3]"
+        }
+      ],
+      "recommendation": "Remove or replace the citation to Brown and Kim [3] in the Introduction, because the journal has retracted the article and the notice says the data in Figures 2 to 4 had been fabricated and the conclusions cannot be relied on. Also re-check the 12% claim your draft uses as the reason for the 200 mg dose.",
+      "claims": [
+        {
+          "text": "The draft's Introduction cites Brown and Kim [3] as showing that 200 mg of caffeine improves working memory by 12%, which is why the authors chose a 200 mg dose.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Brown and Kim [3] showed that 200 mg of caffeine improves working memory by 12%, which is why we chose a 200 mg dose for our experiment."
+            }
+          ]
+        },
+        {
+          "text": "The journal has retracted the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.002r",
+              "quote": "The journal has retracted this article."
+            }
+          ]
+        },
+        {
+          "text": "The notice says the data in Figures 2 to 4 had been fabricated and the conclusions cannot be relied on.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.002r",
+              "quote": "the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on"
+            }
+          ]
+        },
+        {
+          "text": "The stored paper reports that 200 mg caffeine improved n-back accuracy by 12% compared with placebo.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "200 mg caffeine improved n-back accuracy by 12% compared with placebo."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The journal has retracted the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The journal has retracted this article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "An institutional investigation found that the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "An institutional investigation found that the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The stored paper's results section says Figures 2 to 4 show accuracy by dose.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Figures 2 to 4 show accuracy by dose.",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The stored paper reports that 200 mg caffeine improved n-back accuracy by 12% compared with placebo.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "200 mg caffeine improved n-back accuracy by 12% compared with placebo.",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The authors have not responded.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The authors have not responded.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft's Introduction cites Brown and Kim [3] as showing that 200 mg of caffeine improves working memory by 12%, which is why the authors chose a 200 mg dose.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Brown and Kim [3] showed that 200 mg of caffeine improves working memory by 12%, which is why we chose a 200 mg dose for our experiment.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The stored paper reports that 200 mg caffeine improved n-back accuracy by 12% compared with placebo.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "200 mg caffeine improved n-back accuracy by 12% compared with placebo.",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The journal has retracted the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The journal has retracted this article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The notice says the data in Figures 2 to 4 had been fabricated and the conclusions cannot be relied on.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The draft's Introduction cites Brown and Kim [3] as showing that 200 mg of caffeine improves working memory by 12%, which is why the authors chose a 200 mg dose.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Brown and Kim [3] showed that 200 mg of caffeine improves working memory by 12%, which is why we chose a 200 mg dose for our experiment.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The journal has retracted the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The journal has retracted this article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The notice says the data in Figures 2 to 4 had been fabricated and the conclusions cannot be relied on.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the data in Figures 2 to 4 had been fabricated, and the conclusions cannot be relied on",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "The stored paper reports that 200 mg caffeine improved n-back accuracy by 12% compared with placebo.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "200 mg caffeine improved n-back accuracy by 12% compared with placebo.",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

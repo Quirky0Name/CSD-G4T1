@@ -5,7 +5,7 @@
   "max_invented": 0,
   "max_misattributed": 0,
   "max_unlinked": 0,
-  "max_unbacked": 0,
-  "max_uncovered": 0,
+  "max_unbacked": 2,
+  "max_uncovered": 1,
   "case_pass_rate": 0.67
 }

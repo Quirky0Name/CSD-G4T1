@@ -1,0 +1,104 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the draft does not cite the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The draft does not cite the tracked paper, Green roofs and urban cooling, in its text or its reference list.\" (evaluation and recommendation)"
+    },
+    {
+      "fact": "says no action is needed for the draft or the alert can be dismissed",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No action is needed on the draft, and the alert can be dismissed.\" (recommendation)"
+    },
+    {
+      "fact": "says the draft cites the retracted paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing a reference from the draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: Green roofs and urban cooling",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted title is labelled 'Retraction:' and names the same paper, so it shows that a retraction notice exists for it."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This article has been retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states directly that the article was retracted for image manipulation in the supplementary figures and because the temperature data could not be verified, matching the claim."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Green roofs lowered surface temperature by 4 C in three cities.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted sentence from the tracked paper states that green roofs lowered surface temperature by 4 C in three cities. It does not say it is from the abstract, but the content matches the claim."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper has been retracted.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction is because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The abstract reports that green roofs lowered surface temperature by 4 C in three cities.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft does not cite the tracked paper, Green roofs and urban cooling, in its text or its reference list.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft does not cite the tracked paper, Green roofs and urban cooling, in its text or its reference list.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "impact-0",
+    "action-0"
+  ]
+}

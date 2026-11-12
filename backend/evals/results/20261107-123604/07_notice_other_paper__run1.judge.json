@@ -1,0 +1,87 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the notice is about a different article (sleep quality in nurses)",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The only alert is a retraction notice, but it is about a different article, a study of mindfulness training and sleep quality in nurses.\""
+    },
+    {
+      "fact": "says the tracked paper is not affected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Nothing given shows any change to the tracked exam-anxiety paper.\""
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "RETRACTED: Mindfulness training improves sleep quality in nurses",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted title is a retraction notice for an article on mindfulness training and sleep quality in nurses, which is what claim 1 states."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This article has been retracted because the data could not be verified.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted sentence says the article was retracted because its data could not be verified, matching claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Mindfulness training reduces exam anxiety in undergraduates",
+      "backs": true,
+      "pass": true,
+      "reason": "The tracked paper's own title is about mindfulness training and exam anxiety in undergraduates, so it shows the tracked paper is about exam anxiety in undergraduates, as claim 3 states."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The only alert is a retraction notice.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction notice is about a different article, a study of mindfulness training and sleep quality in nurses.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "That article was retracted because its data could not be verified.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing given shows any change to the tracked exam-anxiety paper.",
+      "covered_by": [],
+      "pass": false
+    }
+  ],
+  "absent_claims": []
+}

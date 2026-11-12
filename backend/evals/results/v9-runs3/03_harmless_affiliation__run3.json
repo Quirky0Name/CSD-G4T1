@@ -1,0 +1,108 @@
+{
+  "change_summary": "A correction notice changes the first author's affiliation from University of Northfield to Northfield Institute of Education. The notice says this does not affect the results or conclusions. It is an administrative change only.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 9,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 31,
+          "about_this_paper": "yes",
+          "what_changed": "The correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education. The notice says results and conclusions are not affected.",
+          "scope": "administrative",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "It only corrects an author affiliation, and the notice states it does not affect the results or conclusions.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "The correct affiliation is Northfield Institute of Education. This does not affect the results or conclusions of the article."
+            },
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "The affiliation of the first author was given as University of Northfield."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "none",
+      "summary": "A correction notice changes the first author's affiliation from University of Northfield to Northfield Institute of Education. The notice says this does not affect the results or conclusions. It is an administrative change only.",
+      "claims": [
+        {
+          "text": "The correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education."
+            }
+          ]
+        },
+        {
+          "text": "The notice says the correction does not affect the results or conclusions of the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "This does not affect the results or conclusions of the article."
+            }
+          ]
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The notice says the correction does not affect the results or conclusions of the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This does not affect the results or conclusions of the article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

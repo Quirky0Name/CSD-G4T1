@@ -1,0 +1,241 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the retraction is based only on a metadata flag, with no notice or reason available",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The alert reports a retraction but there is no notice, and no notice text or current copy is available... the retraction flag is unconfirmed"
+    },
+    {
+      "fact": "advises the researcher to check the journal or publisher's page to confirm the retraction",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Check the journal's or publisher's page to confirm the retraction before changing the draft."
+    },
+    {
+      "fact": "states a reason for the retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "quotes a retraction notice",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line shows retraction with no notice."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft Methods cites Novak and Silva [2] sensor and calibration without changes."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "The calibration protocol is given in Section 2.",
+      "backs": true,
+      "pass": true,
+      "reason": "Paper's Methods says protocol is in Section 2."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line shows retraction with no notice."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line shows retraction with no notice."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft Methods text matches the claim."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Alert line states it."
+    },
+    {
+      "claim_id": "impact-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Draft quote shows it."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Paper passage says so."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Alert line states it."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Alert line states it."
+    },
+    {
+      "claim_id": "action-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Draft quote shows it."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-2",
+      "from": [
+        "change-0",
+        "change-1"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Unconfirmed status follows from no notice and no copy; medium level rests on those facts."
+    },
+    {
+      "claim_id": "impact-4",
+      "from": [
+        "impact-0",
+        "impact-2",
+        "impact-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft relies on the method, retraction unconfirmed, scope unstated, so unclear."
+    },
+    {
+      "claim_id": "impact-5",
+      "from": [
+        "change-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Restates the medium severity from claim 3."
+    },
+    {
+      "claim_id": "impact-6",
+      "from": [
+        "impact-0",
+        "impact-4",
+        "impact-5"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft uses the method and possible effect, so high but uncertain impact is reasonable."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The alert reports a retraction with no notice.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No current copy was provided, so no retraction watermark or banner can be seen.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction flag is unconfirmed but may be a real retraction.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's Methods cites [2] for the sensor and the calibration protocol used without changes.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert reports a retraction but there is no notice, and no notice text or current copy is available to show which parts are affected.",
+      "covered_by": [
+        "change-0",
+        "impact-3",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "It is unclear whether the Methods use is touched, since the retraction flag is unconfirmed.",
+      "covered_by": [
+        "impact-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The impact is high but uncertain, because the draft relies on the paper's method.",
+      "covered_by": [
+        "impact-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert reports a retraction with no notice.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft's Methods cites [2] for the sensor and says it used the calibration protocol without changes.",
+      "covered_by": [
+        "impact-0",
+        "action-2"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-1",
+    "impact-3",
+    "action-1"
+  ]
+}

@@ -8,8 +8,9 @@ import { ActionButton } from '../components/ActionButton'
 import { useToast } from '../components/Toasts'
 import { ALERT_SEVERITY_DOT_CLASS, highestNewAlertSeverity } from '../format'
 import { useTracking } from '../tracking'
+import { Page, PageHeader } from '../components/Page'
+import { DIALOG_FRAME, DIALOG_PANEL, card, cardInteractive, errorPanel, iconButton, inputClasses, riseDelay, signalLink } from '../ui'
 
-const CARD = 'rounded-md bg-gray-800/50 outline -outline-offset-1 outline-white/10'
 
 type Load = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; projects: Project[] }
 
@@ -75,33 +76,38 @@ function Projects() {
   }
 
   return (
-    <main className="px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl/7 font-bold text-white sm:text-3xl sm:tracking-tight">Projects</h1>
-          <p className="mt-2 text-sm/6 text-gray-400">Each project has its own tracked papers and draft.</p>
-        </div>
-        <ActionButton tone="primary" disabled={load.status !== 'ready'} onClick={() => setCreating(true)}>
-          <PlusIcon aria-hidden="true" className="size-4" />
-          New project
-        </ActionButton>
-      </div>
+    <Page>
+      <PageHeader
+        title="Projects"
+        meta={[
+          load.status === 'ready' && `${load.projects.length + 1} project${load.projects.length === 0 ? '' : 's'}`,
+          tracking.status === 'ready' && `${tracking.papers.length} paper${tracking.papers.length === 1 ? '' : 's'} tracked`,
+          tracking.status === 'ready' && (
+            <NewAlertsNote count={tracking.alerts.filter((alert) => alert.status === 'new').length} />
+          ),
+        ]}
+        description="Each project keeps its own tracked papers and draft."
+        actions={
+          <ActionButton tone="primary" disabled={load.status !== 'ready'} onClick={() => setCreating(true)}>
+            <PlusIcon aria-hidden="true" className="size-4" />
+            New project
+          </ActionButton>
+        }
+      />
 
       {load.status === 'error' && (
-        <p className="mb-4 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">
-          Couldn't load your projects: {load.message}
-        </p>
+        <p className={`animate-reveal mb-4 ${errorPanel}`}>Couldn't load your projects: {load.message}</p>
       )}
 
-      <ul role="list" className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-4">
+      <ul role="list" className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-4">
         {creating && (
-          <li>
+          <li className="animate-rise">
             <NameForm label="New project name" submit="Create" onSubmit={create} onCancel={() => setCreating(false)} />
           </li>
         )}
         {load.status === 'ready' &&
-          load.projects.map((project) => (
-            <li key={project.id}>
+          load.projects.map((project, i) => (
+            <li key={project.id} className="animate-rise" style={riseDelay(i + 1)}>
               {renamingId === project.id ? (
                 <NameForm
                   label={`Rename ${project.name}`}
@@ -133,7 +139,7 @@ function Projects() {
             </li>
           ))}
         {/* the default project has no row: it can't be renamed or deleted (docs/CONTRACTS.md, "Projects") */}
-        <li>
+        <li className="animate-rise" style={riseDelay(load.status === 'ready' ? load.projects.length + 1 : 1)}>
           <ProjectCard to="/project" name="Default project" count={countIn(null)} newAlerts={newAlertsIn(null)} />
         </li>
       </ul>
@@ -144,7 +150,18 @@ function Projects() {
         onConfirm={remove}
         onClose={() => setDeleting(null)}
       />
-    </main>
+    </Page>
+  )
+}
+
+// the strip's right end: how many alerts are waiting, in the alert's own words
+export function NewAlertsNote({ count }: { count: number }) {
+  if (count === 0) return <span>No new alerts</span>
+  return (
+    <Link to="/alerts" className={`inline-flex items-center gap-1.5 ${signalLink}`}>
+      <span className="size-1.5 rounded-full bg-red-400" aria-hidden="true" />
+      {count} new alert{count === 1 ? '' : 's'}
+    </Link>
   )
 }
 
@@ -164,9 +181,11 @@ function ProjectCard({
   const severity = highestNewAlertSeverity(newAlerts)
 
   return (
-    <div className={`${CARD} relative flex h-full min-h-44 flex-col p-5 hover:bg-gray-800 focus-within:outline-indigo-500`}>
+    <div className={`${cardInteractive} group relative flex h-full min-h-44 flex-col p-5`}>
       <div className="flex min-h-8 items-start justify-between gap-3">
-        <FolderIcon aria-hidden="true" className="size-8 shrink-0 text-gray-400" />
+        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-indigo-500/10 text-indigo-300 transition-colors group-hover:bg-indigo-500/20">
+          <FolderIcon aria-hidden="true" className="size-6" />
+        </span>
         {children && <div className="-mt-1 -mr-1 flex shrink-0 gap-1">{children}</div>}
       </div>
       <Link
@@ -211,7 +230,7 @@ function CardAction({
       aria-label={label}
       title={title}
       onClick={onClick}
-      className={`relative z-10 flex size-10 items-center justify-center rounded-md text-gray-400 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-indigo-500 sm:size-8 ${danger ? 'hover:text-red-400' : 'hover:text-white'}`}
+      className={`${iconButton} ${danger ? 'hover:text-red-400' : ''}`}
     >
       {children}
     </button>
@@ -253,7 +272,7 @@ function NameForm({
       onKeyDown={(event) => {
         if (event.key === 'Escape') onCancel()
       }}
-      className={`${CARD} flex h-full min-h-44 flex-col justify-center p-5`}
+      className={`${card} flex h-full min-h-44 flex-col justify-center p-5 outline-indigo-400/60`}
     >
       <input
         autoFocus
@@ -264,10 +283,10 @@ function NameForm({
         placeholder="Project name"
         onChange={(event) => setName(event.target.value)}
         onFocus={(event) => event.target.select()}
-        className="block w-full rounded-md bg-white/5 px-2.5 py-1.5 text-sm/6 text-white outline -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500"
+        className={inputClasses}
       />
       {error && <p className="mt-1.5 px-1 text-xs/5 text-red-400">{error}</p>}
-      <div className="mt-2 flex justify-end gap-2">
+      <div className="mt-3 flex justify-end gap-2">
         <ActionButton tone="quiet" onClick={onCancel}>
           Cancel
         </ActionButton>
@@ -315,15 +334,15 @@ function DeleteDialog({
 
   return (
     <Dialog open={project !== null} onClose={close} className="relative z-50">
-      <DialogBackdrop className="fixed inset-0 bg-black/70" />
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-md rounded-lg border border-white/10 bg-gray-900 p-6 text-gray-100 shadow-lg">
-          <DialogTitle className="text-base/7 font-semibold break-words text-white">Delete "{project?.name}"?</DialogTitle>
-          <p className="mt-2 text-sm/6 text-gray-300">
+      <DialogBackdrop transition className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-200 data-closed:opacity-0" />
+      <div className={DIALOG_FRAME}>
+        <DialogPanel className={`${DIALOG_PANEL} max-w-md`}>
+          <DialogTitle className="text-lg/7 font-semibold break-words text-white">Delete "{project?.name}"?</DialogTitle>
+          <p className="mt-1 text-sm/6 text-gray-300">
             {papers}, with their alerts and reports, and its draft are deleted too. This can't be undone.
           </p>
-          {error && <p className="mt-3 text-sm/6 text-red-400">{error}</p>}
-          <div className="mt-5 flex justify-end gap-2">
+          {error && <p className={`mt-4 ${errorPanel}`}>{error}</p>}
+          <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <ActionButton tone="quiet" onClick={close}>
               Cancel
             </ActionButton>

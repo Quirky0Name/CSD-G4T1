@@ -1,0 +1,238 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the draft does not cite the retracted paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The draft doesn't cite the retracted 2018 paper, so no action is required and the alert can be dismissed.\" Also: \"Your draft's reference list has only a 2021 review by the same authors, which is a different paper.\""
+    },
+    {
+      "fact": "says no action is needed for the draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The draft doesn't cite the retracted 2018 paper, so no action is required and the alert can be dismissed.\""
+    },
+    {
+      "fact": "says the draft cites the retracted paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"So none of your uses rely on it, and the retraction doesn't affect the draft as written.\" The answer says the draft does not cite the retracted paper."
+    },
+    {
+      "fact": "recommends removing the 2021 review from the reference list",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "the reported yields could not be reproduced and the raw data were found to have been altered",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted words state that the reported yields could not be reproduced and the raw data were altered, matching claim 1."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote states that a single ethanol extraction recovered 94% of the curcumin, matching claim 2."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "retraction, notice 10.9999/fake.2018.014r",
+      "backs": false,
+      "pass": false,
+      "reason": "The passage gives only a notice identifier. It says nothing about the alert's severity, so it does not show the alert is high severity."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Okonkwo, C., & Eze, P. (2021). Green solvents for curcumin extraction: a review. J. Fake Chemistry, 12, 40-62.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote is a 2021 review by Okonkwo and Eze in a reference list. It shows that review is cited, which supports the first part of claim 4. It does not show the tracked 2018 paper is absent."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "High-yield ethanol extraction of curcumin from turmeric",
+      "backs": false,
+      "pass": false,
+      "reason": "This is only a paper title. It does not show whether the title belongs to the tracked 2018 paper or whether it is absent from the reference list, so it does not back claim 4."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Extraction yields above 90% from a single ethanol step have been claimed for turmeric, although these claims have since been questioned.",
+      "backs": true,
+      "pass": true,
+      "reason": "The sentence states that yields above 90% from a single ethanol step were claimed but have since been questioned. It matches the uncited sentence described in claim 5, although the absence of a citation is not shown in the quote itself."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted words state that the article was retracted because yields could not be reproduced and raw data were altered, matching claim 6."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Okonkwo, C., & Eze, P. (2021). Green solvents for curcumin extraction: a review. J. Fake Chemistry, 12, 40-62.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote shows that the 2021 review is cited. It supports the claim that the draft cites that review, though the word 'only' is not shown."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "High-yield ethanol extraction of curcumin from turmeric",
+      "backs": false,
+      "pass": false,
+      "reason": "This is only a paper title. It does not show that the draft cites only the 2021 review or that it omits the 2018 paper, so it does not back claim 7."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted words state that the article was retracted for irreproducible yields and altered raw data, matching claim 8."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "Extraction yields above 90% from a single ethanol step have been claimed for turmeric, although these claims have since been questioned.",
+      "backs": true,
+      "pass": true,
+      "reason": "The sentence states that single-step ethanol yields above 90% were claimed but have since been questioned, and it is in the Introduction. This matches claim 9."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper has been retracted.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the reported yields could not be reproduced and the raw data were altered.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The whole paper is affected.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's main claim of 94% curcumin recovery in a single ethanol extraction is affected.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper should not be relied on.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The tracked paper is the 2018 research article by Okonkwo and Eze on ethanol extraction of curcumin, which has been retracted.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's reference list has only a 2021 review by the same authors.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The 2021 review is a different paper from the tracked 2018 paper.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The Introduction mentions single-step ethanol yields above 90% but cites no source.",
+      "covered_by": [
+        "impact-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The Introduction's yield sentence does not name the retracted paper.",
+      "covered_by": [
+        "impact-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "None of the draft's uses rely on the retracted paper.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The retraction does not affect the draft as written.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft does not cite the retracted 2018 paper.",
+      "covered_by": [
+        "impact-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No action is required and the retraction alert can be dismissed.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "recommendation",
+      "statement": "Check whether the uncited 90% single-step yield sentence in the Introduction came from the 2018 paper.",
+      "covered_by": [
+        "impact-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "If that sentence came from the 2018 paper, cite it explicitly as retracted or remove it.",
+      "covered_by": [],
+      "pass": false
+    }
+  ]
+}

@@ -1,0 +1,628 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the paper was retracted because of concerns about peer review integrity or manipulation of the publication process, which call the validity of its reported results into question",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "retracted the paper because of concerns about peer review integrity and potential manipulation of the publication process, and they say these concerns call into question the validity and provenance of the reported results"
+    },
+    {
+      "fact": "says the draft's choice of an LSTM detector in Section 3, and the model settings in Section 4, rest on the retracted paper's reported results",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The retraction touches your draft's use of Dutta [14] as the main evidence for choosing an LSTM ... and the model settings you take from the paper"
+    },
+    {
+      "fact": "tells the researcher to remove or replace the citation and to re-justify or re-check the choice of detector and its settings, for example with their own model comparison",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "In Section 3, remove or replace the Dutta [14] citation and the LURL figures, then re-check whether your choice of an LSTM still holds on other evidence ... the starting settings and comparison baseline need another source."
+    },
+    {
+      "fact": "says the paper was retracted for data fabrication, plagiarism or image problems",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the reported results can still be relied on",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says no action is needed",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: Detecting phishing websites using machine learning technique",
+      "backs": true,
+      "pass": true,
+      "reason": "Title states retraction."
+    },
+    {
+      "claim_id": "change-0",
+      "quote": "The PLOS One Editors retract this article [1]",
+      "backs": true,
+      "pass": true,
+      "reason": "Editors retract the article."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "because it was identified as one of a series of submissions for which we have concerns about peer review integrity and potential manipulation of the publication process",
+      "backs": true,
+      "pass": true,
+      "reason": "States reason."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "These concerns call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the concern."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The author either did not respond directly or could not be reached.",
+      "backs": true,
+      "pass": true,
+      "reason": "States author response."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "The experiments' outcome shows that the proposed method's performance is better than the recent approaches in malicious URL detection.",
+      "backs": true,
+      "pass": true,
+      "reason": "Paper says method better than recent approaches."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft names Dutta as main evidence, LURL RNN-LSTM."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Therefore, the study proposes Recurrent Neural Network (RNN) based URL detection approach.",
+      "backs": true,
+      "pass": true,
+      "reason": "Paper proposes RNN-based URL detection."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "The proposed method (LURL) is developed in Python 3.0",
+      "backs": true,
+      "pass": true,
+      "reason": "Names the method LURL."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "LURL reached an accuracy of 97.4% on the Phishtank dataset and 96.8% on the Crawler dataset, higher than both comparison detectors on both datasets",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft gives accuracies and comparison."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "and an F1-score of 96.4 on the Phishtank dataset [14]",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft gives F1 96.4 with [14]."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "LURL has produced an average of 97.4% and 96.8% for Phishtank and Crawler datasets respectively.",
+      "backs": true,
+      "pass": true,
+      "reason": "Paper reports the averages."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft starts from Dutta settings."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "LURL learning_rate = 1.0, max_lr_epoch = 7,",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives lr 1.0 and max_lr_epoch 7."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "acc_check_thresh = 5, s_training = False, hidden_size = 650",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives hidden size 650."
+    },
+    {
+      "claim_id": "impact-6",
+      "quote": "The PLOS One Editors retract this article [1]",
+      "backs": true,
+      "pass": true,
+      "reason": "Retraction stated."
+    },
+    {
+      "claim_id": "impact-7",
+      "quote": "because it was identified as one of a series of submissions for which we have concerns about peer review integrity and potential manipulation of the publication process",
+      "backs": true,
+      "pass": true,
+      "reason": "Reason stated."
+    },
+    {
+      "claim_id": "impact-8",
+      "quote": "These concerns call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "Concern stated."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "The PLOS One Editors retract this article [1]",
+      "backs": true,
+      "pass": true,
+      "reason": "Retraction stated."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "because it was identified as one of a series of submissions for which we have concerns about peer review integrity and potential manipulation of the publication process",
+      "backs": true,
+      "pass": true,
+      "reason": "Reason stated."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "These concerns call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "Concern stated."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft names Dutta as main evidence."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "Therefore, the study proposes Recurrent Neural Network (RNN) based URL detection approach.",
+      "backs": true,
+      "pass": true,
+      "reason": "Paper proposes RNN approach."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "The proposed method (LURL) is developed in Python 3.0",
+      "backs": true,
+      "pass": true,
+      "reason": "Names LURL."
+    },
+    {
+      "claim_id": "action-5",
+      "quote": "LURL reached an accuracy of 97.4% on the Phishtank dataset and 96.8% on the Crawler dataset, higher than both comparison detectors on both datasets",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft accuracies."
+    },
+    {
+      "claim_id": "action-5",
+      "quote": "and an F1-score of 96.4 on the Phishtank dataset [14]",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft F1."
+    },
+    {
+      "claim_id": "action-6",
+      "quote": "LURL has produced an average of 97.4% and 96.8% for Phishtank and Crawler datasets respectively.",
+      "backs": true,
+      "pass": true,
+      "reason": "Paper averages."
+    },
+    {
+      "claim_id": "action-7",
+      "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft settings."
+    },
+    {
+      "claim_id": "action-8",
+      "quote": "LURL learning_rate = 1.0, max_lr_epoch = 7,",
+      "backs": true,
+      "pass": true,
+      "reason": "Paper settings lr and epochs."
+    },
+    {
+      "claim_id": "action-8",
+      "quote": "acc_check_thresh = 5, s_training = False, hidden_size = 650",
+      "backs": true,
+      "pass": true,
+      "reason": "Hidden size."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages show retraction."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 shows it."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5."
+    },
+    {
+      "claim_id": "change-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 6 says better than recent approaches; RNN-based method is the proposed one."
+    },
+    {
+      "claim_id": "impact-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 7."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 8, 9."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 10, 11."
+    },
+    {
+      "claim_id": "impact-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 12."
+    },
+    {
+      "claim_id": "impact-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 13."
+    },
+    {
+      "claim_id": "impact-5",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 14, 15."
+    },
+    {
+      "claim_id": "impact-6",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 16."
+    },
+    {
+      "claim_id": "impact-7",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 17."
+    },
+    {
+      "claim_id": "impact-8",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 18."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 19."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 20."
+    },
+    {
+      "claim_id": "action-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 21."
+    },
+    {
+      "claim_id": "action-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 22."
+    },
+    {
+      "claim_id": "action-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 23, 24."
+    },
+    {
+      "claim_id": "action-5",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 25, 26."
+    },
+    {
+      "claim_id": "action-6",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 27."
+    },
+    {
+      "claim_id": "action-7",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 28."
+    },
+    {
+      "claim_id": "action-8",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 29, 30."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-5",
+      "from": [
+        "change-0",
+        "change-2",
+        "change-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Claims 1,3,5 support that results can't be relied on; 'whole paper' is a mild extension from retraction of the article."
+    },
+    {
+      "claim_id": "impact-9",
+      "from": [
+        "impact-0",
+        "impact-1",
+        "impact-6",
+        "impact-8"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft relies on Dutta's LURL paper, which is retracted with doubtful results."
+    },
+    {
+      "claim_id": "impact-10",
+      "from": [
+        "impact-2",
+        "impact-3",
+        "impact-8"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Figures are the paper's results, called into question."
+    },
+    {
+      "claim_id": "impact-11",
+      "from": [
+        "impact-4",
+        "impact-5",
+        "impact-6",
+        "impact-8"
+      ],
+      "follows": false,
+      "pass": false,
+      "reason": "Settings come from the retracted paper; 'published results the draft plans to compare against' is not given by the named claims."
+    },
+    {
+      "claim_id": "impact-12",
+      "from": [
+        "impact-9",
+        "impact-10",
+        "impact-11"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from 16-18 as the rubric basis, though 18 adds an unsupported comparison plan."
+    },
+    {
+      "claim_id": "action-9",
+      "from": [
+        "action-3",
+        "action-4",
+        "action-0",
+        "action-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from 23, 24, 20, 22."
+    },
+    {
+      "claim_id": "action-10",
+      "from": [
+        "action-5",
+        "action-6",
+        "action-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from 25, 26, 22."
+    },
+    {
+      "claim_id": "action-11",
+      "from": [
+        "action-7",
+        "action-8",
+        "action-0",
+        "action-2"
+      ],
+      "follows": false,
+      "pass": false,
+      "reason": "Settings part follows, but the planned comparison with published results isn't in claims 27, 28, 20, 22."
+    },
+    {
+      "claim_id": "action-12",
+      "from": [
+        "action-9",
+        "action-10",
+        "action-11"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from 29-31 as rubric basis."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The PLOS One Editors retracted the paper.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Retracted because one of a series of submissions with peer review integrity concerns, calling into question validity and provenance.",
+      "covered_by": [
+        "change-1",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Paper's results include RNN detector outperforming recent approaches; retraction touches whole paper and results can't be relied on.",
+      "covered_by": [
+        "change-4",
+        "change-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The author either did not respond or could not be reached.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Section 3 names Dutta [14] as main evidence, LURL RNN-LSTM.",
+      "covered_by": [
+        "impact-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Section 3 cites [14] for accuracies 97.4% and 96.8% and F1 96.4.",
+      "covered_by": [
+        "impact-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Section 4 starts from LURL settings hidden size 650, learning rate 1.0, and paper lists lr 1.0, max 7 lr epochs, hidden size 650.",
+      "covered_by": [
+        "impact-4",
+        "impact-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Editors retracted due to peer review integrity concerns calling into question validity and provenance.",
+      "covered_by": [
+        "impact-6",
+        "impact-7",
+        "impact-8"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Retraction touches the draft's use of Dutta as main evidence.",
+      "covered_by": [
+        "impact-9"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Retraction touches LURL figures as paper's reported results.",
+      "covered_by": [
+        "impact-10"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Retraction touches settings and published results planned for comparison.",
+      "covered_by": [
+        "impact-11"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Impact is high.",
+      "covered_by": [
+        "impact-12"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Editors retracted due to peer review concerns calling into question validity and provenance.",
+      "covered_by": [
+        "action-0",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Retraction touches Dutta use, LURL figures, settings and comparison results.",
+      "covered_by": [
+        "action-9",
+        "action-10",
+        "action-11"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

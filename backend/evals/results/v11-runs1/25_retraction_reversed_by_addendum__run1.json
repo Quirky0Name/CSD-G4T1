@@ -1,0 +1,230 @@
+{
+  "change_summary": "The paper was retracted over concerns about duplicated images, but a later statement says the retraction was issued in error. The image concerns related to a different article, and the publisher checked this article's images and data and found no problems. The retraction is withdrawn and the article is reinstated, so the paper's findings can be relied on again.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 11,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 251,
+          "about_this_paper": "yes",
+          "what_changed": "The publisher retracted the paper over concerns about duplicated images. A later statement says this retraction was issued in error and has been withdrawn.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "The retraction was reversed by the later reinstatement statement (alert 252), which says the images and data were checked and no problems were found, so the findings can be relied on again.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2021.025r",
+              "quote": "concerns were raised about the duplication of images. The article is therefore retracted."
+            },
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The retraction notice for the above article, published on 22 September 2026, was issued in error."
+            },
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The publisher has checked the images and data of this article and found no problems with them."
+            }
+          ]
+        },
+        {
+          "alert_id": 252,
+          "about_this_paper": "yes",
+          "what_changed": "A statement of reinstatement says the retraction was issued in error, the retraction is withdrawn, the article is reinstated, and the RETRACTED watermark is removed.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "It lifts the retraction: the image concerns related to a different article, and the publisher found no problems with this paper's images and data.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The image concerns that led to the retraction relate to a different article in the same investigation"
+            },
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed."
+            }
+          ]
+        }
+      ],
+      "relations": "Alert 252 reverses alert 251: the reinstatement statement withdraws the earlier retraction notice, which had been issued in error.",
+      "severity": "none",
+      "claims": [
+        {
+          "text": "The paper was retracted over concerns about duplicated images.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.025r",
+              "quote": "concerns were raised about the duplication of images. The article is therefore retracted."
+            }
+          ]
+        },
+        {
+          "text": "A later statement says the retraction notice was issued in error.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The retraction notice for the above article, published on 22 September 2026, was issued in error."
+            }
+          ]
+        },
+        {
+          "text": "The image concerns related to a different article in the same investigation.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The image concerns that led to the retraction relate to a different article in the same investigation"
+            }
+          ]
+        },
+        {
+          "text": "The publisher checked this article's images and data and found no problems.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The publisher has checked the images and data of this article and found no problems with them."
+            }
+          ]
+        },
+        {
+          "text": "The retraction is withdrawn and the article is reinstated.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.025a",
+              "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed."
+            }
+          ]
+        }
+      ],
+      "summary": [
+        {
+          "text": "The paper was retracted over concerns about duplicated images, but a later statement says the retraction was issued in error.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "The image concerns related to a different article, and the publisher checked this article's images and data and found no problems.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The retraction is withdrawn and the article is reinstated, so the paper's findings can be relied on again.",
+          "kind": "fact",
+          "claims": [
+            5
+          ]
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The paper was retracted over concerns about duplicated images.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "concerns were raised about the duplication of images. The article is therefore retracted.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "A later statement says the retraction notice was issued in error.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 2,
+          "alert_id": null,
+          "quote": "The retraction notice for the above article, published on 22 September 2026, was issued in error.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The image concerns related to a different article in the same investigation.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 2,
+          "alert_id": null,
+          "quote": "The image concerns that led to the retraction relate to a different article in the same investigation",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The publisher checked this article's images and data and found no problems.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 2,
+          "alert_id": null,
+          "quote": "The publisher has checked the images and data of this article and found no problems with them.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The retraction is withdrawn and the article is reinstated.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 2,
+          "alert_id": null,
+          "quote": "The retraction is withdrawn, the article is reinstated, and the RETRACTED watermark has been removed.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

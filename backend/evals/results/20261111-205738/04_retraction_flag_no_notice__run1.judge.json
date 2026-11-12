@@ -1,0 +1,212 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the retraction is based only on a metadata flag, with no notice or reason available",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The paper was flagged as retracted on 2026-10-01, with no notice, and no reason for the retraction is given."
+    },
+    {
+      "fact": "advises the researcher to check the journal or publisher's page to confirm the retraction",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Check the journal's or publisher's page for the paper to confirm the retraction before changing your draft."
+    },
+    {
+      "fact": "states a reason for the retraction",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "no reason for the retraction is given"
+    },
+    {
+      "fact": "quotes a retraction notice",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "No retraction notice or current copy of the paper was provided"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line says retraction, no notice, detected 2026-10-01; shows the flag."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results.",
+      "backs": true,
+      "pass": true,
+      "reason": "Paper's quoted sentence states the sensor under 20 USD, nitrate within 5% of lab results; matches main claim."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft says it measured nitrate with Novak and Silva [2] sensor and used calibration without changes."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "We describe a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same quote shows the paper describes the sensor as claimed."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "The calibration protocol is given in Section 2.",
+      "backs": true,
+      "pass": true,
+      "reason": "Quote says calibration protocol is in Section 2."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line shows retraction flag, no notice, detected 2026-10-01."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line shows retraction flag, no notice, detected 2026-10-01."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "We measured nitrate with the sensor of Novak and Silva [2], using their calibration protocol without changes.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft quote shows the citation for sensor and unchanged calibration."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper was flagged as retracted, with no notice, detected on 2026-10-01.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No retraction notice or current copy of the paper was provided, and no reason for the retraction is given.",
+      "covered_by": [
+        "change-1",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper's main claim is a sensor costing under 20 USD that measures nitrate in river water to within 5% of lab results.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your Methods cites Novak and Silva [2] for the sensor and the calibration protocol used without changes.",
+      "covered_by": [
+        "impact-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper describes a sensor under 20 USD measuring nitrate within 5% of lab results.",
+      "covered_by": [
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper gives the calibration protocol in Section 2.",
+      "covered_by": [
+        "impact-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The paper was flagged as retracted on 2026-10-01, with no notice.",
+      "covered_by": [
+        "impact-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No retraction notice or current copy of the paper was provided, and no reason for the retraction is given.",
+      "covered_by": [
+        "impact-4",
+        "impact-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "No notice says which parts of the paper are affected.",
+      "covered_by": [
+        "impact-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The flag is on the paper whose sensor and calibration protocol your Methods use without changes.",
+      "covered_by": [
+        "impact-0",
+        "impact-3",
+        "action-0",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The paper was flagged as retracted on 2026-10-01, with no notice, and no reason for the retraction is given.",
+      "covered_by": [
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Your Methods cites Novak and Silva [2] for the sensor and the calibration protocol used without changes.",
+      "covered_by": [
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Your own measurements depend on this sensor and its calibration protocol.",
+      "covered_by": [
+        "action-2"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-1",
+    "change-2",
+    "impact-4",
+    "impact-5",
+    "impact-6",
+    "action-3",
+    "action-4"
+  ]
+}

@@ -1,0 +1,213 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the paper was retracted because of an analysis error that invalidates the main result",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The paper was retracted after the authors found a coding error in the analysis that invalidates the main result."
+    },
+    {
+      "fact": "says the impact judgment is general because there is no draft",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "No draft was uploaded, so this judgment is general and not about your own paper."
+    },
+    {
+      "fact": "recommends uploading the draft so future changes can be judged against it",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Upload your draft for this project so the next change can be judged against it"
+    },
+    {
+      "fact": "names a section of the researcher's draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the draft cites the paper",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "Says 'For a typical researcher who cites the paper' and 'remove or replace any citation' \u2013 conditional, not saying the draft cites it."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "States retraction due to coding error invalidating main result."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "States 2.1% increase not reproducible."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "In 300 women aged 65+, 1000 IU daily vitamin D raised hip bone density by 2.1% over a year.",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract reports 1000 IU daily raised hip BMD 2.1% over a year."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same retraction statement."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same non-reproducibility statement."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "This article has been retracted after the authors found a coding error in the analysis that invalidates the main result.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same retraction statement."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The reported 2.1% increase in bone density was not reproducible.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same non-reproducibility statement."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 1 matches."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 2 matches."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 matches."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4 matches."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5 matches."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 6 matches."
+    },
+    {
+      "claim_id": "action-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 7 matches."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-3",
+      "from": [
+        "change-0",
+        "change-1",
+        "change-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Retraction due to error invalidating the main result and non-reproducible finding reasonably implies findings can't be relied on; 'whole paper' is a plain retraction meaning."
+    },
+    {
+      "claim_id": "impact-3",
+      "from": [
+        "impact-0",
+        "impact-1",
+        "impact-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Impact level rests on retraction invalidating main result; but it names claim 5 (no draft) and 'typical researcher citing as key evidence' is hypothetical; the facts for high impact are given by 6 and 7."
+    },
+    {
+      "claim_id": "action-3",
+      "from": [
+        "action-1",
+        "action-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Retraction invalidating main result gives a high impact for someone citing it as key evidence."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The paper was retracted after the authors found a coding error that invalidates the main result.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the reported 2.1% increase was not reproducible, and the abstract reports the 2.1% hip bone density increase.",
+      "covered_by": [
+        "change-1",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction touches the whole paper and its findings cannot be relied on.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice says the article was retracted after the authors found a coding error that invalidates the main result.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "No draft was uploaded.",
+      "covered_by": [
+        "impact-0"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

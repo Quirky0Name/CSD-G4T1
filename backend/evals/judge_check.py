@@ -25,7 +25,7 @@ COLUMNS = ["run", "n", "fact", "kind", "answer_excerpt", "judge_present", "human
 def grading(run: Path, label: str) -> list[dict] | None:
     """A run's graded items under a label, or None when that grading doesn't exist."""
     path = judge.grade_path(run, None if label == "default" else label)
-    return json.loads(path.read_text())["items"] if path.exists() else None
+    return json.loads(path.read_text(encoding="utf-8"))["items"] if path.exists() else None
 
 
 def share(agreed: int, total: int) -> str:
@@ -82,7 +82,7 @@ def sample(folder: Path, n: int, seed: int | None, out: Path) -> None:
         items = grading(run, "default")
         if items is None:
             continue
-        excerpt = judge.answer(json.loads(run.read_text()))
+        excerpt = judge.answer(json.loads(run.read_text(encoding="utf-8")))
         population += [
             (run.stem, i, item, excerpt)
             for i, item in enumerate(items, 1)

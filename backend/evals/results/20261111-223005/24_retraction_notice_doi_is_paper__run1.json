@@ -1,0 +1,295 @@
+{
+  "change_summary": "Alert 241 records a retraction whose notice DOI is 10.9999/fake.2020.024, detected on 2026-10-01, but the tracked paper's own DOI is 10.9999/fake.2020.024, and the Crossref title recorded for that DOI is the paper's own title, not a retraction notice title. No separate retraction notice text was provided, the current copy has no retraction watermark or banner, and its content does not differ from the stored paper. The paper went online on 3 April 2020, which does not match the alert's 2026 detection date, and the current copy still reports the trial's main finding: LGG reduced antibiotic-associated diarrhoea (11.5% vs 21.2%). The retraction alert is not shown to be about a real change to this paper, so nothing here shows its findings are affected.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 13,
+    "model": "opus",
+    "model_version": "claude-opus-5-5",
+    "answered_by": {
+      "change": "opus",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "pdfs": {
+      "attached": [
+        "stored paper",
+        "current copy"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 241,
+          "about_this_paper": "no",
+          "what_changed": "Only metadata is available. The retraction alert points to the paper's own DOI rather than a separate notice, and the copy downloaded now has the same content as the stored paper, with no retraction watermark or banner.",
+          "scope": "unclear",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "The 'notice' is the paper's own DOI, its Crossref title is the paper's own title, and nothing in the current copy shows a retraction or any other change. The alert date (2026-10-01) does not match the paper's own online date (3 April 2020).",
+          "evidence": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01"
+            },
+            {
+              "source": "stored paper",
+              "quote": "doi: 10.9999/fake.2020.024"
+            },
+            {
+              "source": "current copy",
+              "quote": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial"
+            },
+            {
+              "source": "stored paper",
+              "quote": "Available online 3 April 2020."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "none",
+      "claims": [
+        {
+          "text": "Alert 241 records a retraction whose notice DOI is 10.9999/fake.2020.024, detected on 2026-10-01.",
+          "passages": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "doi: 10.9999/fake.2020.024"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The Crossref title recorded for that DOI is the paper's own title, not a retraction notice title.",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial"
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The current copy has no retraction watermark or banner.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "The content of the current copy does not differ from the stored paper.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "No separate retraction notice text was provided.",
+          "passages": [],
+          "absence": true,
+          "from_claims": []
+        },
+        {
+          "text": "The paper went online on 3 April 2020, which does not match the alert's 2026 detection date.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Available online 3 April 2020."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The current copy still reports the trial's main finding: LGG reduced antibiotic-associated diarrhoea (11.5% vs 21.2%).",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "AAD occurred in 18 participants (11.5%) given LGG and 33 (21.2%) given placebo (adjusted risk ratio 0.55, 95% CI 0.32\u20130.92)."
+            }
+          ],
+          "absence": false,
+          "from_claims": []
+        },
+        {
+          "text": "The retraction alert is not shown to be about a real change to this paper, so nothing here shows its findings are affected.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        }
+      ],
+      "summary": [
+        {
+          "text": "Alert 241 records a retraction whose notice DOI is 10.9999/fake.2020.024, detected on 2026-10-01, but the tracked paper's own DOI is 10.9999/fake.2020.024, and the Crossref title recorded for that DOI is the paper's own title, not a retraction notice title.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "No separate retraction notice text was provided, the current copy has no retraction watermark or banner, and its content does not differ from the stored paper.",
+          "kind": "fact",
+          "claims": [
+            6,
+            4,
+            5
+          ]
+        },
+        {
+          "text": "The paper went online on 3 April 2020, which does not match the alert's 2026 detection date, and the current copy still reports the trial's main finding: LGG reduced antibiotic-associated diarrhoea (11.5% vs 21.2%).",
+          "kind": "fact",
+          "claims": [
+            7,
+            8
+          ]
+        },
+        {
+          "text": "The retraction alert is not shown to be about a real change to this paper, so nothing here shows its findings are affected.",
+          "kind": "fact",
+          "claims": [
+            9
+          ]
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "Alert 241 records a retraction whose notice DOI is 10.9999/fake.2020.024, detected on 2026-10-01.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 241,
+          "quote": "retraction, notice 10.9999/fake.2020.024, detected 2026-10-01",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "doi: 10.9999/fake.2020.024",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The Crossref title recorded for that DOI is the paper's own title, not a retraction notice title.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Lactobacillus rhamnosus GG reduces antibiotic-associated diarrhoea in hospitalised adults: a randomised controlled trial",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The current copy has no retraction watermark or banner.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The content of the current copy does not differ from the stored paper.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-5",
+      "kind": "change",
+      "text": "No separate retraction notice text was provided.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-6",
+      "kind": "change",
+      "text": "The paper went online on 3 April 2020, which does not match the alert's 2026 detection date.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Available online 3 April 2020.",
+          "page": 4,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-7",
+      "kind": "change",
+      "text": "The current copy still reports the trial's main finding: LGG reduced antibiotic-associated diarrhoea (11.5% vs 21.2%).",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "AAD occurred in 18 participants (11.5%) given LGG and 33 (21.2%) given placebo (adjusted risk ratio 0.55, 95% CI 0.32\u20130.92).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-8",
+      "kind": "change",
+      "text": "The retraction alert is not shown to be about a real change to this paper, so nothing here shows its findings are affected.",
+      "supported": false,
+      "passages": []
+    }
+  ]
+}

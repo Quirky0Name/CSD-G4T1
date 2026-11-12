@@ -5,7 +5,9 @@ A source resolves to a text of the report: a report document's DOI to that `docu
 paper's own DOI or "stored paper" to `paper`; "current copy" and "new version" to the first
 document of that kind; "draft" to `draft`; "alert <id>" to that `alert`'s line as the prompt shows
 it. A quote not in the text its source names, but in another of the report's texts, is re-targeted
-to where it was found. Claims quote only source material, never the model's earlier answers.
+to where it was found. Claims quote only source material, never the model's earlier answers;
+a later step builds on an earlier step's conclusion as a derived claim naming its claims
+(`from_change`, `from_impact`), with no passages.
 
 Quotes and PDF text are never logged."""
 
@@ -13,7 +15,7 @@ import asyncio
 from dataclasses import dataclass, field
 
 from research_evaluation.impact.inputs import ReportInputs
-from research_evaluation.impact.prompts import alerts_block, paper_block
+from research_evaluation.impact.prompts import alerts_block, paper_block, pdf_label, update_to_line
 from research_evaluation.impact.quotes import (
     ALERT,
     DOI,
@@ -54,7 +56,8 @@ class _Source:
     pdf: bytes | None = None
     # texts that count as text to check (a document's text, record and links; an alert's line)
     body: list[str] = field(default_factory=list)
-    # texts searched but not counted as text to check (the paper's details)
+    # texts searched but not counted as text to check (the paper's details; a document's DOI,
+    # update_to_includes_paper line and PDF label)
     details: list[str] = field(default_factory=list)
     _pages: list[str] | None = None
 
@@ -123,11 +126,18 @@ class _Sources:
     def _document(document: DocumentInReport, pdf: bytes | None) -> _Source:
         texts = [document.text or ""]
         texts += leaves(document.crossref_record) + leaves(document.links)
+        # lines the prompt shows for the document besides its text: quotable, but not text to check
+        shown = [document.doi]
+        if document.kind == "notice":
+            shown.append(update_to_line(document))
+        if pdf is not None:
+            shown.append(pdf_label(document))
         return _Source(
             "document",
             document_id=document.id,
             pdf=pdf,
             body=[t for t in (_normal(text) for text in texts) if t],
+            details=[_normal(text) for text in shown],
         )
 
     def all(self) -> list[_Source]:

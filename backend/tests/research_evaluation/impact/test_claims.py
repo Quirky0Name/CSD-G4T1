@@ -32,7 +32,7 @@ def change(*claims: dict) -> ChangeAssessment:
             "alerts": [],
             "relations": None,
             "severity": "high",
-            "summary": "The paper was retracted.",
+            "summary": [{"text": "The paper was retracted.", "kind": "fact", "claims": [1]}],
             "claims": list(claims) or [claim("The paper was retracted.")],
         }
     )
@@ -45,7 +45,7 @@ def impact(*claims: dict) -> ImpactAssessment:
             "reference_entry": None,
             "uses": [],
             "impact_level": "high",
-            "explanation": "Your Discussion rests on it.",
+            "explanation": [{"text": "Your Discussion rests on it.", "kind": "fact", "claims": [1]}],
             "claims": list(claims) or [claim("Your Discussion rests on it.")],
         }
     )
@@ -55,7 +55,7 @@ def actions(*claims: dict) -> RecommendedActions:
     return RecommendedActions.model_validate(
         {
             "actions": [],
-            "recommendation": "Replace the citation.",
+            "recommendation": [{"text": "Replace the citation.", "kind": "fact", "claims": [1]}],
             "claims": list(claims) or [claim("Replace the citation.")],
         }
     )
@@ -222,6 +222,25 @@ async def test_a_quote_from_a_notices_crossref_record_with_no_text_is_verbatim()
         None,
         "verbatim",
     )
+
+
+@pytest.mark.parametrize(
+    "quote", ["update_to_includes_paper: true", NOTICE], ids=["update_to line", "doi"]
+)
+async def test_a_quote_of_a_line_the_prompt_shows_for_a_notice_is_verbatim(quote):
+    found, _ = await one(NOTICE, quote)
+
+    assert (found["target"], found["document_id"], found["verified"]) == ("document", 1, "verbatim")
+
+
+async def test_a_quote_of_a_current_copys_pdf_label_is_verbatim():
+    copy = current_copy(pdf_source_url="https://example.org/paper.pdf")
+    found, _ = await one(
+        "current copy", "downloaded on ? from https://example.org/paper.pdf",
+        documents=[notice(), copy], paper_pdf=None, document_pdfs=[(copy, TWO_PAGES)],
+    )
+
+    assert (found["target"], found["document_id"], found["verified"]) == ("document", 2, "verbatim")
 
 
 async def test_a_quote_from_the_papers_details_gives_the_paper_with_no_page():

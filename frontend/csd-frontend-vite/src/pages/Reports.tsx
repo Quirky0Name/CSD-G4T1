@@ -1,11 +1,8 @@
 import ReportList from '../components/ReportList'
 
+// the list lays out its own page, so its hero can count what it shows
 function Reports() {
-  return (
-    <main className="min-h-screen px-4 py-10 text-gray-100 sm:px-6 lg:px-8">
-      <ReportList />
-    </main>
-  )
+  return <ReportList />
 }
 
 export default Reports

@@ -1,0 +1,97 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the change is only to the author's affiliation",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The paper gave the first author's affiliation as University of Northfield, while the correct affiliation is Northfield Institute of Education."
+    },
+    {
+      "fact": "says the results and conclusions are unaffected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The notice states the change does not affect the results or conclusions of the article."
+    },
+    {
+      "fact": "recommends changing the draft",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "describes a change to any result or number",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Correction to: School start times and teenage sleep",
+      "backs": true,
+      "pass": true,
+      "reason": "Title shows a correction to the paper on school start times and teenage sleep."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The affiliation of the first author was given as University of Northfield.",
+      "backs": true,
+      "pass": true,
+      "reason": "States the first author's affiliation was given as University of Northfield."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "Garcia, M. (University of Northfield)",
+      "backs": true,
+      "pass": true,
+      "reason": "Tracked paper lists Garcia with University of Northfield, supporting that the paper gave that affiliation (first author is implied but plausible)."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The correct affiliation is Northfield Institute of Education.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states the correct affiliation."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "This does not affect the results or conclusions of the article.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states the change doesn't affect results or conclusions."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "A correction was published to the paper on school start times and teenage sleep.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The paper gave the first author's affiliation as University of Northfield, while the correct affiliation is Northfield Institute of Education.",
+      "covered_by": [
+        "change-1",
+        "change-2",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice states the change does not affect the results or conclusions of the article.",
+      "covered_by": [],
+      "pass": false
+    }
+  ],
+  "absent_claims": []
+}

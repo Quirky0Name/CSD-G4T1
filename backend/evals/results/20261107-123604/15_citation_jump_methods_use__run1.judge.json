@@ -1,0 +1,179 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the alert is about a rise in citations and not a change to the paper's content",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"That is attention, not a change to the paper, the tool or its defaults, so this use is not affected and the impact is none.\" and \"the alert only reports a rise in works citing Mensah (2020), not a change to the paper\""
+    },
+    {
+      "fact": "says no change to the draft is needed or the alert can be dismissed",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"No action is needed: the alert only reports a rise in works citing Mensah (2020), not a change to the paper, and your single Methods use of StructCompare's default parameters is untouched. The alert can be dismissed.\""
+    },
+    {
+      "fact": "suggests the paper's findings or methods are in doubt",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends replacing or removing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line states the 61 vs. 4 citation counts over the two 30-day windows, which is exactly what claim 1 says."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3].",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft sentence says predicted structures were scored with StructCompare using Mensah's default parameters. That matches the claimed use with default parameters. The quote does not name the section, but describing a scoring procedure is consistent with Methods."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "We present StructCompare, an open-source tool that scores the similarity of predicted protein structures.",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper's own abstract sentence describes StructCompare as an open-source tool that scores the similarity of predicted protein structures, matching the claim."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line gives the same 61-versus-4 rise in works citing the paper over 30 days, matching the claim."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Works citing this paper: 61 in the last 30 days, up from 4 in the 30 days before.",
+      "backs": true,
+      "pass": true,
+      "reason": "The alert line states the 61 in the last 30 days, up from 4 in the prior 30 days, matching the claim."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "Predicted structures were scored with StructCompare, using the default parameters of Mensah [3].",
+      "backs": false,
+      "pass": false,
+      "reason": "The draft sentence shows one use of StructCompare with default parameters, but it does not show that this is the draft's only use of the paper. The 'only use' part of the claim is not supported by the quote."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "OpenAlex recorded a sudden rise in works citing this paper, from 4 to 61 in 30-day windows.",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No notice or new version was found.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing shows a change to the paper's content.",
+      "covered_by": [
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft cites Mensah (2020) once, in Methods, where StructCompare was used with its default parameters to score predicted structures.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert reports that many more works cite the paper recently (61 in 30 days, up from 4).",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert reflects attention to the paper rather than a change to the paper.",
+      "covered_by": [
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The alert does not indicate a change to the StructCompare tool or its default parameters.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's use of the paper is not affected by the citation rise.",
+      "covered_by": [
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert only reports a rise in works citing Mensah (2020).",
+      "covered_by": [
+        "change-0",
+        "impact-2",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert does not report a change to the paper.",
+      "covered_by": [
+        "impact-3",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft's single Methods use of StructCompare's default parameters is untouched.",
+      "covered_by": [
+        "impact-0",
+        "action-1"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-1"
+  ]
+}

@@ -1,0 +1,11 @@
+Results: D:\SMU\CS203\project\CSD-G4T1\backend\evals\results\20261111-214819
+
+Case                                Runs  Pass  Target  Unj  Err    Tag      Spread   Text  Hard  Fail  Inv  Mis  Unk
+---------------------------------------------------------------------------------------------------------------------
+29_real_expression_of_concern          1   0/1  misses    0    0   1.00        1.00   1.00     0     0    0    0    0
+---------------------------------------------------------------------------------------------------------------------
+
+Pass rate by category (counted runs only):
+  real: expression of concern, key evidence: 0/1 (0%), not counted: 0 unjudged, 0 error
+Overall pass rate: 0/1 (0%), not counted: 0 unjudged, 0 error
+Failure types (in failed runs): hard_fail 0, wrong_tag 0, missed_fact 0, wrong_fact 0, invented_quote 0, misattributed_quote 0, unlinked_claim 0, unbacked_passage 1, uncovered_statement 0

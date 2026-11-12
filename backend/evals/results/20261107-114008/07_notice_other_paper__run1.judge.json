@@ -1,0 +1,109 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the notice is about a different article (sleep quality in nurses)",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The retraction alert is about a different article, 'Mindfulness training improves sleep quality in nurses'.\""
+    },
+    {
+      "fact": "says the tracked paper is not affected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The tracked paper on exam anxiety in undergraduates has no notice of its own, so nothing here affects what you can rely on from it.\""
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "RETRACTED: Mindfulness training improves sleep quality in nurses",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted title is 'RETRACTED: Mindfulness training improves sleep quality in nurses', which shows the notice is titled for an article on sleep quality in nurses. The 'different article' part is an inference from that title, but the title itself supports the claim."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This article has been retracted because the data could not be verified.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted sentence states the article was retracted because the data could not be verified, matching the claim."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Mindfulness training reduces exam anxiety in undergraduates",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted title is 'Mindfulness training reduces exam anxiety in undergraduates', which describes a paper on exam anxiety in undergraduates."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "update_to_includes_paper: true",
+      "backs": true,
+      "pass": true,
+      "reason": "The quoted field 'update_to_includes_paper: true' says the update-to list includes the paper."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The retraction alert is about a different article, 'Mindfulness training improves sleep quality in nurses'.",
+      "covered_by": [
+        "change-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Its notice says the data could not be verified.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The tracked paper on exam anxiety in undergraduates",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The tracked paper has no notice of its own.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing in the retraction notice affects what you can rely on from the tracked paper.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice's update-to list includes the tracked paper.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    }
+  ]
+}

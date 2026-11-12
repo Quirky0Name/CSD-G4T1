@@ -1,0 +1,94 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the notice is about a different article (sleep quality in nurses)",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The retraction notice is for a different article, \"Mindfulness training improves sleep quality in nurses\", which was retracted because its data could not be verified."
+    },
+    {
+      "fact": "says the tracked paper is not affected",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Nothing given shows a change to the tracked paper itself."
+    },
+    {
+      "fact": "says the tracked paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends removing the citation",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"recommendation\": null"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "RETRACTED: Mindfulness training improves sleep quality in nurses",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote is the Crossref title of the retraction notice, which is the exact title claim 1 states."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "This article has been retracted because the data could not be verified.",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote says the article was retracted because the data could not be verified, which is what claim 2 states."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Mindfulness training reduces exam anxiety in undergraduates",
+      "backs": true,
+      "pass": true,
+      "reason": "The quote is the title of the tracked paper, exactly as claim 3 states it."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The retraction notice is for a different article, \"Mindfulness training improves sleep quality in nurses\"",
+      "covered_by": [
+        "change-0",
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retracted article was retracted because its data could not be verified.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The tracked paper is about exam anxiety in undergraduates.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "Nothing given shows a change to the tracked paper itself.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-3"
+  ]
+}

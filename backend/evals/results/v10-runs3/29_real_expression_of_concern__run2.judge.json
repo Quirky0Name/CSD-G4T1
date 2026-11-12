@@ -1,0 +1,377 @@
+{
+  "judge_model": "haiku",
+  "items": [
+    {
+      "fact": "says the expression of concern states that Fig. 7 does not show LSD1 siRNA data, so the H460 knockdown migration result is not supported",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"The notice says the Fig. 7 results do not match the legend or Results text, and the LSD1 siRNA migration statement is not supported.\" and \"The notice says the Fig. 7 results do not correspond to the legend or Results text, which hits the result your central hypothesis leans on\""
+    },
+    {
+      "fact": "says the draft's Aim 2 rationale rests on that H460 siRNA migration result",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Your Rationale for Aim 2 cites Lv et al. [12] for the H460 siRNA scratch-assay result and takes it as the clearest indication that LSD1 drives migration\" and \"your draft takes that knockdown result as the clearest indication that LSD1 drives migration\""
+    },
+    {
+      "fact": "advises not resting Aim 2 on this result alone, for example by hedging the wording, adding independent evidence, or presenting the effect as what the planned experiments will test",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "\"Hedge that wording, cite the notice, and don't build Aim 2 on this result alone.\""
+    },
+    {
+      "fact": "notes that the concern is unresolved (the authors did not respond) and the paper may later be corrected or retracted",
+      "kind": "must_include",
+      "present": false,
+      "pass": false,
+      "evidence": "\"PLOS ONE issued an Expression of Concern on this article to inform readers of unresolved issues\" and \"the authors did not respond\" and \"keep tracking the paper.\" The answer never says the paper may be corrected or retracted."
+    },
+    {
+      "fact": "says the paper was retracted",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "says the draft's use of the migration result is not affected by the concern",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "\"Overall the impact is moderate: the Rationale use is directly affected\""
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "The PLOS ONE Editors issue this Expression of Concern to inform readers of the unresolved issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same wording: the PLOS ONE Editors issue the Expression of Concern to inform readers of unresolved issues."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "The results shown in Fig. 7 do not correspond to the description in the Figure legend or the corresponding text of the Results section.",
+      "backs": false,
+      "pass": false,
+      "reason": "Shows only that the Fig. 7 results do not match the legend or Results text. It says nothing about the LSD1 siRNA migration statement being unsupported."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "there appears to be a vertical discontinuity in the LSD1 panel between the 293T and A549 lanes.",
+      "backs": true,
+      "pass": true,
+      "reason": "Says there appears to be a vertical discontinuity in the LSD1 panel, which matches 'possible'. The passage does not name Fig. 4 itself."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Similarities were noted between this article [1] and work by other research groups which call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "States that similarities with other groups' work call into question the validity and provenance of the reported results."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The authors did not respond or could not be reached to discuss these issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "States that the authors did not respond or could not be reached, which supports the 'authors did not respond' part of the claim."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "the number and rate of migrated cells was gradually reduced after transfection with LSD1 siRNA plasmid in the H460 cell lines.",
+      "backs": true,
+      "pass": true,
+      "reason": "Results state that the number and rate of migrated H460 cells fell after LSD1 siRNA transfection, which supports the reduced-migration part of the claim. The A549-versus-H460 part is covered by passage 7."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "The expression of LSD1 was lower in the A549 cell than in the H460 cell line, as shown in Figure 4.",
+      "backs": true,
+      "pass": true,
+      "reason": "States that LSD1 expression was lower in A549 than in H460 as shown in Figure 4."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "over-expression of LSD1 protein was associated with shorter overall survival [12].",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Background cites [12] for LSD1 over-expression being associated with shorter overall survival."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Our results showed that overexpression of LSD1 protein were associated with shorter overall survival of NSCLC patients.",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper reports that LSD1 over-expression was associated with shorter overall survival in NSCLC patients."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "Similarities were noted between this article [1] and work by other research groups which call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same notice statement that similarities with other groups' work call into question the validity and provenance of the reported results."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "We take this knockdown result as the clearest indication that LSD1 is a driver, and not only a marker, of migration in lung cancer cells",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft takes the knockdown result as the clearest indication that LSD1 is a driver of migration. The passage does not show the Lv et al. [12] citation or the scratch-assay detail."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "The main evidence behind this hypothesis is a single cell-line study.",
+      "backs": true,
+      "pass": true,
+      "reason": "The paper's Results report reduced migrated cell number and rate after LSD1 siRNA in H460 cells."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "the number and rate of migrated cells was gradually reduced after transfection with LSD1 siRNA plasmid in the H460 cell lines.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same wording: the notice says the Fig. 7 results do not correspond to the legend or Results text."
+    },
+    {
+      "claim_id": "impact-6",
+      "quote": "The results shown in Fig. 7 do not correspond to the description in the Figure legend or the corresponding text of the Results section.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft takes the H460 knockdown result as the clearest indication that LSD1 drives migration."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "We take this knockdown result as the clearest indication that LSD1 is a driver, and not only a marker, of migration in lung cancer cells",
+      "backs": true,
+      "pass": true,
+      "reason": "Same wording: the notice says the Fig. 7 results do not correspond to the legend or Results text."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "The results shown in Fig. 7 do not correspond to the description in the Figure legend or the corresponding text of the Results section.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft calls the single cell-line study the main evidence behind its hypothesis."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "The main evidence behind this hypothesis is a single cell-line study.",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft says the main evidence behind this hypothesis is a single cell-line study."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "Similarities were noted between this article [1] and work by other research groups which call into question the validity and provenance of the reported results.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same notice statement that similarities with other groups' work call into question the validity and provenance of the reported results."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "over-expression of LSD1 protein was associated with shorter overall survival [12].",
+      "backs": true,
+      "pass": true,
+      "reason": "The draft's Background cites [12] for over-expression of LSD1 being associated with shorter overall survival."
+    },
+    {
+      "claim_id": "action-5",
+      "quote": "The PLOS ONE Editors issue this Expression of Concern to inform readers of the unresolved issues.",
+      "backs": true,
+      "pass": true,
+      "reason": "Same wording: the PLOS ONE Editors issue an Expression of Concern to inform readers of unresolved issues."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "PLOS ONE issued an Expression of Concern on this article to inform readers of unresolved issues.",
+      "covered_by": [
+        "change-0",
+        "action-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the Fig. 7 results do not match the legend or Results text.",
+      "covered_by": [
+        "change-1",
+        "impact-6",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says the LSD1 siRNA migration statement is not supported.",
+      "covered_by": [
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice reports a possible vertical discontinuity in the LSD1 panel of Fig. 4.",
+      "covered_by": [
+        "change-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The notice says similarities with other groups' work call into question the validity and provenance of the results.",
+      "covered_by": [
+        "change-3",
+        "impact-2",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The authors did not respond to the notice's concerns.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The stored paper's Results state that LSD1 siRNA reduced migration in H460 cells.",
+      "covered_by": [
+        "change-4",
+        "impact-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The stored paper's Results state that A549 expression was lower than H460 per Figure 4.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's Background section cites [12] for LSD1 over-expression being associated with shorter overall survival.",
+      "covered_by": [
+        "impact-0",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper reports that LSD1 over-expression is associated with shorter overall survival.",
+      "covered_by": [
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice names no specific problem with the survival data.",
+      "covered_by": [],
+      "pass": false
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice says similarities with other groups' work call into question the validity and provenance of the reported results.",
+      "covered_by": [
+        "change-3",
+        "impact-2",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's Rationale for Aim 2 cites Lv et al. [12] for the H460 siRNA scratch-assay result.",
+      "covered_by": [
+        "impact-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft's Rationale for Aim 2 takes the H460 siRNA scratch-assay result as the clearest indication that LSD1 drives migration.",
+      "covered_by": [
+        "impact-3",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper reports that result (the H460 siRNA migration reduction).",
+      "covered_by": [
+        "impact-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice says the Fig. 7 results do not correspond to the legend or Results text.",
+      "covered_by": [
+        "change-1",
+        "impact-6",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft calls this single cell-line study the main evidence for its central hypothesis.",
+      "covered_by": [
+        "impact-4",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice says the Fig. 7 results do not correspond to the legend or Results text.",
+      "covered_by": [
+        "change-1",
+        "impact-6",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft takes the Fig. 7 knockdown result as the clearest indication that LSD1 drives migration.",
+      "covered_by": [
+        "impact-3",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The notice says similarities with other groups' work call into question the validity and provenance of the reported results.",
+      "covered_by": [
+        "change-3",
+        "impact-2",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft's Background cites [12] for the survival association.",
+      "covered_by": [
+        "impact-0",
+        "action-4"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

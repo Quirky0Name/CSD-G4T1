@@ -1,0 +1,390 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the current copy of the paper carries a retraction or withdrawal banner",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "The current copy's title is marked 'RETRACTED:'"
+    },
+    {
+      "fact": "says the reason for the retraction is not stated",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "No reason for the retraction is given in the material provided."
+    },
+    {
+      "fact": "tells the researcher to stop and raise it with co-authors or supervisor because the draft's methods depend on the paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "If confirmed, raise it with your co-authors or supervisor rather than just editing the Methods text"
+    },
+    {
+      "fact": "states a specific reason for the retraction such as fabrication or error",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "claims a retraction notice was found or quotes one",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "The alert records a retraction with no notice."
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line records retraction with no notice."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "RETRACTED: Soil carbon gains after winter cover cropping",
+      "backs": true,
+      "pass": true,
+      "reason": "Title carries RETRACTED:."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "Soil carbon gains after winter cover cropping",
+      "backs": true,
+      "pass": true,
+      "reason": "Tracked paper's title has no marking."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "Winter cover crops raised topsoil carbon by 6% over three years.",
+      "backs": true,
+      "pass": true,
+      "reason": "Fetched document states the 6% result."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft Methods says this."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Using an established protocol rather than designing our own lets our numbers be compared directly with that study",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft says comparability."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "We describe the sampling and analysis protocol in detail so that it can be reused by other field groups",
+      "backs": true,
+      "pass": true,
+      "reason": "Abstract says protocol is described for reuse."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "RETRACTED: Soil carbon gains after winter cover cropping",
+      "backs": true,
+      "pass": true,
+      "reason": "Retracted title."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert records retraction no notice."
+    },
+    {
+      "claim_id": "impact-6",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert severity high."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "retraction, no notice, detected 2026-10-01, alert severity high",
+      "backs": true,
+      "pass": true,
+      "reason": "Alert line shows retraction with no notice."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "RETRACTED: Soil carbon gains after winter cover cropping",
+      "backs": true,
+      "pass": true,
+      "reason": "Retracted title."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft Methods text."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "Using an established protocol rather than designing our own lets our numbers be compared directly with that study",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft comparability text."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Shown by alert line."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Shown."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Shown."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "The fetched document repeats the 6% result; abstract location is reasonably implied."
+    },
+    {
+      "claim_id": "impact-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Shown by draft quote."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Shown by draft quote."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Shown by abstract quote."
+    },
+    {
+      "claim_id": "impact-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Both parts shown."
+    },
+    {
+      "claim_id": "impact-6",
+      "backed": true,
+      "pass": true,
+      "reason": "Alert line says severity high."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Shown."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Shown."
+    },
+    {
+      "claim_id": "action-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Shown."
+    },
+    {
+      "claim_id": "action-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Shown."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-5",
+      "from": [
+        "change-1",
+        "change-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "A RETRACTED: title versus unmarked stored title indicates the paper is retracted, so findings unreliable."
+    },
+    {
+      "claim_id": "impact-5",
+      "from": [
+        "impact-0",
+        "impact-2",
+        "impact-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft follows the protocol of the paper whose current copy is marked retracted."
+    },
+    {
+      "claim_id": "impact-7",
+      "from": [
+        "impact-5",
+        "impact-6"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Method adopted from the paper plus high severity gives the high level."
+    },
+    {
+      "claim_id": "action-5",
+      "from": [
+        "action-3",
+        "action-1",
+        "action-0"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Follows from the draft's use of the protocol and the retracted title and alert."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The alert records a retraction with no notice.",
+      "covered_by": [
+        "change-0",
+        "action-0"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy's title is marked 'RETRACTED:', while the stored paper's title has no retraction marking.",
+      "covered_by": [
+        "change-1",
+        "change-2",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The current copy still repeats the 6% topsoil carbon result in its abstract.",
+      "covered_by": [
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "No reason for the retraction is given in the material provided.",
+      "covered_by": [
+        "change-4",
+        "impact-4",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The whole paper is retracted, so its findings can't be relied on.",
+      "covered_by": [
+        "change-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your Methods (Section 2.2) says you followed the protocol of Haugen and Rao [5] exactly for 0-15 cm cores and dry-combustion carbon measurement.",
+      "covered_by": [
+        "impact-0",
+        "action-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "You say this lets your numbers be compared directly with that study.",
+      "covered_by": [
+        "impact-1",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The stored paper says it describes its protocol so other groups can reuse it.",
+      "covered_by": [
+        "impact-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The current copy of that paper is marked 'RETRACTED:' and the alert records a retraction with no notice, and no reason is given.",
+      "covered_by": [
+        "impact-3",
+        "action-0",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "Your use of its protocol is therefore touched by the retraction.",
+      "covered_by": [
+        "impact-5",
+        "action-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The impact on you is high, because the affected use is a method adopted from the paper and the alert severity is high.",
+      "covered_by": [
+        "impact-7",
+        "impact-6"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The alert records a retraction with no notice, and the current copy of the tracked paper carries a 'RETRACTED:' title.",
+      "covered_by": [
+        "impact-3",
+        "action-0",
+        "action-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft's use of the protocol in [5] is touched by the retraction, because it follows the protocol of the paper whose current copy is marked retracted.",
+      "covered_by": [
+        "impact-5",
+        "action-5"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": [
+    "change-4",
+    "impact-4",
+    "action-2"
+  ]
+}

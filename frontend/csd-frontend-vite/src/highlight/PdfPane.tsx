@@ -28,6 +28,12 @@ function loadDocument(url: string): Promise<PDFDocumentProxy> {
 }
 
 type Size = { width: number; height: number }
+
+// Every page is drawn at one scale: a US Letter page (the widest common portrait page, in PDF points)
+// fills the paper column. A smaller page, A4 or A5, keeps that scale and sits centred on a sheet as
+// wide as the column, so neither the paper's width nor the text's size changes between documents;
+// only a page wider than Letter (a landscape table) is shrunk to fit.
+const PAPER_WIDTH = 612
 type TextContent = Awaited<ReturnType<PDFPageProxy['getTextContent']>>
 type Loaded = { url: string; pdf: PDFDocumentProxy; sizes: Size[] } | { url: string; failed: true }
 
@@ -41,6 +47,8 @@ export default function PdfPane({
   onResult?: (result: PaneResult) => void
 }) {
   const scroller = useRef<HTMLDivElement>(null)
+  // the paper column: one width for every page, capped by .paper-column so pages stay readable
+  const column = useRef<HTMLDivElement>(null)
   const pages = useRef(new Map<number, HTMLDivElement>())
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [width, setWidth] = useState(0)
@@ -53,7 +61,7 @@ export default function PdfPane({
   }, [onResult])
 
   useEffect(() => {
-    const element = scroller.current
+    const element = column.current
     if (!element) return
     const observer = new ResizeObserver(([entry]) => setWidth(Math.floor(entry.contentRect.width)))
     observer.observe(element)
@@ -125,28 +133,30 @@ export default function PdfPane({
       aria-label="PDF pages"
       className="pdf-pane relative h-full overflow-y-auto overscroll-contain bg-gray-950/60 px-3 py-3 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-500 sm:px-4"
     >
-      {!loaded || loaded.url !== url ? (
-        <PaneNote>Loading the PDF…</PaneNote>
-      ) : 'failed' in loaded ? (
-        <PaneNote>No copy of this document to show.</PaneNote>
-      ) : (
-        width > 0 &&
-        loaded.sizes.map((size, i) => (
-          <PdfPage
-            key={i}
-            pdf={loaded.pdf}
-            number={i + 1}
-            size={size}
-            width={width}
-            slices={slices?.get(i + 1) ?? null}
-            onDrawn={i + 1 === firstPage ? onDrawn : undefined}
-            register={(element) => {
-              if (element) pages.current.set(i + 1, element)
-              else pages.current.delete(i + 1)
-            }}
-          />
-        ))
-      )}
+      <div ref={column} className="paper-column">
+        {!loaded || loaded.url !== url ? (
+          <PaneNote>Loading the PDF…</PaneNote>
+        ) : 'failed' in loaded ? (
+          <PaneNote>No copy of this document to show.</PaneNote>
+        ) : (
+          width > 0 &&
+          loaded.sizes.map((size, i) => (
+            <PdfPage
+              key={i}
+              pdf={loaded.pdf}
+              number={i + 1}
+              size={size}
+              width={width}
+              slices={slices?.get(i + 1) ?? null}
+              onDrawn={i + 1 === firstPage ? onDrawn : undefined}
+              register={(element) => {
+                if (element) pages.current.set(i + 1, element)
+                else pages.current.delete(i + 1)
+              }}
+            />
+          ))
+        )}
+      </div>
     </div>
   )
 }
@@ -202,7 +212,8 @@ function PdfPage({
   // what the page-drawing effect reads once its text layer is ready
   const latest = useRef({ slices, onDrawn })
   const [near, setNear] = useState(false)
-  const scale = width / size.width
+  const scale = Math.min(width / PAPER_WIDTH, width / size.width)
+  const pageWidth = Math.round(size.width * scale)
   const height = Math.round(size.height * scale)
   // a page with a highlight is drawn even before it scrolls near
   const show = near || slices !== null
@@ -275,7 +286,7 @@ function PdfPage({
       aria-label={`Page ${number}`}
       role="group"
     >
-      <div ref={layers} className="absolute inset-0" />
+      <div ref={layers} className="absolute top-0" style={{ left: Math.floor((width - pageWidth) / 2), width: pageWidth, height }} />
       <div ref={marks} className="pointer-events-none absolute inset-0" aria-hidden="true" />
       <span className="pdf-page-number">{number}</span>
     </div>

@@ -1,0 +1,433 @@
+{
+  "judge_model": "sonnet",
+  "items": [
+    {
+      "fact": "says the retraction is for duplicate publication, not for errors or misconduct in the data",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "the reason given is that it substantially duplicates a paper the same authors published earlier... the editors found no problem with the data themselves."
+    },
+    {
+      "fact": "says the findings still stand in the original publication",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "the same findings still available in the 2019 paper"
+    },
+    {
+      "fact": "advises keeping the citation and citing the retraction notice or the original paper",
+      "kind": "must_include",
+      "present": true,
+      "pass": true,
+      "evidence": "Keep the statement and cite the original 2019 paper for it... if you keep the 2020 citation, cite the retraction notice alongside it."
+    },
+    {
+      "fact": "says the data were fabricated or unreliable",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": ""
+    },
+    {
+      "fact": "recommends deleting the sentence or the claim it supports",
+      "kind": "must_not_include",
+      "present": false,
+      "pass": true,
+      "evidence": "Keep the statement and cite the original 2019 paper"
+    }
+  ],
+  "passages": [
+    {
+      "claim_id": "change-0",
+      "quote": "Retraction: Wearable heart-rate monitoring in older adults: accuracy of wrist sensors",
+      "backs": true,
+      "pass": true,
+      "reason": "Title shows a retraction notice for the paper."
+    },
+    {
+      "claim_id": "change-0",
+      "quote": "This article has been retracted at the authors' request",
+      "backs": true,
+      "pass": true,
+      "reason": "States retracted at authors' request."
+    },
+    {
+      "claim_id": "change-1",
+      "quote": "because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130)",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives duplication of earlier 2019 paper by same authors."
+    },
+    {
+      "claim_id": "change-2",
+      "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states it."
+    },
+    {
+      "claim_id": "change-3",
+      "quote": "The editors found no problem with the data themselves.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states it."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "Wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives most of the headline result."
+    },
+    {
+      "claim_id": "change-4",
+      "quote": "beats per minute of ECG.",
+      "backs": true,
+      "pass": true,
+      "reason": "Completes the result with ECG."
+    },
+    {
+      "claim_id": "impact-0",
+      "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults (Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021).",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft citation statement matches."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "Wrist-worn optical sensors estimated heart rate in 200 adults aged 70 or over to within 4.8",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives the result portion."
+    },
+    {
+      "claim_id": "impact-1",
+      "quote": "beats per minute of ECG.",
+      "backs": true,
+      "pass": true,
+      "reason": "Completes the result."
+    },
+    {
+      "claim_id": "impact-2",
+      "quote": "This article has been retracted at the authors' request",
+      "backs": true,
+      "pass": true,
+      "reason": "Notice says retracted at authors' request."
+    },
+    {
+      "claim_id": "impact-3",
+      "quote": "because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130)",
+      "backs": true,
+      "pass": true,
+      "reason": "Gives duplication reason."
+    },
+    {
+      "claim_id": "impact-4",
+      "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states it."
+    },
+    {
+      "claim_id": "impact-5",
+      "quote": "The editors found no problem with the data themselves.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states it."
+    },
+    {
+      "claim_id": "action-0",
+      "quote": "Wrist-worn sensors can estimate heart rate to within about 5 beats per minute in older adults (Alvarez et al., 2018; Nguyen and Cole, 2020; Farouk, 2021).",
+      "backs": true,
+      "pass": true,
+      "reason": "Draft citation matches."
+    },
+    {
+      "claim_id": "action-1",
+      "quote": "This article has been retracted at the authors' request",
+      "backs": true,
+      "pass": true,
+      "reason": "Retracted at authors' request."
+    },
+    {
+      "claim_id": "action-2",
+      "quote": "because it substantially duplicates a paper they published earlier (Nguyen and Cole, 2019, doi 10.9999/fake.2019.130)",
+      "backs": true,
+      "pass": true,
+      "reason": "Duplication reason."
+    },
+    {
+      "claim_id": "action-3",
+      "quote": "The data and findings are the same as in the earlier paper, which remains in the literature.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states it."
+    },
+    {
+      "claim_id": "action-4",
+      "quote": "The editors found no problem with the data themselves.",
+      "backs": true,
+      "pass": true,
+      "reason": "Directly states it."
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "change-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages show retraction at authors' request."
+    },
+    {
+      "claim_id": "change-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 3 shows it."
+    },
+    {
+      "claim_id": "change-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 4."
+    },
+    {
+      "claim_id": "change-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 5."
+    },
+    {
+      "claim_id": "change-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 6 and 7 together give the full result."
+    },
+    {
+      "claim_id": "impact-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 8."
+    },
+    {
+      "claim_id": "impact-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passages 9 and 10."
+    },
+    {
+      "claim_id": "impact-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 11."
+    },
+    {
+      "claim_id": "impact-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 12."
+    },
+    {
+      "claim_id": "impact-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 13."
+    },
+    {
+      "claim_id": "impact-5",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 14."
+    },
+    {
+      "claim_id": "action-0",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 15."
+    },
+    {
+      "claim_id": "action-1",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 16."
+    },
+    {
+      "claim_id": "action-2",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 17."
+    },
+    {
+      "claim_id": "action-3",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 18."
+    },
+    {
+      "claim_id": "action-4",
+      "backed": true,
+      "pass": true,
+      "reason": "Passage 19."
+    }
+  ],
+  "derived": [
+    {
+      "claim_id": "change-5",
+      "from": [
+        "change-0",
+        "change-2",
+        "change-3"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Retraction of paper, same findings in earlier paper which remains; 'may still stand' is hedged and supported."
+    },
+    {
+      "claim_id": "impact-6",
+      "from": [
+        "impact-0",
+        "impact-2"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft cites the paper and the paper is retracted."
+    },
+    {
+      "claim_id": "impact-7",
+      "from": [
+        "impact-0",
+        "impact-2",
+        "impact-3",
+        "impact-4",
+        "impact-5"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Three sources, duplicate reason, same findings, no data problem are all in the named claims; low level is supported."
+    },
+    {
+      "claim_id": "action-5",
+      "from": [
+        "action-0",
+        "action-1"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Draft cites the paper and it is retracted."
+    },
+    {
+      "claim_id": "action-6",
+      "from": [
+        "action-0",
+        "action-1",
+        "action-2",
+        "action-3",
+        "action-4"
+      ],
+      "follows": true,
+      "pass": true,
+      "reason": "Supported by named claims 15-19."
+    }
+  ],
+  "statements": [
+    {
+      "field": "change_summary",
+      "statement": "The tracked paper has been retracted at the authors' request, reason: substantially duplicates 2019 paper.",
+      "covered_by": [
+        "change-0",
+        "change-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The data and findings are the same as in the earlier paper, which remains in the literature, and editors found no problem with the data.",
+      "covered_by": [
+        "change-2",
+        "change-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The stored paper's headline result is wrist-worn sensors estimated heart rate in 200 adults 70+ to within 4.8 bpm of ECG.",
+      "covered_by": [
+        "change-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "change_summary",
+      "statement": "The retraction covers the whole paper, but its findings may still stand in the original 2019 paper.",
+      "covered_by": [
+        "change-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The draft cites Nguyen and Cole 2020 with Alvarez 2018 and Farouk 2021 for the Introduction statement; stored paper reports 4.8 bpm result.",
+      "covered_by": [
+        "impact-0",
+        "impact-1"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice says retracted at authors' request, for duplication of 2019 paper.",
+      "covered_by": [
+        "impact-2",
+        "impact-3"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The notice says data and findings same as earlier paper, no problem with data.",
+      "covered_by": [
+        "impact-4",
+        "impact-5"
+      ],
+      "pass": true
+    },
+    {
+      "field": "evaluation",
+      "statement": "The Introduction citation is touched, impact low, one of three sources, etc.",
+      "covered_by": [
+        "impact-6",
+        "impact-7"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The draft cites the paper with two others in the Introduction; notice says retracted for duplication.",
+      "covered_by": [
+        "action-0",
+        "action-1",
+        "action-2"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "Notice says data and findings same, no problem with data.",
+      "covered_by": [
+        "action-3",
+        "action-4"
+      ],
+      "pass": true
+    },
+    {
+      "field": "recommendation",
+      "statement": "The citation is touched, impact low.",
+      "covered_by": [
+        "action-5",
+        "action-6"
+      ],
+      "pass": true
+    }
+  ],
+  "absent_claims": []
+}

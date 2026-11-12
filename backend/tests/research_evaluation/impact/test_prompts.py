@@ -25,7 +25,7 @@ CHANGE = ChangeAssessment.model_validate(
         "alerts": [],
         "relations": None,
         "severity": "high",
-        "summary": "The paper was retracted.",
+        "summary": [{"text": "The paper was retracted.", "kind": "fact", "claims": [1]}],
         "claims": [{"text": "The paper was retracted.", "passages": []}],
     }
 )

@@ -1,0 +1,340 @@
+{
+  "runs": {
+    "01_correction_effect_size__run1": {
+      "started_at": "2026-11-11T15:03:03.273073+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "76ff7547ff7aeca3e8d1acfb9d84af9f083a1c459f218dde5b46a7d295ebe71a"
+    },
+    "02_retraction_key_evidence__run1": {
+      "started_at": "2026-11-11T15:04:09.756739+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "b997c29ee80428b768b7fb5e2d6dcff65102d4737dd73aa9608d5670afb75e78"
+    },
+    "03_harmless_affiliation__run1": {
+      "started_at": "2026-11-11T15:04:37.589928+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "5626e9b63e6a520efdca6b0d7d9f69b8ad3a47eb265be0172f11aa87780ab397"
+    },
+    "04_retraction_flag_no_notice__run1": {
+      "started_at": "2026-11-11T15:04:44.574525+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "035a36c911b70ad7603e1dc940f593286b9dd14d7ae6619cb73b91510ce0582b"
+    },
+    "05_vague_expression_of_concern__run1": {
+      "started_at": "2026-11-11T15:05:05.402178+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "27bf9db1c8c95f839e5a716c18cc1e84cd08516f1b9eacbf6f5c5232d411af90"
+    },
+    "07_notice_other_paper__run1": {
+      "started_at": "2026-11-11T15:05:30.043965+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "b79ffefe797a262c0c31e3ea2a9731eff00dfd1d5c5e3286954df8a96c10c825"
+    },
+    "08_retraction_no_draft__run1": {
+      "started_at": "2026-11-11T15:05:37.643504+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "e311024e599c4e8a5db8bfbdee6cf66692eb3c65a4fcd13b70ee9a21a0c9a057"
+    },
+    "09_retraction_background_only__run1": {
+      "started_at": "2026-11-11T15:05:57.229102+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "1a3ee6fa6ee949dc572e3ed1871555791e80d6765aee35da536dc2ee250bc743"
+    },
+    "10_draft_does_not_cite__run1": {
+      "started_at": "2026-11-11T15:06:17.983759+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "4ef1f106edca778924f2ce1a7e9fc227350c922dec9f79e1ecdcdc314b54db59"
+    },
+    "11_concern_then_retraction_replacement__run1": {
+      "started_at": "2026-11-11T15:06:33.845806+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "75817a227bd4a54a43585f4d278aafef432e14d117f52cd498c7de65c5539566"
+    },
+    "12_misleading_typographical_notice__run1": {
+      "started_at": "2026-11-11T15:07:08.981577+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "6989e76084bc29cfb764806be06a3fe3f6fc49f820ec5fe2fc6ba63932deb3c2"
+    },
+    "13_duplicate_retraction_group_citation__run1": {
+      "started_at": "2026-11-11T15:07:44.139585+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "6ff15507c5ca535adfe2f17b58412583c99ee893995151b198d0cacb8297605a"
+    },
+    "14_same_authors_different_paper__run1": {
+      "started_at": "2026-11-11T15:08:11.110375+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "9a8208cce3707ca6ce572a14b210425c171c932085eabcff44af50c7dfc2964e"
+    },
+    "15_citation_jump_methods_use__run1": {
+      "started_at": "2026-11-11T15:08:28.314722+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "a8ccd31377d79cefb073647e03be5dfdc28c5e5c081f5325dac83d32ea94e069"
+    },
+    "16_partial_retraction_two_uses__run1": {
+      "started_at": "2026-11-11T15:08:46.585758+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "96dfd5839d10b522ead7528d267811939df3b5b544b1c2b315e28d1beb239723"
+    },
+    "18_correction_use_unaffected__run1": {
+      "started_at": "2026-11-11T15:09:19.533043+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "63f1bf69514c0f7650ae70b5826f9f3ada63ab0d89fbacc0e08f51cc501ec1bd"
+    },
+    "19_flag_with_watermark__run1": {
+      "started_at": "2026-11-11T15:09:42.570652+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "dbad0ac1fb4e67c50b8887415bd46a86573ad5ab225fe68b61eb3303c8de64bb"
+    },
+    "20_prompt_injection_in_notice__run1": {
+      "started_at": "2026-11-11T15:10:10.053976+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "b61bb2420a789e573f7f9faaa35f6b2afafb130058ce3712fd06f5dc58d577c6"
+    },
+    "21_correction_effect_size_reworded__run1": {
+      "started_at": "2026-11-11T15:10:32.742742+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "ce75596853ae6c29a882bc96fe70fbfb90b74f1b2cafb3744cbdf7608570568b"
+    },
+    "24_retraction_notice_doi_is_paper__run1": {
+      "started_at": "2026-11-11T15:10:56.264320+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "63c3cc118e866d3d113443853e84b80be704b0fe56d9474d1e3f32fd49f337ff"
+    },
+    "25_retraction_reversed_by_addendum__run1": {
+      "started_at": "2026-11-11T15:11:07.482370+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "d71ca670e9669f6e0e7b63ca8477f728d1c5afbda64f2ce92d9fae98f99e0b4b"
+    },
+    "27_withdrawal_content_gone__run1": {
+      "started_at": "2026-11-11T15:11:45.198975+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "1458eb368d07bcefe3be19a51dd518094d27ecd1bab09b9dd0178acc7a4887ac"
+    },
+    "28_real_retraction__run1": {
+      "started_at": "2026-11-11T15:12:14.333208+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "fb525bbd65cc114a3c883e3c4fb5b775d1ae5af3d2c3860a5a96c2747b1847f8"
+    },
+    "29_real_expression_of_concern__run1": {
+      "started_at": "2026-11-11T15:21:06.947659+00:00",
+      "prompt_version": 11,
+      "prompt_sha256": "91d7cf38e851f0a2ec5b6fb60fdf77078c5e1b59d8b16ed897876ca03e4beccd",
+      "provider": "claude-code",
+      "models": [
+        "sonnet"
+      ],
+      "generation": {
+        "temperature": null,
+        "seed": null
+      },
+      "case_sha256": "8653ab636e5924c3958c880280a36f75b36b9f2319e174066214ee64c5a0d28e"
+    }
+  }
+}

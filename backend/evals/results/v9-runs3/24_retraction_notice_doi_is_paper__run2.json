@@ -1,0 +1,185 @@
+{
+  "change_summary": "A retraction alert was raised, but its notice carries the paper's own DOI and no notice text was available. The current copy has the same content as the stored paper and shows no retraction banner or watermark. The alert was detected in October 2026, while the paper was published in July 2020. The flag is therefore unconfirmed and nothing shows a change to the paper.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 9,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "pdfs": {
+      "attached": [
+        "stored paper",
+        "current copy"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 241,
+          "about_this_paper": "no",
+          "what_changed": "Crossref or OpenAlex flagged a retraction, but the notice's DOI is the paper's own DOI, and no notice text was provided. The current copy's content matches the stored paper and shows no retraction banner or watermark.",
+          "scope": "unclear",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "The notice DOI is the paper's own and nothing else shows a change: the current copy matches the stored paper and its Crossref title has no 'RETRACTED' marking. The alert was detected in 2026, years after the July 2020 publication, so the dates do not match; the flag is still unconfirmed.",
+          "evidence": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024"
+            },
+            {
+              "source": "stored paper",
+              "quote": "J. Fake Clinical Microbiology 2020; 56(1): 41\u201358 \u00b7 doi:10.9999/fake.2020.024"
+            },
+            {
+              "source": "current copy",
+              "quote": "Version of record\npublished in the July 2020 issue: Volume 56,\nIssue 1, 1 July 2020, pages 41\u201358."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "none",
+      "summary": "A retraction alert was raised, but its notice carries the paper's own DOI and no notice text was available. The current copy has the same content as the stored paper and shows no retraction banner or watermark. The alert was detected in October 2026, while the paper was published in July 2020. The flag is therefore unconfirmed and nothing shows a change to the paper.",
+      "claims": [
+        {
+          "text": "The alert records a retraction whose notice DOI is 10.9999/fake.2020.024.",
+          "passages": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024"
+            }
+          ]
+        },
+        {
+          "text": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "J. Fake Clinical Microbiology 2020; 56(1): 41\u201358 \u00b7 doi:10.9999/fake.2020.024"
+            }
+          ]
+        },
+        {
+          "text": "No notice text was provided.",
+          "passages": []
+        },
+        {
+          "text": "The current copy shows no retraction banner or watermark, and its content matches the stored paper.",
+          "passages": []
+        },
+        {
+          "text": "The paper's version of record was published on 1 July 2020.",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "Version of record\npublished in the July 2020 issue: Volume 56,\nIssue 1, 1 July 2020, pages 41\u201358."
+            }
+          ]
+        },
+        {
+          "text": "The alert was detected on 2026-10-01.",
+          "passages": [
+            {
+              "source": "alert 241",
+              "quote": "detected 2026-10-01"
+            }
+          ]
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The alert records a retraction whose notice DOI is 10.9999/fake.2020.024.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 241,
+          "quote": "retraction, notice 10.9999/fake.2020.024",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "J. Fake Clinical Microbiology 2020; 56(1): 41\u201358 \u00b7 doi:10.9999/fake.2020.024",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "No notice text was provided.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The current copy shows no retraction banner or watermark, and its content matches the stored paper.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The paper's version of record was published on 1 July 2020.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Version of record\npublished in the July 2020 issue: Volume 56,\nIssue 1, 1 July 2020, pages 41\u201358.",
+          "page": 4,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-5",
+      "kind": "change",
+      "text": "The alert was detected on 2026-10-01.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 241,
+          "quote": "detected 2026-10-01",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}

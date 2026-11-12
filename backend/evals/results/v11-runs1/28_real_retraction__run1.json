@@ -1,0 +1,435 @@
+{
+  "change_summary": "FUCK U GEMINI FLASH. WHO TF IS EVEN USING GEMINI FLASH",
+  "change_severity": "low",
+  "impact_level": "low",
+  "evaluation": "FUCK U GEMINI FLASH. WHO TF IS EVEN USING GEMINI FLASH",
+  "recommendation": "FUCK U GEMINI FLASH. WHO TF IS EVEN USING GEMINI FLASH",
+  "assessment": {
+    "prompt_version": 11,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": null
+    },
+    "placeholder": true,
+    "draft": "read",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 281,
+          "about_this_paper": "yes",
+          "what_changed": "PLOS ONE retracted the article because of concerns about peer review integrity and possible manipulation of the publication process, which call into question the validity and provenance of the results.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "The retraction notice says the reported results' validity and provenance are in question, so the findings can't be relied on. The stored paper also carries a RETRACTED watermark.",
+          "evidence": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "These concerns call into question the validity and provenance of the reported results."
+            },
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "Retraction: Detecting phishing websites using machine learning technique"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "claims": [
+        {
+          "text": "PLOS ONE retracted the paper because of concerns about peer review integrity and potential manipulation of the publication process.",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "The PLOS One Editors retract this article [1] because it was identified as one of a series of submissions for which we have concerns about peer review integrity"
+            }
+          ]
+        },
+        {
+          "text": "The notice says these concerns call into question the validity and provenance of the reported results.",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "These concerns call into question the validity and provenance of the reported results."
+            }
+          ]
+        },
+        {
+          "text": "The notice's Crossref title names this paper's title, so it is about this paper.",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "Retraction: Detecting phishing websites using machine learning technique"
+            }
+          ]
+        },
+        {
+          "text": "The author either did not respond or could not be reached.",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "The author either did not respond directly or could not be reached."
+            }
+          ]
+        }
+      ],
+      "summary": [
+        {
+          "text": "PLOS ONE retracted the paper because of concerns about peer review integrity and potential manipulation of the publication process.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The notice says these concerns call into question the validity and provenance of the reported results.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "The retraction notice is titled for this paper, so it is about this paper.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "The author either did not respond or could not be reached.",
+          "kind": "fact",
+          "claims": [
+            4
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[14] Dutta, A. K. (2021). Detecting phishing websites using machine learning technique. PLoS ONE, 16(10), e0258361. doi:10.1371/journal.pone.0258361",
+      "uses": [
+        {
+          "section": "3. Choice of detector",
+          "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL",
+          "role": "key_evidence",
+          "claim_relied_on": "that the LURL RNN-LSTM URL detector reached 97.4% and 96.8% accuracy and beat two comparison detectors, justifying the choice of an LSTM",
+          "affected": "yes",
+          "reason": "The retraction covers the whole paper and questions the validity and provenance of the reported results the choice rests on."
+        },
+        {
+          "section": "4. Planned system and data",
+          "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73",
+          "role": "methods_or_data",
+          "claim_relied_on": "the LURL model settings (two LSTM layers, hidden size 650, learning rate 1.0, decay 0.73, 7 epochs) used as the starting configuration",
+          "affected": "yes",
+          "reason": "The settings come from the retracted paper, whose results are in question, and the draft wants to read its results against the published ones."
+        }
+      ],
+      "impact_level": "high",
+      "claims": [
+        {
+          "text": "In Section 3 the draft says the main evidence for choosing an LSTM comes from Dutta [14]'s LURL detector.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL"
+            }
+          ]
+        },
+        {
+          "text": "The draft says it chose an LSTM on the strength of LURL's reported results.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "On the strength of these results we chose an LSTM over the character-level"
+            }
+          ]
+        },
+        {
+          "text": "The stored paper reports LURL accuracy of 97.4% on Phishtank and 96.8% on Crawler.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "LURL has produced an average of 97.4% and 96.8% for Phishtank and Crawler datasets respectively."
+            }
+          ]
+        },
+        {
+          "text": "In Section 4 the draft starts from the LURL settings reported by Dutta [14], with hidden size 650 and learning rate 1.0 with decay 0.73.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73"
+            }
+          ]
+        },
+        {
+          "text": "The stored paper lists LURL settings of learning rate 1.0, max_lr_epoch 7 and decay 0.73.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "learning_rate = 1.0, max_lr_epoch = 7,"
+            }
+          ]
+        },
+        {
+          "text": "The retraction notice says the concerns call into question the validity and provenance of the reported results.",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "These concerns call into question the validity and provenance of the reported results."
+            }
+          ]
+        },
+        {
+          "text": "PLOS ONE retracted the paper over concerns about peer review integrity.",
+          "passages": [
+            {
+              "source": "10.1371/journal.pone.0322065",
+              "quote": "The PLOS One Editors retract this article [1] because it was identified as one of a series of submissions for which we have concerns about peer review integrity"
+            }
+          ]
+        }
+      ],
+      "explanation": [
+        {
+          "text": "Your Section 3 says the main evidence for choosing an LSTM comes from Dutta [14], and you chose an LSTM on the strength of LURL's results, which the stored paper reports as 97.4% and 96.8% accuracy.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "Your Section 4 starts from the LURL settings reported by Dutta [14], and the stored paper lists those settings.",
+          "kind": "fact",
+          "claims": [
+            4,
+            5
+          ]
+        },
+        {
+          "text": "The retraction notice says the concerns call into question the validity and provenance of the reported results, and PLOS ONE retracted the paper over concerns about peer review integrity.",
+          "kind": "fact",
+          "claims": [
+            6,
+            7
+          ]
+        },
+        {
+          "text": "Both the model choice and the starting settings rest on the retracted paper, so the impact on your draft is high.",
+          "kind": "fact",
+          "claims": [
+            1,
+            4,
+            6
+          ]
+        }
+      ]
+    },
+    "actions": null,
+    "failed_step": "actions",
+    "failures": [
+      {
+        "model": "sonnet",
+        "cause": "timed out after 300 s"
+      }
+    ]
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "PLOS ONE retracted the paper because of concerns about peer review integrity and potential manipulation of the publication process.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The PLOS One Editors retract this article [1] because it was identified as one of a series of submissions for which we have concerns about peer review integrity",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The notice says these concerns call into question the validity and provenance of the reported results.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "These concerns call into question the validity and provenance of the reported results.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The notice's Crossref title names this paper's title, so it is about this paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: Detecting phishing websites using machine learning technique",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The author either did not respond or could not be reached.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The author either did not respond directly or could not be reached.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "In Section 3 the draft says the main evidence for choosing an LSTM comes from Dutta [14]'s LURL detector.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The main evidence for our choice comes from Dutta [14], who built an RNN-LSTM URL detector, called LURL",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The draft says it chose an LSTM on the strength of LURL's reported results.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "On the strength of these results we chose an LSTM over the character-level",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The stored paper reports LURL accuracy of 97.4% on Phishtank and 96.8% on Crawler.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "LURL has produced an average of 97.4% and 96.8% for Phishtank and Crawler datasets respectively.",
+          "page": 13,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "In Section 4 the draft starts from the LURL settings reported by Dutta [14], with hidden size 650 and learning rate 1.0 with decay 0.73.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We start from the LURL settings reported by Dutta [14]: two LSTM layers with a hidden size of 650, a learning rate of 1.0 with a decay of 0.73",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The stored paper lists LURL settings of learning rate 1.0, max_lr_epoch 7 and decay 0.73.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "learning_rate = 1.0, max_lr_epoch = 7,",
+          "page": 12,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "The retraction notice says the concerns call into question the validity and provenance of the reported results.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "These concerns call into question the validity and provenance of the reported results.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-6",
+      "kind": "impact",
+      "text": "PLOS ONE retracted the paper over concerns about peer review integrity.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The PLOS One Editors retract this article [1] because it was identified as one of a series of submissions for which we have concerns about peer review integrity",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ]
+}
