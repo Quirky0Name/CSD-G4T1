@@ -14,8 +14,6 @@
 |---|---|
 | Full test suite | `cd backend && uv run pytest` |
 | Single test file | `cd backend && uv run pytest <path>` |
-| Live tests, Claude Code Sonnet medium (default) | `cd backend && uv run pytest -m live tests/research_evaluation/impact/test_rag_effect_live.py` |
-| Live tests, Gemini tested model | `cd backend && RAG_EFFECT_PROVIDER=gemini uv run pytest -m live tests/research_evaluation/impact/test_rag_effect_live.py` |
 | Typecheck | none |
 | Lint | `cd backend && uv run ruff check` |
 
@@ -135,26 +133,32 @@ Starting branch: `feat/rag-ai-eval`
   - Must run on Claude Code (user: "test should be able to work with claude code").
   - Default tested model and judge: Sonnet at effort medium through Claude Code (user: "use sonnet medium by default for both model and judge"). Built like `evals/run.py`'s `make_llm` and `evals/judge.py`'s `make_judge` (`evals/claude_llm.ClaudeLlm`). Overrides: `RAG_EFFECT_PROVIDER` (`claude-code` default, `gemini`, `claude-api`), `RAG_EFFECT_MODEL` (default `sonnet` on Claude Code, `claude-sonnet-5-5` on the API, `GEMINI_MODEL` on Gemini), `RAG_EFFECT_JUDGE_PROVIDER` and `RAG_EFFECT_JUDGE_MODEL` (same defaults), effort `medium` for Claude.
   - The chosen provider unavailable (no key; `claude` not installed or not logged in, `claude_llm.preflight` raising `NotOnSubscription`) skips the tests; `ClaudeLimitReached` skips the rest.
-  - The judge gets the added context (the profile, the feedback item or the past items), and the baseline's and the variant's `change_severity`, `impact_level`, `evaluation`, `recommendation` and `actions`, labelled "without context" and "with context". It answers `{"yes": bool, "quote": str}` to one question per test, with a quote from the "with context" answer. Source: user (confirmed).
+  - The judge reads only the two runs' text bodies, labelled "without context" and "with context": every sentence of the summary, explanation and recommendation, and every action, whether or not a claim backs it (claims are left to the other tests). It never sees the added context. It answers `{"passed": bool}` to one question per test. Source: user ("change the judge ... to just read the text body and compare the two to see if it changes. a simple pass fail will do. assume that claims pass in previous tests").
   - What each test checks (user: "for personalisation check if tone change. for report notes and past docs, check if it affects output"; "don't make the tests too strict. should be passable. just to check whether will affect").
   - Inputs: the IJAA retraction of `test_live_gemini_judges_the_ijaa_retraction_against_a_draft_that_cites_it` (notice record fixture, `draft_cites_ijaa.pdf`), so steps 2 and 3 run. Source: `code: test_assess.py`.
   - One baseline (no profile, no feedback, no past) and each variant are run once per session and cached in a module-scoped fixture: 4 `assess` runs and 3 judge calls in all. One run each, no retries.
-  - Each test prints the baseline and variant answers and the judge's quote, so `-s` shows them.
+  - Each test prints the baseline's and variant's text bodies and the judge's pass or fail, so `-s` shows them.
   - Marked `live`, so `uv run pytest` never runs them. Source: `code: backend/pyproject.toml` (`addopts`).
   - `evals/claude_llm.py` is imported as `evals.claude_llm` (`pythonpath` has `.`). Source: `code: backend/pyproject.toml`.
   - The tests:
-    - **`test_profile_changes_tone`:** a profile with `response_preferences: "Write casually and plainly, like a friendly colleague, with no jargon."` (other fields set too). Judge: "Is the tone of the with-context answer noticeably different from the without-context answer, in the direction the profile asks?"
+    - **`test_profile_changes_tone`:** a profile with `response_preferences: "Write casually and plainly, like a friendly colleague, with no jargon."` (other fields set too). Judge: "Is the with-context text noticeably more casual and plain, with less jargon, than the without-context text?"
     - **`test_profile_keeps_levels`:** code check: in the profile run, `change_severity` and `impact_level` are each the baseline's or one step from it (`none` < `low` < `medium` < `high`). `PROFILE_RULES` forbids level changes; one step allows for run-to-run noise.
-    - **`test_feedback_affects_output`:** one `researcher_feedback` item from another of the researcher's papers, verdict `overstated`, note "The last report overstated this. I only use their dataset in a supplementary robustness check, so changes to it rarely matter for my conclusions. Don't tell me to rewrite the paper." (user: confirmed). Passes when either level differs from the baseline, or the judge answers yes to "Does the with-context answer differ from the without-context answer in a way the feedback explains (its conclusions, levels, focus or actions)?"
-    - **`test_past_timeline_affects_output`:** `chunks` = one past alert and one past report describing an earlier expression of concern about the same paper's data. Judge: "Does the with-context answer use or refer to the earlier items, in a way the without-context answer doesn't?"
+    - **`test_feedback_affects_output`:** one `researcher_feedback` item from another of the researcher's papers, verdict `overstated`, note "The last report overstated this. I only use their dataset in a supplementary robustness check, so changes to it rarely matter for my conclusions. Don't tell me to rewrite the paper." (user: confirmed). Judge: "Does the with-context text say something the without-context text doesn't, or leave out something it says?"
+    - **`test_past_timeline_affects_output`:** `chunks` = one past alert and one past report describing an earlier expression of concern about the same paper's data. Judge: the same question as the feedback test.
 - **Acceptance criteria:**
-  - [ ] The 4 tests pass with the defaults (Claude Code, Sonnet, medium, model and judge): `cd backend && uv run pytest -m live tests/research_evaluation/impact/test_rag_effect_live.py`.
-  - [ ] With the chosen provider unavailable they skip, not fail: `cd backend && RAG_EFFECT_PROVIDER=gemini GEMINI_API_KEY= uv run pytest -m live tests/research_evaluation/impact/test_rag_effect_live.py` reports 4 skipped.
-  - [ ] Without `-m live` they are deselected: `cd backend && uv run pytest tests/research_evaluation/impact/test_rag_effect_live.py` reports 4 deselected.
-  - [ ] `uv run pytest` and `uv run ruff check` pass.
+  - [x] With the chosen provider unavailable they skip, not fail: `cd backend && RAG_EFFECT_PROVIDER=gemini GEMINI_API_KEY= uv run pytest -m live tests/research_evaluation/impact/test_rag_effect_live.py` reports 4 skipped.
+  - [x] Without `-m live` they are deselected: `cd backend && uv run pytest tests/research_evaluation/impact/test_rag_effect_live.py` reports 4 deselected.
+  - [x] `uv run pytest` and `uv run ruff check` pass.
 - **Doc deltas:**
+  - `make_llm` is built in the test file, not imported: `evals/run.py` imports `fpdf`, which isn't a project dependency. It mirrors `make_llm`'s defaults; an unknown provider raises. No doc needed.
+  - The feedback item and the past alert and report are written by the real builders (`chunks.feedback_piece`, `alert_pieces`, `report_pieces`), so they read as stored chunks do. The feedback's earlier report is a retraction of another paper whose dataset the researcher's Methods used. No doc needed.
+  - A run that comes back as the placeholder fails its test (with the failures), since a comparison against it says nothing. EVALUATION.md, the smoke-test subsection.
+  - The cache is a module-scoped `Runs` fixture keyed by context; each run uses its test's stub Storage Management and User Management. No doc needed.
+  - First live run (Claude Code, Sonnet, medium; 2026-11-12): profile tone and profile levels passed; feedback and past failed (judge "no", levels equal). A rerun of those two with every step's answer saved gave the same: the past run's step 1 `relations` linked the retraction to the 2020 expression of concern, but no claim, summary, explanation or recommendation mentioned it (step 3 doesn't get the past); the feedback run mentioned the feedback nowhere. Live runs stopped there (user: "stop running claude code cases, just create them"). The user then changed the judge (Decisions above); the reworked tests haven't been run live.
+  - Spec change: "The 4 tests pass with the defaults" moved from S2's acceptance criteria to the Human checks, and the two live-test commands from the header's Commands to that check (user: option 2, "the live pass is a human check"), so no automated step spends the researcher's Claude Code quota. No doc needed.
+  - Spec change: the judge's Decision, the printed output and the three judge questions changed as above (before: the judge saw the added context and the answer fields, answered yes with a quote, and the feedback test also passed on a level change). EVALUATION.md, the smoke-test subsection.
   - EVALUATION.md, "Evals" (a short "Before/after smoke tests" subsection): the live tests and what each checks (profile: tone changes, levels within one step; feedback and past: output affected), that checks are loose (one run each, a Sonnet judge), not scored evals, that they don't test retrieval or prove "better"; how to run them; the defaults (Claude Code Sonnet medium, model and judge) and the `RAG_EFFECT_*` overrides.
 
 ## Human checks
 
-- [ ] **S2:** run the live tests once with `-s` and read the printed baseline and variant answers. Expected: the profile answer reads in the asked tone, the feedback answer's conclusions take the note into account (for example lower levels or narrower advice), and the past answer links the retraction to the earlier concern, sensibly.
+- [ ] **S2:** run the live tests once with the defaults (Claude Code, Sonnet, medium, model and judge) and `-s`: `cd backend && uv run pytest -m live -s tests/research_evaluation/impact/test_rag_effect_live.py`; with Gemini as the tested model, prefix `RAG_EFFECT_PROVIDER=gemini`. Expected: the 4 tests pass, and in the printed baseline and variant texts the profile answer reads in the asked tone, the feedback answer's conclusions take the note into account (for example lower levels or narrower advice), and the past answer links the retraction to the earlier concern, sensibly.
