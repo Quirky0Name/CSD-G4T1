@@ -103,12 +103,17 @@ Past items first, then the feedback item, then the profile item. Past and feedba
   - The profile is invented and fixed in `past.json`; it is never the researcher's real profile. Source: user ("just make it fake a profile, dn read the real one"). Doc delta.
   - The PDFs are made with a throwaway script (not in the repo), like the existing example; `.gitattributes` there keeps PDFs byte for byte. Doc delta.
 - **Acceptance criteria:**
-  - [ ] `pastContent()` parses, and every placeholder in its `context_chunks` names an existing past alert, document, or the past report (`FakeReportExampleTest`).
-  - [ ] Every `document` item's `page` is within its PDF's page count, and every `start`/`end` lies inside the notice text (`FakeReportExampleTest`).
-  - [ ] The example profile has only listed occupation, field and work-type values, at most 5 interests of 1 to 60 characters, and `response_preferences` of at most 500 characters (`FakeReportExampleTest`).
-  - [ ] `GET /public/fake-report/past-new-version.pdf` and `past-related.pdf` answer `200` with bytes starting `%PDF-`; `GET /public/fake-report/past.json` answers `404` (`FakeReportTest`).
-  - [ ] `cd storage && ./mvnw test` passes.
+  - [x] `pastContent()` parses, and every placeholder in its `context_chunks` names an existing past alert, document, or the past report (`FakeReportExampleTest`).
+  - [x] Every `document` item's `page` is within its PDF's page count, and every `start`/`end` lies inside the notice text (`FakeReportExampleTest`).
+  - [x] The example profile has only listed occupation, field and work-type values, at most 5 interests of 1 to 60 characters, and `response_preferences` of at most 500 characters (`FakeReportExampleTest`).
+  - [x] `GET /public/fake-report/past-new-version.pdf` and `past-related.pdf` answer `200` with bytes starting `%PDF-`; `GET /public/fake-report/past.json` answers `404` (`FakeReportTest`).
+  - [x] `cd storage && ./mvnw test` passes.
 - **Doc deltas:** CONTRACTS.md "Example files in `storage/src/main/resources/dev/fake-report/`": `past.json`, its shape and placeholders, the two new PDFs. STORAGE.md "Fake reports": the past example, its story, how it was made.
+  - Placeholder shape (CONTRACTS.md): `past.json`'s `context_chunks` holds only the past items, each `{"source": "alert" | "document" | "report", "index": <position in past.json's alerts or documents; absent for report>, "page"?, "start"?, "end"?}`; an unknown `source` fails to parse. The `feedback` and `profile` items aren't in it: they are built from `past.json`'s `feedback` and `profile`, so the verdict and profile are written once. Why: an index is the only stable name for a row that doesn't exist yet.
+  - The story (STORAGE.md): a correction notice `10.9999/fake.2019.011c` adding the trial registration number and that Fake Pharma Ltd donated the iron sulphate; the corrected version `10.9999/fake.2019.011v1.1` (`past-new-version.pdf`, 3 pages, slope still 0.45); the current copy `paper.pdf`; and a related letter to the editor `10.9999/fake.2020.044` (`past-related.pdf`, 2 pages: the letter questioning the Table 3 slope, and the authors' reply standing by it). The past report rates the change `low` and the impact `medium`, which the feedback calls overstated. Why: the letter's slope question is what the current report's expression of concern and retraction later confirm, so it reads as the earlier chapter.
+  - The past evaluation has `"claims": []` (STORAGE.md). Why: the frontend's `withMockClaims` gives an assessed fake report with null claims the current example's claims, which quote documents the past report doesn't have.
+  - The two PDFs use fpdf2's core Helvetica font, not the DejaVu of the existing ones (STORAGE.md, how it was made). Why: no DejaVu font was at hand; core fonts embed nothing.
+  - `FakeReportExampleTest` copies the profile lists from `users/src/main/resources/profile/options.json` and reads a PDF's page count from its uncompressed page tree's `/Count`. Why: storage has no PDF library and its tests don't read the users module. No doc needed beyond the test's comment.
 
 ### S2. Storage stores the past with the fake report
 
