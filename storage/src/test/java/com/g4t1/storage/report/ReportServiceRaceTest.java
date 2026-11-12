@@ -30,7 +30,7 @@ class ReportServiceRaceTest {
     private final PaperRepository papers = mock(PaperRepository.class);
     private final ReportDocumentService documents = mock(ReportDocumentService.class);
     private final ReportService service = new ReportService(reports, alerts, papers, documents,
-            JsonMapper.builder().build());
+            JsonMapper.builder().build(), event -> { });
 
     private final UUID paperId = UUID.randomUUID();
     private final Report report = mock(Report.class);

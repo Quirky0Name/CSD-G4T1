@@ -24,6 +24,8 @@ spring:
 storage:
   jwt-secret: ${JWT_SECRET}
   grobid-url: ${GROBID_URL:http://localhost:8070}
+  # Research Evaluation, nudged after a researcher saves or deletes a report's feedback
+  re-base-url: ${RE_BASE_URL:http://localhost:8000}
   crossref-mailto: ${CROSSREF_MAILTO:}
   openalex-api-key: ${OPENALEX_API_KEY:}
   semantic-scholar-api-key: ${S2_API_KEY:}

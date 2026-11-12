@@ -6,6 +6,7 @@ import com.g4t1.storage.alert.AlertResponse;
 import com.g4t1.storage.alert.AlertService;
 import com.g4t1.storage.alert.NewAlertRequest;
 import com.g4t1.storage.paper.PaperRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,14 +33,16 @@ public class ReportService {
     private final PaperRepository papers;
     private final ReportDocumentService documents;
     private final JsonMapper json;
+    private final ApplicationEventPublisher events;
 
     public ReportService(ReportRepository reports, AlertRepository alerts, PaperRepository papers,
-                         ReportDocumentService documents, JsonMapper json) {
+                         ReportDocumentService documents, JsonMapper json, ApplicationEventPublisher events) {
         this.reports = reports;
         this.alerts = alerts;
         this.papers = papers;
         this.documents = documents;
         this.json = json;
+        this.events = events;
     }
 
     /**
@@ -216,7 +219,8 @@ public class ReportService {
     /**
      * Saves the owner's verdict and note on an assessed report of their paper, replacing any earlier
      * feedback. The note is trimmed, blank is null, and over 500 characters is a 400. Another user's
-     * paper is the same 404 as a missing one, as for the report list.
+     * paper is the same 404 as a missing one, as for the report list. Once committed, Research
+     * Evaluation is nudged to embed it (FeedbackNudger).
      */
     @Transactional
     public ReportFeedbackResponse saveFeedback(UUID userId, UUID paperId, long reportId,
@@ -231,13 +235,16 @@ public class ReportService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Report " + reportId + " is not assessed");
         }
         report.recordFeedback(request.verdict(), note);
+        events.publishEvent(new FeedbackChanged(reportId));
         return ReportFeedbackResponse.of(report);
     }
 
-    // clears the owner's feedback on a report of their paper; a report with none is left as it is
+    // clears the owner's feedback on a report of their paper; a report with none is left as it is. Either
+    // way Research Evaluation is nudged once committed, and finds no feedback, which deletes its chunk
     @Transactional
     public void deleteFeedback(UUID userId, UUID paperId, long reportId) {
         requireOwnedReport(userId, paperId, reportId).clearFeedback();
+        events.publishEvent(new FeedbackChanged(reportId));
     }
 
     private Report requireOwnedReport(UUID userId, UUID paperId, long reportId) {
