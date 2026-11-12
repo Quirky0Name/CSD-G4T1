@@ -151,12 +151,16 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
   - `UserService` stops deleting profile chunks: a deleted user's papers cascade to their chunks (user: "ok to rest assumed"). Doc delta.
   - Feedback search spans every paper of the owner; other types stay per paper (I3). Doc delta.
 - **Acceptance criteria:**
-  - [ ] `PUT /internal/chunks` with `feedback` and a report id stores one chunk with the report's `paper_id`; with `profile` returns `400`; with an unknown report `404` (`ChunkControllerTest`).
-  - [ ] Feedback search from paper A returns the owner's feedback chunks of papers A and B, never another owner's, nearest first, each with `paper_id`, `paper_title`, `report_id`, `source_date` = `feedback_updated_at` (`ChunkSearchPostgresIT`).
-  - [ ] A `document` search still returns only that paper's chunks, now with `paper_id` and `paper_title` (`ChunkSearchPostgresIT`).
-  - [ ] Deleting a report deletes its feedback chunk (`ChunkPostgresIT`).
-  - [ ] `cd storage && ./mvnw test` passes (Postgres ITs run when Docker is up).
+  - [x] `PUT /internal/chunks` with `feedback` and a report id stores one chunk with the report's `paper_id`; with `profile` returns `400`; with an unknown report `404` (`ChunkControllerTest`).
+  - [x] Feedback search from paper A returns the owner's feedback chunks of papers A and B, never another owner's, nearest first, each with `paper_id`, `paper_title`, `report_id`, `source_date` = `feedback_updated_at` (`ChunkSearchPostgresIT`).
+  - [x] A `document` search still returns only that paper's chunks, now with `paper_id` and `paper_title` (`ChunkSearchPostgresIT`).
+  - [x] Deleting a report deletes its feedback chunk (`ChunkPostgresIT`).
+  - [x] `cd storage && ./mvnw test` passes (Postgres ITs run when Docker is up).
 - **Doc deltas:** CONTRACTS.md: I3 in `PUT /internal/chunks` and `POST /internal/chunks/search`. STORAGE.md "Chunks": `feedback` replaces `profile`, the columns, the cross-paper scope. ROADMAP.md: remove "Writing and using profile chunks". Out of scope: embedding the profile.
+  - Added in build: `PUT /internal/chunks` now deletes by `source_type` and source id, since a report's `report` and `feedback` chunks share `report_id`; storing one never removes the other (`ChunkControllerTest`); STORAGE.md.
+  - Added in build: an unknown report for `feedback` is `404` `No report <id>`; a non-numeric `source_id` is `400` `source_id must be a decimal id` like the other types; CONTRACTS.md.
+  - Added in build: in each match, `paper_id` and `paper_title` come right after `report_id`; the feedback scope joins `papers` on `owner_id`, so a user's feedback chunks go when their papers are deleted; CONTRACTS.md, STORAGE.md.
+  - Added in build: `ChunkControllerTest.deletedWithUser` now proves a deleted user's feedback chunks go with their papers while another user's stay.
 
 ### S3: Feedback chunk and its embed endpoint (Research Evaluation)
 
