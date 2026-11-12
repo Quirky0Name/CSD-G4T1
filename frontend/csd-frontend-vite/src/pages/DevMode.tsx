@@ -405,7 +405,7 @@ export default function DevMode() {
       await reload()
       setTab('reports')
       return fakeStatus === 'assessed'
-        ? 'Fake report added. The researcher gets the toast within 30 s.'
+        ? 'Fake report added, with an earlier report, feedback and a profile for its Context tab. The researcher gets the toast within 30 s.'
         : `Fake report added, stuck at ${fakeStatus}. No toast for this one.`
     })
 
