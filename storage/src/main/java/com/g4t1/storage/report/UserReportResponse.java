@@ -10,7 +10,8 @@ import java.util.UUID;
 
 // A report as the researcher sees it: its alerts in the alert API's shape (no change_key), its
 // documents, the evaluation fields impact will fill (null until then), and the past chunks impact
-// added to its prompt (a JSON array as Research Evaluation sent it; null when none was sent)
+// added to its prompt (a JSON array as Research Evaluation sent it; null when none was sent), and the
+// researcher's feedback on it (null when none was saved)
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record UserReportResponse(
         Long id,
@@ -23,12 +24,14 @@ public record UserReportResponse(
         Instant evaluatedAt,
         List<AlertResponse> alerts,
         List<UserDocumentResponse> documents,
-        JsonNode contextChunks) {
+        JsonNode contextChunks,
+        ReportFeedbackResponse feedback) {
 
     static UserReportResponse from(Report report, List<AlertResponse> alerts, List<UserDocumentResponse> documents,
                                    JsonNode contextChunks) {
         return new UserReportResponse(report.getId(), report.getPaperId(), report.getStatus(), report.getCreatedAt(),
                 report.getInvestigatedAt(), report.getEvaluation(), report.getRecommendation(),
-                report.getEvaluatedAt(), alerts, documents, contextChunks);
+                report.getEvaluatedAt(), alerts, documents, contextChunks,
+                ReportFeedbackResponse.of(report));
     }
 }

@@ -24,6 +24,9 @@ import java.util.stream.Collectors;
 @Service
 public class ReportService {
 
+    // the same limit as a profile's response_preferences
+    static final int MAX_FEEDBACK_NOTE = 500;
+
     private final ReportRepository reports;
     private final AlertRepository alerts;
     private final PaperRepository papers;
@@ -210,6 +213,42 @@ public class ReportService {
         return toResponse(report);
     }
 
+    /**
+     * Saves the owner's verdict and note on an assessed report of their paper, replacing any earlier
+     * feedback. The note is trimmed, blank is null, and over 500 characters is a 400. Another user's
+     * paper is the same 404 as a missing one, as for the report list.
+     */
+    @Transactional
+    public ReportFeedbackResponse saveFeedback(UUID userId, UUID paperId, long reportId,
+                                               ReportFeedbackRequest request) {
+        String note = request.note() == null || request.note().isBlank() ? null : request.note().strip();
+        if (note != null && note.length() > MAX_FEEDBACK_NOTE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "note must be at most " + MAX_FEEDBACK_NOTE + " characters");
+        }
+        Report report = requireOwnedReport(userId, paperId, reportId);
+        if (report.getStatus() != ReportStatus.ASSESSED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Report " + reportId + " is not assessed");
+        }
+        report.recordFeedback(request.verdict(), note);
+        return ReportFeedbackResponse.of(report);
+    }
+
+    // clears the owner's feedback on a report of their paper; a report with none is left as it is
+    @Transactional
+    public void deleteFeedback(UUID userId, UUID paperId, long reportId) {
+        requireOwnedReport(userId, paperId, reportId).clearFeedback();
+    }
+
+    private Report requireOwnedReport(UUID userId, UUID paperId, long reportId) {
+        if (!papers.findById(paperId).map(paper -> paper.getOwnerId().equals(userId)).orElse(false)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
+        }
+        return reports.findById(reportId)
+                .filter(report -> report.getPaperId().equals(paperId))
+                .orElseThrow(() -> noReport(reportId));
+    }
+
     private Report requireReport(UUID paperId, long reportId) {
         requirePaper(paperId);
         return reports.findById(reportId)
@@ -236,6 +275,6 @@ public class ReportService {
                 report.getEvaluatedAt(), report.getChangeSummary(), report.getChangeSeverity(),
                 report.getImpactLevel(), report.getAssessment() == null ? null : json.readTree(report.getAssessment()),
                 alerts.findByReportIdOrderByIdAsc(report.getId()).stream().map(ReportAlertResponse::from).toList(),
-                documents.forReport(report.getId()));
+                documents.forReport(report.getId()), ReportFeedbackResponse.of(report));
     }
 }

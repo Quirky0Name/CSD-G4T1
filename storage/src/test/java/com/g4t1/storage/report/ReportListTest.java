@@ -221,7 +221,9 @@ class ReportListTest {
                 .andExpect(jsonPath("$.reports[1].investigated_at").value(done.getInvestigatedAt().toString()))
                 .andExpect(jsonPath("$.reports[*].evaluation").value(contains(nullValue(), nullValue())))
                 .andExpect(jsonPath("$.reports[*].recommendation").value(contains(nullValue(), nullValue())))
-                .andExpect(jsonPath("$.reports[*].evaluated_at").value(contains(nullValue(), nullValue())));
+                .andExpect(jsonPath("$.reports[*].evaluated_at").value(contains(nullValue(), nullValue())))
+                .andExpect(jsonPath("$.reports[0].feedback").value(nullValue()))
+                .andExpect(jsonPath("$.reports[1].feedback").value(nullValue()));
     }
 
     @Test

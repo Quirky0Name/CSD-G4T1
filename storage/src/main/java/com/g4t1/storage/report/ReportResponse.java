@@ -9,7 +9,8 @@ import java.util.UUID;
 
 // A report with everything in it, for Research Evaluation: its alerts, its documents, and the
 // evaluation fields impact fills (null until the report is assessed). owner_id is the paper owner's,
-// so impact can read the researcher's profile from User Management
+// so impact can read the researcher's profile from User Management. feedback is the researcher's verdict
+// and note, null when none was saved
 @JsonInclude(JsonInclude.Include.ALWAYS)
 public record ReportResponse(
         Long id,
@@ -26,5 +27,6 @@ public record ReportResponse(
         AssessmentLevel impactLevel,
         JsonNode assessment,
         List<ReportAlertResponse> alerts,
-        List<ReportDocumentResponse> documents) {
+        List<ReportDocumentResponse> documents,
+        ReportFeedbackResponse feedback) {
 }
