@@ -34,6 +34,7 @@ function report(id: number, createdAt: string, alerts: Alert[] = [], paperId = P
     change_severity: null,
     impact_level: null,
     claims: null,
+    feedback: null,
     alerts,
     documents: [],
   }

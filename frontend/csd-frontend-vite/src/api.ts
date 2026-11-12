@@ -83,6 +83,8 @@ export type UserReport = {
   // what impact read beside this report, in prompt order: [] when it found no past, null before
   // V14 or until assessed
   context_chunks: ContextChunk[] | null
+  // the researcher's verdict and note on this report; null when none was saved
+  feedback: ReportFeedback | null
   alerts: Alert[]
   documents: UserDocument[]
 }
@@ -104,6 +106,31 @@ export type PastChunk = {
 
 export type FeedbackVerdict = 'fair' | 'overstated' | 'understated'
 
+// a researcher's verdict on how serious an assessed report made the change out to be, and an optional
+// note (docs/CONTRACTS.md, PUT /papers/{paperId}/reports/{reportId}/feedback)
+export type ReportFeedback = {
+  verdict: FeedbackVerdict
+  note: string | null
+  updated_at: string
+}
+
+// the note's limit, counted after trimming as Storage counts it
+export const FEEDBACK_NOTE_MAX = 500
+
+export async function saveReportFeedback(
+  paperId: string,
+  reportId: number,
+  body: { verdict: FeedbackVerdict; note: string | null },
+): Promise<ReportFeedback> {
+  const res = await storage.put<ReportFeedback>(`/papers/${paperId}/reports/${reportId}/feedback`, body)
+  return res.data
+}
+
+// 204 also when there was none
+export async function deleteReportFeedback(paperId: string, reportId: number): Promise<void> {
+  await storage.delete(`/papers/${paperId}/reports/${reportId}/feedback`)
+}
+
 export type FeedbackChunk = {
   source_type: 'feedback'
   // the report the feedback is on
@@ -118,7 +145,7 @@ export type FeedbackChunk = {
 const CONTEXT_SOURCES = new Set(['document', 'alert', 'report', 'feedback'])
 
 // What this branch's Storage sends: the same, without the fields the claims and RAG work added
-type Added = 'change_summary' | 'change_severity' | 'impact_level' | 'claims' | 'context_chunks'
+type Added = 'change_summary' | 'change_severity' | 'impact_level' | 'claims' | 'context_chunks' | 'feedback'
 export type RawReport = Omit<UserReport, Added> & Partial<Pick<UserReport, Added>>
 
 // Fields the server leaves out become null, so nothing downstream checks for undefined. A context
@@ -131,6 +158,7 @@ export function toUserReport(raw: RawReport): UserReport {
     impact_level: raw.impact_level ?? null,
     claims: raw.claims ?? null,
     context_chunks: raw.context_chunks?.filter((item) => CONTEXT_SOURCES.has(item.source_type)) ?? null,
+    feedback: raw.feedback ?? null,
   }
 }
 
