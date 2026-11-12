@@ -190,12 +190,17 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
   - At most 8000 characters, `PAGE_LIMIT`, within `gemini-embedding-001`'s 2048-token input; the evaluation fields are cut, never the title, verdict or note (user: "ok to rest assumed"). Doc delta.
   - Embedded as `RETRIEVAL_DOCUMENT`; failures logged by class only, never raised, like `store_report_chunks`. Doc delta.
 - **Acceptance criteria:**
-  - [ ] `feedback_piece` gives the lines above, in order, and leaves out empty fields and the note line when there is no note (`test_feedback_chunk.py`).
-  - [ ] With a 20,000-character evaluation the content is at most 8000 characters and still ends with the verdict and note (`test_feedback_chunk.py`).
-  - [ ] `store_feedback_chunk` sends `PUT /internal/chunks` with `source_type` `feedback`, `source_id` the report id, one chunk; with no feedback it sends an empty list; an embedder or Storage error is logged and not raised (`test_feedback_chunk.py`).
-  - [ ] `POST /embed/feedback` returns `202` with a service token, `403` with a user token, `401` with none, `422` for `"12"`, `503` with no Gemini key (`test_embed_feedback.py`).
-  - [ ] `uv run pytest tests/research_evaluation` and `uv run ruff check` pass.
+  - [x] `feedback_piece` gives the lines above, in order, and leaves out empty fields and the note line when there is no note (`test_feedback_chunk.py`).
+  - [x] With a 20,000-character evaluation the content is at most 8000 characters and still ends with the verdict and note (`test_feedback_chunk.py`).
+  - [x] `store_feedback_chunk` sends `PUT /internal/chunks` with `source_type` `feedback`, `source_id` the report id, one chunk; with no feedback it sends an empty list; an embedder or Storage error is logged and not raised (`test_feedback_chunk.py`).
+  - [x] `POST /embed/feedback` returns `202` with a service token, `403` with a user token, `401` with none, `422` for `"12"`, `503` with no Gemini key (`test_embed_feedback.py`).
+  - [x] `uv run pytest tests/research_evaluation` and `uv run ruff check` pass.
 - **Doc deltas:** CONTRACTS.md: I4 under "Research Evaluation". EVALUATION.md "Embeddings": the feedback chunk, its content and limit.
+  - Added in build: the report date in the title line is the report's `created_at` (as document chunks use), `unknown` when absent; the title falls back to the DOI, then `unknown paper`; EVALUATION.md.
+  - Added in build: `changes` lists each change type once, in alert order; when the 8000 limit bites, everything between the title line and the verdict (the changes line included) is cut from the end; EVALUATION.md.
+  - Added in build: `POST /embed/feedback` is `503` also when the impact context has no embedder; CONTRACTS.md.
+  - Added in build: `Chunk.source_date` is optional, since a feedback chunk can outlive its deleted feedback (a failed delete nudge) and its `feedback_updated_at` is then null; one such chunk must not fail the whole search; EVALUATION.md.
+  - Added in build: the stub Storage Management gains `PUT /internal/chunks`, a report `feedback` field, and stub-only `PUT /dev/reports/{id}/feedback` and `GET /dev/chunks/{type}/{id}`, so the feedback path runs against it; no doc (dev aid, documented in its docstrings).
 
 ### S4: Save and delete nudge the embedder (Storage)
 
