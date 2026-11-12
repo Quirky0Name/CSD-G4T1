@@ -153,7 +153,7 @@ Past items first, then the feedback item, then the profile item. Past and feedba
 - **Blocked by:** S2
 - **Branch:** `dev-mode-rag`
 - **Order on branch:** 3
-- **Files:** `frontend/csd-frontend-vite/src/api.ts` (`ProfileChunk` in `ContextChunk`, `profile` in `CONTEXT_SOURCES`), `src/context/resolve.ts`, `src/context/describe.ts`, `src/components/ReportContext.tsx` (`ProfileBody`, icon, group), `src/context/resolve.test.ts`, a `ReportContext` test.
+- **Files:** `frontend/csd-frontend-vite/src/api.ts` (`ProfileChunk` in `ContextChunk`, `profile` in `CONTEXT_SOURCES`), `src/context/resolve.ts`, `src/context/describe.ts`, `src/components/ReportContext.tsx` (`ProfileBody`, icon, group), `src/context/resolve.test.ts`, `src/components/ReportContext.test.tsx` (new); `package.json`, `package-lock.json`, `tsconfig.app.json`, `tsconfig.test.json` for the component-test tooling.
 - **Seams:**
   - `resolveContext(items, reports, paperId)`: catches a `profile` item becoming a `profile` entry with the item's profile, and one with no `profile` object being dropped; misses rendering.
   - `ContextList` / `ContextPane` (vitest + Testing Library): catches the "From your profile" group after feedback, the row title, and the pane's fields; misses layout.
@@ -163,10 +163,13 @@ Past items first, then the feedback item, then the profile item. Past and feedba
   - Group order: "From this paper's past", "From your feedback", "From your profile". Source: I1 order. Doc delta not needed (follows the item order).
   - Row title `Your profile`; the pane lists occupation (or `occupation_other` for `Other`), research fields, research interests, type of work and how reports are written, leaving out empty answers, all as text. Source: GLOSSARY.md "Profile". `transient`.
 - **Acceptance criteria:**
-  - [ ] `resolveContext` turns a `profile` item into a `profile` entry carrying its profile; an item with `profile` missing or not an object is dropped (`resolve.test.ts`).
-  - [ ] With past, feedback and profile items, the Context list shows three groups in that order; picking `Your profile` shows its non-empty answers and no empty ones (`ReportContext` test).
-  - [ ] `npm test`, `npx tsc -b` and `npm run lint` pass in `frontend/csd-frontend-vite`.
+  - [x] `resolveContext` turns a `profile` item into a `profile` entry carrying its profile; an item with `profile` missing or not an object is dropped (`resolve.test.ts`).
+  - [x] With past, feedback and profile items, the Context list shows three groups in that order; picking `Your profile` shows its non-empty answers and no empty ones (`ReportContext` test).
+  - [x] `npm test`, `npx tsc -b` and `npm run lint` pass in `frontend/csd-frontend-vite`.
 - **Doc deltas:** CONTRACTS.md, `GET /papers/{id}/reports` `context_chunks` row: the `profile` item (shape in I1), sent only by dev mode's fake report, shown from its own `profile`.
+  - Component tests: `@testing-library/react`, `@testing-library/dom` and `jsdom` added as dev dependencies, and `tsconfig.test.json` (`tsconfig.app.json` excludes them) now takes `*.test.tsx`. A component test opts into jsdom with a `// @vitest-environment jsdom` first line, so the other tests stay in node; `ReportContext.test.tsx` mocks `PdfPane`, which needs a real canvas (frontend `README.md`, testing). Why: the seams name vitest + Testing Library, and the frontend had neither.
+  - The row's meta under `Your profile` is the occupation and the research fields; the pane opens with "The assessment read these answers from your profile while it wrote this report." and lists the answers with the profile page's labels (`Occupation`, `Research fields`, `Research interests`, `Type of work`, `How reports are written`), from `profileAnswers` in `context/describe.ts`. Why: the same words as the profile page. No doc needed beyond the code.
+  - A `profile` item whose `profile` is not an object (missing, null, a string or an array) is dropped, keeping the other items' keys as their positions. Why: the acceptance criterion; positions keep keys stable. No doc needed beyond the CONTRACTS.md row.
 
 ### S4. Dev page message and demo doc
 
