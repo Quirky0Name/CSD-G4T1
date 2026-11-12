@@ -173,6 +173,26 @@ export type Profile = {
   response_preferences: string | null
 }
 
+// a channel's minimum level for alerts or reports (docs/CONTRACTS.md, GET /auth/me/notifications);
+// null is never
+export type Threshold = 'low' | 'medium' | 'high' | null
+
+export type ChannelThresholds = {
+  min_alert_severity: Threshold
+  min_change_severity: Threshold
+  min_impact_level: Threshold
+}
+
+export type NotificationPreferences = {
+  // address is the account email, read-only
+  email: ChannelThresholds & { enabled: boolean; address: string }
+  telegram: ChannelThresholds & { enabled: boolean; chat_id: number | null }
+}
+
+export type ChannelOutcome = 'sent' | 'failed' | 'disabled' | 'not_configured'
+
+export type TestOutcomes = { channels: { email: ChannelOutcome; telegram: ChannelOutcome } }
+
 export type PollSummary = {
   poll_id: number
   trigger: string
@@ -243,6 +263,31 @@ export async function getProfile(): Promise<Profile | null> {
 // replaces every answer, creating the profile when there is none; returns it as stored
 export async function saveProfile(profile: Profile): Promise<Profile> {
   const res = await meApi.put<Profile>('/profile', profile)
+  return res.data
+}
+
+// the researcher's outside notification preferences: email and Telegram, each with its thresholds
+export async function getNotifications(): Promise<NotificationPreferences> {
+  const res = await meApi.get<NotificationPreferences>('/notifications')
+  return res.data
+}
+
+// each PUT replaces one whole channel and answers both, as stored
+export async function saveEmailNotifications(body: ChannelThresholds & { enabled: boolean }): Promise<NotificationPreferences> {
+  const res = await meApi.put<NotificationPreferences>('/notifications/email', body)
+  return res.data
+}
+
+export async function saveTelegramNotifications(
+  body: ChannelThresholds & { enabled: boolean; chat_id: number | null },
+): Promise<NotificationPreferences> {
+  const res = await meApi.put<NotificationPreferences>('/notifications/telegram', body)
+  return res.data
+}
+
+// a fixed test message to every enabled channel, thresholds ignored; 429 within 60 s of the last
+export async function sendTestNotification(): Promise<TestOutcomes> {
+  const res = await meApi.post<TestOutcomes>('/notifications/test')
   return res.data
 }
 

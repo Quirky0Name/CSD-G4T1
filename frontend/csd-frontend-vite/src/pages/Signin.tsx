@@ -1,108 +1,101 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowRightIcon } from '@heroicons/react/20/solid'
 import { errorMessage } from '../api'
 import { useAuth } from '../auth'
+import { AuthShell } from '../components/AuthShell'
+import { errorPanel, inputClasses, labelClasses, primaryPill, smallPill } from '../ui'
 
-const inputClasses =
-    'block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500'
+// Sign-in on the sign-up card: the penguin, turned 3/4, points across at the form, and turns to its !
+// when the details are refused.
 
 export default function Signin() {
-    const { login } = useAuth()
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [error, setError] = useState<string | null>(null)
-    const [submitting, setSubmitting] = useState(false)
+  const { login } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        setError(null)
-        setSubmitting(true)
-        try {
-            await login(email, password)
-        } catch (err) {
-            setError(errorMessage(err))
-            setSubmitting(false)
-        }
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError(null)
+    setSubmitting(true)
+    try {
+      await login(email, password)
+    } catch (err) {
+      setError(errorMessage(err))
+      setSubmitting(false)
     }
+  }
 
-    return (
+  return (
+    <AuthShell
+      pose={error ? 'alert' : 'point'}
+      caption="Welcome back. Your papers have been watched while you were away."
+      hideCaptionOnPhone
+      topRight={
         <>
-            <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
-                <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-                    <h2 className="text-center text-2xl/9 font-bold tracking-tight text-gray-900 dark:text-white">
-                        Sign in to your account
-                    </h2>
-                </div>
-
-                <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900 dark:text-gray-100">
-                                Email address
-                            </label>
-                            <div className="mt-2">
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="text"
-                                    inputMode="email"
-                                    required
-                                    autoComplete="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className={inputClasses}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900 dark:text-gray-100">
-                                    Password
-                                </label>
-                            </div>
-                            <div className="mt-2">
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    required
-                                    autoComplete="current-password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className={inputClasses}
-                                />
-                            </div>
-                        </div>
-
-                        {error && (
-                            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-                                {error}
-                            </p>
-                        )}
-
-                        <div>
-                            <button
-                                type="submit"
-                                disabled={submitting}
-                                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-60 dark:bg-indigo-500 dark:shadow-none dark:hover:bg-indigo-400 dark:focus-visible:outline-indigo-500"
-                            >
-                                Sign in
-                            </button>
-                        </div>
-                    </form>
-
-                    <p className="mt-10 text-center text-sm/6 text-gray-500 dark:text-gray-400">
-                        Not a member?{' '}
-                        <Link
-                            to="/register"
-                            className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
-                        >
-                            Register as new member
-                        </Link>
-                    </p>
-                </div>
-            </div>
+          <span className="hidden min-[380px]:inline">New here?</span>
+          <Link to="/register" className={smallPill}>
+            Create account
+          </Link>
         </>
-    )
+      }
+    >
+      <form onSubmit={handleSubmit} className="animate-step-forward mt-6 flex flex-1 flex-col md:mt-10 short:md:mt-4">
+        <h1 className="text-2xl/8 font-semibold tracking-tight text-balance text-white sm:text-3xl/9">Sign in to your desk</h1>
+        <p className="mt-2 text-sm/6 text-gray-400">See which of the papers you cite have changed since you last looked.</p>
+
+        <div className="mt-8 space-y-5 short:mt-5 short:space-y-3">
+          <div>
+            <label htmlFor="email" className={labelClasses}>
+              Email address
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="text"
+              inputMode="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={error ? true : undefined}
+              className={`mt-1.5 ${inputClasses}`}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className={labelClasses}>
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={error ? true : undefined}
+              className={`mt-1.5 ${inputClasses}`}
+            />
+          </div>
+
+          {error && (
+            <p role="alert" className={`animate-reveal ${errorPanel}`}>
+              {error}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-auto pt-10 short:pt-6">
+          <button type="submit" disabled={submitting} className={`w-full sm:w-auto ${primaryPill}`}>
+            {submitting ? 'Signing in…' : 'Sign in'}
+            {!submitting && <ArrowRightIcon aria-hidden="true" className="size-4" />}
+          </button>
+        </div>
+      </form>
+    </AuthShell>
+  )
 }

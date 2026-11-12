@@ -19,6 +19,8 @@ import {
 } from '../format'
 import { useTracking } from '../tracking'
 import { ActionButton, ActionLink } from './ActionButton'
+import { EmptyState, Loading, Page, PageHeader } from './Page'
+import { badge, card, errorPanel, riseDelay, smallPill } from '../ui'
 
 const DOCUMENT_KIND_LABEL: Record<DocumentKind, string> = {
   notice: 'Notice',
@@ -27,17 +29,7 @@ const DOCUMENT_KIND_LABEL: Record<DocumentKind, string> = {
   related: 'Related document',
 }
 
-function Spinner({ label }: { label: string }) {
-  return (
-    <div role="status" className="flex items-center gap-2 text-sm text-gray-400">
-      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-4 animate-spin text-indigo-400">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
-        <path fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" className="opacity-75" />
-      </svg>
-      {label}
-    </div>
-  )
-}
+const Spinner = Loading
 
 export default function ReportList() {
   const { state } = useTracking()
@@ -54,29 +46,37 @@ export default function ReportList() {
 
   const filteredTitle =
     paperFilter && state.status === 'ready' ? state.papers.find((paper) => paper.id === paperFilter)?.title : null
+  // flagged in the header when a report found a change that hits hard
+  const serious = (reports ?? []).some((report) => report.change_severity === 'high' || report.impact_level === 'high')
+
+  const assessed = (reports ?? []).filter((report) => report.status === 'assessed').length
 
   return (
-    <div>
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl/7 font-bold text-white sm:text-3xl sm:tracking-tight">Reports</h1>
-          <p className="mt-2 text-sm/6 text-gray-400">
-            {filteredTitle ? `For ${filteredTitle}.` : 'Changes that may affect your research, grouped per paper.'}
-          </p>
-        </div>
-        {paperFilter && (
-          <Link to="/reports" className="mt-1 shrink-0 text-sm font-semibold text-indigo-400 hover:text-indigo-300">
-            Show all
-          </Link>
-        )}
-      </div>
+    <Page>
+      <PageHeader
+        title="Reports"
+        meta={
+          reports
+            ? [
+                `${assessed} assessed`,
+                `${reports.length - assessed} in progress`,
+                serious && <span className="text-red-300">Includes a high-severity change</span>,
+                filteredTitle && `For ${filteredTitle}`,
+              ]
+            : undefined
+        }
+        description={filteredTitle ? undefined : 'What each change means for your work, one report per change.'}
+        actions={
+          paperFilter && (
+            <Link to="/reports" className={smallPill}>
+              Show all reports
+            </Link>
+          )
+        }
+      />
 
       {state.status === 'loading' && <Spinner label="Loading reports…" />}
-      {state.status === 'error' && (
-        <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-400 outline outline-red-500/20">
-          {state.message}
-        </p>
-      )}
+      {state.status === 'error' && <p className={errorPanel}>{state.message}</p>}
       {state.status === 'ready' && reports && (
         <ReportRows
           papers={state.papers}
@@ -85,7 +85,7 @@ export default function ReportList() {
           onToggle={(id) => setExpandedId((current) => (current === id ? null : id))}
         />
       )}
-    </div>
+    </Page>
   )
 }
 
@@ -103,28 +103,29 @@ function ReportRows({
   const paperTitle = new Map(papers.map((paper) => [paper.id, paper.title ?? 'Untitled paper']))
 
   if (reports.length === 0) {
-    return <p className="text-sm/6 text-gray-400">No reports yet.</p>
+    return (
+      <EmptyState pose="laptop" title="No reports yet">
+        When an alert comes in, the change is investigated and assessed against your draft, and the report lands here.
+      </EmptyState>
+    )
   }
 
   return (
-    <ul role="list" className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,34rem),1fr))] items-start gap-3">
-      {reports.map((report) => (
-        <li
-          key={report.id}
-          className="overflow-hidden bg-gray-800/50 px-4 py-4 shadow-none outline -outline-offset-1 outline-white/10 sm:rounded-md sm:px-6"
-        >
+    <ul role="list" className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,30rem),1fr))] items-start gap-4">
+      {reports.map((report, index) => (
+        <li key={report.id} style={riseDelay(index + 1)} className={`${card} animate-rise overflow-hidden p-5 sm:px-6`}>
           <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
             <p className="min-w-0 text-sm/6 font-semibold text-white">
               {paperTitle.get(report.paper_id) ?? 'Unknown paper'}
             </p>
             <span
-              className={`mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-xs font-medium inset-ring ${REPORT_STATUS_STYLES[report.status]}`}
+              className={`mt-0.5 ${badge} ${REPORT_STATUS_STYLES[report.status]}`}
             >
               {REPORT_STATUS_LABEL[report.status]}
             </span>
             {report.change_severity && report.change_severity !== 'none' && (
               <span
-                className={`mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-xs font-medium inset-ring ${LEVEL_STYLES[report.change_severity]}`}
+                className={`mt-0.5 ${badge} ${LEVEL_STYLES[report.change_severity]}`}
               >
                 {LEVEL_LABEL[report.change_severity]} severity
               </span>
@@ -141,7 +142,7 @@ function ReportRows({
             </div>
           )}
 
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
             <p className="text-xs/5 text-gray-400">
               Opened <time dateTime={report.created_at}>{formatDateTime(report.created_at)}</time>
               {' · '}
@@ -166,7 +167,11 @@ function ReportRows({
             </div>
           </div>
 
-          {expandedId === report.id && <ReportDetails report={report} />}
+          {expandedId === report.id && (
+            <div className="animate-reveal">
+              <ReportDetails report={report} />
+            </div>
+          )}
         </li>
       ))}
     </ul>
@@ -238,7 +243,7 @@ function DocumentSummary({ doc }: { doc: UserDocument }) {
   const details = [record?.journal, record?.published].filter(Boolean).join(' · ')
 
   return (
-    <li className="rounded-md bg-gray-900/60 px-3 py-2 text-gray-300">
+    <li className="rounded-xl bg-white/[0.03] px-3.5 py-2.5 text-gray-300 outline-1 -outline-offset-1 outline-white/5">
       <p className="text-xs font-medium text-gray-400">{DOCUMENT_KIND_LABEL[doc.kind]}</p>
       <p className="mt-0.5 font-medium text-white">{record?.title ?? doc.doi}</p>
       {details && <p className="text-xs text-gray-400">{details}</p>}
@@ -281,7 +286,7 @@ function DocumentSummary({ doc }: { doc: UserDocument }) {
 
 export function AlertSummary({ alert }: { alert: Alert }) {
   return (
-    <li className="rounded-md bg-gray-900/60 px-3 py-2 text-gray-300">
+    <li className="rounded-xl bg-white/[0.03] px-3.5 py-2.5 text-gray-300 outline-1 -outline-offset-1 outline-white/5">
       <p className="font-medium text-white">
         {CHANGE_TYPE_LABEL[alert.change_type]}{' '}
         <span className="text-xs text-gray-400">({ALERT_SEVERITY_LABEL[alert.alert_severity]} alert severity)</span>

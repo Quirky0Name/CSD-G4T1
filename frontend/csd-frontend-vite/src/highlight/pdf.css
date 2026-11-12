@@ -69,4 +69,16 @@
 
 .pdf-pane {
   scrollbar-color: rgb(75 85 99) transparent;
+  /* the scrollbar's room is kept whether or not it shows, so the paper doesn't narrow (and every
+     page redraw) once pages load or a long text starts to scroll */
+  scrollbar-gutter: stable both-edges;
+}
+
+/* The paper's width, shared by PDF pages and a source's text: the pane's width up to a letter page
+   at actual size (816px), so a page stays readable on a wide screen and is the same width whichever
+   claim, pane or source is open */
+.paper-column {
+  width: 100%;
+  max-width: 51rem;
+  margin-inline: auto;
 }

@@ -1,0 +1,30 @@
+# docker-compose.dev.yml's Caddyfile: Caddyfile's routes to the services (keep the two in step),
+# with the built files swapped for the Vite dev server, hot-reload websocket included.
+:80 {
+	request_body {
+		max_size 31MiB
+	}
+
+	handle_path /api/* {
+		reverse_proxy storage:8081
+	}
+	handle_path /updating/* {
+		reverse_proxy updating:8001
+	}
+	@users path /auth/* /projects /projects/*
+	handle @users {
+		reverse_proxy users:8080
+	}
+
+	redir /adminer /adminer/
+	handle_path /adminer/* {
+		basic_auth {
+			{$ADMIN_USER} {$ADMIN_PASSWORD_HASH}
+		}
+		reverse_proxy adminer:8080
+	}
+
+	handle {
+		reverse_proxy vite:5173
+	}
+}

@@ -1,11 +1,8 @@
 import AlertList from '../components/AlertList'
 
+// the list lays out its own page, so its hero can count what it shows
 function Alerts() {
-  return (
-    <main className="min-h-screen px-4 py-10 text-gray-100 sm:px-6 lg:px-8">
-      <AlertList />
-    </main>
-  )
+  return <AlertList />
 }
 
 export default Alerts

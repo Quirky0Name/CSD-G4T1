@@ -1,0 +1,27 @@
+# Frontend hot reload on the usual address. Layered over docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# `web` (Caddy) still routes /api, /auth, /projects and /updating to the services, but every other
+# path goes to a Vite dev server running the source as it is on disk, so a save shows up on
+# localhost:8088 straight away. Never used on the server: it runs plain `docker compose up`.
+services:
+  vite:
+    image: node:22-alpine
+    working_dir: /app
+    # npm ci on start keeps the container's node_modules in step with package-lock.json
+    command: sh -c "npm ci --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"
+    volumes:
+      - ./frontend/csd-frontend-vite:/app
+      # the container's own node_modules: the host's has macOS/Windows binaries (esbuild, rollup,
+      # Tailwind's oxide) that don't run on Linux
+      - vite_node_modules:/app/node_modules
+    restart: unless-stopped
+
+  web:
+    # the dev Caddyfile, mounted, so neither it nor the frontend needs an image rebuild
+    volumes:
+      - ./frontend/csd-frontend-vite/Caddyfile.dev:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - vite
+
+volumes:
+  vite_node_modules:

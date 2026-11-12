@@ -1,11 +1,12 @@
 import { useEffect, useReducer, useRef, useState, type FormEvent, type ReactNode, type Ref } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/20/solid'
-import { DocumentMagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { errorMessage, isConflict } from '../api'
 import { useAuth } from '../auth'
 import { GeminiNotice, QuestionStep } from '../components/ProfileQuestions'
-import SignupIllustration, { type SignupStage } from '../components/SignupIllustration'
+import { AuthShell } from '../components/AuthShell'
+import { SIGNUP_POSE, SignupBadge, type SignupStage } from '../components/SignupIllustration'
+import { ghostPill, inputClasses, labelClasses, primaryPill, smallPill, textLink } from '../ui'
 import { OTHER } from '../profile/options'
 import { toProfile, validateAnswers, type AnswerErrors, type Answers } from '../profile/profileForm'
 import { PROFILE_STEPS, isAnswered, stepError, type ProfileStep } from '../profile/questionSteps'
@@ -22,16 +23,6 @@ const CAPTION: Record<'account' | 'questions' | 'review', string> = {
   questions: 'A few answers help each report speak to your work.',
   review: 'You can change any answer later in your profile.',
 }
-
-const inputClasses =
-  'block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 aria-invalid:outline-red-400 sm:text-sm/6'
-const labelClasses = 'block text-xs/5 font-medium tracking-wide text-gray-400'
-const primaryPill =
-  'inline-flex items-center justify-center gap-1.5 rounded-full bg-indigo-500 px-6 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_-8px_rgba(99,102,241,0.8)] transition-[background-color,transform] duration-150 hover:bg-indigo-400 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400 disabled:cursor-wait disabled:opacity-60'
-const ghostPill =
-  'inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold text-gray-300 outline-1 -outline-offset-1 outline-white/15 transition-colors duration-150 hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-400 disabled:opacity-50'
-const textLink =
-  'rounded text-sm font-medium text-gray-400 underline-offset-4 hover:text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400'
 
 export default function Register() {
   const { register } = useAuth()
@@ -118,45 +109,24 @@ export default function Register() {
   const progress = screen === 'account' ? 0 : step + 1
 
   return (
-    <div className="signup relative grid min-h-svh justify-items-center overflow-hidden bg-gray-950 px-4 py-8 sm:px-6 sm:py-12 md:items-start md:pt-[max(3rem,6vh)]">
-      <Backdrop />
-
-      <div className="relative grid w-full max-w-5xl self-start rounded-3xl bg-gray-900 md:min-h-[46rem] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.8)] outline-1 -outline-offset-1 outline-white/10 md:grid-cols-[minmax(0,9fr)_minmax(0,11fr)]">
-        <aside className="flex flex-col rounded-t-3xl bg-gray-800/40 px-6 pt-6 pb-6 md:rounded-l-3xl md:rounded-tr-none md:px-10 md:pt-8 md:pb-10">
-          <p className="flex items-center gap-2 text-sm font-semibold text-white">
-            <DocumentMagnifyingGlassIcon aria-hidden="true" className="size-5 text-indigo-400" />
-            Research desk
-          </p>
-          <div className="mx-auto mt-3 flex w-full max-w-[8rem] flex-col sm:mt-4 sm:max-w-xs md:mt-16 md:max-w-none">
-            <SignupIllustration stage={stage} />
-          </div>
-          {/* on a phone the account screen keeps its form above the fold; its caption returns from sm up */}
-          <div className="mx-auto w-full">
-            <p
-              className={`mx-auto mt-2 max-w-[34ch] text-center text-sm/5 font-medium text-balance text-gray-200 sm:mt-4 md:max-w-[26ch] md:text-base/6 ${
-                screen === 'account' ? 'hidden sm:block' : ''
-              }`}
-            >
-              {CAPTION[screen === 'account' ? 'account' : step < REVIEW ? 'questions' : 'review']}
-            </p>
-          </div>
-          <div className="md:mt-auto">
-            <ProgressDots current={progress} total={REVIEW + 2} />
-          </div>
-        </aside>
-
-        <section className="flex min-w-0 flex-col overflow-x-clip px-6 pt-6 pb-8 sm:px-10 md:pt-8 md:pb-10">
-          <p className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-sm text-gray-400">
-            Already have an account?
-            <Link
-              to="/signin"
-              className="rounded-full px-3.5 py-1 text-sm font-semibold text-gray-200 outline-1 -outline-offset-1 outline-white/20 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-2 focus-visible:outline-indigo-400"
-            >
-              Sign in
-            </Link>
-          </p>
-
-          <div key={stage} className={`mt-8 flex flex-1 flex-col md:mt-10 ${animation}`}>
+    <AuthShell
+      pose={SIGNUP_POSE[stage]}
+      poseKey={stage}
+      badge={<SignupBadge stage={stage} />}
+      caption={CAPTION[screen === 'account' ? 'account' : step < REVIEW ? 'questions' : 'review']}
+      // on a phone the account screen keeps its form above the fold; its caption returns from sm up
+      hideCaptionOnPhone={screen === 'account'}
+      footer={<ProgressDots current={progress} total={REVIEW + 2} />}
+      topRight={
+        <>
+          <span className="hidden min-[380px]:inline">Already have an account?</span>
+          <Link to="/signin" className={smallPill}>
+            Sign in
+          </Link>
+        </>
+      }
+    >
+          <div key={stage} className={`mt-6 flex flex-1 flex-col md:mt-10 short:md:mt-4 ${animation}`}>
             {screen === 'account' && (
               <form onSubmit={handleContinue} className="flex flex-1 flex-col">
                 <Heading headingRef={heading}>Create your account</Heading>
@@ -236,7 +206,7 @@ export default function Register() {
                   </div>
                 </div>
 
-                <div className="mt-auto pt-10">
+                <div className="mt-auto pt-10 short:pt-6">
                   <button type="submit" className={`w-full sm:w-auto ${primaryPill}`}>
                     Continue
                     <ArrowRightIcon aria-hidden="true" className="size-4" />
@@ -291,9 +261,7 @@ export default function Register() {
               </div>
             )}
           </div>
-        </section>
-      </div>
-    </div>
+    </AuthShell>
   )
 }
 
@@ -323,7 +291,7 @@ function Counter({ current, total }: { current: number; total: number }) {
 
 function ProgressDots({ current, total }: { current: number; total: number }) {
   return (
-    <div className="mt-6 flex justify-center gap-1.5" aria-hidden="true">
+    <div className="flex gap-1.5 sm:mt-6 sm:justify-center short:md:mt-3" aria-hidden="true">
       {Array.from({ length: total }, (_, i) => (
         <span
           key={i}
@@ -349,7 +317,7 @@ function StepActions({
   children: ReactNode
 }) {
   return (
-    <div className="mt-auto pt-10">
+    <div className="mt-auto pt-10 short:pt-6">
       {notice && <GeminiNotice className="mb-6" />}
       <div className="flex items-center justify-between gap-4">
         {/* disabled while the request is out, so its answer always lands on this screen */}
@@ -395,22 +363,5 @@ function Review({ answers, onEdit }: { answers: Answers; onEdit: (step: number) 
         )
       })}
     </dl>
-  )
-}
-
-// the reference's loose dashed curves, drawn faintly on the app's own ground
-function Backdrop() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 1440 900"
-      preserveAspectRatio="xMidYMid slice"
-      className="pointer-events-none absolute inset-0 size-full"
-    >
-      <path d="M-40 180 C 220 60, 380 300, 620 170" stroke="#818cf8" strokeOpacity="0.18" strokeWidth="2" strokeDasharray="6 10" fill="none" />
-      <path d="M1480 640 C 1260 760, 1120 520, 900 700" stroke="#818cf8" strokeOpacity="0.18" strokeWidth="2" strokeDasharray="6 10" fill="none" />
-      <circle cx="1240" cy="120" r="160" fill="#6366f1" fillOpacity="0.06" />
-      <circle cx="160" cy="820" r="200" fill="#6366f1" fillOpacity="0.05" />
-    </svg>
   )
 }
