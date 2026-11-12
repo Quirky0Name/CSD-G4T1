@@ -112,4 +112,4 @@ A setting (`DEV_MODE`, off unless set to `true`) that gives the stack an admin a
 The account `admin`, which exists only in dev mode. It reads and changes any researcher's paper data and is not a researcher: it has no papers or projects.
 
 **Fake report**:
-A report, with its alerts and documents, copied onto a paper by the admin from one saved example instead of coming from a poll.
+A report, with its alerts and documents, copied onto a paper by the admin from one saved example instead of coming from a poll. An assessed one also brings an invented past: an earlier report, the researcher's feedback on it and an invented profile.

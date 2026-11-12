@@ -90,6 +90,19 @@ Use two windows that don't share a session (the session is in
 4. Pick a claim: its sentence in the example draft and its passage in the
    cited source are highlighted, one pane above the other. `?claim=<id>` keeps the
    choice across a reload.
+5. Open the report's **Context** tab ("What the assessment read beside this
+   report"). **From this paper's past** lists the past documents, alert and
+   report, each opening its pane (PDFs at the stated page, the notice text
+   marked); **From your feedback** lists one item, `Overstated`, linking to the
+   past report; **From your profile** shows the invented profile, not the
+   researcher's own.
+
+An assessed fake report also brings a past report (assessed) and a past alert
+(`new`), dated 30 days back, so the researcher's app may show a toast for each
+of the two reports and one more alert toast: `tracking.tsx` toasts every newly
+seen assessed report and `new` alert. The dev page says so after the call:
+"Fake report added, with an earlier report, feedback and a profile for its
+Context tab. The researcher gets the toast within 30 s."
 
 ## Rehearsing the Updating half
 

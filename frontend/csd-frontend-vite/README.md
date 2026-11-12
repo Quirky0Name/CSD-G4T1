@@ -48,6 +48,7 @@ npm run dev
 - `npm run build` — typecheck (`tsc -b`) then build.
 - `npm run lint` — ESLint.
 - `npm test` — Vitest unit tests (`src/**/*.test.ts`, type-checked by `tsconfig.test.json`).
+  Component tests (`*.test.tsx`, also type-checked by `tsconfig.test.json`; `tsconfig.app.json` excludes them) use `@testing-library/react`, `@testing-library/dom` and `jsdom`. A component test opts into jsdom with a `// @vitest-environment jsdom` first line, so the other tests stay in node. `ReportContext.test.tsx` mocks `PdfPane`, which needs a real canvas.
 
 ## Projects
 

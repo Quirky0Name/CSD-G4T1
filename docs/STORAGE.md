@@ -367,11 +367,11 @@ row fails, the file just saved is deleted. Code: `AdminService.createFakePaper`.
 **Fake reports** (`POST /admin/papers/{id}/fake-report`). Copies one saved
 example onto the paper without a poll; the application never generates
 anything.
-- The example is `src/main/resources/dev/fake-report/` (`report.json` and
-  four PDFs, all served on `/public/fake-report/{file}`: the two document
+- The example is `src/main/resources/dev/fake-report/` (`report.json`, `past.json` (below) and
+  six PDFs, all served on `/public/fake-report/{file}`: the two document
   PDFs, `paper.pdf`, which a fake paper stores, and `draft.pdf`, which the
   frontend shows as the draft the example's claims quote; it is never
-  stored as anyone's draft). `.gitattributes` there keeps
+  stored as anyone's draft; the other two are the past's, below). `.gitattributes` there keeps
   the PDFs byte for byte. It is read by `FakeReportExample`.
 - It was generated once from eval case 11
   (`backend/evals/cases/11_concern_then_retraction_replacement.json`: paper,
@@ -396,8 +396,43 @@ anything.
   `assignUnreportedToReport`, so a real alert waiting for its report stays
   out. The draft is only a generation input; a fake report never touches
   the project's draft.
-- `GET /public/fake-report/{file}` takes no token and serves only the two
-  named PDFs (`FakeReportPdfController`); the report UI links a PDF only
+- With `status=assessed` (the default) the call also stores an invented
+  past, so the report page's Context tab has something to show without Gemini
+  or a second poll. It is `past.json` and two PDFs beside `report.json`,
+  read by `FakeReportExample.pastContent()`, invented once by Claude and
+  committed; the application generates nothing. The story is the example
+  paper's (iron supplementation and fatigue, `10.9999/fake.2019.011`) before
+  the current report: a correction notice `10.9999/fake.2019.011c` adding the
+  trial registration number and that Fake Pharma Ltd donated the iron
+  sulphate; the corrected version `10.9999/fake.2019.011v1.1`
+  (`past-new-version.pdf`, 3 pages, slope still 0.45); the current copy
+  `paper.pdf`; and a related letter to the editor `10.9999/fake.2020.044`
+  (`past-related.pdf`, 2 pages: the letter questioning the Table 3 slope, and
+  the authors' reply standing by it). The past report rates the change `low`
+  and the impact `medium`; the researcher's feedback on it is `overstated`
+  with a note. The letter's slope question is what the current report's
+  expression of concern and retraction later confirm, so the past reads as
+  the earlier chapter. The past evaluation has `"claims": []`, because the
+  frontend's `withMockClaims` would otherwise give it the current example's
+  claims, which quote documents the past report doesn't have. The two PDFs
+  were made with a throwaway script (not in the repo) using fpdf2's core
+  Helvetica font (no DejaVu was at hand), unlike the existing ones.
+- `AdminService.createFakeReport` is `@Transactional`: `ReportService.storeFakePast`
+  and `storeFake` join it, so the past and the fake report are stored both or
+  neither (also when a failure comes after the past is stored), and each
+  registers its own clean-up that deletes its PDF copies if the transaction
+  doesn't commit. The past's timestamps are 30 days before the call;
+  `pdf_fetched_at` is back-dated with the documents' `created_at`.
+  The response stays the fake report alone.
+- The invented past is not embedded: no `chunks` row is written and
+  `FeedbackChanged` is not published, so Research Evaluation is never
+  nudged and a later real assessment won't retrieve it. The researcher's real
+  profile in User Management is never read or changed: the profile in the
+  fake report's `context_chunks` comes from `past.json`. The past is fixed
+  (no request body), and the feedback item is always on this paper's past
+  report, never on another paper of the researcher.
+- `GET /public/fake-report/{file}` takes no token and serves only the
+  named PDFs (not `past.json`) (`FakeReportPdfController`); the report UI links a PDF only
   through `pdf_source_url`, so the frontend needs no change.
 
 ## Gotchas
