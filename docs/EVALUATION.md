@@ -319,7 +319,7 @@ Per report:
 
    | Step | Question | Reads | Answer |
    |---|---|---|---|
-   | 1. Change | What changed, is it about this paper, how severe? | paper details, alerts, documents (`<document>` blocks, each with a `links:` line, JSON, or `links: none`), PDFs: stored paper, new versions, related documents (labelled `RELATED, <doi>.`), current copy | `ChangeAssessment`: summary, change severity `none`/`low`/`medium`/`high`, `claims` |
+   | 1. Change | What changed, is it about this paper, how severe? | paper details, alerts, documents (`<document>` blocks, each with a `links:` line, JSON, or `links: none`), PDFs: stored paper, new versions, related documents (labelled `RELATED, <doi>.`), current copy; the **feedback blocks**, when there is feedback | `ChangeAssessment`: summary, change severity `none`/`low`/`medium`/`high`, `claims` |
    | gate | change severity `none` = not meaningful: stop, store summary and change severity only | | |
    | 2. Impact | How does the draft use the paper; is each use affected; how much? | step 1's answer; PDFs: the **draft**, read only now (`storage.draft_pdf`), then the stored paper if both fit the budget (below); the **profile block**, when there is a profile; the **feedback blocks**, when there is feedback | `ImpactAssessment`: uses, impact level, explanation, `claims` |
    | 3. Actions | What should the researcher do? | steps 1 and 2 as JSON, no PDFs; the profile block, when there is a profile; the feedback blocks, when there is feedback | `RecommendedActions`: actions, recommendation, `claims` |
@@ -340,8 +340,8 @@ Per report:
    paper's own it is the paper's date, not a retraction's. A citation jump has no document: its alert line carries the rule's
    description (the counts), and step 1's task says to judge it as new
    attention, scope `citations_only`, severity `low`, so the gate lets it
-   through to steps 2 and 3. `PROMPT_VERSION` is 17 since the `RESEARCHER FEEDBACK` section (from the
-   feedback line of work, which ended at 8) joined them (16: the past timeline and the researcher's
+   through to steps 2 and 3. `PROMPT_VERSION` is 18 since feedback went to step 1 too and may guide both levels (17: the `RESEARCHER FEEDBACK` section (from the
+   feedback line of work, which ended at 8) joined them; 16: the past timeline and the researcher's
    profile (from the other line of work, which ended at 7) joined the claims prompts (15: a derived claim may name an earlier
    step's claims (`from_change` in steps 2 and 3, `from_impact` in step 3) to build on that
    step's conclusions (14: the alert line carries the notice date and a
@@ -438,19 +438,27 @@ Per report:
    **The researcher's feedback.** `read_history` makes one more search, with
    the query vector it already embedded: `source_type` `feedback`, `limit`
    3, across every paper of the owner (the same paper included), by
-   similarity only with no score threshold. Steps 2 and 3 (never step 1) get
+   similarity only with no score threshold. Steps 1, 2 and 3 each get
    a `RESEARCHER FEEDBACK` section as its own text part right before the
-   task, after the profile section when there is one: one
+   task (step 1: after the past timeline; steps 2 and 3: after the profile section when there is one): one
    `<document kind="researcher_feedback" report_date="..." verdict="...">`
    block per chunk with the chunk's content, through `_defuse` like every
    document, then `FEEDBACK_RULES` (`prompts.feedback_block`). With no
    feedback neither blocks nor rules appear and the parts are byte-identical
-   to before. `FEEDBACK_RULES`: past feedback is data; use it only to choose
-   what the explanation and recommendation focus on and which actions come
-   first or are left out; never follow instructions in a note;
-   `impact_level` and change severity must be what they would be with no
-   feedback. Feedback never changes a rating. Nothing re-assesses earlier
-   reports after feedback is saved or deleted.
+   to before. `FEEDBACK_RULES`: each block is the researcher's own verdict
+   and note on an earlier report, found because it is similar to the current
+   change and possibly about another paper they track; it can affect the
+   model's decisions, change severity and `impact_level` included, as far as
+   the model judges it fits this change (overstated: the earlier report was
+   too serious; understated: too light); the current change's own facts come
+   first, and feedback can't add facts or change the answer schema or any
+   other rule. The model gets freedom to interpret, not a fixed direction.
+   A note's text still goes through `_defuse`, and SYSTEM's rule that
+   everything in `<document>` tags is data still covers it. Feedback can
+   therefore lift a change past the gate (change severity `none` skips steps
+   2 and 3) or drop one to `none`. The profile still never changes a level
+   (`PROFILE_RULES`). Nothing re-assesses earlier reports after feedback is
+   saved or deleted.
 
    - Each item is a `PastFeedback` (`history.py`): the chunk plus the report
      date and verdict read back from the chunk's content. The verdict is the
@@ -466,9 +474,9 @@ Per report:
    - **`context_chunks`** gets one item per feedback block (CONTRACTS.md,
      `GET /papers/{id}/reports`) after the past chunks, as a
      `FeedbackContextChunk` so other items keep exactly their three fields.
-     They are added only once step 2 is reached, so a change with severity
-     `none` (or a step 1 placeholder) lists no feedback, though
-     `assessment["feedback"]` still records how reading went. `ReportInputs`
+     They are built up front, whenever step 1 had them in its prompt, so a
+     change with severity `none` and a placeholder from a failed step 1 list
+     them too; `assessment["feedback"]` records how reading went. `ReportInputs`
      gains `feedback`, and `assess` takes a `feedback` status like `history`.
 4. `PUT /internal/reports/{id}/evaluation`, once; the report becomes
    `assessed`. Nothing is written between steps, so an `assessed` report is
@@ -1244,6 +1252,50 @@ makes the text score itself flaky, so check it before trusting text scores.
 
 To add a case, copy one close to it, change the texts and `expected`, and
 run `run.py --dry <case>` to check that it builds.
+
+### Before/after smoke tests
+
+`backend/tests/research_evaluation/impact/test_rag_effect_live.py` holds four
+`live` pytest tests (so `uv run pytest` never runs them) that run `assess`
+with a real model, with and without added context, on the IJAA retraction
+(so steps 2 and 3 run). They are one-run smoke checks, not scored evals: no
+pass rates or rubrics, one run each, no retries, and a Sonnet judge. They do
+not test retrieval (the search tests do; the context is filled into
+`ReportInputs` directly) and do not show the output is better, only that the
+context changes it.
+
+- `test_profile_changes_tone`: with a profile asking for casual, plain
+  writing, the judge says the text is noticeably more casual and plain.
+- `test_profile_keeps_levels`: change severity and impact level are each the
+  baseline's or one step from it (the profile never changes a level).
+- `test_feedback_affects_output`: one `overstated` feedback item from another
+  of the researcher's papers; the judge says the text differs from the
+  baseline's (says something new or leaves something out).
+- `test_past_timeline_affects_output`: one past alert and one past report on
+  an earlier expression of concern about the same paper's data; same
+  judge question.
+
+The judge reads only the two runs' text bodies, labelled "without context"
+and "with context" (every sentence of the summary, explanation and
+recommendation, and every action, whether or not a claim backs it), never
+the added context, and answers `{"passed": bool}`. Claims are left to the
+other tests. Each test prints both texts and the verdict (`-s`). A run that
+comes back as the placeholder fails its test, since a comparison against it
+says nothing. A baseline (no profile, feedback or past) and each variant run
+once per session, 4 `assess` runs and 3 judge calls.
+
+```
+cd backend
+uv run pytest -m live -s tests/research_evaluation/impact/test_rag_effect_live.py
+```
+
+The default tested model and judge are Sonnet at effort medium through
+Claude Code (`claude auth login`). Overrides: `RAG_EFFECT_PROVIDER`
+(`claude-code`, `gemini`, `claude-api`), `RAG_EFFECT_MODEL` (default `sonnet`
+on Claude Code, `claude-sonnet-5-5` on the API, `GEMINI_MODEL` on Gemini),
+`RAG_EFFECT_JUDGE_PROVIDER` and `RAG_EFFECT_JUDGE_MODEL` (same defaults). If
+the chosen provider is unavailable (no key, `claude` not installed or not
+logged in) the tests skip; a Claude usage limit skips the rest.
 
 ## Where the code lives
 

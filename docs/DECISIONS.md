@@ -27,11 +27,15 @@ type, and impact reads the nearest ones when it assesses a later report.
   thing should be one chunk"), not the alerts' descriptions or documents.
 - **Feedback search spans every paper of the owner**, the same paper
   included; other source types stay per paper. Retrieval is `limit` 3,
-  similarity only, steps 2 and 3 only.
+  similarity only (steps 2 and 3 only, until 2026-11-12: now every step).
 - **Feedback never changes `impact_level` or change severity** (the user:
   "no"). It only steers what the explanation, recommendation and actions
   focus on and order, like the profile (2026-11-09). A note is data: its
-  instructions are never followed.
+  instructions are never followed. *Superseded (user, 2026-11-12): feedback
+  reaches every step (1, 2 and 3) and guides the model's conclusions, change
+  severity and impact level included, so it can lift a change past the gate
+  or drop one to `none`; the rule gives the model freedom to interpret, not
+  a fixed direction. The profile still can't change a level.*
 - **Profile chunks were removed**, not repurposed: nothing wrote them, and
   the profile stays in User Management.
 - **The service token is signed HS256 explicitly**, since a 48+ byte

@@ -68,7 +68,7 @@ A researcher's answers to the sign-up questionnaire: occupation, research fields
 _Avoid_: Preferences (for the whole), user settings, questionnaire (for the saved answers)
 
 **Profile block**:
-The `<document kind="researcher_profile">` block that gives a profile to impact's steps 2 and 3.
+The `<document kind="researcher_profile">` block that gives a profile to impact's steps 1, 2 and 3.
 _Avoid_: Profile prompt, user context
 
 **Feedback**:
