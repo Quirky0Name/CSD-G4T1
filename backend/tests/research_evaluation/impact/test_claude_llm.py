@@ -4,10 +4,12 @@ answer is read."""
 import base64
 from types import SimpleNamespace
 
+import anthropic
+import httpx2
 import pytest
 from pydantic import BaseModel
 
-from research_evaluation.impact.llm import ClaudeLlm, Pdf
+from research_evaluation.impact.llm import ClaudeLlm, FallbackLlm, GeminiLlm, Pdf
 
 
 class Verdict(BaseModel):
@@ -83,3 +85,52 @@ async def test_an_answer_with_nothing_parsed_raises():
 
     with pytest.raises(ValueError, match="no text"):
         await llm.generate(system="s", parts=["p"], schema=Verdict)
+
+
+CLAUDE_URL = "https://api.anthropic.com/v1/messages"
+
+
+def overloaded() -> anthropic.APIStatusError:
+    response = httpx2.Response(529, request=httpx2.Request("POST", CLAUDE_URL))
+    return anthropic.APIStatusError("Overloaded", response=response, body=None)
+
+
+def timed_out() -> anthropic.APITimeoutError:
+    return anthropic.APITimeoutError(httpx2.Request("POST", CLAUDE_URL))
+
+
+class FailingMessages:
+    def __init__(self, failure: Exception):
+        self.failure = failure
+
+    async def parse(self, **kwargs):
+        raise self.failure
+
+
+class GeminiModels:
+    async def generate_content(self, **kwargs):
+        return SimpleNamespace(
+            text='{"severity": "low", "summary": "A typo."}', model_version="gemini-3-flash-001"
+        )
+
+
+def gemini() -> GeminiLlm:
+    return GeminiLlm(SimpleNamespace(aio=SimpleNamespace(models=GeminiModels())), "gemini-flash-latest")
+
+
+@pytest.mark.parametrize(
+    "messages",
+    [
+        FailingMessages(overloaded()),
+        FailingMessages(timed_out()),
+        FakeMessages(parsed_output=None, stop_reason="refusal"),
+    ],
+    ids=["529", "timeout", "refusal"],
+)
+async def test_a_sonnet_failure_falls_back_to_gemini(messages):
+    sonnet = ClaudeLlm(client=fake_client(messages), model="claude-sonnet-5-5")
+
+    answer = await FallbackLlm((sonnet, gemini())).generate(system="s", parts=["p"], schema=Verdict)
+
+    assert answer.model == "gemini-flash-latest"
+    assert answer.value == Verdict(severity="low", summary="A typo.")
