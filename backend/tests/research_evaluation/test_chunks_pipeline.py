@@ -21,6 +21,7 @@ from research_evaluation.impact.schemas import (
     Claim,
     ImpactAssessment,
     RecommendedActions,
+    Sentence,
 )
 from research_evaluation.main import create_app, impact_context
 from research_evaluation.storage import sm_client
@@ -109,16 +110,18 @@ class FakeLlm:
             raise AllModelsFailed([ModelFailure("fake-gemini", "Gemini answered 503 (UNAVAILABLE)")])
         answers = {
             ChangeAssessment: ChangeAssessment(
-                alerts=[], relations=None, severity=self.severity, summary="Table 2 was corrected.",
+                alerts=[], relations=None, severity=self.severity,
+                summary=[Sentence(text="Table 2 was corrected.", kind="fact", claims=[1])],
                 claims=[Claim(text="Table 2 was corrected.", passages=[])],
             ),
             ImpactAssessment: ImpactAssessment(
                 cited=True, reference_entry=None, uses=[], impact_level="medium",
-                explanation="Your Discussion relies on Table 2.",
+                explanation=[Sentence(text="Your Discussion relies on Table 2.", kind="fact", claims=[1])],
                 claims=[Claim(text="Your Discussion relies on Table 2.", passages=[])],
             ),
             RecommendedActions: RecommendedActions(
-                actions=[], recommendation="Recheck Table 2.",
+                actions=[],
+                recommendation=[Sentence(text="Recheck Table 2.", kind="advice", claims=[])],
                 claims=[Claim(text="Recheck Table 2.", passages=[])],
             ),
         }
