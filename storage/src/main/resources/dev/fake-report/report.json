@@ -160,7 +160,56 @@
         ],
         "relations": "Retraction and replacement that follows from the expression of concern: the concern announced an investigation into the dose-response calculation, and the retraction notice reports its outcome ('Following the editors' investigation'), confirming the error and pointing to a corrected version. The retraction supersedes the earlier concern, which does not stand as a separate open issue.",
         "severity": "medium",
-        "summary": "The paper was first flagged with an expression of concern about its dose-response calculation, then retracted and replaced by a corrected version after the editors' investigation. The error is confined to the main effect size in Table 3 and section 3.3: the slope drops from 0.45 to 0.28 points per 10 mg, and its confidence interval from 0.30 to 0.60 to 0.15 to 0.41. The rest of the paper, including the iron status and adverse event results and the conclusion that fatigue reduction increases with dose, reads the same in the corrected version, and the notice says the finding that iron reduces fatigue is unchanged. This is serious for anyone quoting the size of the effect, who should cite the corrected version, especially as the copy at the original DOI still shows the old number with no retraction mark; the general direction of the finding can still be relied on.",
+        "summary": [
+          {
+            "text": "The paper was first flagged with an expression of concern about its dose-response calculation, then retracted and replaced by a corrected version after the editors' investigation.",
+            "kind": "fact",
+            "claims": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "text": "The error is confined to the main effect size in Table 3 and section 3.3: the slope drops from 0.45 to 0.28 points per 10 mg, and its confidence interval from 0.30 to 0.60 to 0.15 to 0.41.",
+            "kind": "fact",
+            "claims": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "text": "The rest of the paper, including the iron status and adverse event results and the conclusion that fatigue reduction increases with dose, reads the same in the corrected version, and the notice says the finding that iron reduces fatigue is unchanged.",
+            "kind": "fact",
+            "claims": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          {
+            "text": "This is serious for anyone quoting the size of the effect, who should cite the corrected version, especially as the copy at the original DOI still shows the old number with no retraction mark; the general direction of the finding can still be relied on.",
+            "kind": "fact",
+            "claims": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          }
+        ],
         "claims": [
           {
             "text": "The editors issued an expression of concern about how the paper's dose-response analysis was calculated.",
@@ -244,7 +293,58 @@
           }
         ],
         "impact_level": "low",
-        "explanation": "Your draft cites the paper once, in the Discussion (section 4), where it compares your slope of 0.41 with the paper's 0.45 per 10 mg and treats the closeness as support for your design. That use is directly affected: the paper was retracted and replaced because the 0.45 slope was miscalculated, and the corrected value is 0.28 (95% CI 0.15 to 0.41). The overall impact is low because this is a comparison rather than the basis of your results, and your methods and own estimate do not depend on the paper. The sentence still needs fixing: it should cite the corrected version and give 0.28, and you should reconsider whether your estimate is still \"close\" and whether that supports your design, since 0.41 now sits at the upper limit of the corrected interval. The direction of the finding is unchanged, so your general statement that fatigue fell more with the higher dose is not in conflict with it.",
+        "explanation": [
+          {
+            "text": "Your draft cites the paper once, in the Discussion (section 4), where it compares your slope of 0.41 with the paper's 0.45 per 10 mg and treats the closeness as support for your design.",
+            "kind": "fact",
+            "claims": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          {
+            "text": "That use is directly affected: the paper was retracted and replaced because the 0.45 slope was miscalculated, and the corrected value is 0.28 (95% CI 0.15 to 0.41).",
+            "kind": "fact",
+            "claims": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          {
+            "text": "The overall impact is low because this is a comparison rather than the basis of your results, and your methods and own estimate do not depend on the paper.",
+            "kind": "fact",
+            "claims": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          {
+            "text": "The sentence still needs fixing: it should cite the corrected version and give 0.28, and you should reconsider whether your estimate is still \"close\" and whether that supports your design, since 0.41 now sits at the upper limit of the corrected interval.",
+            "kind": "fact",
+            "claims": [
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          {
+            "text": "The direction of the finding is unchanged, so your general statement that fatigue fell more with the higher dose is not in conflict with it.",
+            "kind": "fact",
+            "claims": [
+              1,
+              2,
+              3,
+              4
+            ]
+          }
+        ],
         "claims": [
           {
             "text": "Your Discussion compares your slope of 0.41 with the paper's 0.45 per 10 mg, and treats the closeness as support for your design.",
@@ -298,7 +398,18 @@
             "where": "Reference list, entry [7]"
           }
         ],
-        "recommendation": "Cite the corrected version in your Discussion, change 0.45 to 0.28 (95% CI 0.15 to 0.41), and update reference [7]. Then reconsider whether your 0.41 is still close enough to support your design, since that argument, not just the number, is affected.",
+        "recommendation": [
+          {
+            "text": "Cite the corrected version in your Discussion, change 0.45 to 0.28 (95% CI 0.15 to 0.41), and update reference [7].",
+            "kind": "advice",
+            "claims": []
+          },
+          {
+            "text": "Then reconsider whether your 0.41 is still close enough to support your design, since that argument, not just the number, is affected.",
+            "kind": "advice",
+            "claims": []
+          }
+        ],
         "claims": [
           {
             "text": "Replace 0.45 with the corrected 0.28 per 10 mg (95% CI 0.15 to 0.41) and cite the corrected version.",
