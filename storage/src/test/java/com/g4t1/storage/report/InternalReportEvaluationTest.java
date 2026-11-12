@@ -87,6 +87,7 @@ class InternalReportEvaluationTest {
                 .andExpect(jsonPath("$.paper_id").value(paperId.toString()))
                 .andExpect(jsonPath("$.alerts[*].id").value(contains((int) alertId)))
                 .andExpect(jsonPath("$.documents[0].doi").value("10.1/notice"))
+                .andExpect(jsonPath("$.feedback").value(nullValue()))
                 .andReturn().getResponse().getContentAsString();
         String nested = mvc.perform(service(get("/internal/papers/" + paperId + "/reports/" + reportId)))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();

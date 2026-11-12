@@ -14,7 +14,7 @@ from impact_prompt_support import CHANGE, DRAFT, PAPER_PDF, sample_inputs, saved
 from research_evaluation.chunks import document_pieces
 from research_evaluation.embedding import chunk_text
 from research_evaluation.impact.assess import assess
-from research_evaluation.impact.history import context_chunk
+from research_evaluation.impact.history import context_chunk, read_history
 from research_evaluation.impact.llm import Answer
 from research_evaluation.impact.prompts import change_prompt, impact_prompt
 from research_evaluation.impact.run import ImpactContext, assess_report
@@ -73,8 +73,7 @@ class RecordingLlm:
                 claims=[Claim(text="Your Discussion relies on it.", passages=[])],
             ),
             RecommendedActions: RecommendedActions(
-                actions=[],
-                recommendation=[Sentence(text="Replace it.", kind="advice", claims=[])],
+                actions=[], recommendation=[Sentence(text="Replace it.", kind="advice", claims=[1])],
                 claims=[Claim(text="Replace it.", passages=[])],
             ),
         }
@@ -113,6 +112,8 @@ def mock_sm():
     inputs = sample_inputs()
     paper = inputs.report.paper_id
     with respx.mock(base_url=SM, assert_all_called=False) as mock:
+        # the feedback chunks the feedback search finds; none unless a test sets them
+        mock.feedback = []
         mock.get(f"/internal/reports/{REPORT}").respond(200, json=report_json(inputs))
         mock.get(f"/internal/papers/{paper}/snapshots").respond(200, json={"snapshots": []})
         mock.get(f"/internal/papers/{paper}/pdf").respond(200, content=b"%PDF-1.7 stored")
@@ -125,7 +126,7 @@ def mock_sm():
 
         def search(request):
             source_type = json.loads(request.content)["source_type"]
-            found = [c for c in PAST if c.source_type == source_type]
+            found = [c for c in PAST + mock.feedback if c.source_type == source_type]
             return httpx.Response(200, json=[c.model_dump(mode="json") for c in found])
 
         mock.post("/internal/chunks/search", name="search").mock(side_effect=search)
@@ -191,8 +192,10 @@ async def test_search_calls(sm, mock_sm):
 
     searches = [json.loads(call.request.content) for call in mock_sm.routes["search"].calls]
     assert [(s["source_type"], s["limit"]) for s in searches] == [
-        ("alert", 3), ("report", 3), ("document", 5)
+        ("alert", 3), ("report", 3), ("document", 5), ("feedback", 3)
     ]
+    # one query vector for all four
+    assert len({json.dumps(s["embedding"]) for s in searches}) == 1
     paper = str(sample_inputs().report.paper_id)
     assert all(s["paper_id"] == paper and len(s["embedding"]) == 1536 for s in searches)
     [(query, task)] = [call for call in embedder.calls if call[1] == "query"]
@@ -332,6 +335,90 @@ async def test_not_in_step_3(sm):
 
     assert section(llm.parts[RecommendedActions]) == []
     assert all(c.content not in "\n".join(texts(llm.parts[RecommendedActions])) for c in PAST)
+
+
+# The researcher's feedback: one more search with the same query, kept apart from the past
+
+FEEDBACK_CHUNK = chunk(
+    "feedback", "41", 0.88,
+    'feedback on report of 2026-06-01: "Another paper"\nresearcher\'s verdict: overstated',
+    report_id=41, source_date=datetime(2026, 6, 2, 8, tzinfo=UTC),
+)
+
+
+async def test_feedback_is_read_apart_from_the_past(sm, mock_sm):
+    mock_sm.feedback = [FEEDBACK_CHUNK]
+
+    history = await read_history(sm, FakeEmbedder(), sample_inputs().report)
+
+    assert history.status == "read"
+    assert [c.source_id for c in history.chunks] == ["11", "21", "1"]
+    assert history.feedback_status == "read"
+    [item] = history.feedback
+    assert item.chunk.source_id == "41"
+    assert item.verdict == "overstated"
+
+
+async def test_no_feedback_found_is_none(sm, mock_sm):
+    history = await read_history(sm, FakeEmbedder(), sample_inputs().report)
+
+    assert history.feedback_status == "none"
+    assert history.feedback == []
+
+
+async def test_a_failed_feedback_search_leaves_the_past(sm, mock_sm, caplog):
+    def search(request):
+        body = json.loads(request.content)
+        if body["source_type"] == "feedback":
+            return httpx.Response(500)
+        found = [c for c in PAST if c.source_type == body["source_type"]]
+        return httpx.Response(200, json=[c.model_dump(mode="json") for c in found])
+
+    mock_sm.routes["search"].mock(side_effect=search)
+
+    with caplog.at_level(logging.WARNING, logger="research_evaluation.impact.history"):
+        history = await read_history(sm, FakeEmbedder(), sample_inputs().report)
+
+    assert history.status == "read"
+    assert len(history.chunks) == 3
+    assert history.feedback_status == "failed"
+    assert history.feedback == []
+    assert any("feedback for report 3" in record.getMessage() for record in caplog.records)
+
+
+async def test_a_failed_embedding_fails_both(sm, mock_sm):
+    history = await read_history(sm, FakeEmbedder(fail=True), sample_inputs().report)
+
+    assert (history.status, history.feedback_status) == ("failed", "failed")
+
+
+async def test_no_embedder_reads_no_feedback(sm, mock_sm):
+    history = await read_history(sm, None, sample_inputs().report)
+
+    assert (history.status, history.feedback_status) == ("none", "none")
+
+
+async def test_feedback_whose_feedback_was_deleted_is_left_out(sm, mock_sm):
+    stale = FEEDBACK_CHUNK.model_copy(update={"source_date": None, "source_id": "42"})
+    mock_sm.feedback = [stale, FEEDBACK_CHUNK]
+
+    history = await read_history(sm, FakeEmbedder(), sample_inputs().report)
+
+    assert [item.chunk.source_id for item in history.feedback] == ["41"]
+
+
+async def test_feedback_reaches_steps_2_and_3_and_the_evaluation(sm, mock_sm):
+    mock_sm.feedback = [FEEDBACK_CHUNK]
+    llm = RecordingLlm()
+
+    assert await assess_report(sm, ImpactContext(llm, embedder=FakeEmbedder()), REPORT)
+
+    body = sent_evaluation(mock_sm)
+    assert body["assessment"]["feedback"] == "read"
+    assert body["context_chunks"][-1]["source_type"] == "feedback"
+    for schema in (ImpactAssessment, RecommendedActions):
+        assert any("researcher_feedback" in part for part in texts(llm.parts[schema]))
+    assert not any("researcher_feedback" in part for part in texts(llm.parts[ChangeAssessment]))
 
 
 def test_context_chunk_range_matches_text():

@@ -37,7 +37,13 @@ This is the single source of truth for every interface between services.
   (`role=service`) and rejects user tokens, the same way Storage
   Management treats `/internal/**`. User Management mints one too
   (`sub=svc:users`, five minutes) to clear a deleted project or account in
-  Storage Management.
+  Storage Management. Storage Management mints one too (`sub=svc:storage`,
+  `role=service`, `iat` and `exp` set, five minutes, signed with
+  `JWT_SECRET` like the others), for its one outbound call: `POST
+  /embed/feedback` on Research Evaluation (`RE_BASE_URL`), after a
+  researcher saves or deletes a report's feedback. It is signed with HS256
+  explicitly, since the key's length would otherwise pick HS384 or HS512 for
+  a 48+ byte `JWT_SECRET`, which Research Evaluation rejects.
 - **Admin token** (dev mode only, `DEV_MODE=true`): the usual JWT plus a
   claim: HS256, `sub` = the admin's user id, `role` = `admin`, 1 hour.
   Storage Management and User Management read it as an admin
@@ -393,8 +399,8 @@ no `owner_id`; `401` missing or bad token, `403` a user token.
 
 Deletes everything the user owns: their papers in every project, the
 default one included, each with everything that refers to it (as above),
-then all their drafts and their PDFs, and the user's `profile` chunks (see
-`PUT /internal/chunks`; they have no foreign key to cascade from). **Response `204`**, also when there's
+then all their drafts and their PDFs. Every chunk, `feedback` chunks
+included, belongs to a paper and goes with it. **Response `204`**, also when there's
 nothing to delete, so an account delete User Management retries still
 goes through.
 
@@ -702,6 +708,7 @@ report of the paper, whatever its status, **newest first** (by
     "created_at": "2026-09-27T08:00:00Z", "investigated_at": "2026-09-27T08:00:40Z",
     "evaluation": null, "recommendation": null, "evaluated_at": null,
     "change_summary": null, "change_severity": null, "impact_level": null, "claims": null,
+    "feedback": null,
     "alerts": [
       {"id": 7, "paper_id": "uuid", "change_type": "retraction", "alert_severity": "high",
        "description": "...", "recommendation": "...", "notice_doi": "10.xxxx/notice",
@@ -729,7 +736,8 @@ be in `GET /papers/{id}/alerts` a moment before it's in a report.
 |---|---|
 | `status` | `investigating` (its documents are being fetched, or fetching stopped midway; nothing resumes it yet), `investigated` (fetching finished) or `assessed` (impact wrote its evaluation) |
 | `created_at`, `investigated_at` | when the report was opened, and when fetching finished (null until then) |
-| `context_chunks` | the chunks impact added to the prompt, so a frontend can show them: an array of items in prompt order, as `PUT /internal/reports/{id}/evaluation` stored it, e.g. `{"source_type": "document", "source_id": "7", "page": null, "start": 2800, "end": 6000}`. `source_type` is `document`, `alert` or `report`; `source_id` is the document's, alert's or report's own id (not the report it belongs to); `page` is the PDF page the chunk came from, null when it isn't from a PDF page; `start` and `end` (ints, both or neither) are only on a `document` item with `page` null whose `text` was cut into more than one chunk: the chunk's character range in the document's `text`, `text.slice(start, end)`, and absent otherwise. How to show an item: an `alert` or `report` item is the alert or report with that id in this paper's report list (one chunk is the whole alert or report); a `document` item with `page` opens `GET /documents/{id}/pdf` at `page`; a `document` item without `page` (a notice or other Europe PMC text) is the document with that `id` in any report's `documents` (a document's `id` is unique across reports), its `text` shown whole, or with `start`/`end` `text.slice(start, end)` marked, like the highlighting `TextPane`. `text_truncated` true means the stored text was cut at 60,000 characters and only that part was chunked. The chunk's text is not stored on the report. A PDF page over 8,000 characters is split and gets no `start`/`end`: the frontend opens the page without marking the part. Items of reports assessed before `start`/`end` existed have none; they aren't backfilled. `[]` when impact found no past; null for a report assessed before V14 or not yet assessed. Returned only here, not by `GET /internal/reports/{id}`, since only a frontend shows it |
+| `context_chunks` | the chunks impact added to the prompt, so a frontend can show them: an array of items in prompt order, as `PUT /internal/reports/{id}/evaluation` stored it, e.g. `{"source_type": "document", "source_id": "7", "page": null, "start": 2800, "end": 6000}`. `source_type` is `document`, `alert`, `report` or `feedback`; `source_id` is the document's, alert's or report's own id (not the report it belongs to); `page` is the PDF page the chunk came from, null when it isn't from a PDF page; `start` and `end` (ints, both or neither) are only on a `document` item with `page` null whose `text` was cut into more than one chunk: the chunk's character range in the document's `text`, `text.slice(start, end)`, and absent otherwise. How to show an item: an `alert` or `report` item is the alert or report with that id in this paper's report list (one chunk is the whole alert or report); a `document` item with `page` opens `GET /documents/{id}/pdf` at `page`; a `document` item without `page` (a notice or other Europe PMC text) is the document with that `id` in any report's `documents` (a document's `id` is unique across reports), its `text` shown whole, or with `start`/`end` `text.slice(start, end)` marked, like the highlighting `TextPane`. `text_truncated` true means the stored text was cut at 60,000 characters and only that part was chunked. The chunk's text is not stored on the report. A PDF page over 8,000 characters is split and gets no `start`/`end`: the frontend opens the page without marking the part. Items of reports assessed before `start`/`end` existed have none; they aren't backfilled. A `feedback` item (I5) is `{"source_type": "feedback", "source_id": "<report id>", "page": null, "paper_id": "<uuid>", "paper_title": "<title or null>", "source_date": "<ISO-8601>", "verdict": "overstated"}`, so a client can show "Shaped by your feedback on `<title>`" and link to that report of that paper. Feedback items come after the past items, and only when impact reached step 2 (a change severity `none` report lists none). `[]` when impact found no past; null for a report assessed before V14 or not yet assessed. Returned only here, not by `GET /internal/reports/{id}`, since only a frontend shows it |
+| `feedback` | the researcher's verdict and note on this report, `{"verdict": "fair \| overstated \| understated", "note": "..." or null, "updated_at": "..."}`, or `null` when none was saved (see `PUT /papers/{paperId}/reports/{reportId}/feedback`) |
 | `evaluation`, `recommendation`, `evaluated_at` | impact's evaluation of the report's alerts together, what the researcher should do, and when it was written. Null until the report is `assessed`, and also null on an assessed report whose change impact rated `none` (not meaningful) |
 | `change_summary`, `change_severity`, `impact_level` | impact's summary of what changed, how serious the change is for anyone relying on the paper, and how much the researcher's draft is affected (`none`, `low`, `medium` or `high`), as in `GET /internal/papers/{id}/reports/{reportId}`. Null until the report is `assessed`; `impact_level` is also null when `change_severity` is `none` |
 | `claims` | the evaluation's claims, an array of `Claim` (below); null until `assessed` and on reports assessed before claims existed (they aren't backfilled) |
@@ -823,6 +831,44 @@ isn't a UUID; `401` missing or bad token; `403` a service token; `404`, as on
 the internal endpoints, also for a paper with no stored PDF, a document with
 none (a notice, `pending`, `not_found`) and a file missing from disk, each
 with its own `detail`.
+### `PUT /papers/{paperId}/reports/{reportId}/feedback`
+
+User JWT, the paper's owner only. The researcher's verdict on an `assessed`
+report and an optional note, replacing any earlier feedback. The verdict
+rates how serious the report as a whole made the change out to be.
+
+```json
+{"verdict": "fair | overstated | understated", "note": "only use their dataset"}
+```
+
+- `verdict` required (labels `Fair`, `Overstated`, `Understated`). `note`
+  optional: absent, `null` or blank stores null. It is trimmed with Java
+  `String.strip()` (Unicode whitespace) and may be at most 500 characters
+  after that, counted in UTF-16 code units like `response_preferences`.
+- **Response `200`:** the stored feedback, `{"verdict": "overstated", "note": "...", "updated_at": "2026-11-12T08:00:00Z"}`
+  (`updated_at` truncated to microseconds like every timestamp).
+- Once the change has committed, Storage Management nudges Research
+  Evaluation (`POST /embed/feedback`, "Auth" above) so the feedback is
+  embedded as its `feedback` chunk. The nudge is fire-and-forget on another
+  thread: the answer never waits for it, a failing or unreachable Research
+  Evaluation still gives `200`, and a rejected request sends none.
+- Errors, as problem details: `400` a bad body, an unknown verdict, or
+  `note must be at most 500 characters`; `401`; `403` a service token; `404`
+  `No paper <id>` (no such paper or another user's) or `No report <id>` (a
+  report not of that paper, also of another of the owner's papers); `409`
+  `Report <id> is not assessed`. The note's length is checked before
+  ownership, so another user's paper with a note over 500 characters is
+  `400`, not `404`; this reveals nothing. The owner check runs before the
+  report lookup.
+
+### `DELETE /papers/{paperId}/reports/{reportId}/feedback`
+
+User JWT, the paper's owner only. Clears the report's feedback (verdict,
+note and time). **Response `204`**, also when the report has none. Errors:
+`401`; `403` a service token; `404` as for the `PUT`. It nudges Research
+Evaluation after commit like the `PUT`, even when there was no feedback;
+Research Evaluation then finds none and stores an empty chunk list, which
+deletes the report's `feedback` chunk.
 
 ### `POST /papers` (track by DOI)
 
@@ -1344,6 +1390,7 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
   "evaluation": null, "recommendation": null, "evaluated_at": null,
   "change_summary": null, "change_severity": null, "impact_level": null, "assessment": null,
   "claims": null,
+  "feedback": null,
   "alerts": [
     {"id": 7, "change_type": "retraction", "change_key": "retraction", "alert_severity": "high",
      "description": "...", "recommendation": "...", "notice_doi": "10.xxxx/...",
@@ -1374,6 +1421,11 @@ Errors, as problem details: `400` an id that isn't a UUID; `404` with
 
   Unlike the alerts' `alert_severity`, which is fixed by change type, these are
   impact's judgment.
+- `feedback`: the researcher's verdict and note, in the shape of
+  `PUT /papers/{paperId}/reports/{reportId}/feedback`'s response, or `null`
+  when none was saved. Every endpoint that returns this record carries it
+  (including `GET /internal/reports/{reportId}`), so Research Evaluation
+  can build the feedback chunk from one read.
 - `owner_id`: the id of the user who owns the report's paper. It is on
   every endpoint that returns this record (this one,
   `GET /internal/reports/{reportId}`, and the `PATCH` and evaluation `PUT`
@@ -1569,26 +1621,26 @@ report for the current copy, and one per user tracking the paper).
 ### `PUT /internal/chunks`
 
 Service-JWT only. Replaces every chunk of one source, in one transaction.
-Research Evaluation calls it after impact has stored a report's evaluation.
+Research Evaluation calls it after impact has stored a report's evaluation, and for a report's feedback on `POST /embed/feedback`.
 
 ```json
 {
-  "source_type": "alert | report | document | profile",
+  "source_type": "alert | report | document | feedback",
   "source_id": "42",
   "embed_model": "gemini-embedding-001",
   "chunks": [{"content": "text that was embedded", "page": 3, "embedding": [0.0123, -0.0456]}]
 }
 ```
 
-- `source_id` is a string: the alert, report or document id in decimal, or the user's uuid for `profile`.
+- `source_id` is a string: the alert, report or document id in decimal; for `feedback`, the report id. `profile` is no longer a source type: it is a `400`.
 - `page` is optional (null or absent: no page); when present, at least 1.
-- Storage Management never looks inside `content`. A profile's chunks are whatever the caller sends, for example one per field (`expertise: ...`).
+- Storage Management never looks inside `content`. A report's `report` and `feedback` chunks share its id; storing one source type never removes the other's.
 - `chunks` may be empty, which deletes the source's chunks.
 - `chunk_index` is the position in `chunks`, from 0.
 - Every `embedding` has exactly 1536 numbers. `embed_model` is at most 64 characters.
-- Storage Management copies `paper_id` from the source row, never from the request.
+- Storage Management copies `paper_id` from the source row, never from the request; for `feedback` that is the report's paper.
 
-**Response `204`:** stored. Errors, as problem details: `400` a missing field, an unknown `source_type`, a `source_id` that doesn't parse for its type, an embedding that isn't 1536 numbers, empty `content`, a `page` below 1, or an `embed_model` over 64 characters; `401` missing or bad token, `403` a user token; `404` the alert, report or document doesn't exist. A `profile` is never `404`: users live in User Management, and Storage Management holds bare user ids, as it does with `project_id`.
+**Response `204`:** stored. Errors, as problem details: `400` a missing field, an unknown `source_type`, a `source_id` that doesn't parse for its type, an embedding that isn't 1536 numbers, empty `content`, a `page` below 1, or an `embed_model` over 64 characters; `401` missing or bad token, `403` a user token; `404` the alert, report or document doesn't exist (for `feedback`, `No report <id>`). A non-numeric `source_id` is `400` `source_id must be a decimal id`, for `feedback` as for the other types.
 
 ### `POST /internal/chunks/search`
 
@@ -1599,25 +1651,26 @@ Impact's steps 1 and 2 call it.
 {
   "paper_id": "uuid",
   "embedding": [0.0123, -0.0456],
-  "source_type": "alert | report | document | profile",
+  "source_type": "alert | report | document | feedback",
   "limit": 3
 }
 ```
 
-- Every chunk of the paper of that `source_type` is a candidate, with no date, order or exclusion filter. Search is per paper, never across papers.
-- With `profile`, the candidates are the profile chunks of the paper's owner (`papers.owner_id`).
+- Every chunk of the paper of that `source_type` is a candidate, with no date, order or exclusion filter. Search is per paper, except `feedback`.
+- With `feedback`, the candidates are the `feedback` chunks of **every** paper whose `owner_id` is the given paper's owner, never another owner's. A chunk whose report has no feedback any more (deleted, the chunk kept by a failed delete nudge) is left out, so it never takes one of the `limit` slots.
 - `limit`: 1 to 20.
 
 **Response `200`**, nearest first:
 
 ```json
 [{"source_type": "document", "source_id": "7", "chunk_index": 2, "page": 3, "report_id": 12,
-  "source_date": "2026-10-02T08:00:00Z", "content": "...", "score": 0.83}]
+  "paper_id": "uuid", "paper_title": "A study of ...", "source_date": "2026-10-02T08:00:00Z", "content": "...", "score": 0.83}]
 ```
 
 - `score` is `1 - cosine distance`.
-- `source_date`: the alert's `detected_at`, the report's `evaluated_at`, the document's `created_at`, or the profile chunk's `created_at`.
-- `report_id` is null for `profile`.
+- `paper_id` (uuid) and `paper_title` (string or null, the paper's title as Storage Management holds it) are in every match; they follow `report_id`.
+- `source_date`: the alert's `detected_at`, the report's `evaluated_at`, the document's `created_at`, or, for `feedback`, the feedback's `updated_at`.
+- `report_id` is the report the source belongs to; for `feedback`, the report itself.
 
 Errors, as problem details: `400` a missing field (including `paper_id`), an unknown `source_type`, an embedding that isn't 1536 numbers, or `limit` out of range; `401` missing or bad token, `403` a user token; `404` no such paper.
 
@@ -1684,10 +1737,10 @@ Rules:
 
 ## Research Evaluation
 
-Called only by Updating's nudge (`POST /evaluate/changes`) and, by hand
-with a service token, `POST /evaluate/reports`. Storage Management and the
-frontend never call it: alerts and reports reach the frontend through
-Storage Management. How the evaluation works is in EVALUATION.md.
+Called by Updating's nudge (`POST /evaluate/changes`), by Storage
+Management's feedback nudge (`POST /embed/feedback`) and, by hand with a
+service token, `POST /evaluate/reports`. The frontend never calls it:
+alerts and reports reach the frontend through Storage Management. How the evaluation works is in EVALUATION.md.
 
 ### `POST /evaluate/changes`
 
@@ -1831,6 +1884,23 @@ Errors: `503` with `detail` `Gemini isn't configured` when neither
 predates Sonnet and is kept as it is); `422` a body that isn't that
 shape.
 
+### `POST /embed/feedback`
+
+Embeds a report's feedback as its one `feedback` chunk. Called by Storage
+Management after a researcher saves or deletes feedback. Service JWT only
+(`401`/`403` as `POST /evaluate/reports`).
+
+**Request:** `{"report_id": 12}`, a JSON integer (`"12"` is `422`).
+
+**Response `202`:** `{"report_id": 12}`; the chunk is built and stored in
+the background (`PUT /internal/chunks` with `source_type` `feedback`). A
+report with no feedback stores an empty chunk list, which deletes the chunk.
+An embedding or Storage Management failure is logged and never raised.
+
+Errors: `503` with `detail` `Gemini isn't configured` when there is no
+embedder (no `GEMINI_API_KEY`, or the impact context has none); `422` a body
+that isn't that shape.
+
 ### Under review: `/evaluate/snapshot`, `/evaluate/citation-neighbourhood`, `/evaluate/stance`
 
 From the 2026-09-18 design and never built; likely to become internal
@@ -1904,7 +1974,7 @@ logged by Updating, not returned.
 |---|---|---|
 | `JWT_SECRET` | all | base64-encoded, 32+ bytes (`openssl rand -base64 32`); every service decodes before use. For now: a shared throwaway value in that format |
 | `SM_BASE_URL` | Research Evaluation, Updating, User Management | Storage Management's base URL (`http://localhost:8081` locally) |
-| `RE_BASE_URL` | Updating | Research Evaluation's base URL (Updating's nudge goes here). Storage Management never calls Research Evaluation |
+| `RE_BASE_URL` | Updating, Storage Management | Research Evaluation's base URL (Updating's nudge and Storage Management's feedback nudge go here; `http://research-evaluation:8000` in the root compose stack) |
 | `UM_BASE_URL` | Research Evaluation | User Management's base URL (`http://localhost:8080` locally, `http://users:8080` in the root compose stack) |
 | `APP_URL` | User Management | the site's address (e.g. `https://our-name.duckdns.org`), for the link `<APP_URL>/papers/<paper id>` in an outside notification; empty sends no link |
 | `REFRESH_COOKIE_SECURE` | User Management | `true` adds `Secure` to the refresh cookie; `false` by default, so it works over plain HTTP locally. Set `true` on the deployed server |

@@ -7,6 +7,7 @@ handle communitcation with SM
 - read a report by id, the paper's details and PDFs, the draft, and store the evaluation (impact)
 - store the embedded chunks of a report, its alerts and its documents, and search a paper's
   chunks (impact)
+- store a report's feedback chunk (POST /embed/feedback)
 
 handle HTTP codes
 """
@@ -97,10 +98,21 @@ class DocumentInReport(BaseModel):
     links: list[dict[str, Any]] | None = None
 
 
+class Feedback(BaseModel):
+    """The researcher's verdict and optional note on an assessed report."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    verdict: str
+    note: str | None = None
+    updated_at: datetime
+
+
 class Report(BaseModel):
     """A report read by its id (impact's handoff): its paper and the paper's owner, status, alerts
-    and documents. owner_id is optional so a response without it fails only the profile read, not
-    the report."""
+    and documents, and once assessed its evaluation and the researcher's feedback (None until
+    then). owner_id is optional so a response without it fails only the profile read, not the
+    report."""
 
     model_config = ConfigDict(extra="ignore")
 
@@ -112,6 +124,13 @@ class Report(BaseModel):
     created_at: datetime | None = None
     alerts: list[AlertInReport]
     documents: list[DocumentInReport]
+    change_summary: str | None = None
+    change_severity: str | None = None
+    impact_level: str | None = None
+    evaluation: str | None = None
+    recommendation: str | None = None
+    evaluated_at: datetime | None = None
+    feedback: Feedback | None = None
 
 
 class PaperDetails(BaseModel):
@@ -311,8 +330,10 @@ async def store_chunks(
 
 class Chunk(BaseModel):
     """A stored chunk a search found (`POST /internal/chunks/search`), nearest first. report_id is
-    the report the source belongs to (None for a profile); source_date is the alert's
-    detected_at, the report's evaluated_at, the document's or profile chunk's created_at."""
+    the report the source belongs to; source_date is the alert's detected_at, the report's
+    evaluated_at, the document's created_at or the feedback's updated_at (None for a feedback
+    chunk whose feedback was deleted since). paper_id and paper_title are the chunk's paper, which
+    for feedback can be another of the owner's papers."""
 
     model_config = ConfigDict(extra="ignore")
 
@@ -321,7 +342,9 @@ class Chunk(BaseModel):
     chunk_index: int
     page: int | None = None
     report_id: int | None = None
-    source_date: datetime
+    paper_id: UUID | None = None
+    paper_title: str | None = None
+    source_date: datetime | None = None
     content: str
     score: float
 

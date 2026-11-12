@@ -50,7 +50,11 @@ class ChunkPostgresIT extends PgvectorContainer {
         assertThat(jdbc.queryForObject("select indexdef from pg_indexes where indexname = 'idx_chunks_embedding'",
                 String.class)).contains("hnsw").contains("vector_cosine_ops");
 
-        UUID user = UUID.randomUUID();
+        Paper paper = new Paper(UUID.randomUUID());
+        paper.setDoi("10.1000/" + UUID.randomUUID());
+        UUID paperId = papers.save(paper).getId();
+        jdbc.update("insert into reports (paper_id, created_at) values (?, current_timestamp)", paperId);
+        long report = jdbc.queryForObject("select id from reports where paper_id = ?", Long.class, paperId);
         List<Double> embedding = new ArrayList<>();
         for (int i = 0; i < ChunkRepository.DIMENSIONS; i++) {
             embedding.add((i % 7 - 3) / 100.0);
@@ -59,20 +63,52 @@ class ChunkPostgresIT extends PgvectorContainer {
                         .header(HttpHeaders.AUTHORIZATION, TestTokens.service())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(Map.of(
-                                "source_type", "profile",
-                                "source_id", user.toString(),
+                                "source_type", "feedback",
+                                "source_id", String.valueOf(report),
                                 "embed_model", "gemini-embedding-001",
                                 "chunks", List.of(Map.of("content", "expertise: epidemiology", "embedding", embedding))))))
                 .andExpect(status().isNoContent());
 
-        String stored = jdbc.queryForObject("select embedding::text from chunks where user_id = ?", String.class, user);
+        String stored = jdbc.queryForObject("select embedding::text from chunks where report_id = ?", String.class, report);
         double[] values = Arrays.stream(stored.substring(1, stored.length() - 1).split(","))
                 .mapToDouble(Double::parseDouble).toArray();
         assertThat(values).hasSize(ChunkRepository.DIMENSIONS);
         for (int i = 0; i < values.length; i++) {
             assertThat(values[i]).isCloseTo(embedding.get(i), within(1e-6));
         }
-        jdbc.update("delete from chunks where user_id = ?", user);
+        jdbc.update("delete from papers where id = ?", paperId);
+    }
+
+    @Test
+    void theMigrationDroppedProfileChunks() {
+        assertThat(jdbc.queryForObject("select count(*) from information_schema.columns"
+                + " where table_name = 'chunks' and column_name = 'user_id'", Integer.class)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from pg_indexes where indexname = 'idx_chunks_user'",
+                Integer.class)).isZero();
+    }
+
+    @Test
+    void deletingAReportDeletesItsFeedbackChunk() throws Exception {
+        Paper paper = new Paper(UUID.randomUUID());
+        paper.setDoi("10.1000/" + UUID.randomUUID());
+        UUID paperId = papers.save(paper).getId();
+        jdbc.update("insert into reports (paper_id, created_at) values (?, current_timestamp)", paperId);
+        long report = jdbc.queryForObject("select id from reports where paper_id = ?", Long.class, paperId);
+        mvc.perform(put("/internal/chunks")
+                        .header(HttpHeaders.AUTHORIZATION, TestTokens.service())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(Map.of(
+                                "source_type", "feedback",
+                                "source_id", String.valueOf(report),
+                                "embed_model", "gemini-embedding-001",
+                                "chunks", List.of(Map.of("content", "feedback on report",
+                                        "embedding", ChunkControllerTest.embedding(ChunkRepository.DIMENSIONS)))))))
+                .andExpect(status().isNoContent());
+
+        jdbc.update("delete from reports where id = ?", report);
+
+        assertThat(jdbc.queryForObject("select count(*) from chunks where report_id = ?", Integer.class, report)).isZero();
+        jdbc.update("delete from papers where id = ?", paperId);
     }
 
     @Test

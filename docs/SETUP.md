@@ -40,7 +40,7 @@ comments into the value.
 | `DEV_TOOLS` | Storage Management | `true` (the default) serves the `/dev` demo tools and Swagger; `false` takes both away, for a public server |
 | `DEV_MODE` | Storage Management, User Management | `false` unless set. `true` (only that, in any letter case; `1`, `on` and `yes` don't count) creates the admin account `admin` / `12345679` in User Management and serves the `/admin/**` endpoints in Storage Management. Separate from `DEV_TOOLS`. Its password is known: never on a server (DEPLOY.md). Updating and Research Evaluation don't read it |
 | `SM_BASE_URL` | RE, Updating | `http://localhost:8081` (compose overrides it) |
-| `RE_BASE_URL` | Updating | `http://localhost:8000` |
+| `RE_BASE_URL` | Updating, Storage Management | `http://localhost:8000` |
 | `UM_BASE_URL` | RE | `http://localhost:8080`: User Management, where impact reads the researcher's profile and the events for outside notifications are posted (compose sets `http://users:8080`) |
 | `DATABASE_URL` | Updating | `postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` (the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres |
 | `OPENALEX_API_KEY` | Updating (and Storage Management) | openalex.org |

@@ -47,6 +47,11 @@ public class Report {
     private String assessment;
     // the past chunks impact added to the prompt, a JSON array as Research Evaluation sent it; null when not sent
     private String contextChunks;
+    // the researcher's feedback on the assessed report (docs/STORAGE.md); all null when there is none
+    @Convert(converter = FeedbackVerdict.Converter.class)
+    private FeedbackVerdict feedbackVerdict;
+    private String feedbackNote;
+    private Instant feedbackUpdatedAt;
     // JSON text, as Research Evaluation sent it; null on reports assessed before claims existed
     private String claims;
 
@@ -62,6 +67,19 @@ public class Report {
     void markInvestigated() {
         status = ReportStatus.INVESTIGATED;
         investigatedAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
+    }
+
+    // replaces any earlier feedback; the note is already trimmed, and null when there is none
+    void recordFeedback(FeedbackVerdict verdict, String note) {
+        feedbackVerdict = verdict;
+        feedbackNote = note;
+        feedbackUpdatedAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
+    }
+
+    void clearFeedback() {
+        feedbackVerdict = null;
+        feedbackNote = null;
+        feedbackUpdatedAt = null;
     }
 
     public Long getId() {
@@ -114,6 +132,18 @@ public class Report {
 
     public String getContextChunks() {
         return contextChunks;
+    }
+
+    public FeedbackVerdict getFeedbackVerdict() {
+        return feedbackVerdict;
+    }
+
+    public String getFeedbackNote() {
+        return feedbackNote;
+    }
+
+    public Instant getFeedbackUpdatedAt() {
+        return feedbackUpdatedAt;
     }
 
     public String getClaims() {

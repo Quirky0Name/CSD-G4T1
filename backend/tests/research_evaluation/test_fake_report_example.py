@@ -72,7 +72,7 @@ def test_the_stored_fields_are_what_the_answers_say(report: dict[str, Any]) -> N
     impact = ImpactAssessment.model_validate(assessment["impact"])
     actions = RecommendedActions.model_validate(assessment["actions"])
 
-    # the free texts are stored as assess stores them: the kept sentences joined
+    # the stored text is the kept sentences joined (impact/schemas.py, prose)
     assert evaluation["change_summary"] == prose(change.summary, change.claims)
     assert evaluation["change_severity"] == change.severity
     assert evaluation["impact_level"] == impact.impact_level

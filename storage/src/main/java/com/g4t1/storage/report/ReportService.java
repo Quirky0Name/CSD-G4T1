@@ -6,6 +6,7 @@ import com.g4t1.storage.alert.AlertResponse;
 import com.g4t1.storage.alert.AlertService;
 import com.g4t1.storage.alert.NewAlertRequest;
 import com.g4t1.storage.paper.PaperRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,19 +25,24 @@ import java.util.stream.Collectors;
 @Service
 public class ReportService {
 
+    // the same limit as a profile's response_preferences
+    static final int MAX_FEEDBACK_NOTE = 500;
+
     private final ReportRepository reports;
     private final AlertRepository alerts;
     private final PaperRepository papers;
     private final ReportDocumentService documents;
     private final JsonMapper json;
+    private final ApplicationEventPublisher events;
 
     public ReportService(ReportRepository reports, AlertRepository alerts, PaperRepository papers,
-                         ReportDocumentService documents, JsonMapper json) {
+                         ReportDocumentService documents, JsonMapper json, ApplicationEventPublisher events) {
         this.reports = reports;
         this.alerts = alerts;
         this.papers = papers;
         this.documents = documents;
         this.json = json;
+        this.events = events;
     }
 
     /**
@@ -136,9 +142,7 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public List<UserReportResponse> listForOwner(UUID userId, UUID paperId) {
-        if (!papers.findById(paperId).map(paper -> paper.getOwnerId().equals(userId)).orElse(false)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
-        }
+        requireOwnedPaper(userId, paperId);
         return userReports(paperId);
     }
 
@@ -214,11 +218,58 @@ public class ReportService {
         return toResponse(report);
     }
 
+    /**
+     * Saves the owner's verdict and note on an assessed report of their paper, replacing any earlier
+     * feedback. The note is trimmed, blank is null, and longer than MAX_FEEDBACK_NOTE is a 400. Another
+     * user's paper is the same 404 as a missing one, as for the report list. Once committed, Research
+     * Evaluation is nudged to embed it (FeedbackNudger).
+     */
+    @Transactional
+    public ReportFeedbackResponse saveFeedback(UUID userId, UUID paperId, long reportId,
+                                               ReportFeedbackRequest request) {
+        String note = request.note() == null || request.note().isBlank() ? null : request.note().strip();
+        if (note != null && note.length() > MAX_FEEDBACK_NOTE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "note must be at most " + MAX_FEEDBACK_NOTE + " characters");
+        }
+        Report report = requireOwnedReport(userId, paperId, reportId);
+        if (report.getStatus() != ReportStatus.ASSESSED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Report " + reportId + " is not assessed");
+        }
+        report.recordFeedback(request.verdict(), note);
+        events.publishEvent(new FeedbackChanged(reportId));
+        return ReportFeedbackResponse.of(report);
+    }
+
+    // clears the owner's feedback on a report of their paper; a report with none is left as it is. Either
+    // way Research Evaluation is nudged once committed, and finds no feedback, which deletes its chunk
+    @Transactional
+    public void deleteFeedback(UUID userId, UUID paperId, long reportId) {
+        requireOwnedReport(userId, paperId, reportId).clearFeedback();
+        events.publishEvent(new FeedbackChanged(reportId));
+    }
+
+    private Report requireOwnedReport(UUID userId, UUID paperId, long reportId) {
+        requireOwnedPaper(userId, paperId);
+        return requireReportOf(paperId, reportId);
+    }
+
     private Report requireReport(UUID paperId, long reportId) {
         requirePaper(paperId);
+        return requireReportOf(paperId, reportId);
+    }
+
+    private Report requireReportOf(UUID paperId, long reportId) {
         return reports.findById(reportId)
                 .filter(report -> report.getPaperId().equals(paperId))
                 .orElseThrow(() -> noReport(reportId));
+    }
+
+    // a paper that doesn't exist and one that belongs to someone else are the same 404
+    private void requireOwnedPaper(UUID userId, UUID paperId) {
+        if (!papers.findById(paperId).map(paper -> paper.getOwnerId().equals(userId)).orElse(false)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No paper " + paperId);
+        }
     }
 
     private static ResponseStatusException noReport(long reportId) {
@@ -240,6 +291,6 @@ public class ReportService {
                 report.getEvaluatedAt(), report.getChangeSummary(), report.getChangeSeverity(),
                 report.getImpactLevel(), jsonValue(report.getAssessment()), jsonValue(report.getClaims()),
                 alerts.findByReportIdOrderByIdAsc(report.getId()).stream().map(ReportAlertResponse::from).toList(),
-                documents.forReport(report.getId()));
+                documents.forReport(report.getId()), ReportFeedbackResponse.of(report));
     }
 }

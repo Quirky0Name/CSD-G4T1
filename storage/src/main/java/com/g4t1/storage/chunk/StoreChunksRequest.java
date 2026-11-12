@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 // The body of PUT /internal/chunks: every chunk of one source, replacing the ones stored. source_id is
-// the alert, report or document id in decimal, or the user's uuid for a profile. An empty list deletes them.
+// the alert, report or document id in decimal; for feedback, the report's id. An empty list deletes them.
 public record StoreChunksRequest(
         @NotNull SourceType sourceType,
         @NotBlank String sourceId,

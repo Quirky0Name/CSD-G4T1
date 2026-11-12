@@ -11,7 +11,10 @@ its documents is cut into chunks, embedded and stored in Storage Management, one
   - neither: no chunks.
 
 Storing never raises and is never retried: a failure (embedding, Storage Management, a PDF pypdf
-can't read) is logged and leaves that source without chunks, and the others are still stored."""
+can't read) is logged and leaves that source without chunks, and the others are still stored.
+
+Apart from those, a report's feedback is one chunk of its own (feedback_piece, stored by
+research_evaluation.feedback when the researcher saves or deletes it)."""
 
 import asyncio
 import io
@@ -26,9 +29,16 @@ from pypdf import PdfReader
 from pypdf.errors import PyPdfError
 
 from research_evaluation.embedding import Embedder, chunk_text
+from research_evaluation.impact.history import FEEDBACK_HEAD, NOTE_LINE, UNKNOWN, VERDICT_LINE
 from research_evaluation.impact.inputs import ReportInputs
 from research_evaluation.impact.schemas import Evaluation
-from research_evaluation.storage import AlertInReport, DocumentInReport, store_chunks
+from research_evaluation.storage import (
+    AlertInReport,
+    DocumentInReport,
+    PaperDetails,
+    Report,
+    store_chunks,
+)
 
 log = logging.getLogger(__name__)
 
@@ -56,19 +66,51 @@ def alert_pieces(alert: AlertInReport) -> list[Piece]:
     return [Piece("\n".join(lines))]
 
 
+def _evaluation_fields(source: Evaluation | Report) -> list[tuple[str, str | None]]:
+    return [
+        ("change summary", source.change_summary),
+        ("change severity", source.change_severity),
+        ("impact level", source.impact_level),
+        ("evaluation", source.evaluation),
+        ("recommendation", source.recommendation),
+    ]
+
+
 def report_pieces(evaluation: Evaluation) -> list[Piece]:
     """The evaluation's fields that are present; none for the placeholder, which says nothing
     about the paper."""
     if evaluation.assessment.get("placeholder"):
         return []
-    fields = [
-        ("change summary", evaluation.change_summary),
-        ("change severity", evaluation.change_severity),
-        ("impact level", evaluation.impact_level),
-        ("evaluation", evaluation.evaluation),
-        ("recommendation", evaluation.recommendation),
-    ]
+    fields = _evaluation_fields(evaluation)
     return [Piece("\n".join(f"{name}: {value}" for name, value in fields if value))]
+
+
+def feedback_piece(report: Report, paper: PaperDetails) -> Piece:
+    """The report's evaluation with the researcher's verdict and note, as one chunk of at most
+    PAGE_LIMIT characters: the title line, the alerts' change types and the evaluation fields that
+    are present, then the verdict and the note (left out when there is none). A long evaluation is
+    cut; the title line, verdict and note never are. The title and each field are put on one line,
+    so no line above the verdict can pass for a label (history.past_feedback reads the verdict
+    back). The report must have feedback."""
+    feedback = report.feedback
+    if feedback is None:
+        raise ValueError(f"report {report.id} has no feedback")
+    date = report.created_at.date().isoformat() if report.created_at else UNKNOWN
+    head = f'{FEEDBACK_HEAD} {date}: "{_one_line(paper.title or paper.doi or "unknown paper")}"'
+    change_types = ", ".join(dict.fromkeys(alert.change_type for alert in report.alerts))
+    fields = [("changes", change_types), *_evaluation_fields(report)]
+    middle = "\n".join(f"{name}: {_one_line(value)}" for name, value in fields if value)
+    tail = f"{VERDICT_LINE}{feedback.verdict}"
+    if feedback.note:
+        tail += f"\n{NOTE_LINE}{feedback.note}"
+    room = PAGE_LIMIT - len(f"{head}\n\n{tail}")
+    middle = middle[: max(room, 0)].rstrip()
+    return Piece("\n".join(part for part in (head, middle, tail) if part))
+
+
+def _one_line(text: str) -> str:
+    """The text with every line break that str.splitlines knows turned into a space."""
+    return " ".join(text.splitlines())
 
 
 def document_pieces(

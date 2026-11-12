@@ -120,8 +120,7 @@ class FakeLlm:
                 claims=[Claim(text="Your Discussion relies on Table 2.", passages=[])],
             ),
             RecommendedActions: RecommendedActions(
-                actions=[],
-                recommendation=[Sentence(text="Recheck Table 2.", kind="advice", claims=[])],
+                actions=[], recommendation=[Sentence(text="Recheck Table 2.", kind="advice", claims=[1])],
                 claims=[Claim(text="Recheck Table 2.", passages=[])],
             ),
         }

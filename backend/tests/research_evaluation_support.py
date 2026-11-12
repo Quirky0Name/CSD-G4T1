@@ -69,3 +69,42 @@ async def nudge(client: httpx.AsyncClient, paper_ids: list, token: str | None = 
         json={"paper_ids": [str(paper_id) for paper_id in paper_ids]},
         headers={"Authorization": f"Bearer {token or updating_token()}"},
     )
+
+
+class FeedbackEmbedder:
+    """Embeds every text as the same vector and records each call; `fail` makes every call raise."""
+
+    model = "gemini-embedding-001"
+
+    def __init__(self, fail: bool = False):
+        self.fail = fail
+        self.calls: list[tuple[list[str], str]] = []
+
+    async def embed(self, texts, task):
+        self.calls.append((texts, task))
+        if self.fail:
+            raise RuntimeError(f"embedding failed for {texts[0]}")
+        return [[0.5] * 1536 for _ in texts]
+
+
+async def feedback_report(sm, feedback: dict | None) -> int:
+    """An assessed report of a new paper with one alert and a snapshot titled, with that feedback."""
+    paper = await sm.add_paper()
+    await sm.add_snapshot(paper, 1, title="Hydroxychloroquine and azithromycin")
+    await sm.client.post(
+        f"/internal/papers/{paper}/alerts",
+        json={
+            "change_type": "retraction", "change_key": "retraction", "alert_severity": "high",
+            "description": "d", "recommendation": "r", "notice_doi": None,
+            "detected_at": "2026-09-20T12:00:00Z", "snapshot_id": 2, "previous_snapshot_id": 1,
+        },
+    )
+    report_id = (await sm.client.post(f"/internal/papers/{paper}/reports")).json()["id"]
+    await sm.client.patch(f"/internal/papers/{paper}/reports/{report_id}", json={"status": "investigated"})
+    await sm.client.put(
+        f"/internal/reports/{report_id}/evaluation",
+        json={"change_summary": "Retracted.", "change_severity": "high", "impact_level": "high",
+              "evaluation": "Your Methods use it.", "recommendation": "Remove it."},
+    )
+    await sm.client.put(f"/dev/reports/{report_id}/feedback", json=feedback)
+    return report_id

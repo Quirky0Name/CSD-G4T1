@@ -30,6 +30,38 @@ primary one"). Without the Anthropic key nothing changes.
 - **The placeholder text was replaced** (the user's call): every text of a
   placeholder evaluation is shown on the report page.
 
+## 2026-11-12 — Report feedback is embedded as one chunk and retrieved across the researcher's papers
+
+A researcher can rate an assessed report `fair`, `overstated` or
+`understated` with an optional note. It is stored on the report; the
+`feedback` chunk is a derived copy that replaces the unused `profile` source
+type, and impact reads the nearest ones when it assesses a later report.
+
+- **Storage Management now calls Research Evaluation**, reversing
+  2026-09-26's "Storage Management never calls it" for this one case: after
+  a save or delete commits, it posts `POST /embed/feedback` with its own
+  service token (`sub=svc:storage`), fire-and-forget (the user's call: "A",
+  the same pattern as Updating's nudge). The alternative, a frontend call to
+  Research Evaluation, would have put Gemini behind a user token. A failed
+  nudge never fails the save, and failed embeds aren't backfilled: saving
+  again re-embeds.
+- **One chunk per report**, the evaluation plus the verdict and note ("whole
+  thing should be one chunk"), not the alerts' descriptions or documents.
+- **Feedback search spans every paper of the owner**, the same paper
+  included; other source types stay per paper. Retrieval is `limit` 3,
+  similarity only, steps 2 and 3 only.
+- **Feedback never changes `impact_level` or change severity** (the user:
+  "no"). It only steers what the explanation, recommendation and actions
+  focus on and order, like the profile (2026-11-09). A note is data: its
+  instructions are never followed.
+- **Profile chunks were removed**, not repurposed: nothing wrote them, and
+  the profile stays in User Management.
+- **The service token is signed HS256 explicitly**, since a 48+ byte
+  `JWT_SECRET` would otherwise give HS384/HS512, which Research Evaluation
+  rejects (as for User Management's tokens, 2026-10-24).
+- **Feedback can be deleted** (the user: "can delete"); the delete nudges
+  too, and Research Evaluation stores an empty list.
+
 ## 2026-11-11 — Chunks are embedded with Gemini `gemini-embedding-001` at 1536 dimensions
 
 Impact searches a paper's past alerts, reports and report documents by

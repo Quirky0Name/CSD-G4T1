@@ -44,6 +44,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       GROBID_URL: http://grobid:8070
+      # nudged after feedback is saved or deleted; not a depends_on, since Research Evaluation depends on storage
+      RE_BASE_URL: http://research-evaluation:8000
       CROSSREF_MAILTO: ${CROSSREF_MAILTO:-}
       OPENALEX_API_KEY: ${OPENALEX_API_KEY:-}
       S2_API_KEY: ${S2_API_KEY:-}

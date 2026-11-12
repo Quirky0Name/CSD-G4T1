@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 import httpx
 
+from research_evaluation.impact.history import PastFeedback
 from research_evaluation.storage import (
     Chunk,
     DocumentInReport,
@@ -37,6 +38,8 @@ class ReportInputs:
     # the paper's past (earlier alerts, reports and document chunks) that steps 1 and 2 read,
     # nearest first (impact.history); empty when there is none or it couldn't be read
     chunks: list[Chunk] = field(default_factory=list)
+    # the researcher's nearest past feedback (impact.history), for steps 2 and 3 only
+    feedback: list[PastFeedback] = field(default_factory=list)
 
 
 def label(document: DocumentInReport) -> str:
