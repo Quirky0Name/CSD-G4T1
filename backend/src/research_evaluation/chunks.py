@@ -11,7 +11,10 @@ its documents is cut into chunks, embedded and stored in Storage Management, one
   - neither: no chunks.
 
 Storing never raises and is never retried: a failure (embedding, Storage Management, a PDF pypdf
-can't read) is logged and leaves that source without chunks, and the others are still stored."""
+can't read) is logged and leaves that source without chunks, and the others are still stored.
+
+Apart from those, a report's feedback is one chunk of its own (feedback_piece, stored by
+research_evaluation.feedback when the researcher saves or deletes it)."""
 
 import asyncio
 import io
@@ -28,7 +31,13 @@ from pypdf.errors import PyPdfError
 from research_evaluation.embedding import Embedder, chunk_text
 from research_evaluation.impact.inputs import ReportInputs
 from research_evaluation.impact.schemas import Evaluation
-from research_evaluation.storage import AlertInReport, DocumentInReport, store_chunks
+from research_evaluation.storage import (
+    AlertInReport,
+    DocumentInReport,
+    PaperDetails,
+    Report,
+    store_chunks,
+)
 
 log = logging.getLogger(__name__)
 
@@ -69,6 +78,35 @@ def report_pieces(evaluation: Evaluation) -> list[Piece]:
         ("recommendation", evaluation.recommendation),
     ]
     return [Piece("\n".join(f"{name}: {value}" for name, value in fields if value))]
+
+
+def feedback_piece(report: Report, paper: PaperDetails) -> Piece:
+    """The report's evaluation with the researcher's verdict and note, as one chunk of at most
+    PAGE_LIMIT characters: the title line, the alerts' change types and the evaluation fields that
+    are present, then the verdict and the note (left out when there is none). A long evaluation is
+    cut; the title line, verdict and note never are. The report must have feedback."""
+    feedback = report.feedback
+    if feedback is None:
+        raise ValueError(f"report {report.id} has no feedback")
+    date = report.created_at.date().isoformat() if report.created_at else "unknown"
+    head = f'feedback on report of {date}: "{paper.title or paper.doi or "unknown paper"}"'
+    change_types = ", ".join(dict.fromkeys(alert.change_type for alert in report.alerts))
+    fields = [
+        ("changes", change_types),
+        ("change summary", report.change_summary),
+        ("change severity", report.change_severity),
+        ("impact level", report.impact_level),
+        ("evaluation", report.evaluation),
+        ("recommendation", report.recommendation),
+    ]
+    middle = "\n".join(f"{name}: {value}" for name, value in fields if value)
+    tail = f"researcher's verdict: {feedback.verdict}"
+    if feedback.note:
+        tail += f"\nresearcher's note: {feedback.note}"
+    # what's left for the middle once the head, the tail and the two newlines around it are in
+    room = PAGE_LIMIT - len(head) - len(tail) - 2
+    middle = middle[: max(room, 0)].rstrip()
+    return Piece("\n".join(part for part in (head, middle, tail) if part))
 
 
 def document_pieces(

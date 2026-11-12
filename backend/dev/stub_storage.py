@@ -97,6 +97,23 @@ class ReportEvaluation(BaseModel):
         return self
 
 
+class Feedback(BaseModel):
+    """Stub-only: a report's feedback as `GET /internal/reports/{id}` shows it."""
+
+    verdict: Literal["fair", "overstated", "understated"]
+    note: str | None = None
+    updated_at: datetime
+
+
+class NewChunks(BaseModel):
+    """The body of `PUT /internal/chunks`; stored as sent, replacing the source's chunks."""
+
+    source_type: Literal["alert", "report", "document", "feedback"]
+    source_id: str
+    embed_model: str
+    chunks: list[dict[str, Any]]
+
+
 class DownloadablePdf(BaseModel):
     """Stub-only: a DOI whose PDF the stub's scripted download finds."""
 
@@ -146,6 +163,8 @@ class Store:
     # paper; the real service keys drafts by owner and project)
     paper_pdfs: dict[UUID, bytes] = field(default_factory=dict)
     drafts: dict[UUID, bytes] = field(default_factory=dict)
+    # every source's chunks as last stored, keyed by (source_type, source_id); an empty list stays
+    chunks: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
 
     def add_snapshot(self, paper_id: UUID, snapshot: dict[str, Any]) -> dict[str, Any]:
         self.last_snapshot_id += 1
@@ -168,6 +187,7 @@ class Store:
         self.pdf_files.clear()
         self.paper_pdfs.clear()
         self.drafts.clear()
+        self.chunks.clear()
 
 
 def create_app(jwt_key: bytes | None = None) -> FastAPI:
@@ -346,6 +366,8 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
             "change_severity": None,
             "impact_level": None,
             "assessment": None,
+            # the researcher's feedback, null until saved (stub-only: set with /dev/reports/{id}/feedback)
+            "feedback": None,
         }
         store.reports[report["id"]] = report
         for alert in unreported:
@@ -442,6 +464,13 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
             pdf_fetched_at=datetime.now(UTC).isoformat(),
         )
 
+    @internal.put("/chunks", status_code=204)
+    def store_chunks(chunks: NewChunks) -> None:
+        """Replaces the source's chunks; a report of a deleted paper, or none, is `No report`."""
+        if chunks.source_type in ("report", "feedback"):
+            find_report_by_id(int(chunks.source_id))
+        store.chunks[(chunks.source_type, chunks.source_id)] = chunks.model_dump(mode="json")
+
     @internal.get("/documents/{document_id}/pdf")
     def document_pdf(document_id: int) -> Response:
         """The stored PDF; only reads, never downloads."""
@@ -498,6 +527,20 @@ def create_app(jwt_key: bytes | None = None) -> FastAPI:
     def pdf_downloads() -> list[str]:
         """Stub-only: the DOI of every download attempted, in order."""
         return store.pdf_downloads
+
+    @dev.put("/reports/{report_id}/feedback", status_code=204)
+    def set_feedback(report_id: int, feedback: Feedback | None = None) -> None:
+        """Stub-only: the report's feedback, or none for an empty body."""
+        find_report_by_id(report_id)["feedback"] = (
+            feedback.model_dump(mode="json") if feedback is not None else None
+        )
+
+    @dev.get("/chunks/{source_type}/{source_id}")
+    def stored_chunks(source_type: str, source_id: str) -> dict[str, Any]:
+        """Stub-only: the last `PUT /internal/chunks` body for that source."""
+        if (source_type, source_id) not in store.chunks:
+            raise HTTPException(404, f"No chunks of {source_type} {source_id}")
+        return store.chunks[(source_type, source_id)]
 
     @dev.post("/reset", status_code=204)
     def reset() -> None:
