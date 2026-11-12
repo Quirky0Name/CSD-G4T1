@@ -143,6 +143,22 @@ class ChunkSearchPostgresIT extends PgvectorContainer {
     }
 
     @Test
+    void aChunkOfDeletedFeedbackIsLeftOutAndTakesNoSlot() throws Exception {
+        Source deleted = history();
+        Source kept = history(deleted.owner(), "Second paper");
+        store("feedback", deleted.report(), List.of(chunk("deleted feedback", null, axis(0))));
+        store("feedback", kept.report(), List.of(chunk("kept feedback", null, sum(axis(0), axis(1)))));
+        jdbc.update("""
+                update reports set feedback_verdict = null, feedback_note = null, feedback_updated_at = null
+                where id = ?""", deleted.report());
+
+        JsonNode results = search(deleted.paper(), "feedback", axis(0), 1);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).get("content").asString()).isEqualTo("kept feedback");
+    }
+
+    @Test
     void aDocumentSearchStaysOnThePaperAndNamesIt() throws Exception {
         Source first = history();
         Source second = history(first.owner(), "Second paper");

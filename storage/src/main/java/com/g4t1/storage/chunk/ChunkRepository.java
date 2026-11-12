@@ -52,15 +52,17 @@ public class ChunkRepository {
         }
     }
 
-    // The paper's chunks of one source type (for feedback, those of every paper of the paper's owner),
-    // nearest first by cosine distance, each with its paper's id and title. Postgres only: H2 has no
-    // vector distance. Runs inside a transaction, for set local.
+    // The paper's chunks of one source type (for feedback, those of every paper of the paper's owner whose
+    // feedback still exists), nearest first by cosine distance, each with its paper's id and title. Postgres
+    // only: H2 has no vector distance. Runs inside a transaction, for set local.
     public List<ChunkMatch> search(UUID paperId, SourceType type, List<Double> embedding, int limit) {
         // the HNSW index with a where filter otherwise stops at ef_search candidates and can return fewer
         // than limit; iterative scan keeps going until the filter has found enough, still nearest first
         jdbc.execute("set local hnsw.iterative_scan = strict_order");
+        // a deleted feedback's chunk outlives it when the delete nudge fails; it must not take a slot
         String scope = type == SourceType.FEEDBACK
                 ? "p.owner_id = (select owner_id from papers where id = ?) and c.source_type = ?"
+                        + " and r.feedback_updated_at is not null"
                 : "c.paper_id = ? and c.source_type = ?";
         String sql = """
                 select c.source_type, c.alert_id, c.report_id, c.document_id, c.chunk_index, c.page, c.content,
