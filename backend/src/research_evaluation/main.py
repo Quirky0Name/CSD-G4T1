@@ -21,7 +21,15 @@ from research_evaluation.config import ResearchEvaluationSettings
 from research_evaluation.embedding import GeminiEmbedder
 from research_evaluation.evaluate import EvaluationResult, evaluate_papers
 from research_evaluation.feedback import store_feedback_chunk
-from research_evaluation.impact.llm import FallbackLlm, gemini_configured, make_client
+from research_evaluation.impact.llm import (
+    ClaudeLlm,
+    FallbackLlm,
+    GeminiLlm,
+    claude_configured,
+    gemini_configured,
+    make_claude_client,
+    make_client,
+)
 from research_evaluation.impact.run import ImpactContext, assess_reports
 from research_evaluation.investigation.run import (
     InvestigationContext,
@@ -69,8 +77,8 @@ def investigation_context(request: Request) -> InvestigationContext:
 
 
 def impact_context(request: Request) -> ImpactContext | None:
-    """The model impact runs with, made at startup; None when GEMINI_API_KEY isn't set (tests
-    override this)."""
+    """The models impact runs with, made at startup; None when neither ANTHROPIC_API_KEY nor
+    GEMINI_API_KEY is set (tests override this)."""
     return request.app.state.impact
 
 
@@ -81,12 +89,12 @@ async def investigate_then_assess(
     papers: list[PaperChanges],
 ) -> None:
     """The background task after a nudge: investigation, then impact on the reports it
-    finished (the handoff is their ids). Without a Gemini key the reports stay investigated."""
+    finished (the handoff is their ids). Without a model key the reports stay investigated."""
     report_ids = await investigate_papers(sm, investigation, papers)
     if not report_ids:
         return
     if impact is None:
-        log.info("GEMINI_API_KEY is not set: reports %s stay investigated", report_ids)
+        log.info("no model key is set: reports %s stay investigated", report_ids)
         return
     await assess_reports(sm, impact, report_ids)
 
@@ -162,13 +170,27 @@ def configure_logging() -> None:
 
 
 def _impact_context(config: ResearchEvaluationSettings, um: httpx.AsyncClient) -> ImpactContext:
-    """Impact's model and embedder, on one Gemini client (GEMINI_API_KEY must be set)."""
+    """Impact's models, Claude first when ANTHROPIC_API_KEY is set, then Gemini's, and the
+    embedder on the Gemini client; at least one of the two keys must be set."""
+    claude = (
+        (ClaudeLlm(make_claude_client(config), config.claude_model),)
+        if claude_configured(config)
+        else ()
+    )
+    if not gemini_configured(config):
+        # the embedder is Gemini's, so the paper's past is neither searched nor stored
+        return ImpactContext(FallbackLlm(claude), um=um)
     gemini = make_client(config)
     return ImpactContext(
         FallbackLlm(
-            gemini,
-            # a name listed twice is tried once
-            tuple(dict.fromkeys((config.gemini_model, *config.gemini_fallback_models))),
+            (
+                *claude,
+                *(
+                    GeminiLlm(gemini, name)
+                    # a name listed twice is tried once
+                    for name in dict.fromkeys((config.gemini_model, *config.gemini_fallback_models))
+                ),
+            )
         ),
         um=um,
         embedder=GeminiEmbedder(gemini, config.embed_model),
@@ -204,7 +226,8 @@ def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
                 pdf_timeout=config.investigation_pdf_timeout_seconds,
                 um=um,
             )
-            app.state.impact = _impact_context(config, um) if gemini_configured(config) else None
+            impact_on = claude_configured(config) or gemini_configured(config)
+            app.state.impact = _impact_context(config, um) if impact_on else None
             yield
 
     app = FastAPI(title="Research Evaluation", lifespan=lifespan)

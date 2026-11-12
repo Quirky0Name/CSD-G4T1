@@ -32,7 +32,8 @@ feature on their own.
 - It then **investigates** them (fetches each notice's Crossref record and
   open-access text, the paper's current copy, a new version, and
   documents reached by following links into the paper's history) into a
-  **report**, and Gemini judges the report's **impact** on the
+  **report**, and an LLM (Claude Sonnet, falling back to Gemini) judges
+  the report's **impact** on the
   researcher's draft (change severity, impact level, evaluation,
   recommendation).
 - An in-app notification, on the frontend's 30 s refresh, when one of the signed-in researcher's reports is assessed.
@@ -66,7 +67,7 @@ Storage Management.
 ## Data flow
 
 ```
-Frontend ──/api──▶ Storage Management ◀──/internal── Research Evaluation ──▶ Crossref, Europe PMC, Gemini
+Frontend ──/api──▶ Storage Management ◀──/internal── Research Evaluation ──▶ Crossref, Europe PMC, Claude, Gemini
    │                  │  ▲        │                        ▲
    │                  │  │        └─▶ GROBID, Crossref,    │ POST /evaluate/changes (paper ids)
    │                  ▼  │            OpenAlex, S2          │
@@ -95,7 +96,8 @@ One poll, end to end:
    Management for the report's owner, and stores what it fetched as the
    report's documents (Storage Management downloads their PDFs); then
    **impact** reads the paper's past chunks from Storage Management
-   (`POST /internal/chunks/search`), asks Gemini about the report, checks
+   (`POST /internal/chunks/search`), asks Sonnet (then Gemini, if Sonnet
+   fails) about the report, checks
    each quote of the answer's claims against the text it came from
    (`impact/claims.py`), stores its evaluation with those claims (the report
    becomes `assessed`) and posts a `report_assessed` event with it. A
@@ -169,11 +171,11 @@ Rules that hold across the flow:
   document storage need (GROBID, Crossref/OpenAlex metadata, open-access
   PDF downloads). It stores what it's sent.
 - **Detection is deterministic.** Whether a paper was retracted never
-  depends on an LLM; alerts keep their rule-based alert severity, and Gemini's
-  judgment sits on the report next to them.
+  depends on an LLM; alerts keep their rule-based alert severity, and the
+  model's judgment sits on the report next to them.
 - **Background work never raises and is never retried.** A failure is
   logged and leaves the report where it was (ROADMAP.md lists the gaps).
-- **Third-party text is data.** Notice text and PDFs go to Gemini tagged
+- **Third-party text is data.** Notice text and PDFs go to the model tagged
   as documents, and nothing acts on them.
 
 ## Auth

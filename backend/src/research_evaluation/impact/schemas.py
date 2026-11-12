@@ -18,9 +18,9 @@ Role = Literal[
     "methods_or_data", "key_evidence", "supporting", "comparison", "background", "critical"
 ]
 
-# every text of the evaluation stored when every Gemini model failed a step
-# (docs/EVALUATION.md, "Impact"; the story owner's wording)
-PLACEHOLDER_TEXT = "FUCK U GEMINI FLASH. WHO TF IS EVEN USING GEMINI FLASH"
+# every text of the evaluation stored when every model failed a step
+# (docs/EVALUATION.md, "Impact"); the researcher sees it on the report page
+PLACEHOLDER_TEXT = "Not assessed: the AI model didn't answer. This report can be assessed again later."
 
 
 class _Answer(BaseModel):
@@ -196,7 +196,7 @@ class ContextChunk(BaseModel):
 
 
 class FeedbackContextChunk(BaseModel):
-    """A past feedback chunk added to steps 2 and 3: enough for a frontend to show and link
+    """A past feedback chunk given to the steps: enough for a frontend to show and link
     "Shaped by your feedback on <title>" (I5). source_id is the report the feedback is on."""
 
     source_type: Literal["feedback"] = "feedback"
@@ -221,6 +221,6 @@ class Evaluation(BaseModel):
     # every finished step's claims, quotes checked (impact/claims.py); null on reports assessed
     # before claims existed
     claims: list[StoredClaim] | None = None
-    # the past chunks steps 1 and 2 were given, in prompt order, then the feedback steps 2 and 3
-    # were given, so a frontend can show them (I5)
+    # the past chunks steps 1 and 2 were given, in prompt order, then the feedback every step was
+    # given, so a frontend can show them (I5)
     context_chunks: list[ContextChunk | FeedbackContextChunk] = []

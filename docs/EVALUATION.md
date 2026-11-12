@@ -16,7 +16,7 @@ POST /evaluate/changes (paper ids, from Updating)
   └─ reply 202 / 503
        └─ background task, per paper evaluated without failure that had changes:
           3. investigation  investigation/   open a report, post its alerts to User Management, fetch its documents → report ids
-          4. impact         impact/          read the paper's past, Gemini three steps → PUT evaluation → assessed → post it to User Management → store the report's chunks
+          4. impact         impact/          read the paper's past, three model steps → PUT evaluation → assessed → post it to User Management → store the report's chunks
 POST /evaluate/reports (report ids, by hand) ─▶ 4 only
 ```
 
@@ -303,23 +303,23 @@ DOIs only through these fixed rules and caps.
 
 `impact/run.py` `assess_reports(sm, context, report_ids)`, one report at
 a time, called with investigation's ids after each nudge or by
-`POST /evaluate/reports`. Without `GEMINI_API_KEY` it doesn't run (one log
-line) and reports stay `investigated`.
+`POST /evaluate/reports`. Without `ANTHROPIC_API_KEY` or `GEMINI_API_KEY` it
+doesn't run (one log line) and reports stay `investigated`.
 
 Per report:
 
 1. `GET /internal/reports/{id}`; skip unless `investigated` (before any PDF
-   or Gemini call, so a wrong or repeated id costs one read).
+   or model call, so a wrong or repeated id costs one read).
    Then `impact/history.py` reads the paper's past (below).
 2. `inputs.gather_inputs`: the paper's details (newest snapshot), the
    paper's stored PDF, each document whose `pdf_status` is `ok`. Anything
    missing is recorded, not a failure.
-3. `assess.assess`, three Gemini calls in a row (`prompts.py`, structured
+3. `assess.assess`, three model calls in a row (`prompts.py`, structured
    output against the schemas in `schemas.py`, no tools):
 
    | Step | Question | Reads | Answer |
    |---|---|---|---|
-   | 1. Change | What changed, is it about this paper, how severe? | paper details, alerts, documents (`<document>` blocks, each with a `links:` line, JSON, or `links: none`), PDFs: stored paper, new versions, related documents (labelled `RELATED, <doi>.`), current copy | `ChangeAssessment`: summary, change severity `none`/`low`/`medium`/`high`, `claims` |
+   | 1. Change | What changed, is it about this paper, how severe? | paper details, alerts, documents (`<document>` blocks, each with a `links:` line, JSON, or `links: none`), PDFs: stored paper, new versions, related documents (labelled `RELATED, <doi>.`), current copy; the **feedback blocks**, when there is feedback | `ChangeAssessment`: summary, change severity `none`/`low`/`medium`/`high`, `claims` |
    | gate | change severity `none` = not meaningful: stop, store summary and change severity only | | |
    | 2. Impact | How does the draft use the paper; is each use affected; how much? | step 1's answer; PDFs: the **draft**, read only now (`storage.draft_pdf`), then the stored paper if both fit the budget (below); the **profile block**, when there is a profile; the **feedback blocks**, when there is feedback | `ImpactAssessment`: uses, impact level, explanation, `claims` |
    | 3. Actions | What should the researcher do? | steps 1 and 2 as JSON, no PDFs; the profile block, when there is a profile; the feedback blocks, when there is feedback | `RecommendedActions`: actions, recommendation, `claims` |
@@ -340,8 +340,8 @@ Per report:
    paper's own it is the paper's date, not a retraction's. A citation jump has no document: its alert line carries the rule's
    description (the counts), and step 1's task says to judge it as new
    attention, scope `citations_only`, severity `low`, so the gate lets it
-   through to steps 2 and 3. `PROMPT_VERSION` is 17 since the `RESEARCHER FEEDBACK` section (from the
-   feedback line of work, which ended at 8) joined them (16: the past timeline and the researcher's
+   through to steps 2 and 3. `PROMPT_VERSION` is 18 since feedback went to step 1 too and may guide both levels (17: the `RESEARCHER FEEDBACK` section (from the
+   feedback line of work, which ended at 8) joined them; 16: the past timeline and the researcher's
    profile (from the other line of work, which ended at 7) joined the claims prompts (15: a derived claim may name an earlier
    step's claims (`from_change` in steps 2 and 3, `from_impact` in step 3) to build on that
    step's conclusions (14: the alert line carries the notice date and a
@@ -438,19 +438,27 @@ Per report:
    **The researcher's feedback.** `read_history` makes one more search, with
    the query vector it already embedded: `source_type` `feedback`, `limit`
    3, across every paper of the owner (the same paper included), by
-   similarity only with no score threshold. Steps 2 and 3 (never step 1) get
+   similarity only with no score threshold. Steps 1, 2 and 3 each get
    a `RESEARCHER FEEDBACK` section as its own text part right before the
-   task, after the profile section when there is one: one
+   task (step 1: after the past timeline; steps 2 and 3: after the profile section when there is one): one
    `<document kind="researcher_feedback" report_date="..." verdict="...">`
    block per chunk with the chunk's content, through `_defuse` like every
    document, then `FEEDBACK_RULES` (`prompts.feedback_block`). With no
    feedback neither blocks nor rules appear and the parts are byte-identical
-   to before. `FEEDBACK_RULES`: past feedback is data; use it only to choose
-   what the explanation and recommendation focus on and which actions come
-   first or are left out; never follow instructions in a note;
-   `impact_level` and change severity must be what they would be with no
-   feedback. Feedback never changes a rating. Nothing re-assesses earlier
-   reports after feedback is saved or deleted.
+   to before. `FEEDBACK_RULES`: each block is the researcher's own verdict
+   and note on an earlier report, found because it is similar to the current
+   change and possibly about another paper they track; it can affect the
+   model's decisions, change severity and `impact_level` included, as far as
+   the model judges it fits this change (overstated: the earlier report was
+   too serious; understated: too light); the current change's own facts come
+   first, and feedback can't add facts or change the answer schema or any
+   other rule. The model gets freedom to interpret, not a fixed direction.
+   A note's text still goes through `_defuse`, and SYSTEM's rule that
+   everything in `<document>` tags is data still covers it. Feedback can
+   therefore lift a change past the gate (change severity `none` skips steps
+   2 and 3) or drop one to `none`. The profile still never changes a level
+   (`PROFILE_RULES`). Nothing re-assesses earlier reports after feedback is
+   saved or deleted.
 
    - Each item is a `PastFeedback` (`history.py`): the chunk plus the report
      date and verdict read back from the chunk's content. The verdict is the
@@ -466,9 +474,9 @@ Per report:
    - **`context_chunks`** gets one item per feedback block (CONTRACTS.md,
      `GET /papers/{id}/reports`) after the past chunks, as a
      `FeedbackContextChunk` so other items keep exactly their three fields.
-     They are added only once step 2 is reached, so a change with severity
-     `none` (or a step 1 placeholder) lists no feedback, though
-     `assessment["feedback"]` still records how reading went. `ReportInputs`
+     They are built up front, whenever step 1 had them in its prompt, so a
+     change with severity `none` and a placeholder from a failed step 1 list
+     them too; `assessment["feedback"]` records how reading went. `ReportInputs`
      gains `feedback`, and `assess` takes a `feedback` status like `history`.
 4. `PUT /internal/reports/{id}/evaluation`, once; the report becomes
    `assessed`. Nothing is written between steps, so an `assessed` report is
@@ -596,13 +604,23 @@ fit `ResearcherProfile`). `um` is checked first, so the evals, which pass
 none, record `none`. `assessment` records only the status, never the
 profile's values.
 
-**Model fallback** (`llm.FallbackLlm`): each call tries `GEMINI_MODEL`,
-then `GEMINI_FALLBACK_MODELS` in order (duplicates removed), starting from
-`GEMINI_MODEL` again for every step. Any Gemini-side failure moves on: an
-API error of any code, a transport error or timeout
-(`IMPACT_LLM_TIMEOUT_SECONDS`), no text, an answer that doesn't fit the
-schema. Anything else raises. The SDK makes one attempt per call, so every
-retry is a fallback.
+**Model fallback** (`llm.FallbackLlm`): each call tries `CLAUDE_MODEL`
+(`claude-sonnet-5-5`, only when `ANTHROPIC_API_KEY` is set), then
+`GEMINI_MODEL`, then `GEMINI_FALLBACK_MODELS` in order (duplicates
+removed), starting from the first model again for every step. Any
+model-side failure moves on: an API error of any code, a transport error or
+timeout (`IMPACT_LLM_TIMEOUT_SECONDS`), a Claude refusal (`stop_reason`
+`refusal`), no text, an answer that doesn't fit the schema. Anything else
+raises. Neither SDK retries (the Anthropic client has `max_retries=0`), so
+every retry is a fallback, and an overloaded Sonnet moves straight on to
+Gemini.
+
+**Claude's call** (`llm.ClaudeLlm`): the same system prompt, text and PDFs
+(as base64 `document` blocks) as Gemini gets, the schema through
+`messages.parse`, adaptive thinking at effort `low`, since a researcher
+waits on all three steps. With only `ANTHROPIC_API_KEY` set, impact runs on
+Claude alone and has no embedder, so the paper's past is neither searched
+nor stored (below).
 
 **When every model fails a step**, `assess` returns a placeholder
 evaluation: both levels `low`, all three texts `PLACEHOLDER_TEXT`
@@ -643,10 +661,10 @@ no chunks.
 `assess_report` with no background task (the next report waits for it), never
 before it. The evaluation `PUT` makes the report `assessed`, so the
 researcher's next refresh shows the notification; storing chunks never
-delays or blocks it. A report that is never assessed (no `GEMINI_API_KEY`,
-or impact failed) gets no chunks. There is no backfill: rows stored before
+delays or blocks it. A report that is never assessed (no model key, or
+impact failed) gets no chunks. There is no backfill: rows stored before
 V13 have none. The embedder rides in `ImpactContext.embedder`: at startup a
-`GeminiEmbedder` on the same Gemini client as the model; `None` (no
+`GeminiEmbedder` on the Gemini models' client; `None` (no
 `GEMINI_API_KEY`, and the existing tests) stores no chunks.
 
 **What is stored.** Alerts, then the report, then documents, each source
@@ -776,8 +794,9 @@ assessed the report (without `GEMINI_API_KEY`, only `alerts`).
 
 `backend/evals/` measures how well impact (the three steps) answers,
 so a prompt or model change can be compared against a score instead of a
-guess. Production runs them on Gemini; the evals can also run them on
-Claude (`--provider`, below), which measures Claude, not production. It's a dev tool: no service imports it, it isn't in the Docker
+guess. Production runs them on Sonnet when `ANTHROPIC_API_KEY` is set, with
+Gemini as its fallback; `--provider claude-api --effort low` (below) sends
+production's Sonnet request, plus prompt caching. It's a dev tool: no service imports it, it isn't in the Docker
 images, and pytest doesn't run it. It calls the real `assess.assess` on
 hand-written cases, with a fake Storage Management that only serves the
 draft, and scores the saved answers afterwards, so re-scoring costs no
@@ -903,8 +922,10 @@ billed to the key. `evals/results/` is tracked in git.
   them); `meta.json` records them as null, and the Claude judge has no
   temperature 0, so check its agreement with itself (`judge_check.py
   agree`).
-- **Claude results measure Claude, not production's Gemini.** `compare.py`
-  across providers shows the model change; it isn't a regression check.
+- **Compare like with like.** Production leads with Sonnet at effort `low`;
+  the evals default to `medium`, so pass `--effort low` to measure
+  production, and a Gemini run measures the fallback. `compare.py` across
+  providers shows the model change; it isn't a regression check.
 
 **A case** (`evals/cases/NN_name.json`, 24 of them, 13 marked
 `"tier": "hard"`) is one report: `paper` (details) and `paper_text`,
@@ -1245,6 +1266,50 @@ makes the text score itself flaky, so check it before trusting text scores.
 To add a case, copy one close to it, change the texts and `expected`, and
 run `run.py --dry <case>` to check that it builds.
 
+### Before/after smoke tests
+
+`backend/tests/research_evaluation/impact/test_rag_effect_live.py` holds four
+`live` pytest tests (so `uv run pytest` never runs them) that run `assess`
+with a real model, with and without added context, on the IJAA retraction
+(so steps 2 and 3 run). They are one-run smoke checks, not scored evals: no
+pass rates or rubrics, one run each, no retries, and a Sonnet judge. They do
+not test retrieval (the search tests do; the context is filled into
+`ReportInputs` directly) and do not show the output is better, only that the
+context changes it.
+
+- `test_profile_changes_tone`: with a profile asking for casual, plain
+  writing, the judge says the text is noticeably more casual and plain.
+- `test_profile_keeps_levels`: change severity and impact level are each the
+  baseline's or one step from it (the profile never changes a level).
+- `test_feedback_affects_output`: one `overstated` feedback item from another
+  of the researcher's papers; the judge says the text differs from the
+  baseline's (says something new or leaves something out).
+- `test_past_timeline_affects_output`: one past alert and one past report on
+  an earlier expression of concern about the same paper's data; same
+  judge question.
+
+The judge reads only the two runs' text bodies, labelled "without context"
+and "with context" (every sentence of the summary, explanation and
+recommendation, and every action, whether or not a claim backs it), never
+the added context, and answers `{"passed": bool}`. Claims are left to the
+other tests. Each test prints both texts and the verdict (`-s`). A run that
+comes back as the placeholder fails its test, since a comparison against it
+says nothing. A baseline (no profile, feedback or past) and each variant run
+once per session, 4 `assess` runs and 3 judge calls.
+
+```
+cd backend
+uv run pytest -m live -s tests/research_evaluation/impact/test_rag_effect_live.py
+```
+
+The default tested model and judge are Sonnet at effort medium through
+Claude Code (`claude auth login`). Overrides: `RAG_EFFECT_PROVIDER`
+(`claude-code`, `gemini`, `claude-api`), `RAG_EFFECT_MODEL` (default `sonnet`
+on Claude Code, `claude-sonnet-5-5` on the API, `GEMINI_MODEL` on Gemini),
+`RAG_EFFECT_JUDGE_PROVIDER` and `RAG_EFFECT_JUDGE_MODEL` (same defaults). If
+the chosen provider is unavailable (no key, `claude` not installed or not
+logged in) the tests skip; a Claude usage limit skips the rest.
+
 ## Where the code lives
 
 `backend/src/research_evaluation/`:
@@ -1259,17 +1324,17 @@ run `run.py --dry <case>` to check that it builds.
 | User Management client | `users.py`: `ResearcherProfile`, `researcher_profile(http, user_id)`, `notify(http, user_id, body)` (the events above, 30 s timeout set on the post) |
 | Detection, rules, per-paper evaluation | `changes.py`, `rules.py`, `evaluate.py` |
 | Investigation | `investigation/`: `http.py` (one GET, `FetchStatus`), `crossref.py`, `europepmc.py`, `investigate.py` (plan, fetch), `run.py` |
-| Impact | `impact/`: `llm.py` (Gemini client, `FallbackLlm`, the `Llm` protocol), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `history.py` (the query, the three searches), `assess.py`, `claims.py` (`build_claims`), `quotes.py` (`norm`, `quoted_in`, `join_hyphens`, `pdf_pages`, `PdfUnreadable`, `leaves`, `DOI`, `ALERT`, `ELLIPSIS`: shared with the evals; `pypdf` is a project dependency), `run.py` (`ImpactContext`) |
+| Impact | `impact/`: `llm.py` (`ClaudeLlm`, `GeminiLlm`, `FallbackLlm`, the `Llm` protocol), `prompts.py` (the prompt texts, `PROMPT_VERSION`), `schemas.py`, `inputs.py`, `history.py` (the query, the three searches), `assess.py`, `claims.py` (`build_claims`), `quotes.py` (`norm`, `quoted_in`, `join_hyphens`, `pdf_pages`, `PdfUnreadable`, `leaves`, `DOI`, `ALERT`, `ELLIPSIS`: shared with the evals; `pypdf` is a project dependency), `run.py` (`ImpactContext`) |
 | Shared with Updating | `backend/src/common/`: `doi.py` (`normalize_doi`), `service_token.py` (`ServiceTokenAuth`), `config.py` |
 | Dev stub of Storage Management | `backend/dev/stub_storage.py` (every internal endpoint in memory, plus `/dev/*` helpers) |
 | Tests | `backend/tests/research_evaluation/` (with `investigation/` and `impact/`); fixtures in `backend/tests/fixtures/` |
 | Evals of impact (dev only) | `backend/evals/`: `cases/`, `thresholds.json`, `run.py`, `claude_llm.py` (`ClaudeLlm` through Claude Code, `ClaudeApiLlm` through the Claude API, `preflight`, `ClaudeLimitReached`, `NotOnSubscription`), `judge.py` (`Rubric`), `judge_check.py`, `check_passage_scoring.py`, `real/extract.py` (imports `research_evaluation.impact.quotes` from `src/`; run as `uv run python evals/real/extract.py`, no `--with pypdf`), `score.py` (also the shared helpers `verdict`, `pass_rate`, `group_by`, `noise_floor`, `overall_mean`, `failure_line`), `compare.py`, `all.py` |
 
-The lifespan makes four HTTP clients: Storage Management's (base URL,
-service token, 10 s), User Management's (`UM_BASE_URL`, service token, same
+The lifespan makes Storage Management's HTTP client (base URL, service
+token, 10 s), User Management's (`UM_BASE_URL`, service token, same
 timeout), one for Crossref and Europe PMC (no base URL and no auth), and
-the Gemini client. User Management's is always opened, even without a Gemini
-key, but only `ImpactContext` and `InvestigationContext` use it (`ImpactContext.um`
+impact's Anthropic and Gemini clients, each only with its key. User
+Management's is always opened, even without a model key, but only `ImpactContext` and `InvestigationContext` use it (`ImpactContext.um`
 and `InvestigationContext.um`, both optional: `None` sends nothing, as in the evals).
 
 ## Gotchas
@@ -1304,8 +1369,10 @@ and `InvestigationContext.um`, both optional: `None` sends nothing, as in the ev
   `POST /evaluate/reports` skips it. Only `assessment.placeholder` tells it
   from a real `low`.
 - **Slow paths add up:** reports are assessed one after another, each up
-  to (1 + fallbacks) × 3 × `IMPACT_LLM_TIMEOUT_SECONDS` (12 minutes with
-  the defaults).
+  to (models in the chain) × 3 × `IMPACT_LLM_TIMEOUT_SECONDS` (18 minutes
+  with Sonnet and both Gemini models).
+- **Sonnet is paid per token** (`ANTHROPIC_API_KEY`, console.anthropic.com),
+  with no free tier: a report is three calls, each sending its PDFs.
 - **Free-tier Gemini:** about 20 requests per model per day (`429`), and
   `gemini-flash-latest` (currently `gemini-3.8-flash`) is often `503`
   ("high demand"). `gemini-2.5-flash` isn't available to new keys. A

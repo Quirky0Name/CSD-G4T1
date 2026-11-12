@@ -30,7 +30,8 @@ Learner Lab won't do: it limits IAM roles and stops instances after a few hours.
    | `/research-assistant/REFRESH_COOKIE_SECURE` | `true`, so the refresh token's cookie is sent only over HTTPS |
    | `/research-assistant/ADMIN_PASSWORD_HASH` | `docker run --rm caddy:2.11-alpine caddy hash-password` (for `/adminer`) |
 
-   Then any of the API keys and settings in `.env.example` the app should use (`GEMINI_API_KEY`,
+   Then any of the API keys and settings in `.env.example` the app should use (`ANTHROPIC_API_KEY`,
+   `GEMINI_API_KEY`,
    `OPENALEX_API_KEY`, `CROSSREF_MAILTO`,
    `DEV_TOOLS`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM`,
    `TELEGRAM_BOT_TOKEN`, `APP_URL`, ...). Outside notifications by email need

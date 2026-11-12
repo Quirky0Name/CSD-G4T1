@@ -8,8 +8,8 @@
 
 The profile tailors the text of steps 2 and 3, never a level; step 1 never gets it. Reading it
 can't fail the report: `assessment["profile"]` records what happened, never the profile's values.
-The researcher's past feedback (read with the past, impact.history) goes to steps 2 and 3 the same
-way, after the profile: `assessment["feedback"]` records how reading it went, never a note.
+The researcher's past feedback (read with the past, impact.history) goes to every step, and may
+guide its levels too: `assessment["feedback"]` records how reading it went, never a note.
 
 It returns the body for `PUT /internal/reports/{id}/evaluation`; storing it is the caller's job.
 A model answer that doesn't fit its schema raises, and nothing is returned for the report
@@ -64,9 +64,18 @@ async def assess(
     went (impact.history: read, none or failed); None works each out from `inputs`, as the evals
     do."""
     prompt = change_prompt(inputs)
-    # the past chunks steps 1 and 2 get, in prompt order, for the frontend to show (I5); the
-    # feedback steps 2 and 3 get is added once step 2 is reached
+    # the past chunks and feedback the steps get, in prompt order, for the frontend to show (I5)
     context: list[ContextChunk | FeedbackContextChunk] = [context_chunk(c) for c in inputs.chunks]
+    context += [
+        FeedbackContextChunk(
+            source_id=item.chunk.source_id,
+            paper_id=item.chunk.paper_id,
+            paper_title=item.chunk.paper_title,
+            source_date=item.chunk.source_date,
+            verdict=item.verdict,
+        )
+        for item in inputs.feedback
+    ]
     assessment: dict[str, Any] = {
         "prompt_version": PROMPT_VERSION,
         "model": llm.model,
@@ -108,16 +117,6 @@ async def assess(
         assessment["draft"] = "read" if draft is not None else "none"
         assessment["profile"], profile = await _read_profile(um, inputs.report)
         step = "impact"
-        context += [
-            FeedbackContextChunk(
-                source_id=item.chunk.source_id,
-                paper_id=item.chunk.paper_id,
-                paper_title=item.chunk.paper_title,
-                source_date=item.chunk.source_date,
-                verdict=item.verdict,
-            )
-            for item in inputs.feedback
-        ]
         step_two = impact_prompt(
             inputs.paper,
             change.value,

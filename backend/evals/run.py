@@ -43,7 +43,7 @@ from claude_llm import ApiStopped, ClaudeLimitReached, NotOnSubscription, Usage
 from research_evaluation.impact import prompts
 from research_evaluation.impact.assess import assess
 from research_evaluation.impact.inputs import ReportInputs
-from research_evaluation.impact.llm import FallbackLlm, Llm
+from research_evaluation.impact.llm import FallbackLlm, GeminiLlm, Llm
 from research_evaluation.storage import (
     AlertInReport,
     DocumentInReport,
@@ -439,15 +439,13 @@ def make_llm(args: argparse.Namespace) -> EvalLlm:
     if not os.environ.get("GEMINI_API_KEY"):
         sys.exit("GEMINI_API_KEY is not set")
     model = args.model or os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
-    return FallbackLlm(
-        genai.Client(
-            api_key=os.environ["GEMINI_API_KEY"],
-            # same limit as production (IMPACT_LLM_TIMEOUT_SECONDS), in milliseconds
-            http_options=types.HttpOptions(timeout=120_000),
-        ),
-        # GEMINI_MODEL only: an eval never falls back, a failed run is re-run with --resume
-        (model.strip(),),
+    client = genai.Client(
+        api_key=os.environ["GEMINI_API_KEY"],
+        # same limit as production (IMPACT_LLM_TIMEOUT_SECONDS), in milliseconds
+        http_options=types.HttpOptions(timeout=120_000),
     )
+    # GEMINI_MODEL only: an eval never falls back, a failed run is re-run with --resume
+    return FallbackLlm((GeminiLlm(client, model.strip()),))
 
 
 def failed_runs(out_dir: Path, names: list[str]) -> list[tuple[str, str]]:

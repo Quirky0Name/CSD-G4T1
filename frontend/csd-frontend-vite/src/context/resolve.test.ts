@@ -53,6 +53,7 @@ function report(id: number, paperId: string, extra: Partial<UserReport> = {}): U
     impact_level: null,
     claims: null,
     context_chunks: null,
+    feedback: null,
     alerts: [],
     documents: [],
     ...extra,

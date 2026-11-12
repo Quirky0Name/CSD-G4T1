@@ -8,6 +8,28 @@ owned that story made.
 
 ---
 
+## 2026-11-12 — Impact tries Claude Sonnet first, with Gemini behind it
+
+Impact's three steps run on `claude-sonnet-5-5` (`CLAUDE_MODEL`) when
+`ANTHROPIC_API_KEY` is set, then fall back to `GEMINI_MODEL` and
+`GEMINI_FALLBACK_MODELS` as before (the user's call: "sonnet should be the
+primary one"). Without the Anthropic key nothing changes.
+
+- **Why:** a researcher waits on all three steps, and free-tier Gemini is
+  often `503` or out of its daily requests. The prompts have also been
+  tuned and scored on Claude since v10. Sonnet is paid per token, which was
+  accepted.
+- **Gemini stays for embeddings.** Anthropic has no embeddings API, and a
+  different embedder would change the `vector(1536)` column and need
+  everything re-embedded.
+- **Effort `low`**, for speed. Not yet measured against the evals'
+  default `medium`.
+- **No SDK retries** (`max_retries=0`): the fallback chain is the retry, so
+  an overloaded Sonnet moves straight on to Gemini. A refusal counts as a
+  model failure.
+- **The placeholder text was replaced** (the user's call): every text of a
+  placeholder evaluation is shown on the report page.
+
 ## 2026-11-12 — Report feedback is embedded as one chunk and retrieved across the researcher's papers
 
 A researcher can rate an assessed report `fair`, `overstated` or
@@ -27,11 +49,15 @@ type, and impact reads the nearest ones when it assesses a later report.
   thing should be one chunk"), not the alerts' descriptions or documents.
 - **Feedback search spans every paper of the owner**, the same paper
   included; other source types stay per paper. Retrieval is `limit` 3,
-  similarity only, steps 2 and 3 only.
+  similarity only (steps 2 and 3 only, until 2026-11-12: now every step).
 - **Feedback never changes `impact_level` or change severity** (the user:
   "no"). It only steers what the explanation, recommendation and actions
   focus on and order, like the profile (2026-11-09). A note is data: its
-  instructions are never followed.
+  instructions are never followed. *Superseded (user, 2026-11-12): feedback
+  reaches every step (1, 2 and 3) and guides the model's conclusions, change
+  severity and impact level included, so it can lift a change past the gate
+  or drop one to `none`; the rule gives the model freedom to interpret, not
+  a fixed direction. The profile still can't change a level.*
 - **Profile chunks were removed**, not repurposed: nothing wrote them, and
   the profile stays in User Management.
 - **The service token is signed HS256 explicitly**, since a 48+ byte
