@@ -53,6 +53,14 @@ _Avoid_: Severity (on its own)
 How serious one particular change really is for anyone relying on the paper.
 _Avoid_: Severity (on its own)
 
+### Claims
+
+**Claim**:
+A factual statement in an evaluation's summary, explanation or recommendation, listed with the passages that back it.
+
+**Passage**:
+A quote a claim rests on, with the text it was found in (the tracked paper, the draft, a report document or an alert) and its page, and whether the quote was found there word for word.
+
 ### Researchers
 
 **Profile**:
@@ -77,6 +85,23 @@ A piece of an alert's, report's, report document's or report feedback's text, st
 
 **Past timeline**:
 A tracked paper's earlier alerts, reports and report documents, found by vector search, that impact's steps 1 and 2 read beside the current report.
+
+### Notifications
+
+**Outside notification**:
+A message sent to a researcher by email or Telegram when an alert or an assessed report passes that channel's thresholds. The in-app toast is not one.
+_Avoid_: External notif, push notification
+
+**Notification channel**:
+Email or Telegram.
+
+**Notification preferences**:
+A researcher's per-channel on/off, Telegram chat id and thresholds.
+_Avoid_: Preferences (on its own, which is easily taken for the profile)
+
+**Notification threshold**:
+The lowest alert severity, change severity or impact level that sends on one channel. A report sends when either of its levels reaches its threshold.
+_Avoid_: Rule, filter
 
 ### Dev mode
 

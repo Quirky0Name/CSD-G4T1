@@ -6,7 +6,12 @@
 
 It never sees a gold paragraph: only the case's own texts, the model's three free-text fields and
 the facts, and answers pass/fail per fact with a quote. It writes <run>.judge.json next to each
-result; score.py then adds the text score. With --label <label> it writes
+result; score.py then adds the text score.
+
+A run with `claims` (PROMPT_VERSION 5 on) gets a second grading in the same file: whether each
+passage backs its claim (`passages`), and each factual statement of the three free-text fields
+with the claims that cover it (`statements`). The judge reports; the code decides what passes. A
+run graded before claims were judged gets only this grading, without --redo. With --label <label> it writes
 <run>.judge-<label>.json instead, which score.py never reads. Calls the judge model with
 temperature 0.
 
@@ -45,6 +50,32 @@ class Verdict(BaseModel):
 
 class Verdicts(BaseModel):
     items: list[Verdict]
+
+
+PASSAGE_SYSTEM = """You check an AI assistant's claims and the passages it quoted for them. \
+Use only what is given; do not use outside knowledge. For each numbered PASSAGE, give a short \
+reason, then `backs`: true if the quoted words, read on their own, show what the claim states, \
+false if they don't (they are about something else, say less, or contradict it). Then list each \
+factual statement in the ANSWER's change_summary, evaluation and recommendation, with its field, \
+and `covered_by`: the numbers of the CLAIMS that state it (empty if no claim does). You are only \
+reporting, not judging whether the answer is right. Do not reward length or style."""
+
+
+class PassageVerdict(BaseModel):
+    n: int
+    reason: str
+    backs: bool
+
+
+class StatementVerdict(BaseModel):
+    field: str
+    statement: str
+    covered_by: list[int]
+
+
+class PassageVerdicts(BaseModel):
+    passages: list[PassageVerdict]
+    statements: list[StatementVerdict]
 
 
 def load_env() -> None:
@@ -95,6 +126,75 @@ def answer(ev: dict) -> str:
     )
 
 
+def numbered_passages(ev: dict) -> list[tuple[int, dict]]:
+    """Every passage of the run's claims, in order, with the index of its claim; passage n of
+    the prompt is entry n - 1."""
+    return [(i, p) for i, claim in enumerate(ev["claims"]) for p in claim["passages"]]
+
+
+def passage_prompt(ev: dict) -> str:
+    claims = [f"{i}. {c['text']}" for i, c in enumerate(ev["claims"], 1)]
+    passages = [
+        f"{n}. for claim {i + 1}: \"{p['quote']}\""
+        for n, (i, p) in enumerate(numbered_passages(ev), 1)
+    ]
+    return (
+        f"ANSWER\n{answer(ev)}\n\n"
+        "CLAIMS\n" + "\n".join(claims) + "\n\n"
+        "PASSAGES (return one item per number)\n" + ("\n".join(passages) or "(none)")
+    )
+
+
+def passage_grade(ev: dict, verdicts: PassageVerdicts) -> dict:
+    """The code's decision on the judge's report: a passage passes when the judge says it backs
+    its claim (one the judge skipped fails); a statement passes when at least one claim that
+    exists covers it."""
+    said = {v.n: v for v in verdicts.passages}
+    claims = ev["claims"]
+    passages = []
+    for n, (i, p) in enumerate(numbered_passages(ev), 1):
+        verdict = said.get(n)
+        passages.append(
+            {
+                "claim_id": claims[i]["id"],
+                "quote": p["quote"],
+                "backs": verdict.backs if verdict else None,
+                "pass": verdict is not None and verdict.backs,
+                "reason": verdict.reason if verdict else "",
+            }
+        )
+    statements = []
+    for s in verdicts.statements:
+        covered = [claims[k - 1]["id"] for k in s.covered_by if 1 <= k <= len(claims)]
+        statements.append(
+            {"field": s.field, "statement": s.statement, "covered_by": covered, "pass": bool(covered)}
+        )
+    return {"passages": passages, "statements": statements}
+
+
+async def ask(client, model: str, system: str, contents: str, schema: type[BaseModel]) -> str:
+    """One judge call at temperature 0, waiting out a rate limit up to three times."""
+    for attempt in range(4):
+        try:
+            response = await client.aio.models.generate_content(
+                model=model,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    system_instruction=system,
+                    temperature=0,
+                    response_mime_type="application/json",
+                    response_schema=schema,
+                ),
+            )
+            return response.text
+        except errors.APIError as exc:
+            if exc.code != 429 or attempt == 3:
+                raise
+            print("rate limited, waiting 45 s")
+            await asyncio.sleep(45)
+    raise AssertionError("unreachable")
+
+
 def grade_path(run: Path, label: str | None = None) -> Path:
     """Where a run's grade goes: <run>.judge.json, or <run>.judge-<label>.json for a labelled
     grading. Every file with ".judge" in its name is a grade, not a run."""
@@ -126,48 +226,51 @@ async def main() -> None:
         if ev["assessment"]["placeholder"]:
             continue  # nothing to judge: a failed run
         out_path = grade_path(path, args.label)
-        if out_path.exists() and not args.redo:
-            continue  # already graded; --redo grades again
-        case = cases[path.name.split("__")[0]]
-        for attempt in range(4):
-            try:
-                response = await client.aio.models.generate_content(
-                    model=model,
-                    contents=prompt(case, ev),
-                    config=types.GenerateContentConfig(
-                        system_instruction=SYSTEM,
-                        temperature=0,
-                        response_mime_type="application/json",
-                        response_schema=Verdicts,
-                    ),
-                )
-                break
-            except errors.APIError as exc:
-                if exc.code != 429 or attempt == 3:
-                    raise
-                print("rate limited, waiting 45 s")
-                await asyncio.sleep(45)
-        said = {i.n: i for i in Verdicts.model_validate_json(response.text).items}
-        facts = case["expected"]["facts"]
-        wanted = [True] * len(facts["must_include"]) + [False] * len(facts["must_not_include"])
-        items = []
-        for n, (fact, should_say) in enumerate(zip(statements(case), wanted), 1):
-            verdict = said.get(n)
-            # the code, not the judge, decides: a must-include is met when present, a must-not
-            # when absent; a statement the judge skipped counts as failed
-            ok = verdict is not None and verdict.present == should_say
-            items.append(
-                {
-                    "fact": fact,
-                    "kind": "must_include" if should_say else "must_not_include",
-                    "present": verdict.present if verdict else None,
-                    "pass": ok,
-                    "evidence": verdict.evidence if verdict else "",
-                }
-            )
-        out = {"judge_model": model, "items": items}
+        existing = json.loads(out_path.read_text()) if out_path.exists() else None
+        # --redo grades again; a run graded before claims were judged gets only that grading
+        grade_facts = existing is None or args.redo
+        grade_claims = ev.get("claims") is not None and (grade_facts or "passages" not in existing)
+        if not (grade_facts or grade_claims):
+            continue
+        out = existing if not grade_facts else await grade(client, model, cases, path, ev)
+        if grade_claims:
+            text = await ask(client, model, PASSAGE_SYSTEM, passage_prompt(ev), PassageVerdicts)
+            out |= passage_grade(ev, PassageVerdicts.model_validate_json(text))
         out_path.write_text(json.dumps(out, indent=2))
-        print(f"{path.stem}: {sum(i['pass'] for i in items)}/{len(items)} facts met")
+        facts = f"{sum(i['pass'] for i in out['items'])}/{len(out['items'])} facts met"
+        if "passages" in out:
+            backed = sum(p["pass"] for p in out["passages"])
+            covered = sum(s["pass"] for s in out["statements"])
+            facts += (
+                f", {backed}/{len(out['passages'])} passages back their claim, "
+                f"{covered}/{len(out['statements'])} statements covered"
+            )
+        print(f"{path.stem}: {facts}")
+
+
+async def grade(client, model: str, cases: dict, path: Path, ev: dict) -> dict:
+    """The fact grading of one run: the judge reports, the code decides."""
+    case = cases[path.name.split("__")[0]]
+    text = await ask(client, model, SYSTEM, prompt(case, ev), Verdicts)
+    said = {i.n: i for i in Verdicts.model_validate_json(text).items}
+    facts = case["expected"]["facts"]
+    wanted = [True] * len(facts["must_include"]) + [False] * len(facts["must_not_include"])
+    items = []
+    for n, (fact, should_say) in enumerate(zip(statements(case), wanted), 1):
+        verdict = said.get(n)
+        # the code, not the judge, decides: a must-include is met when present, a must-not
+        # when absent; a statement the judge skipped counts as failed
+        ok = verdict is not None and verdict.present == should_say
+        items.append(
+            {
+                "fact": fact,
+                "kind": "must_include" if should_say else "must_not_include",
+                "present": verdict.present if verdict else None,
+                "pass": ok,
+                "evidence": verdict.evidence if verdict else "",
+            }
+        )
+    return {"judge_model": model, "items": items}
 
 
 if __name__ == "__main__":

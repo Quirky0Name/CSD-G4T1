@@ -95,7 +95,7 @@ public class ReportService {
         checkShape(request);
         int updated = reports.recordEvaluation(reportId, request.changeSummary(), request.changeSeverity(),
                 request.impactLevel(), request.evaluation(), request.recommendation(),
-                jsonText(request.assessment()), jsonText(request.contextChunks()),
+                jsonText(request.assessment()), jsonText(request.claims()), jsonText(request.contextChunks()),
                 Instant.now().truncatedTo(ChronoUnit.MICROS), ReportStatus.ASSESSED, ReportStatus.INVESTIGATED);
         Report report = reports.findById(reportId).orElseThrow(() -> noReport(reportId));
         if (updated == 0) {
@@ -118,6 +118,15 @@ public class ReportService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "impact_level, evaluation and recommendation are required unless change_severity is none");
         }
+    }
+
+    // a JSON value as text to store, or null when it was left out or sent as null
+    private String jsonText(JsonNode value) {
+        return value == null || value.isNull() ? null : json.writeValueAsString(value);
+    }
+
+    private JsonNode jsonValue(String text) {
+        return text == null ? null : json.readTree(text);
     }
 
     private static boolean isBlank(String text) {
@@ -182,16 +191,11 @@ public class ReportService {
                         Collectors.mapping(AlertResponse::from, Collectors.toList())));
         Map<Long, List<UserDocumentResponse>> documentsByReport = documents.forOwnerByReport(reportIds);
         return found.stream()
-                .map(report -> UserReportResponse.from(report,
+                .map(report -> UserReportResponse.from(report, jsonValue(report.getClaims()),
                         alertsByReport.getOrDefault(report.getId(), List.of()),
                         documentsByReport.getOrDefault(report.getId(), List.of()),
-                        report.getContextChunks() == null ? null : json.readTree(report.getContextChunks())))
+                        jsonValue(report.getContextChunks())))
                 .toList();
-    }
-
-    // JSON stored as text, as sent; absent or null is null
-    private String jsonText(JsonNode node) {
-        return node == null || node.isNull() ? null : json.writeValueAsString(node);
     }
 
     /**
@@ -285,7 +289,7 @@ public class ReportService {
         return new ReportResponse(report.getId(), report.getPaperId(), ownerId, report.getStatus(), report.getCreatedAt(),
                 report.getInvestigatedAt(), report.getEvaluation(), report.getRecommendation(),
                 report.getEvaluatedAt(), report.getChangeSummary(), report.getChangeSeverity(),
-                report.getImpactLevel(), report.getAssessment() == null ? null : json.readTree(report.getAssessment()),
+                report.getImpactLevel(), jsonValue(report.getAssessment()), jsonValue(report.getClaims()),
                 alerts.findByReportIdOrderByIdAsc(report.getId()).stream().map(ReportAlertResponse::from).toList(),
                 documents.forReport(report.getId()), ReportFeedbackResponse.of(report));
     }

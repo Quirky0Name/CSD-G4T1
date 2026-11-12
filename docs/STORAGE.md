@@ -6,7 +6,9 @@ Updating and Research Evaluation read and write through its `/internal/**`
 endpoints. Its one call to Research Evaluation is the feedback nudge (see
 "Report feedback"). Endpoint shapes and every
 error are in CONTRACTS.md; running it is in SETUP.md; the schema diagram
-is [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html).
+is [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html) (not
+regenerated since: V10 to V17 are only in the migrations; V14 adds
+`reports.context_chunks`, V15 `reports.claims` and V17 the feedback columns).
 
 ## Code layout
 
@@ -81,6 +83,11 @@ default project; project ids aren't checked.
   finds the draft through the tracked paper's owner and project. Its "no
   draft" `404` has its own detail; if the file vanished
   mid-read (a re-upload), it looks the row up once more.
+- **User read** (`ownedPdf`, `GET /draft/pdf?project_id=`): the owner's
+  project's current draft. It reads the row again once when the file is
+  gone, as `pdfForPaper` does, since a re-upload can delete the file between
+  the two reads. Only the current upload is kept, so a highlight quoting a
+  draft replaced after the assessment may not be found in it.
 - No GROBID or Crossref on upload: a draft has no DOI.
 
 ## Snapshots (`snapshots`)
@@ -150,16 +157,30 @@ investigation fetched (documents) and impact's evaluation. Status:
   `assessed` and `evaluated_at`. Nothing updated: `409` (not investigated
   yet, or already assessed: the first evaluation is kept). `assessment`
   is stored as text and returned as a JSON object, like `crossref_record`.
+- **`claims`** (V15, `reports.claims` text): impact's claims as JSON, stored
+  as sent like `assessment` and returned as a JSON array. A column of its own,
+  so Storage Management still never looks inside `assessment`. Any JSON value
+  is accepted; left out or `null` stores null. Null on reports assessed before
+  V15: not backfilled.
+- **PDFs for the researcher** (`GET /papers/{id}/pdf` in `PaperService.ownedPdf`,
+  `GET /documents/{id}/pdf` in `DocumentController` and
+  `ReportDocumentService.ownedPdf`): owner only. A document's owner is checked
+  with one query joining its report and paper
+  (`ReportDocumentRepository.findOwned`). Someone else's item, a missing one,
+  a notice, a paper or document with no stored PDF and a file gone from disk
+  are all `404`s.
 - **The user's view** (`GET /papers/{id}/reports`, `ReportService.listForOwner`):
   four queries whatever the count (paper and ownership, reports newest
   first, all their alerts in the alert list's order, all their documents
   oldest first), each report with every alert it grouped, dismissed ones
   included, in the alert API's shape. Documents leave out `file_key`,
   `sha256` and `report_id`. `UserReportResponse` has `evaluation`,
-  `recommendation`, `evaluated_at` and `context_chunks` but **not** `change_summary`,
-  `change_severity`, `impact_level` or `assessment` (ROADMAP.md).
+  `recommendation`, `evaluated_at`, `change_summary`, `change_severity`,
+  `impact_level`, `claims` and `context_chunks`, but **never** `assessment`.
 - **`context_chunks`** (V14, `reports.context_chunks` text): the chunks
-  impact added to its prompt (`source_type`, `source_id`, `page` each), stored
+  impact added to its prompt (`source_type`, `source_id`, `page` each, plus
+  `start` and `end`, both or neither, on a page-less `document` item whose
+  text was cut into more than one chunk), stored
   as sent and returned as a JSON array in `GET /papers/{id}/reports`, like
   `claims` and `assessment`; Storage Management never looks inside. Absent or
   `null` in the evaluation `PUT` stores null, and reports assessed before V14
@@ -180,7 +201,7 @@ may add a note. The verdict rates how serious the report as a whole made the
 change out to be. It is stored on the report itself; the `feedback` chunk
 (see "Chunks") is a derived, searchable copy.
 
-- **Columns on `reports`** (V15): `feedback_verdict varchar(16)`,
+- **Columns on `reports`** (V17): `feedback_verdict varchar(16)`,
   `feedback_note varchar(500)`, `feedback_updated_at timestamptz`. All null
   when there is no feedback; otherwise the verdict and time are both set.
   `ck_reports_feedback_verdict` allows only the three values, and

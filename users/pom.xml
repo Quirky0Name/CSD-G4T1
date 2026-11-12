@@ -21,6 +21,7 @@
         <java.version>25</java.version>
         <jjwt.version>0.13.0</jjwt.version>
         <springdoc.version>3.1.1</springdoc.version>
+        <greenmail.version>2.1.8</greenmail.version>
     </properties>
 
     <dependencies>
@@ -42,6 +43,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-restclient</artifactId>
+        </dependency>
+        <!-- emails a researcher's notifications; sending stays off until MAIL_HOST is set -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
         <!-- BCrypt, and the token check on /projects; SecurityConfig leaves every other path open -->
         <dependency>
@@ -92,6 +98,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- an SMTP server in the test's own process, to read the mail a notification sends -->
+        <dependency>
+            <groupId>com.icegreen</groupId>
+            <artifactId>greenmail</artifactId>
+            <version>${greenmail.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

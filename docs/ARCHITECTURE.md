@@ -36,6 +36,7 @@ feature on their own.
   researcher's draft (change severity, impact level, evaluation,
   recommendation).
 - An in-app notification, on the frontend's 30 s refresh, when one of the signed-in researcher's reports is assessed.
+- Outside notifications: a researcher who turns on email or Telegram is told when a paper gets alerts and when its report is assessed, whether or not a tab is open.
 - The frontend: tracked papers, alerts (acknowledge, dismiss),
   reports, the draft upload, a manual poll, deleting a paper.
 - Demo tools in Storage Management to replay a change on a real paper
@@ -48,7 +49,7 @@ topic discovery) is in [ROADMAP.md](ROADMAP.md).
 
 | Service | Stack | Owns | Folder |
 |---|---|---|---|
-| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users`, `projects`, `user_profiles` and `refresh_tokens`: register, login, refresh and the JWTs, each researcher's projects and profile, and deleting an account | `users/` |
+| User Management | Java 25 + Spring Boot, Postgres, Flyway | `users`, `projects`, `user_profiles`, `refresh_tokens` and `notification_preferences`: register, login, refresh and the JWTs, each researcher's projects, profile and notification preferences, sending their outside notifications, and deleting an account | `users/` |
 | Frontend | React + TypeScript (Vite, Tailwind) | the researcher's UI; calls the services at `/api`, `/auth`, `/projects` and `/updating` on its own address (the Vite proxy in development, Caddy in the root stack) | `frontend/csd-frontend-vite/` |
 | Storage Management | Java 25 + Spring Boot, Postgres (pgvector), Flyway | all persistence: papers and their PDFs, snapshots, alerts, reports and documents, chunks and their embeddings, drafts | `storage/` |
 | Research Evaluation | Python 3.13, FastAPI | detecting and judging changes (detection, rules, investigation, impact); no database of its own; reads a researcher's profile from User Management | `backend/src/research_evaluation/` |
@@ -75,6 +76,7 @@ Frontend ──/api──▶ Storage Management ◀──/internal── Researc
 
 Research Evaluation ──/internal/users/{id}/profile──▶ User Management (impact's steps 2 and 3)
 Storage Management ──POST /embed/feedback──▶ Research Evaluation (after a researcher saves or deletes feedback)
+Research Evaluation ──/internal/users/{id}/notifications──▶ User Management ──▶ an SMTP server, Telegram
 ```
 
 One poll, end to end:
@@ -89,14 +91,20 @@ One poll, end to end:
    a rule-based assessment and stores them as alerts. Then it replies:
    `202`, or `503` so Updating re-sends next poll.
 4. After the reply, in the background: **investigation** opens a report
-   grouping the paper's new alerts and stores what it fetched as the
+   grouping the paper's new alerts, posts an `alerts` event to User
+   Management for the report's owner, and stores what it fetched as the
    report's documents (Storage Management downloads their PDFs); then
    **impact** reads the paper's past chunks from Storage Management
-   (`POST /internal/chunks/search`), asks Gemini about the report and stores
-   its evaluation (the report becomes `assessed`). After the evaluation is
-   stored, the report's, its alerts' and its documents' chunks are embedded
-   (Gemini) and stored (`PUT /internal/chunks`), so a later report's impact
-   finds them. Research Evaluation sends no notification.
+   (`POST /internal/chunks/search`), asks Gemini about the report, checks
+   each quote of the answer's claims against the text it came from
+   (`impact/claims.py`), stores its evaluation with those claims (the report
+   becomes `assessed`) and posts a `report_assessed` event with it. A
+   placeholder evaluation is not posted. After the evaluation is stored, the
+   report's, its alerts' and its documents' chunks are embedded (Gemini) and
+   stored (`PUT /internal/chunks`), so a later report's impact finds them.
+   Research Evaluation only posts the events: User Management applies each
+   channel's thresholds, builds the message and sends it (below). A failed
+   post is logged and changes nothing.
    **Feedback:** a researcher rates an assessed report (`PUT
    /papers/{id}/reports/{reportId}/feedback`). Storage Management stores the
    verdict and note on the report and, after commit, nudges Research
@@ -106,7 +114,9 @@ One poll, end to end:
    report of any of the same researcher's papers, it searches those chunks
    and gives the nearest to steps 2 and 3.
 5. The **frontend** reads alerts and reports from Storage Management; the
-   researcher acknowledges or dismisses them. The shared refresh of
+   researcher acknowledges or dismisses them. It reads the PDFs a report's
+   claims point at (paper, draft, document) from Storage Management with the
+   user's token. The shared refresh of
    papers, alerts and reports runs every 30 s only while a user is signed
    in, and starts fresh for each user. When a refresh finds a report that
    has become `assessed` since the first load, the frontend notifies the
@@ -123,6 +133,22 @@ notify, and each open tab notifies once per report. There is no server
 push (WebSocket, SSE, browser notifications); the frontend finds assessed
 reports on its refresh.
 
+**Outside notifications** are an email or a Telegram message, sent by User
+Management when an alert or an assessed report passes a channel's
+thresholds. Research Evaluation posts one event (`POST
+/internal/users/{id}/notifications`, CONTRACTS.md); User Management reads
+the researcher's `notification_preferences`, applies each channel's
+thresholds, builds the message and sends it during the request, then answers
+each channel's outcome. Research Evaluation never holds the bot token, the
+SMTP password, an email address or a chat id. Email goes to the account email
+(unverified), over SMTP from `MAIL_HOST`; Telegram is `sendMessage` through
+the bot API to the chat id the researcher typed in. Each channel has its own
+on/off and its own thresholds, and a report sends when its change severity
+or its impact level is at or above that channel's threshold. Sending holds no
+database transaction: the account and the preferences row are read first,
+then the channels are tried one after another, so one failing doesn't stop the
+other. The in-app toast is separate and unchanged.
+
 Rules that hold across the flow:
 
 - **Updating and Research Evaluation share data only through Storage
@@ -132,6 +158,9 @@ Rules that hold across the flow:
   (`GET /internal/users/{id}/profile`, its service token), after the gate and
   only for impact's steps 2 and 3. Which user comes from `owner_id` on
   Storage Management's report. A failed read never fails a report.
+- **User Management calls Telegram and an SMTP server**, the only service
+  that does. Research Evaluation posts events to it with its service token
+  and never sends a message itself.
 - **Research Evaluation is called by Updating** (the nudge), by **Storage
   Management** (`POST /embed/feedback` after feedback is saved or deleted,
   with its own `svc:storage` token) and by hand (`POST /evaluate/reports`
@@ -222,7 +251,7 @@ diagram, up to V9: [diagrams/erd-flyway-V9.html](diagrams/erd-flyway-V9.html); V
 | `alerts` | detected change on a paper (type, `change_key`, rule-based alert severity and text, the researcher's status, `report_id`) | V3, V7, V9 |
 | `snapshots` | snapshot Updating sent (insert-only, the full snapshot history per paper) | V4, V9 |
 | `drafts` | project's draft PDF | V6, V9 |
-| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation, the `context_chunks` impact added to its prompt, the researcher's feedback verdict, note and time) | V7, V8, V14, V15 |
+| `reports` | nudge that stored new alerts for a paper (status, impact's evaluation, the `context_chunks` impact added to its prompt, `claims`, the researcher's feedback verdict, note and time) | V7, V8, V14, V15, V17 |
 | `report_documents` | DOI fetched for a report (notice, new version, related document, current copy) | V7 |
 | `chunks` | embedded piece of an alert's, report's, document's or report-feedback text (`vector(1536)`, HNSW cosine index); always has a `paper_id` | V13, V16 |
 
@@ -237,7 +266,7 @@ User Management's own schema (`users`, Flyway, `users/src/main/resources/db/migr
 `password_hash`; `created_at`; the dev mode admin is the row with email
 `admin`, see Auth), `projects` (`id`; `owner_id`, the user's
 id, deleted with the user; `name`, one of each per owner; `created_at`),
-`user_profiles` and `refresh_tokens`.
+`user_profiles`, `refresh_tokens` and `notification_preferences`.
 
 `user_profiles` (V4): one row per account at most (`user_id` is the primary
 key), holding the researcher's profile. No row means no profile: accounts
@@ -250,6 +279,27 @@ small row, nothing reads old ones, and they go when the account is deleted.
 Both tables have `on delete cascade` to `users`, which is how both of
 `UserRepository`'s bulk deletes (`DELETE /auth/me`, and the admin removal
 with dev mode off) clear them.
+
+`notification_preferences` (V6): one row per account (`user_id` is the primary
+key, `on delete cascade` to `users`), holding each channel's `enabled`, the
+Telegram `telegram_chat_id` and each channel's three thresholds
+(`<channel>_min_alert_severity`, `_min_change_severity`, `_min_impact_level`,
+each `low`, `medium`, `high` or null for never). Every column is `not null`
+except the chat id and the six thresholds. It is account data, deleted with
+the account. Register writes the default row (email off, Telegram off with no
+chat id, every threshold `high`, `medium`, `medium`) in the same transaction as
+the account and its profile, in the `notification` package, and V6 inserts one
+for every account that already existed. So a row is always there, except for
+a dev mode admin created after V6 (it gets none); no code path handles a
+missing row except the internal endpoint's `404`. Each channel's `PUT`
+updates only that channel's columns (`@DynamicUpdate` on the entity) and
+loads the row with a pessimistic write lock inside its transaction, so
+overlapping `PUT`s queue on the row: two `PUT`s to different channels never
+write each other's columns, and each `PUT` to one channel stores a whole
+channel rather than a column by column mix of two requests. A Telegram send
+with no chat id on an enabled channel is `failed` without an error, logging
+the user id and "no chat id" only: the `PUT` refuses that state, but an older
+or hand edited row could hold it.
 
 ## Deployment
 

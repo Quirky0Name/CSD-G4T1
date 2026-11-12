@@ -233,7 +233,7 @@ class ReportFeedbackTest {
         reportService.changeStatus(paper, reportId, ReportStatus.INVESTIGATED);
         reportService.recordEvaluation(reportId, new ReportEvaluationRequest("The paper was retracted.",
                 AssessmentLevel.HIGH, AssessmentLevel.MEDIUM, "Your Discussion relies on it.",
-                "Replace the citation.", null, null));
+                "Replace the citation.", null, null, null));
         return reportId;
     }
 

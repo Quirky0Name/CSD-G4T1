@@ -52,6 +52,8 @@ public class Report {
     private FeedbackVerdict feedbackVerdict;
     private String feedbackNote;
     private Instant feedbackUpdatedAt;
+    // JSON text, as Research Evaluation sent it; null on reports assessed before claims existed
+    private String claims;
 
     protected Report() {
     }
@@ -142,5 +144,9 @@ public class Report {
 
     public Instant getFeedbackUpdatedAt() {
         return feedbackUpdatedAt;
+    }
+
+    public String getClaims() {
+        return claims;
     }
 }

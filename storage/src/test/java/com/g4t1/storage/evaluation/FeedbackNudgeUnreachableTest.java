@@ -95,7 +95,7 @@ class FeedbackNudgeUnreachableTest {
         long reportId = reportService.open(paperId).orElseThrow().id();
         reportService.changeStatus(paperId, reportId, ReportStatus.INVESTIGATED);
         reportService.recordEvaluation(reportId, new ReportEvaluationRequest("Retracted.", AssessmentLevel.HIGH,
-                AssessmentLevel.HIGH, "Your Methods use it.", "Remove it.", null, null));
+                AssessmentLevel.HIGH, "Your Methods use it.", "Remove it.", null, null, null));
         String url = "/papers/" + paperId + "/reports/" + reportId + "/feedback";
 
         mvc.perform(put(url).header(HttpHeaders.AUTHORIZATION, TestTokens.user(owner))

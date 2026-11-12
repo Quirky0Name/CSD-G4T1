@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -111,6 +112,21 @@ public class ReportDocumentService {
     public byte[] storedPdf(long documentId) {
         ReportDocument document = documents.findById(documentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No document " + documentId));
+        return pdfOf(documentId, document);
+    }
+
+    /**
+     * The same PDF, for the owner of the report's paper (the frontend shows it beside the report's
+     * highlights). A document of someone else's paper gets the same 404 as a missing one; a notice
+     * has no PDF, so it is a 404 too.
+     */
+    public byte[] ownedPdf(UUID ownerId, long documentId) {
+        ReportDocument document = documents.findOwned(documentId, ownerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No document " + documentId));
+        return pdfOf(documentId, document);
+    }
+
+    private byte[] pdfOf(long documentId, ReportDocument document) {
         if (document.getPdfStatus() != PdfStatus.OK || document.getFileKey() == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Document " + documentId + " has no stored PDF");
         }

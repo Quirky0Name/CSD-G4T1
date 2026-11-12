@@ -68,7 +68,7 @@ class ReportServiceRaceTest {
     // updates nothing reads the report back and answers 409, writing nothing
     @Test
     void aLostEvaluationRaceIsAConflict() {
-        when(reports.recordEvaluation(anyLong(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        when(reports.recordEvaluation(anyLong(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(0);
         when(report.getStatus()).thenReturn(ReportStatus.ASSESSED);
         when(reports.findById(7L)).thenReturn(Optional.of(report));
@@ -83,7 +83,7 @@ class ReportServiceRaceTest {
 
     @Test
     void anEvaluationOfAReportStillInvestigatingIsAConflict() {
-        when(reports.recordEvaluation(anyLong(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        when(reports.recordEvaluation(anyLong(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(0);
         when(report.getStatus()).thenReturn(ReportStatus.INVESTIGATING);
         when(reports.findById(7L)).thenReturn(Optional.of(report));
@@ -95,6 +95,6 @@ class ReportServiceRaceTest {
 
     private static ReportEvaluationRequest evaluation() {
         return new ReportEvaluationRequest("Retracted.", AssessmentLevel.HIGH, AssessmentLevel.HIGH,
-                "It affects your draft.", "Remove the citation.", null, null);
+                "It affects your draft.", "Remove the citation.", null, null, null);
     }
 }

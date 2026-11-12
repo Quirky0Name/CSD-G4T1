@@ -2,6 +2,7 @@ package com.g4t1.storage.paper;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,6 +45,12 @@ public class PaperController {
     @ResponseStatus(HttpStatus.CREATED)
     public PaperResponse trackByDoi(@AuthenticationPrincipal UUID userId, @RequestBody TrackDoiRequest request) {
         return papers.trackByDoi(userId, request.projectId(), request.doi());
+    }
+
+    // the stored PDF, for its owner only; someone else's paper is the same 404 as a missing one
+    @GetMapping("/{paperId}/pdf")
+    public ResponseEntity<byte[]> pdf(@AuthenticationPrincipal UUID userId, @PathVariable UUID paperId) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(papers.ownedPdf(userId, paperId));
     }
 
     // stops tracking the paper: it goes with its snapshots, alerts, reports and PDFs

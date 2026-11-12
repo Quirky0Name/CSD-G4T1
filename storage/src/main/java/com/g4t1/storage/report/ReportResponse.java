@@ -26,6 +26,7 @@ public record ReportResponse(
         AssessmentLevel changeSeverity,
         AssessmentLevel impactLevel,
         JsonNode assessment,
+        JsonNode claims,
         List<ReportAlertResponse> alerts,
         List<ReportDocumentResponse> documents,
         ReportFeedbackResponse feedback) {

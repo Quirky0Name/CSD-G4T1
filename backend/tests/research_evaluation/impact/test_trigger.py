@@ -16,7 +16,13 @@ from research_evaluation.impact.schemas import (
 
 ANSWERS = {
     ChangeAssessment: ChangeAssessment.model_validate(
-        {"alerts": [], "relations": None, "severity": "high", "summary": "Retracted."}
+        {
+            "alerts": [],
+            "relations": None,
+            "severity": "high",
+            "summary": "Retracted.",
+            "claims": [{"text": "A statement.", "passages": []}],
+        }
     ),
     ImpactAssessment: ImpactAssessment.model_validate(
         {
@@ -25,10 +31,11 @@ ANSWERS = {
             "uses": [],
             "impact_level": "none",
             "explanation": "Your draft doesn't cite it.",
+            "claims": [{"text": "A statement.", "passages": []}],
         }
     ),
     RecommendedActions: RecommendedActions.model_validate(
-        {"actions": [], "recommendation": "No action needed."}
+        {"actions": [], "recommendation": "No action needed.", "claims": [{"text": "A statement.", "passages": []}]}
     ),
 }
 

@@ -19,9 +19,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import tools.jackson.databind.ObjectMapper;
+
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
@@ -62,6 +66,9 @@ class ReportListTest {
 
     @Autowired
     ReportService reportService;
+
+    @Autowired
+    ObjectMapper json;
 
     private final UUID owner = UUID.randomUUID();
     private UUID paperId;
@@ -224,6 +231,26 @@ class ReportListTest {
                 .andExpect(jsonPath("$.reports[*].evaluated_at").value(contains(nullValue(), nullValue())))
                 .andExpect(jsonPath("$.reports[0].feedback").value(nullValue()))
                 .andExpect(jsonPath("$.reports[1].feedback").value(nullValue()));
+    }
+
+    @Test
+    void anAssessedReportListsItsClaimsAndChangeFieldsButNeverTheAssessment() throws Exception {
+        alert(paperId, "retraction", AlertSeverity.HIGH, "2026-09-20T12:00:00Z", "10.1/r");
+        long reportId = open(paperId);
+        reportService.changeStatus(paperId, reportId, ReportStatus.INVESTIGATED);
+        Map<String, Object> body = InternalReportEvaluationTest.full();
+        body.put("claims", InternalReportEvaluationTest.claims());
+        reportService.recordEvaluation(reportId, json.convertValue(body, ReportEvaluationRequest.class));
+
+        String listed = list(paperId, owner)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reports[0].change_summary").value("The paper was retracted for fabricated data."))
+                .andExpect(jsonPath("$.reports[0].change_severity").value("high"))
+                .andExpect(jsonPath("$.reports[0].impact_level").value("medium"))
+                .andExpect(jsonPath("$.reports[0].assessment").doesNotExist())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(json.readTree(listed).get("reports").get(0).get("claims"))
+                .isEqualTo(json.valueToTree(body.get("claims")));
     }
 
     @Test

@@ -190,7 +190,7 @@ def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
             ) as sm,
             # Crossref and Europe PMC only: no base URL, no auth, never the service token
             httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as external,
-            # User Management, for the researcher's profile impact reads
+            # User Management, for the researcher's profile impact reads and the events posted to it
             httpx.AsyncClient(
                 base_url=config.um_base_url, auth=ServiceTokenAuth(key, SERVICE_SUBJECT), timeout=HTTP_TIMEOUT_SECONDS
             ) as um,
@@ -202,6 +202,7 @@ def create_app(settings: ResearchEvaluationSettings | None = None) -> FastAPI:
                 external=external,
                 crossref_mailto=config.crossref_mailto,
                 pdf_timeout=config.investigation_pdf_timeout_seconds,
+                um=um,
             )
             app.state.impact = _impact_context(config, um) if gemini_configured(config) else None
             yield

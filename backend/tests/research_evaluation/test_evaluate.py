@@ -501,7 +501,8 @@ async def test_the_history_request_asks_for_the_newest_window(client, sm):
 
     await nudge(client, [paper])
 
-    assert sm.queries("GET", "/snapshots") == ["last=5"]
+    # the alerts post reads the newest snapshot (last=1) after detection has read its window
+    assert sm.queries("GET", "/snapshots")[:1] == ["last=5"]
 
 
 async def test_a_change_older_than_the_window_is_not_seen(client, sm):
@@ -521,7 +522,7 @@ async def test_a_bigger_window_reaches_further_back(client, sm):
 
     response = await nudge(client, [paper])
 
-    assert sm.queries("GET", "/snapshots") == ["last=6"]
+    assert sm.queries("GET", "/snapshots")[:1] == ["last=6"]
     assert response.json()["alerts_created"] == 2
     assert sorted(alert["change_key"] for alert in await sm.alerts(paper)) == ["correction:10.1/c", "retraction"]
 
