@@ -79,6 +79,23 @@ A piece of an alert's, report's, report document's or profile's text, stored wit
 **Past timeline**:
 A tracked paper's earlier alerts, reports and report documents, found by vector search, that impact's steps 1 and 2 read beside the current report.
 
+### Notifications
+
+**Outside notification**:
+A message sent to a researcher by email or Telegram when an alert or an assessed report passes that channel's thresholds. The in-app toast is not one.
+_Avoid_: External notif, push notification
+
+**Notification channel**:
+Email or Telegram.
+
+**Notification preferences**:
+A researcher's per-channel on/off, Telegram chat id and thresholds.
+_Avoid_: Preferences (on its own, which is easily taken for the profile)
+
+**Notification threshold**:
+The lowest alert severity, change severity or impact level that sends on one channel. A report sends when either of its levels reaches its threshold.
+_Avoid_: Rule, filter
+
 ### Dev mode
 
 **Dev mode**:

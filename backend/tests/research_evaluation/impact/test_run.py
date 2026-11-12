@@ -397,7 +397,7 @@ async def test_impact_reads_the_owners_profile_with_the_contexts_user_management
 
     assert await assess_reports(sm.client, context, [report_id]) == [report_id]
 
-    [request] = um.requests
+    [request] = [r for r in um.requests if r.method == "GET"]
     assert request.url.path == f"/internal/users/{owner}/profile"
     stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
     assert stored["assessment"]["profile"] == "read"
@@ -410,3 +410,176 @@ async def test_a_context_with_no_user_management_client_assesses_without_a_profi
 
     stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
     assert stored["assessment"]["profile"] == "none"
+
+
+# telling the owner about the assessed report (docs/EVALUATION.md, "Impact")
+
+
+async def test_an_assessed_report_posts_the_stored_evaluation_to_the_owner(sm, um):
+    report_id = await investigated_report(sm)
+    context = ImpactContext(FakeLlm("high"), um=um.client)
+
+    assert await assess_reports(sm.client, context, [report_id]) == [report_id]
+
+    stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    [request] = [r for r in um.requests if r.method == "POST"]
+    assert request.url.path == f"/internal/users/{stored['owner_id']}/notifications"
+    assert request.extensions["timeout"]["read"] == 30
+    [(user_id, body)] = um.notifications
+    assert str(user_id) == stored["owner_id"]
+    assert body == {
+        "event": "report_assessed",
+        "paper": {
+            "id": stored["paper_id"],
+            "title": "Hydroxychloroquine and azithromycin as a treatment of COVID-19",
+            "doi": PAPER_DOI,
+        },
+        "report_id": report_id,
+        "change_severity": "high",
+        "change_summary": "A high change.",
+        "impact_level": "medium",
+        "evaluation": "Your Discussion relies on it.",
+        "recommendation": "Replace it.",
+    }
+
+
+async def test_an_impact_level_of_none_is_posted_as_null(sm, um):
+    llm = FakeLlm("high")
+    llm.answers[ImpactAssessment] = IMPACT.model_copy(update={"impact_level": "none"})
+    report_id = await investigated_report(sm)
+
+    assert await assess_reports(sm.client, ImpactContext(llm, um=um.client), [report_id]) == [report_id]
+
+    stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    assert stored["impact_level"] == "none"
+    [(_, body)] = um.notifications
+    assert body["impact_level"] is None
+    assert body["change_severity"] == "high"
+
+
+async def test_a_report_with_no_owner_posts_nothing_and_says_so(sm, um, caplog):
+    context = ImpactContext(FakeLlm("high"), um=um.client)
+    report_id = await investigated_report(sm)
+    stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    sm.transport.faults[("GET", f"/internal/reports/{report_id}")] = httpx.Response(
+        200, json={**stored, "owner_id": None}
+    )
+
+    with caplog.at_level(logging.INFO, logger="research_evaluation.impact.run"):
+        assert await assess_reports(sm.client, context, [report_id]) == [report_id]
+
+    assert um.notifications == []
+    assert f"report {report_id} has no owner: its evaluation is not posted" in caplog.text
+
+
+async def test_a_placeholder_evaluation_posts_nothing(sm, um):
+    context = ImpactContext(FakeLlm("high", fail_on=1, failure=every_model_failed()), um=um.client)
+    report_id = await investigated_report(sm)
+
+    assert await assess_reports(sm.client, context, [report_id]) == [report_id]
+
+    stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    assert stored["assessment"]["placeholder"] is True
+    assert um.notifications == []
+
+
+async def test_a_failed_store_posts_nothing(sm, um):
+    context = ImpactContext(FakeLlm("high"), um=um.client)
+    report_id = await investigated_report(sm)
+    sm.transport.faults[("PUT", "/evaluation")] = 500
+
+    assert await assess_reports(sm.client, context, [report_id]) == []
+
+    assert um.notifications == []
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [500, httpx.ReadTimeout("slow"), httpx.ConnectError("down")],
+    ids=["500", "timeout", "unreachable"],
+)
+async def test_user_management_failing_still_assesses_the_report(sm, um, failure, caplog):
+    context = ImpactContext(FakeLlm("high"), um=um.client)
+    report_id = await investigated_report(sm)
+    um.failure = failure
+
+    with caplog.at_level(logging.WARNING, logger="research_evaluation.users"):
+        assert await assess_reports(sm.client, context, [report_id]) == [report_id]
+
+    stored = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    assert stored["status"] == "assessed"
+    assert f"about report {report_id} failed" in caplog.text
+
+
+class FailingReadsAfterTheStore(httpx.AsyncBaseTransport):
+    """Storage Management as it is, except that once the evaluation is stored, its reads of the
+    paper's snapshots fail: that is the notification reading the paper's details."""
+
+    def __init__(self, inner: httpx.AsyncBaseTransport) -> None:
+        self._inner = inner
+        self.stored = False
+        self.failed = 0
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        if self.stored and request.method == "GET" and request.url.path.endswith("/snapshots"):
+            self.failed += 1
+            return httpx.Response(500, json={"detail": "injected"}, request=request)
+        response = await self._inner.handle_async_request(request)
+        if request.method == "PUT" and request.url.path.endswith("/evaluation"):
+            self.stored = True
+        return response
+
+
+async def test_storage_management_failing_on_the_notifications_paper_read_still_assesses_the_report(
+    sm, um, caplog
+):
+    context = ImpactContext(FakeLlm("high"), um=um.client)
+    report_id = await investigated_report(sm)
+    transport = FailingReadsAfterTheStore(sm.transport)
+    flaky = httpx.AsyncClient(transport=transport, base_url="http://stub", auth=sm.client.auth)
+
+    with caplog.at_level(logging.WARNING, logger="research_evaluation.impact.run"):
+        assert await assess_reports(flaky, context, [report_id]) == [report_id]
+
+    assert transport.failed == 1
+    assert um.notifications == []
+    assert f"reading report {report_id} for its notification failed" in caplog.text
+    await flaky.aclose()
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        {"assessment": {"profile": "none"}, "change_severity": "high"},
+        {"assessment": None, "change_severity": "high", "change_summary": "s"},
+    ],
+    ids=["a missing field", "no assessment"],
+)
+async def test_a_stored_answer_that_cannot_be_read_posts_nothing_and_the_next_report_is_assessed(
+    sm, um, answer, caplog
+):
+    context = ImpactContext(FakeLlm("high"), um=um.client)
+    first = await investigated_report(sm)
+    second = await investigated_report(sm)
+    sm.transport.faults[("PUT", f"/reports/{first}/evaluation")] = httpx.Response(200, json=answer)
+
+    with caplog.at_level(logging.WARNING, logger="research_evaluation.impact.run"):
+        assert await assess_reports(sm.client, context, [first, second]) == [first, second]
+
+    assert [body["report_id"] for _, body in um.notifications] == [second]
+    assert f"reading report {first} for its notification failed" in caplog.text
+
+
+async def test_one_nudge_posts_the_alerts_and_then_the_assessed_report(client, sm, um, impact):
+    impact.context = ImpactContext(FakeLlm("high"), um=um.client)
+    paper = await retracted_paper(sm)
+
+    response = await nudge(client, [paper])
+
+    assert response.status_code == 202
+    report = await the_report(sm, paper)
+    assert [(user_id, body["event"]) for user_id, body in um.notifications] == [
+        (UUID(report["owner_id"]), "alerts"),
+        (UUID(report["owner_id"]), "report_assessed"),
+    ]
+    assert {body["report_id"] for _, body in um.notifications} == {report["id"]}

@@ -34,8 +34,11 @@ from research_evaluation.storage import (
     PaperGone,
     mark_investigated,
     open_report,
+    paper_details,
+    read_report,
     store_document,
 )
+from research_evaluation.users import notify_quietly, paper_body
 
 log = logging.getLogger(__name__)
 
@@ -50,12 +53,15 @@ MAX_CHECKS = 20
 @dataclass(frozen=True)
 class InvestigationContext:
     """What investigation needs besides the Storage Management client: its own client for
-    Crossref and Europe PMC (no auth, never the service token), the Crossref `mailto`, and
-    the longer timeout for storing a document (Storage Management downloads its PDF first)."""
+    Crossref and Europe PMC (no auth, never the service token), the Crossref `mailto`, the
+    longer timeout for storing a document (Storage Management downloads its PDF first), and the
+    User Management client the owner is told about the alerts with (None tells nobody, as in the
+    evals)."""
 
     external: httpx.AsyncClient
     crossref_mailto: str
     pdf_timeout: float
+    um: httpx.AsyncClient | None = None
 
 
 class PaperChanges(BaseModel):
@@ -91,6 +97,7 @@ async def investigate_paper(
         report = await open_report(sm, paper.paper_id)
         if report is None:
             return None
+        await notify_alerts(sm, context, paper, report)
         await investigate_report(sm, context, paper, report)
         await mark_investigated(sm, paper.paper_id, report.id)
     except PaperGone:
@@ -110,6 +117,37 @@ async def investigate_paper(
         )
         return None
     return report.id
+
+
+async def notify_alerts(
+    sm: httpx.AsyncClient, context: InvestigationContext, paper: PaperChanges, report: OpenedReport
+) -> None:
+    """Posts the report's alerts to its owner; User Management decides how to tell them."""
+    if context.um is None:
+        return
+    try:
+        opened = await read_report(sm, report.id)
+        details = await paper_details(sm, paper.paper_id)
+    except Exception as exc:  # noqa: BLE001 telling the owner must not leave the report uninvestigated
+        log.warning("reading report %s for its notification failed: %s", report.id, _cause(exc))
+        return
+    if opened.owner_id is None:
+        log.info("report %s has no owner: its alerts are not posted", report.id)
+        return
+    await notify_quietly(
+        context.um,
+        opened.owner_id,
+        report.id,
+        {
+            "event": "alerts",
+            "paper": paper_body(paper.paper_id, details),
+            "report_id": report.id,
+            "alerts": [
+                alert.model_dump(include={"id", "change_type", "alert_severity", "description"})
+                for alert in opened.alerts
+            ],
+        },
+    )
 
 
 async def investigate_report(
