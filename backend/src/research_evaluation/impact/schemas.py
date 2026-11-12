@@ -1,7 +1,9 @@
 """The shapes of impact's three answers (Gemini's structured output) and of what it sends to
 Storage Management. The field names are the ones the prompts ask for (impact/prompts.py)."""
 
+from datetime import datetime
 from typing import Any, Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -93,6 +95,19 @@ class ContextChunk(BaseModel):
     page: int | None = None
 
 
+class FeedbackContextChunk(BaseModel):
+    """A past feedback chunk added to steps 2 and 3: enough for a frontend to show and link
+    "Shaped by your feedback on <title>" (I5). source_id is the report the feedback is on."""
+
+    source_type: Literal["feedback"] = "feedback"
+    source_id: str
+    page: None = None
+    paper_id: UUID | None
+    paper_title: str | None
+    source_date: datetime | None
+    verdict: str
+
+
 class Evaluation(BaseModel):
     """The body of `PUT /internal/reports/{id}/evaluation`. With change_severity none only the
     summary and change severity are set (and assessment); the rest stays null."""
@@ -103,5 +118,6 @@ class Evaluation(BaseModel):
     evaluation: str | None = None
     recommendation: str | None = None
     assessment: dict[str, Any]
-    # the past chunks steps 1 and 2 were given, in prompt order, so a frontend can show them (I5)
-    context_chunks: list[ContextChunk] = []
+    # the past chunks steps 1 and 2 were given, in prompt order, then the feedback steps 2 and 3
+    # were given, so a frontend can show them (I5)
+    context_chunks: list[ContextChunk | FeedbackContextChunk] = []

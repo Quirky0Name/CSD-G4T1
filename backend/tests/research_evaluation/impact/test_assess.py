@@ -16,6 +16,7 @@ from support import TEST_JWT_SECRET, load_fixture
 from research_evaluation.config import ResearchEvaluationSettings
 from research_evaluation.impact import prompts
 from research_evaluation.impact.assess import assess
+from research_evaluation.impact.history import past_feedback
 from research_evaluation.impact.inputs import MissingPdf, ReportInputs
 from research_evaluation.impact.llm import (
     AllModelsFailed,
@@ -40,7 +41,7 @@ from research_evaluation.impact.schemas import (
     RecommendedActions,
 )
 from research_evaluation.investigation.crossref import CrossrefRecord, fetch_record
-from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails, Report
+from research_evaluation.storage import AlertInReport, Chunk, DocumentInReport, PaperDetails, Report
 from research_evaluation.users import ResearcherProfile
 
 PAPER_DOI = "10.1016/j.ijantimicag.2020.105949"
@@ -797,8 +798,8 @@ def test_non_ascii_answers_are_written_as_they_are():
     assert 'research_interests: ["épidémiologie"]' in block
 
 
-def test_the_prompt_version_is_6():
-    assert PROMPT_VERSION == 6
+def test_the_prompt_version_is_7():
+    assert PROMPT_VERSION == 7
 
 
 # Reading the profile in assess: after the gate, next to the draft; a failed read never fails the
@@ -931,3 +932,85 @@ async def test_the_assessment_records_only_that_the_profile_was_read(sm, um):
     assert evaluation.assessment["profile"] == "read"
     for value in ("Faculty or principal investigator", "hydroxychloroquine trials", "Lead with what my team"):
         assert value not in stored
+
+
+# The researcher's past feedback in assess: steps 2 and 3 only, recorded in assessment and in
+# context_chunks (I5) after the past chunks
+
+FEEDBACK_PAPER = UUID("11111111-2222-3333-4444-555555555555")
+
+
+def feedback_item():
+    return past_feedback(
+        Chunk(
+            source_type="feedback",
+            source_id="41",
+            chunk_index=0,
+            report_id=41,
+            paper_id=FEEDBACK_PAPER,
+            paper_title="A paper on mortality",
+            source_date=datetime(2026, 6, 2, 8, tzinfo=UTC),
+            content='feedback on report of 2026-06-01: "A paper on mortality"\n'
+            "researcher's verdict: overstated\nresearcher's note: only use their dataset",
+            score=0.9,
+        )
+    )
+
+
+def past_chunk():
+    return Chunk(
+        source_type="alert", source_id="21", chunk_index=0, report_id=1,
+        source_date=datetime(2026, 5, 1, 8, tzinfo=UTC), content="alert: correction", score=0.8,
+    )
+
+
+I5_ITEM = {
+    "source_type": "feedback",
+    "source_id": "41",
+    "page": None,
+    "paper_id": str(FEEDBACK_PAPER),
+    "paper_title": "A paper on mortality",
+    "source_date": "2026-06-02T08:00:00Z",
+    "verdict": "overstated",
+}
+
+
+async def test_feedback_is_recorded_and_listed_after_the_past_chunks(sm):
+    llm = fake(sm)
+    inputs = await inputs_for(sm, chunks=[past_chunk()], feedback=[feedback_item()])
+
+    evaluation = await assess(llm, sm.client, inputs, history="read", feedback="read")
+
+    assert evaluation.assessment["feedback"] == "read"
+    body = evaluation.model_dump(mode="json")
+    assert body["context_chunks"] == [
+        {"source_type": "alert", "source_id": "21", "page": None},
+        I5_ITEM,
+    ]
+    assert "only use their dataset" not in json.dumps(evaluation.assessment)
+    steps = [("researcher_feedback" in texts(call["parts"])) for call in llm.calls]
+    assert steps == [False, True, True]
+
+
+async def test_without_a_status_feedback_is_read_or_none_from_the_inputs(sm):
+    with_feedback = await assess(fake(sm), sm.client, await inputs_for(sm, feedback=[feedback_item()]))
+    without = await assess(fake(sm), sm.client, await inputs_for(sm))
+
+    assert with_feedback.assessment["feedback"] == "read"
+    assert without.assessment["feedback"] == "none"
+    assert without.model_dump(mode="json")["context_chunks"] == []
+
+
+async def test_a_failed_feedback_read_is_recorded(sm):
+    evaluation = await assess(fake(sm), sm.client, await inputs_for(sm), feedback="failed")
+
+    assert evaluation.assessment["feedback"] == "failed"
+
+
+async def test_severity_none_gives_no_step_feedback_and_lists_none(sm):
+    llm = fake(sm, severity="none")
+
+    evaluation = await assess(llm, sm.client, await inputs_for(sm, feedback=[feedback_item()]), feedback="read")
+
+    assert evaluation.assessment["feedback"] == "read"
+    assert evaluation.model_dump(mode="json")["context_chunks"] == []

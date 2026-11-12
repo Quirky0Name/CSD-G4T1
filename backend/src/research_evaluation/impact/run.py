@@ -56,10 +56,20 @@ async def assess_report(sm: httpx.AsyncClient, context: ImpactContext, report_id
         if report.status != "investigated":
             log.info("impact skipped report %s: it is %s", report_id, report.status)
             return False
-        # the paper's past, read before step 1 and given to steps 1 and 2; never raises
+        # the paper's past, read before step 1 and given to steps 1 and 2, and the researcher's
+        # feedback, given to steps 2 and 3; never raises
         history = await read_history(sm, context.embedder, report)
-        inputs = replace(await gather_inputs(sm, report), chunks=history.chunks)
-        evaluation = await assess(context.llm, sm, inputs, um=context.um, history=history.status)
+        inputs = replace(
+            await gather_inputs(sm, report), chunks=history.chunks, feedback=history.feedback
+        )
+        evaluation = await assess(
+            context.llm,
+            sm,
+            inputs,
+            um=context.um,
+            history=history.status,
+            feedback=history.feedback_status,
+        )
         await store_evaluation(sm, report_id, evaluation.model_dump(mode="json"))
     except (PaperGone, ReportGone):
         log.info("impact skipped report %s: Storage Management has no such report or paper", report_id)

@@ -9,7 +9,7 @@ from uuid import UUID
 
 from research_evaluation.impact.inputs import MissingPdf, ReportInputs
 from research_evaluation.impact.llm import Part, Pdf
-from research_evaluation.impact.schemas import ChangeAssessment
+from research_evaluation.impact.schemas import ChangeAssessment, ImpactAssessment
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails, Report
 
 FIXTURES = Path(__file__).parent / "fixtures" / "impact"
@@ -76,6 +76,15 @@ def sample_inputs() -> ReportInputs:
 
 CHANGE = ChangeAssessment.model_validate(
     {"alerts": [], "relations": None, "severity": "high", "summary": "The paper was retracted."}
+)
+IMPACT = ImpactAssessment.model_validate(
+    {
+        "cited": True,
+        "reference_entry": "Gautret P, et al. Int J Antimicrob Agents. 2020.",
+        "uses": [],
+        "impact_level": "medium",
+        "explanation": "Your Discussion relies on its viral clearance results.",
+    }
 )
 
 
