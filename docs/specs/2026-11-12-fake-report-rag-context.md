@@ -121,7 +121,7 @@ Past items first, then the feedback item, then the profile item. Past and feedba
 - **Blocked by:** S1
 - **Branch:** `dev-mode-rag`
 - **Order on branch:** 2
-- **Files:** `admin/AdminService.java`; `report/ReportService.java` (`storeFake` extended, or a new `storeFakePast`); `report/Report.java` and `report/ReportDocumentService.java` if back-dated timestamps need setters; `storage/src/test/java/com/g4t1/storage/admin/FakeReportTest.java`.
+- **Files:** `admin/AdminService.java`; `report/ReportService.java` (a new `storeFakePast`); `report/Report.java`, `report/ReportDocument.java` and `report/ReportDocumentService.java` for the back-dated timestamps; `storage/src/test/java/com/g4t1/storage/admin/FakeReportTest.java`.
 - **Seams:**
   - `POST /admin/papers/{id}/fake-report` then `GET /papers/{id}/reports` (researcher token): catches both reports, their order, the past's dates and feedback, `context_chunks` ids resolving to rows of the same paper, the profile item; misses the frontend.
 - **Decisions:**
@@ -134,13 +134,18 @@ Past items first, then the feedback item, then the profile item. Past and feedba
   - The past's alerts get `change_key` `fake:<uuid>` and snapshot ids `0`, like the fake report's. Source: `code: AdminService.createFakeReport`.
   - The response stays the fake report alone (`UserReportResponse`). `transient`.
 - **Acceptance criteria:**
-  - [ ] With `status=assessed`, the paper's report list gains two reports: the fake report first, the past one second, both `assessed` (`FakeReportTest`).
-  - [ ] The past report's alerts, documents, `evaluated_at` and `feedback.updated_at` are 30 days before the call (±1 minute), and its feedback is the example's verdict and note (`FakeReportTest`).
-  - [ ] Every `alert`, `report` and `document` item of the fake report's `context_chunks` names a row of the past report on the same paper; the `feedback` item names the past report with the paper's id, title and the feedback's time; the last item is the example profile (`FakeReportTest`).
-  - [ ] With `status=investigated` and `status=investigating`, only one report is stored and its `context_chunks` is null (`FakeReportTest`).
-  - [ ] No `chunks` row exists after the call, and the Research Evaluation client is never called (`FakeReportTest`, `@MockitoBean ResearchEvaluationClient`).
-  - [ ] `cd storage && ./mvnw test` passes.
+  - [x] With `status=assessed`, the paper's report list gains two reports: the fake report first, the past one second, both `assessed` (`FakeReportTest`).
+  - [x] The past report's alerts, documents, `evaluated_at` and `feedback.updated_at` are 30 days before the call (±1 minute), and its feedback is the example's verdict and note (`FakeReportTest`).
+  - [x] Every `alert`, `report` and `document` item of the fake report's `context_chunks` names a row of the past report on the same paper; the `feedback` item names the past report with the paper's id, title and the feedback's time; the last item is the example profile (`FakeReportTest`).
+  - [x] With `status=investigated` and `status=investigating`, only one report is stored and its `context_chunks` is null (`FakeReportTest`).
+  - [x] No `chunks` row exists after the call, and the Research Evaluation client is never called (`FakeReportTest`, `@MockitoBean ResearchEvaluationClient`).
+  - [x] `cd storage && ./mvnw test` passes.
 - **Doc deltas:** CONTRACTS.md "`POST /admin/papers/{id}/fake-report?status=`": the past report it also stores with `assessed`, its dates, `context_chunks` (I1). STORAGE.md "Fake reports": the same; no chunks and no nudge; the real profile untouched; the Out of scope items it records (no customisation, feedback only on this paper, no embedding).
+  - `status` defaults to `assessed`, so a call with no `status` also stores the past (CONTRACTS.md). Why: the decision ties the past to `assessed`, whichever way it was asked for.
+  - Both reports are stored in one transaction by making `AdminService.createFakeReport` `@Transactional`; `ReportService.storeFakePast` and `storeFake` join it, and each registers its own PDF clean-up (STORAGE.md). Why: the two stores stay separate methods and both-or-neither still holds, including a failure after the past is stored (tested).
+  - The past documents' `pdf_fetched_at` is back-dated with their `created_at` (CONTRACTS.md, the dates list). Why: a PDF fetched 30 days after its document was stored would read wrong.
+  - The past report's own `context_chunks` is null (CONTRACTS.md). Why: it stands for a report assessed before any past existed.
+  - The `feedback` item's `paper_title` is the paper's stored `title` (null when it has none) and `source_date` is the past's `feedback_updated_at` as ISO-8601, the same text as its `feedback.updated_at`; the `profile` item is `past.json`'s `profile` as JSON. Both are built in `AdminService` (CONTRACTS.md). Why: I1 names these values; building them in code keeps the verdict and profile written once in `past.json`.
 
 ### S3. The Context tab shows a profile item
 
