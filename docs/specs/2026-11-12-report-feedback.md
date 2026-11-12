@@ -122,14 +122,18 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
   - Re-save replaces (user: "ok to rest assumed"); feedback can be deleted (user: "can delete"), which nulls all three columns. Doc delta.
   - `updated_at` truncated to microseconds like every other timestamp (code: `9a253c8`). Doc delta not needed.
 - **Acceptance criteria:**
-  - [ ] Owner `PUT` on an assessed report returns `200` with the stored object, and `GET /papers/{id}/reports` returns it (`ReportFeedbackTest`).
-  - [ ] A second `PUT` replaces verdict and note and moves `updated_at` (`ReportFeedbackTest`).
-  - [ ] Blank or absent note stores null (`ReportFeedbackTest`).
-  - [ ] `400` for an unknown verdict and for a 501-character note; `404` for another user's paper and for a report of another paper; `409` for an `investigated` report; `403` for a service token (`ReportFeedbackTest`).
-  - [ ] A report with none returns `"feedback": null` on both reads (`ReportListTest`, internal report test).
-  - [ ] Owner `DELETE` returns `204` and both reads then return `"feedback": null`; `DELETE` on a report with none is `204`; another user's paper is `404`; a service token is `403` (`ReportFeedbackTest`).
-  - [ ] `cd storage && ./mvnw test` passes.
+  - [x] Owner `PUT` on an assessed report returns `200` with the stored object, and `GET /papers/{id}/reports` returns it (`ReportFeedbackTest`).
+  - [x] A second `PUT` replaces verdict and note and moves `updated_at` (`ReportFeedbackTest`).
+  - [x] Blank or absent note stores null (`ReportFeedbackTest`).
+  - [x] `400` for an unknown verdict and for a 501-character note; `404` for another user's paper and for a report of another paper; `409` for an `investigated` report; `403` for a service token (`ReportFeedbackTest`).
+  - [x] A report with none returns `"feedback": null` on both reads (`ReportListTest`, internal report test).
+  - [x] Owner `DELETE` returns `204` and both reads then return `"feedback": null`; `DELETE` on a report with none is `204`; another user's paper is `404`; a service token is `403` (`ReportFeedbackTest`).
+  - [x] `cd storage && ./mvnw test` passes.
 - **Doc deltas:** CONTRACTS.md: I1, I1b, I2. STORAGE.md: the columns and rules. GLOSSARY.md: **Feedback** — a researcher's verdict (fair, overstated, understated) and optional note on one assessed report; _Avoid_: rating, review, comment. Out of scope: feedback per alert or action.
+  - Added in build: problem-detail texts are `note must be at most 500 characters` (400) and `Report <id> is not assessed` (409), so a client can show them; CONTRACTS.md.
+  - Added in build: the note is trimmed with Java `String.strip()` (Unicode whitespace) and its length counted in UTF-16 code units like `response_preferences`; CONTRACTS.md.
+  - Added in build: V15 adds `ck_reports_feedback_verdict` (the three values) and `ck_reports_feedback` (verdict and time both null or both set; a note only with a verdict), so a half-written feedback can never be stored; STORAGE.md.
+  - Added in build: the owner check runs before the report lookup, so another user's paper is `No paper <id>` and a report of another of the owner's papers is `No report <id>`, as the report list does; CONTRACTS.md.
 
 ### S2: `feedback` chunks replace `profile` chunks (Storage)
 
