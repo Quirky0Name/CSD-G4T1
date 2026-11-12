@@ -92,11 +92,15 @@ public class ReportService {
      */
     @Transactional
     public ReportResponse recordEvaluation(long reportId, ReportEvaluationRequest request) {
+        return recordEvaluation(reportId, request, Instant.now().truncatedTo(ChronoUnit.MICROS));
+    }
+
+    private ReportResponse recordEvaluation(long reportId, ReportEvaluationRequest request, Instant evaluatedAt) {
         checkShape(request);
         int updated = reports.recordEvaluation(reportId, request.changeSummary(), request.changeSeverity(),
                 request.impactLevel(), request.evaluation(), request.recommendation(),
                 jsonText(request.assessment()), jsonText(request.claims()), jsonText(request.contextChunks()),
-                Instant.now().truncatedTo(ChronoUnit.MICROS), ReportStatus.ASSESSED, ReportStatus.INVESTIGATED);
+                evaluatedAt, ReportStatus.ASSESSED, ReportStatus.INVESTIGATED);
         Report report = reports.findById(reportId).orElseThrow(() -> noReport(reportId));
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, report.getStatus() == ReportStatus.INVESTIGATING
@@ -174,8 +178,39 @@ public class ReportService {
         if (status == ReportStatus.ASSESSED) {
             recordEvaluation(reportId, evaluation);
         }
-        documents.storeFake(reportId, newDocuments);
+        documents.storeFake(reportId, newDocuments, null);
         return userReports(paperId).stream().filter(entry -> entry.id() == reportId).findFirst().orElseThrow();
+    }
+
+    /**
+     * The invented past an assessed fake report is stored with: an assessed report grouping the given alerts,
+     * its documents and the researcher's feedback, all dated at the given time, in the caller's transaction
+     * or its own. Unlike saving feedback, nothing nudges Research Evaluation, so the past is never embedded
+     * and a real assessment won't retrieve it. Returns the new rows' ids, alerts and documents in the given
+     * order, for the fake report's context items.
+     */
+    @Transactional
+    public StoredFakePast storeFakePast(UUID paperId, List<NewAlertRequest> newAlerts,
+                                        List<FakeDocument> newDocuments, ReportEvaluationRequest evaluation,
+                                        FeedbackVerdict verdict, String note, Instant at) {
+        requirePaper(paperId);
+        Report report = new Report(paperId);
+        report.markInvestigatedSince(at);
+        long reportId = reports.saveAndFlush(report).getId();
+        List<Long> alertIds = newAlerts.stream()
+                .map(request -> alerts.saveAndFlush(new Alert(paperId, request)).getId())
+                .toList();
+        alerts.assignToReport(alertIds, reportId);
+        recordEvaluation(reportId, evaluation, at);
+        // the evaluation's update cleared the persistence context, so the report is read again
+        Report assessed = reports.findById(reportId).orElseThrow(() -> noReport(reportId));
+        assessed.recordFeedback(verdict, note, at);
+        List<Long> documentIds = documents.storeFake(reportId, newDocuments, at);
+        return new StoredFakePast(reportId, alertIds, documentIds, at);
+    }
+
+    public record StoredFakePast(long reportId, List<Long> alertIds, List<Long> documentIds,
+                                 Instant feedbackUpdatedAt) {
     }
 
     private List<UserReportResponse> userReports(UUID paperId) {

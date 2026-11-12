@@ -1,6 +1,7 @@
 package com.g4t1.storage.admin;
 
 import com.g4t1.storage.TestTokens;
+import com.g4t1.storage.evaluation.ResearchEvaluationClient;
 import com.g4t1.storage.alert.AlertService;
 import com.g4t1.storage.alert.AlertSeverity;
 import com.g4t1.storage.alert.ChangeType;
@@ -37,8 +38,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,6 +91,12 @@ class FakeReportTest {
 
     @MockitoBean
     MetadataClient metadata;
+
+    @MockitoBean
+    ResearchEvaluationClient researchEvaluation;
+
+    @Autowired
+    FakeReportExample example;
 
     private final UUID owner = UUID.randomUUID();
     private UUID paperId;
@@ -151,40 +160,152 @@ class FakeReportTest {
     void assessedStoresWhatTheExampleRecordsAndSaysItIsFake() throws Exception {
         create("assessed").andExpect(status().isCreated());
 
-        String assessment = jdbc.queryForObject("select assessment from reports where paper_id = ?", String.class, paperId);
-        assertThat(JsonPath.<Boolean>read(assessment, "$.fake")).isTrue();
-        assertThat(JsonPath.<Object>read(assessment, "$.change")).isNotNull();
+        // the fake report's and its past's
+        List<String> assessments = jdbc.queryForList("select assessment from reports where paper_id = ?",
+                String.class, paperId);
+        assertThat(assessments).hasSize(2).allSatisfy(assessment -> {
+            assertThat(JsonPath.<Boolean>read(assessment, "$.fake")).isTrue();
+            assertThat(JsonPath.<Object>read(assessment, "$.change")).isNotNull();
+        });
     }
 
     @Test
-    void theOwnerSeesTheAlertsAndTheReport() throws Exception {
+    void assessedAlsoStoresAnEarlierAssessedReportListedAfterTheFakeOne() throws Exception {
+        long fakeId = id(create("assessed").andExpect(status().isCreated()));
+
+        ownerReports()
+                .andExpect(jsonPath("$.reports", hasSize(2)))
+                .andExpect(jsonPath("$.reports[0].id").value(fakeId))
+                .andExpect(jsonPath("$.reports[*].status", everyItem(is("assessed"))))
+                .andExpect(jsonPath("$.reports[1].alerts", hasSize(1)))
+                .andExpect(jsonPath("$.reports[1].alerts[0].change_type").value("correction"))
+                .andExpect(jsonPath("$.reports[1].documents[*].kind", containsInAnyOrder(
+                        "notice", "new_version", "current_version", "related")))
+                .andExpect(jsonPath("$.reports[1].change_severity").value("low"))
+                .andExpect(jsonPath("$.reports[1].impact_level").value("medium"))
+                .andExpect(jsonPath("$.reports[1].context_chunks", nullValue()));
+    }
+
+    @Test
+    void thePastIsDatedThirtyDaysBeforeTheCallAndCarriesTheExamplesFeedback() throws Exception {
+        Instant before = Instant.now();
+        create("assessed").andExpect(status().isCreated());
+        Instant after = Instant.now();
+
+        String past = body(ownerReports());
+        List<String> dates = new ArrayList<>();
+        for (String path : List.of("$.reports[1].created_at", "$.reports[1].investigated_at",
+                "$.reports[1].evaluated_at", "$.reports[1].feedback.updated_at")) {
+            dates.add(JsonPath.read(past, path));
+        }
+        dates.addAll(JsonPath.read(past, "$.reports[1].alerts[*].detected_at"));
+        dates.addAll(JsonPath.read(past, "$.reports[1].documents[*].created_at"));
+        assertThat(dates).hasSize(9).allSatisfy(date -> assertThat(Instant.parse(date))
+                .isBetween(before.minus(30, ChronoUnit.DAYS).minus(1, ChronoUnit.MINUTES),
+                        after.minus(30, ChronoUnit.DAYS).plus(1, ChronoUnit.MINUTES)));
+        assertThat(JsonPath.<String>read(past, "$.reports[1].feedback.verdict")).isEqualTo("overstated");
+        assertThat(JsonPath.<String>read(past, "$.reports[1].feedback.note"))
+                .isEqualTo(example.pastContent().feedback().note());
+    }
+
+    @Test
+    void theFakeReportsContextNamesThePastItsFeedbackAndTheExampleProfile() throws Exception {
+        Paper titled = new Paper(owner);
+        titled.setTitle(FakeReportExample.PAPER_TITLE);
+        paperId = papers.save(titled).getId();
+        create("assessed").andExpect(status().isCreated());
+
+        String reports = body(ownerReports());
+        int pastId = JsonPath.read(reports, "$.reports[1].id");
+        List<String> pastAlerts = ids(reports, "$.reports[1].alerts[*].id");
+        List<String> pastDocuments = ids(reports, "$.reports[1].documents[*].id");
+        List<Map<String, Object>> items = JsonPath.read(reports, "$.reports[0].context_chunks");
+
+        assertThat(items).extracting(item -> item.get("source_type")).containsExactly(
+                "document", "alert", "document", "report", "document", "feedback", "profile");
+        for (Map<String, Object> item : items.subList(0, 5)) {
+            String sourceId = (String) item.get("source_id");
+            switch ((String) item.get("source_type")) {
+                case "alert" -> assertThat(pastAlerts).contains(sourceId);
+                case "document" -> assertThat(pastDocuments).contains(sourceId);
+                default -> assertThat(sourceId).isEqualTo(String.valueOf(pastId));
+            }
+        }
+        Map<String, Object> notice = items.get(2);
+        assertThat(notice).containsEntry("page", null).containsKeys("start", "end");
+        assertThat(items.getFirst()).containsEntry("page", 2);
+
+        Map<String, Object> feedback = items.get(5);
+        assertThat(feedback).containsEntry("source_id", String.valueOf(pastId)).containsEntry("page", null)
+                .containsEntry("paper_id", paperId.toString())
+                .containsEntry("paper_title", FakeReportExample.PAPER_TITLE)
+                .containsEntry("source_date", JsonPath.<String>read(reports, "$.reports[1].feedback.updated_at"))
+                .containsEntry("verdict", "overstated");
+
+        Map<String, Object> profile = items.get(6);
+        assertThat(profile).containsEntry("source_id", "example").containsEntry("page", null);
+        FakeReportExample.ExampleProfile expected = example.pastContent().profile();
+        assertThat(JsonPath.<Map<String, Object>>read(reports, "$.reports[0].context_chunks[6].profile"))
+                .containsEntry("occupation", expected.occupation())
+                .containsEntry("occupation_other", expected.occupationOther())
+                .containsEntry("research_fields", expected.researchFields())
+                .containsEntry("research_interests", expected.researchInterests())
+                .containsEntry("work_types", expected.workTypes())
+                .containsEntry("response_preferences", expected.responsePreferences());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"investigating", "investigated"})
+    void beforeAssessmentOnlyTheFakeReportIsStoredWithNoContext(String reportStatus) throws Exception {
+        create(reportStatus).andExpect(status().isCreated()).andExpect(jsonPath("$.context_chunks", nullValue()));
+
+        ownerReports().andExpect(jsonPath("$.reports", hasSize(1)))
+                .andExpect(jsonPath("$.reports[0].context_chunks", nullValue()));
+    }
+
+    @Test
+    void thePastIsNeitherEmbeddedNorSentToResearchEvaluation() throws Exception {
+        create("assessed").andExpect(status().isCreated());
+
+        assertThat(jdbc.queryForObject("select count(*) from chunks", Integer.class)).isZero();
+        verifyNoInteractions(researchEvaluation);
+    }
+
+    @Test
+    void theOwnerSeesTheAlertsAndTheReports() throws Exception {
         create().andExpect(status().isCreated());
 
         mvc.perform(get("/papers/{id}/alerts", paperId).header(HttpHeaders.AUTHORIZATION, TestTokens.user(owner)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.alerts", hasSize(2)))
+                .andExpect(jsonPath("$.alerts", hasSize(3)))
                 .andExpect(jsonPath("$.alerts[*].status", everyItem(is("new"))));
         mvc.perform(get("/papers/{id}/reports", paperId).header(HttpHeaders.AUTHORIZATION, TestTokens.user(owner)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.reports", hasSize(1)))
+                .andExpect(jsonPath("$.reports", hasSize(2)))
                 .andExpect(jsonPath("$.reports[0].status").value("assessed"))
                 .andExpect(jsonPath("$.reports[0].alerts", hasSize(2)));
     }
 
     @Test
-    void twoCallsGiveTwoReportsWithTheirOwnAlertsDocumentsAndFiles() throws Exception {
+    void twoCallsGiveTwoReportsAndTwoPastsWithTheirOwnAlertsDocumentsAndFiles() throws Exception {
         create().andExpect(status().isCreated());
         create().andExpect(status().isCreated());
 
+        // newest first: the two fake reports, then the two pasts dated before them
         admin(get("/admin/papers/{id}/reports", paperId))
-                .andExpect(jsonPath("$.reports", hasSize(2)))
+                .andExpect(jsonPath("$.reports", hasSize(4)))
                 .andExpect(jsonPath("$.reports[0].alerts", hasSize(2)))
                 .andExpect(jsonPath("$.reports[1].alerts", hasSize(2)))
+                .andExpect(jsonPath("$.reports[2].alerts", hasSize(1)))
+                .andExpect(jsonPath("$.reports[3].alerts", hasSize(1)))
                 .andExpect(jsonPath("$.reports[0].documents", hasSize(4)))
-                .andExpect(jsonPath("$.reports[1].documents", hasSize(4)));
+                .andExpect(jsonPath("$.reports[1].documents", hasSize(4)))
+                .andExpect(jsonPath("$.reports[2].documents", hasSize(4)))
+                .andExpect(jsonPath("$.reports[3].documents", hasSize(4)));
         assertThat(jdbc.queryForObject("select count(*) from alerts where paper_id = ?", Integer.class, paperId))
-                .isEqualTo(4);
-        assertThat(fileKeys()).hasSize(4).doesNotHaveDuplicates();
+                .isEqualTo(6);
+        // each call: the fake report's 2 PDFs and the past's 3
+        assertThat(fileKeys()).hasSize(10).doesNotHaveDuplicates();
     }
 
     @Test
@@ -193,7 +314,7 @@ class FakeReportTest {
 
         mvc.perform(get("/internal/papers/{id}/alerts/change-keys", paperId)
                         .header(HttpHeaders.AUTHORIZATION, TestTokens.service()))
-                .andExpect(jsonPath("$.change_keys", hasSize(2)))
+                .andExpect(jsonPath("$.change_keys", hasSize(3)))
                 .andExpect(jsonPath("$.change_keys", everyItem(startsWith("fake:"))));
     }
 
@@ -223,8 +344,8 @@ class FakeReportTest {
                     .andExpect(status().isOk())
                     .andExpect(content().bytes(example(kind[1])));
         }
-        assertThat(jdbc.queryForList("select sha256 from report_documents where file_key is not null", String.class))
-                .hasSize(2).doesNotContainNull();
+        assertThat(jdbc.queryForList("select sha256 from report_documents where file_key is not null and report_id = ?",
+                String.class, JsonPath.<Integer>read(body, "$.id"))).hasSize(2).doesNotContainNull();
     }
 
     @ParameterizedTest
@@ -323,10 +444,10 @@ class FakeReportTest {
     }
 
     @Test
-    void clearingHistoryRemovesTheReportItsAlertsDocumentsAndFiles() throws Exception {
+    void clearingHistoryRemovesTheReportsTheirAlertsDocumentsAndFiles() throws Exception {
         create().andExpect(status().isCreated());
         List<String> keys = fileKeys();
-        assertThat(keys).hasSize(2);
+        assertThat(keys).hasSize(5);
         assertThat(files.read(keys.getFirst())).isPresent();
 
         admin(delete("/admin/papers/{id}/history", paperId)).andExpect(status().isNoContent());
@@ -337,11 +458,13 @@ class FakeReportTest {
         assertThat(keys).allSatisfy(key -> assertThat(files.read(key)).isEmpty());
     }
 
-    @Test
-    void aFailureStoresNothingAndLeavesNoFileBehind() throws Exception {
+    // 1: a file of the past fails; 3: the past is stored and the fake report's first file fails
+    @ParameterizedTest
+    @ValueSource(ints = {1, 3})
+    void aFailureStoresNothingAndLeavesNoFileBehind(int filesBeforeTheFailure) throws Exception {
         List<String> saved = new ArrayList<>();
         doAnswer(call -> {
-            if (!saved.isEmpty()) {
+            if (saved.size() == filesBeforeTheFailure) {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "disk full");
             }
             String key = (String) call.callRealMethod();
@@ -351,10 +474,27 @@ class FakeReportTest {
 
         create().andExpect(status().isInternalServerError());
 
-        assertThat(saved).hasSize(1);
-        assertThat(files.read(saved.getFirst())).isEmpty();
+        assertThat(saved).hasSize(filesBeforeTheFailure)
+                .allSatisfy(key -> assertThat(files.read(key)).isEmpty());
         admin(get("/admin/papers/{id}/reports", paperId)).andExpect(jsonPath("$.reports", hasSize(0)));
         admin(get("/admin/papers/{id}/alerts", paperId)).andExpect(jsonPath("$.alerts", hasSize(0)));
+    }
+
+    private ResultActions ownerReports() throws Exception {
+        return mvc.perform(get("/papers/{id}/reports", paperId)
+                .header(HttpHeaders.AUTHORIZATION, TestTokens.user(owner))).andExpect(status().isOk());
+    }
+
+    private static String body(ResultActions result) throws Exception {
+        return result.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+    }
+
+    private static long id(ResultActions result) throws Exception {
+        return JsonPath.<Integer>read(body(result), "$.id");
+    }
+
+    private static List<String> ids(String json, String path) {
+        return JsonPath.<List<Integer>>read(json, path).stream().map(String::valueOf).toList();
     }
 
     private ResultActions create() throws Exception {
