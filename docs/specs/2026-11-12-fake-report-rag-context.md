@@ -177,15 +177,17 @@ Past items first, then the feedback item, then the profile item. Past and feedba
 - **Blocked by:** S2
 - **Branch:** `dev-mode-rag`
 - **Order on branch:** 4
-- **Files:** `frontend/csd-frontend-vite/src/pages/DevMode.tsx`, a DevMode test, `docs/DEMO.md`.
+- **Files:** `frontend/csd-frontend-vite/src/pages/DevMode.tsx`, `src/pages/DevMode.test.tsx` (new), `docs/DEMO.md` (written by the sweep's docs update, from the doc delta below).
 - **Seams:**
   - `DevMode` page (vitest + Testing Library, mocked `addFakeReport`): catches the success message for `assessed`; misses layout.
 - **Decisions:**
   - No new control on the dev page. Source: user (accepted assumption). Doc delta (DEMO.md).
 - **Acceptance criteria:**
-  - [ ] After "Add fake report" with `assessed`, the message reads `Fake report added, with an earlier report, feedback and a profile for its Context tab. The researcher gets the toast within 30 s.` (DevMode test).
-  - [ ] `npm test`, `npx tsc -b` and `npm run lint` pass in `frontend/csd-frontend-vite`.
+  - [x] After "Add fake report" with `assessed`, the message reads `Fake report added, with an earlier report, feedback and a profile for its Context tab. The researcher gets the toast within 30 s.` (DevMode test).
+  - [x] `npm test`, `npx tsc -b` and `npm run lint` pass in `frontend/csd-frontend-vite`.
 - **Doc deltas:** DEMO.md: a step to open the fake report's Context tab and what each item shows.
+  - DEMO.md, the same step: an assessed fake report also brings a past report that is assessed and a past alert that is `new`, so the researcher's app may show a toast for each of the two reports and one more alert toast, though the past is dated 30 days back. Why: `tracking.tsx` toasts every newly seen assessed report and `new` alert; the message keeps "the toast" as the spec words it.
+  - `DevMode.test.tsx` mocks `../auth` and the `../api` calls the page makes, and drives the real pickers and button; it also checks the unchanged message for `investigated`. No doc needed beyond the frontend testing note in S3's doc deltas.
 
 ## Human checks
 
