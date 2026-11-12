@@ -39,12 +39,17 @@ class Claim(_Answer):
     a statement with nothing to quote has no passages. `absence` is the model saying the claim
     states only that something is missing from the material, so it has nothing to quote.
     `from_claims` makes it a derived claim: a conclusion (a level, "this use is touched") drawn
-    from the claims it names, numbered from 1 in the same step's list, rather than quoted."""
+    from the claims it names, numbered from 1 in the same step's list, rather than quoted.
+    `from_change` and `from_impact` name an earlier step's claims the same way (numbered from 1
+    in that step's list), so a later step can build a logical chain on an earlier step's
+    conclusions (impact may name CHANGE's claims; actions CHANGE's and IMPACT's)."""
 
     text: str
     passages: list[Evidence]
     absence: bool = False
     from_claims: list[int] = []
+    from_change: list[int] = []
+    from_impact: list[int] = []
 
 
 # every step states at least one thing, so an empty list is an answer that doesn't fit

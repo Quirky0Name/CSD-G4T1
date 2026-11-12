@@ -224,6 +224,25 @@ async def test_a_quote_from_a_notices_crossref_record_with_no_text_is_verbatim()
     )
 
 
+@pytest.mark.parametrize(
+    "quote", ["update_to_includes_paper: true", NOTICE], ids=["update_to line", "doi"]
+)
+async def test_a_quote_of_a_line_the_prompt_shows_for_a_notice_is_verbatim(quote):
+    found, _ = await one(NOTICE, quote)
+
+    assert (found["target"], found["document_id"], found["verified"]) == ("document", 1, "verbatim")
+
+
+async def test_a_quote_of_a_current_copys_pdf_label_is_verbatim():
+    copy = current_copy(pdf_source_url="https://example.org/paper.pdf")
+    found, _ = await one(
+        "current copy", "downloaded on ? from https://example.org/paper.pdf",
+        documents=[notice(), copy], paper_pdf=None, document_pdfs=[(copy, TWO_PAGES)],
+    )
+
+    assert (found["target"], found["document_id"], found["verified"]) == ("document", 2, "verbatim")
+
+
 async def test_a_quote_from_the_papers_details_gives_the_paper_with_no_page():
     found, _ = await one("stored paper", "International Journal of Antimicrobial Agents")
 

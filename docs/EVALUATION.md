@@ -319,8 +319,10 @@ Per report:
    paper's own it is the paper's date, not a retraction's. A citation jump has no document: its alert line carries the rule's
    description (the counts), and step 1's task says to judge it as new
    attention, scope `citations_only`, severity `low`, so the gate lets it
-   through to steps 2 and 3. `PROMPT_VERSION` is 14 since the alert line carries the notice date and a
-   derived claim may use only facts its named claims state (13: a conclusion drawn from other claims
+   through to steps 2 and 3. `PROMPT_VERSION` is 15 since a derived claim may name an earlier
+   step's claims (`from_change` in steps 2 and 3, `from_impact` in step 3) to build on that
+   step's conclusions (14: the alert line carries the notice date and a
+   derived claim may use only facts its named claims state; 13: a conclusion drawn from other claims
    is a derived claim (`from_claims`), a claim's quotes may show it together, and a place is
    shown by quoting its sentence, never a heading (12: each claim says whether it states only
    an absence, `absence`; 11: free text as sentences that name their claims; 7: conclusions,
@@ -388,6 +390,10 @@ passages. Whether quotes back their claims is measured offline in the evals.
 - No character ranges: claims are a separate list covering the statements,
   not offsets into `change_summary`, `evaluation` or `recommendation`.
 - Claims quote only source material, never the model's own earlier answers.
+  A later step builds on an earlier step's conclusion (the change's severity,
+  that a use is touched) as a derived claim naming that step's claims
+  (`from_change`, `from_impact`, numbered from 1 in that step's claims), so
+  each link of the chain is judged on whether it follows.
 
 **Source resolution.** A passage's `source` label resolves in this order: a
 report document's DOI to that `document` (checked before the paper's own DOI,
@@ -402,6 +408,12 @@ draft quote on a run with no draft gives `target: "draft"`, `no_text`.
   scalar value of its `crossref_record` and `links`, searched one value at a
   time, so a notice with no open-access text can be quoted from its record. A
   match in the record or links gives `page: null`.
+- Anything else the prompt shows for a document is quotable too, as details
+  that don't count as text to check: its DOI, a notice's
+  `update_to_includes_paper` line (`prompts.update_to_line`) and, when its
+  PDF is attached, the PDF's label (`prompts.pdf_label`: the download date
+  and source URL). The model may quote everything it is given; only an
+  earlier step's own wording is never a source.
 - `paper` also covers the paper's details as the prompt lays them out
   (`prompts.paper_block`); a match there gives `page: null`. The details are
   searched but don't count as text to check.
@@ -697,7 +709,8 @@ ones.
     banner), and nothing can be quoted for that. The model's flag is taken
     as given; the judge's list covers runs from before the flag. A derived
     claim (`from_claims` naming other claims of its step, `PROMPT_VERSION` 13
-    on) is exempt too: it is graded on whether it follows instead.
+    on, or `from_change`/`from_impact` naming an earlier step's claims,
+    `PROMPT_VERSION` 15 on) is exempt too: it is graded on whether it follows instead.
     `unlinked_claim` counts the evaluation's `claims`.
   - **unbacked passage**: one count each for a passage the judge says shows
     none of its claim, a quoted claim whose passages together don't show its
@@ -752,8 +765,8 @@ make a run pass:
 
 ```json
 {"tag": 0.8, "text": 0.8, "max_hard_fails": 0, "max_invented": 0,
- "max_misattributed": 0, "max_unlinked": 0, "max_unbacked": 0,
- "max_uncovered": 0, "case_pass_rate": 0.67}
+ "max_misattributed": 0, "max_unlinked": 0, "max_unbacked": 2,
+ "max_uncovered": 1, "case_pass_rate": 0.67}
 ```
 
 - A hard fail, invented or misattributed quote fails the run when there are

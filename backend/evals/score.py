@@ -94,9 +94,12 @@ def quote_sources(case: dict) -> dict[str, str]:
         # a notice with no open-access text can be quoted from its record and links (as
         # impact/claims.py checks them)
         text = " ".join([text, *leaves(d.get("crossref_record")), *leaves(d.get("links"))])
-        # the prompt shows this line for a notice (prompts.document_block), so it isn't invented
-        if d.get("update_to_includes_paper") is not None:
-            text += f" update_to_includes_paper: {str(d['update_to_includes_paper']).lower()}"
+        # the prompt shows the DOI and, for a notice, this line (prompts.document_block), so
+        # neither is invented
+        text += f" {d['doi']}"
+        if d["kind"] == "notice":
+            included = d.get("update_to_includes_paper")
+            text += f" update_to_includes_paper: {'unknown' if included is None else str(included).lower()}"
         texts[d["doi"].lower()].append(text)
         if d["kind"] in KIND_LABELS:
             texts[KIND_LABELS[d["kind"]]].append(text)
@@ -171,15 +174,23 @@ def flagged_absences(ev: dict) -> list[str]:
 def derived_claims(ev: dict) -> dict[str, list[str]]:
     """Each derived claim's id (PROMPT_VERSION 13 on) and the ids of the claims it says it
     follows from: its step's `from_claims` numbers (from 1 in that step's claims), keeping only
-    those that name another claim of the step. A claim naming none of them isn't derived."""
+    those that name another claim of the step, then (PROMPT_VERSION 15 on) `from_change` and
+    `from_impact`, numbers in an earlier step's claims, keeping only those that name a claim of a
+    step before its own. A claim naming none of them isn't derived."""
+    steps = [(kind, (ev["assessment"].get(step) or {}).get("claims") or []) for kind, step in CLAIM_STEPS]
+    earlier_fields = {"change": "from_change", "impact": "from_impact"}
     out = {}
-    for kind, step in CLAIM_STEPS:
-        claims = (ev["assessment"].get(step) or {}).get("claims") or []
+    for at, (kind, claims) in enumerate(steps):
         for i, claim in enumerate(claims):
             sources = [
                 f"{kind}-{n - 1}" for n in dict.fromkeys(claim.get("from_claims") or [])
                 if 1 <= n <= len(claims) and n - 1 != i
             ]
+            for earlier, earlier_claims in steps[:at]:
+                sources += [
+                    f"{earlier}-{n - 1}" for n in dict.fromkeys(claim.get(earlier_fields[earlier]) or [])
+                    if 1 <= n <= len(earlier_claims)
+                ]
             if sources:
                 out[f"{kind}-{i}"] = sources
     return out

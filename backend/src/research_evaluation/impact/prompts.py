@@ -19,7 +19,7 @@ from research_evaluation.rules import notice_date
 from research_evaluation.storage import AlertInReport, DocumentInReport, PaperDetails
 
 # stored with every result, so answers from a later wording can be told apart
-PROMPT_VERSION = 14
+PROMPT_VERSION = 15
 # the most PDF bytes one call attaches; every PDF Storage Management keeps is at most 25 MB
 MAX_INLINE_PDF_BYTES = 40 * 1024 * 1024
 # how many authors the paper's details name
@@ -44,10 +44,12 @@ Rules:
   short (at most 30 words). A quote is one unbroken stretch of the text:
   never join pieces with "...".
 - Back what you state: each step's claims list its factual statements,
-  each with the quotes from the given material that show it. Quote only
-  the material itself (notices, PDFs, alert lines, the draft), never an
-  earlier step's own wording or a field name this prompt adds (such as
-  update_to_includes_paper).
+  each with the quotes from the given material that show it. Anything this
+  prompt gives you is material you may quote: the tracked paper's details,
+  alert lines, each document's lines (its Crossref record, text, links,
+  update_to_includes_paper line), a PDF's label and the PDFs, and the
+  draft. Never quote an earlier step's own wording; to use an earlier
+  step's conclusion, derive from its claims (below).
 - A claim states one fact, and its quotes together must show that whole fact
   to someone who reads only the claim and the quotes; each quote shows some
   of it. When one quote can't hold the whole fact (it would run past 30
@@ -70,6 +72,16 @@ Rules:
   result, what the draft plans to do with it), quote that as its own claim
   first and name it, and when a quote ends before the words you need, quote
   the next sentence too. Every other claim has from_claims empty.
+- A later step may build on an earlier step's conclusions by deriving from
+  its claims: from_change lists the numbers of CHANGE's claims (counting
+  from 1 in CHANGE's claims), and, in the actions step, from_impact lists
+  IMPACT's the same way. Use this for a fact an earlier step concluded
+  rather than quoted (the change's severity, that a result is no longer
+  significant, that a use is touched): name the claims that conclude it,
+  never quote that step's wording. Each link of the chain must follow
+  plainly from the claims it names. A derived claim may name claims of its
+  own step and earlier steps together. In the change step, from_change and
+  from_impact stay empty; in the impact step, from_impact stays empty.
 - Words that widen a fact (only, once, twice, both, every, the whole,
   nothing else) are part of the fact: keep them only if the quotes show
   them. Don't write "the draft cites it once" or "this is the only place
@@ -346,7 +358,9 @@ with their sources; leave out the ones that don't. Copy only those claims'
 passages, never IMPACT's explanation or a use's reason. A claim of theirs
 with no passages (something missing) is copied with none. A derived claim
 of theirs is copied as a derived claim whose from_claims names your copies
-of the claims it follows from.
+of the claims it follows from. A fact that follows from their claims
+without being one of them is a derived claim naming them in from_change
+and from_impact.
 
 recommendation: two to four sentences with the gist of the actions: each
 piece of advice is an advice sentence, and the fact it rests on is a fact
@@ -428,11 +442,7 @@ def document_block(
     else:
         lines.append(f"crossref: none ({document.crossref_status})")
     if document.kind == "notice":
-        included = document.update_to_includes_paper
-        lines.append(
-            "update_to_includes_paper: "
-            + ("unknown" if included is None else str(included).lower())
-        )
+        lines.append(update_to_line(document))
     if document.text:
         truncated = " (cut short)" if document.text_truncated else ""
         lines.append(f"text{truncated}: {_defuse(document.text)}")
@@ -449,7 +459,13 @@ def document_block(
     return "\n".join(lines)
 
 
-def _pdf_label(document: DocumentInReport) -> str:
+def update_to_line(document: DocumentInReport) -> str:
+    """A notice's line saying whether its Crossref record names the tracked paper."""
+    included = document.update_to_includes_paper
+    return "update_to_includes_paper: " + ("unknown" if included is None else str(included).lower())
+
+
+def pdf_label(document: DocumentInReport) -> str:
     if document.kind == "current_version":
         fetched = document.pdf_fetched_at.date().isoformat() if document.pdf_fetched_at else "?"
         return (
@@ -477,7 +493,7 @@ def change_prompt(inputs: ReportInputs) -> Prompt:
         )
     pdf_order = {"new_version": 0, "related": 1}  # then the current copy
     ordered = sorted(inputs.document_pdfs, key=lambda pair: pdf_order.get(pair[0].kind, 2))
-    pdfs += [(label(document), _pdf_label(document), data) for document, data in ordered]
+    pdfs += [(label(document), pdf_label(document), data) for document, data in ordered]
 
     attached_pdfs: list[tuple[str, bytes]] = []
     for name, model_label, data in pdfs:

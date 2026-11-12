@@ -341,6 +341,20 @@ def a_claim_naming_only_itself_or_no_such_claim_is_not_derived():
 
 
 @check
+def a_claim_may_derive_from_an_earlier_steps_claims():
+    ev = with_derived(run())
+    ev["assessment"]["impact"]["claims"][1]["from_change"] = [1]
+    assert score.derived_claims(ev) == {"impact-1": ["impact-0", "change-0"]}
+    shown = judge.passage_prompt(ev)
+    assert "3. The dose choice is touched. (derived from claims 2, 1)" in shown, shown
+    # an earlier step can't name a later one's, nor a claim that doesn't exist
+    ev["assessment"]["impact"]["claims"][1]["from_claims"] = []
+    ev["assessment"]["impact"]["claims"][1]["from_change"] = [9]
+    ev["assessment"]["impact"]["claims"][1]["from_impact"] = [1]
+    assert score.derived_claims(ev) == {}
+
+
+@check
 def with_no_draft_the_evaluations_statements_are_not_graded():
     ev = run(draft="none")
     statements = [

@@ -642,12 +642,12 @@ def test_a_citation_jumps_empty_evidence_is_still_accepted():
     assert ChangeAssessment.model_validate(jump).alerts[0].evidence == []
 
 
-async def test_the_result_records_prompt_version_14_and_reads_the_draft_only_after_the_gate(sm):
+async def test_the_result_records_prompt_version_15_and_reads_the_draft_only_after_the_gate(sm):
     llm = fake(sm)
 
     evaluation = await assess(llm, sm.client, await inputs_for(sm))
 
-    assert evaluation.assessment["prompt_version"] == 14
+    assert evaluation.assessment["prompt_version"] == 15
     assert [call["drafts_read_before"] for call in llm.calls] == [0, 1, 1]
 
 
