@@ -11,7 +11,8 @@ from dataclasses import dataclass, field
 
 import httpx
 
-from research_evaluation.embedding import Embedder
+from research_evaluation.embedding import CHUNK_OVERLAP, CHUNK_SIZE, Embedder
+from research_evaluation.impact.schemas import ContextChunk
 from research_evaluation.storage import Chunk, Report, search_chunks
 
 log = logging.getLogger(__name__)
@@ -69,3 +70,19 @@ async def read_history(
     if not found:
         return History("none")
     return History("read", sorted(found, key=lambda chunk: chunk.score, reverse=True))
+
+
+def context_chunk(chunk: Chunk) -> ContextChunk:
+    """How a frontend finds `chunk` again (docs/CONTRACTS.md, `context_chunks`). A page-less
+    document chunk whose text was cut into more than one chunk also gets its range in the
+    document's `text`: chunk_text's chunk `chunk_index` starts at chunk_index × (CHUNK_SIZE −
+    CHUNK_OVERLAP). Its content is research_evaluation.chunks' header, ending in a blank line,
+    then that text. A split PDF page gets no range."""
+    item = ContextChunk(source_type=chunk.source_type, source_id=chunk.source_id, page=chunk.page)
+    if chunk.source_type != "document" or chunk.page is not None:
+        return item
+    _, _, text = chunk.content.partition("\n\n")
+    if chunk.chunk_index == 0 and len(text) < CHUNK_SIZE:
+        return item
+    start = chunk.chunk_index * (CHUNK_SIZE - CHUNK_OVERLAP)
+    return item.model_copy(update={"start": start, "end": start + len(text)})

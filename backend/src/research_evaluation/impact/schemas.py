@@ -3,7 +3,13 @@ Storage Management. The field names are the ones the prompts ask for (impact/pro
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializerFunctionWrapHandler,
+    model_serializer,
+)
 
 Level = Literal["none", "low", "medium", "high"]
 Role = Literal[
@@ -129,12 +135,24 @@ class StoredClaim(BaseModel):
 
 
 class ContextChunk(BaseModel):
-    """A past chunk added to the prompt: enough to find it again (a document's PDF at `page`, or
-    the alert or report in the paper's report list)."""
+    """A past chunk added to the prompt: enough to find it again (a document's PDF at `page`, the
+    alert or report in the paper's report list, or a document's text). `start` and `end` are set
+    only for a page-less document chunk whose text was cut into more than one chunk: its range in
+    the document's `text`. Both are left out of the JSON when unset (docs/CONTRACTS.md)."""
 
     source_type: str
     source_id: str
     page: int | None = None
+    start: int | None = None
+    end: int | None = None
+
+    @model_serializer(mode="wrap")
+    def _drop_unset_range(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        data = handler(self)
+        if self.start is None:
+            data.pop("start", None)
+            data.pop("end", None)
+        return data
 
 
 class Evaluation(BaseModel):
