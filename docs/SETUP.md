@@ -37,8 +37,10 @@ comments into the value.
 |---|---|---|
 | `JWT_SECRET` | every service | base64 of 32+ random bytes (`openssl rand -base64 32`), the same everywhere. Storage Management's JWT library rejects shorter keys; the Python apps check at startup |
 | `DEV_TOOLS` | Storage Management | `true` (the default) serves the `/dev` demo tools and Swagger; `false` takes both away, for a public server |
+| `DEV_MODE` | Storage Management, User Management | `false` unless set. `true` (only that, in any letter case; `1`, `on` and `yes` don't count) creates the admin account `admin` / `12345679` in User Management and serves the `/admin/**` endpoints in Storage Management. Separate from `DEV_TOOLS`. Its password is known: never on a server (DEPLOY.md). Updating and Research Evaluation don't read it |
 | `SM_BASE_URL` | RE, Updating | `http://localhost:8081` (compose overrides it) |
 | `RE_BASE_URL` | Updating | `http://localhost:8000` |
+| `UM_BASE_URL` | RE | `http://localhost:8080`: User Management, where impact reads the researcher's profile and the events for outside notifications are posted (compose sets `http://users:8080`) |
 | `DATABASE_URL` | Updating | `postgresql+asyncpg://dev:dev@localhost:5432/research_assistant` (the compose Postgres), or `sqlite+aiosqlite:///./updating.sqlite3` with no Postgres |
 | `OPENALEX_API_KEY` | Updating (and Storage Management) | openalex.org |
 | `CROSSREF_MAILTO` | Updating, RE (and Storage Management) | a team contact email; empty sends none |
@@ -47,6 +49,7 @@ comments into the value.
 | `INVESTIGATION_PDF_TIMEOUT_SECONDS` | RE | `120`: how long investigation waits for Storage Management to store a document (it downloads the PDF first) |
 | `GEMINI_API_KEY` | RE | aistudio.google.com. Optional: the service starts without it, impact doesn't run |
 | `GEMINI_MODEL` | RE | `gemini-flash-latest` |
+| `EMBED_MODEL` | RE | `gemini-embedding-001`: the Gemini model chunks and queries are embedded with, at 1536 dimensions; uses `GEMINI_API_KEY` |
 | `GEMINI_FALLBACK_MODELS` | RE | `gemini-flash-lite-latest`: comma-separated models tried in order when a call fails; empty for none |
 | `IMPACT_LLM_TIMEOUT_SECONDS` | RE | `120`, per Gemini call |
 | `JUDGE_API_KEY` | `evals/judge.py` only | a second aistudio.google.com key (ideally another Google project) for the eval judge; empty falls back to `GEMINI_API_KEY` |
@@ -62,10 +65,14 @@ Outside compose it also reads `SPRING_DATASOURCE_URL`, `_USERNAME`,
 `_PASSWORD`, `GROBID_URL` (default `http://localhost:8070`), `UPLOAD_DIR`
 (default `uploads/` in the working directory) and `PORT` (default 8081).
 
-User Management (`users/`) reads `JWT_SECRET` (the same value),
+User Management (`users/`) also reads the outside notification settings, all
+optional (below, "Email (SMTP)" and "Telegram bot"). It reads `JWT_SECRET` (the same value),
 `SPRING_DATASOURCE_URL`, `_USERNAME`, `_PASSWORD`, and `SM_BASE_URL`
 (Storage Management, which it asks to clear a deleted project; default
-`http://localhost:8081`, and the root stack sets it).
+`http://localhost:8081`, and the root stack sets it) and `REFRESH_COOKIE_SECURE`
+(`false` by default; `true` adds `Secure` to the refresh token's cookie, which
+a browser then sends only over HTTPS, so leave it `false` for plain-HTTP local
+runs).
 
 The whole stack (below) reads one `.env` at the repo root instead (copy
 `.env.example`): the same variables, plus `POSTGRES_PASSWORD` and
@@ -89,6 +96,10 @@ Good to know:
 
 - `POSTGRES_PASSWORD` is set when the database is first created; to
   change it later, `down -v` (losing the data) and start again.
+- The database image is `pgvector/pgvector:pg17`, not `postgres:17`:
+  Storage Management's chunks migration (V13) needs the `vector`
+  extension. A database volume made by the old `postgres:17` image starts
+  unchanged on it, so no `down -v` is needed.
 - Only the website is reachable; it passes `/api`, `/auth`, `/projects`
   and `/updating` on to the services. Swagger doesn't work through it, so
   use the development stacks below for that.
@@ -128,7 +139,9 @@ cd ../storage && docker compose up -d --build
 - `storage/docker-compose.yml`: Storage Management and its Postgres (host
   port 5433). It uses the backend's GROBID on 8070 (`docker compose up
   grobid` in `backend/` for just that); without GROBID, uploads save
-  without a DOI. PDFs and the database are Docker volumes.
+  without a DOI. PDFs and the database are Docker volumes. Its Postgres
+  image is `pgvector/pgvector:pg17` (the chunks migration needs the `vector`
+  extension); it reads an existing `postgres:17` volume unchanged.
 - `down` stops and keeps the data; `down -v` also wipes the databases and
   the stored PDFs (also the fix for any migration error).
 
@@ -148,8 +161,11 @@ Cloudflare check), so tracking those by DOI fails with `422`; PLOS works.
 ## Storage Management without Docker
 
 ```
-docker run -d --name storage-db -p 5432:5432 -e POSTGRES_DB=storage -e POSTGRES_USER=storage -e POSTGRES_PASSWORD=storage postgres:17
+docker run -d --name storage-db -p 5432:5432 -e POSTGRES_DB=storage -e POSTGRES_USER=storage -e POSTGRES_PASSWORD=storage pgvector/pgvector:pg17
 ```
+
+It must be the pgvector image (not `postgres:17`): V13 runs `create extension
+vector` and fails without it.
 
 Set `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/storage`,
 `SPRING_DATASOURCE_USERNAME=storage`, `SPRING_DATASOURCE_PASSWORD=storage`
@@ -188,6 +204,62 @@ Then set `JWT_SECRET`, `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5434/u
 (`.\mvnw.cmd spring-boot:run` on Windows). It listens on 8080; Flyway
 creates the `users` schema and its tables. `docker compose down -v` wipes
 its database.
+
+### Email (SMTP)
+
+Outside notifications by email need an SMTP server; with no `MAIL_HOST`, email
+is not sent and a channel saved enabled gets the outcome `not_configured`. In
+the root `.env` (all read by User Management only):
+
+| Var | Value |
+|---|---|
+| `MAIL_HOST` | the SMTP server; empty turns email off |
+| `MAIL_PORT` | `587` (the default). It is `587` in `.env.example` and the compose file, so an empty value in `.env` never reaches Spring as an empty port |
+| `MAIL_USERNAME`, `MAIL_PASSWORD` | the SMTP login. Authentication happens whenever both are set (JavaMail's rule), so there is no separate auth setting |
+| `MAIL_FROM` | the From address. It has no default: with a `MAIL_HOST` and no `MAIL_FROM` the mail has no From and the SMTP server or JavaMail refuses it (`failed`, logged as `MailSendException`). `not_configured` still means only "no `MAIL_HOST`" |
+| `APP_URL` | the site's address (e.g. `https://our-name.duckdns.org`), for the link to the paper in a message; empty sends no link |
+
+STARTTLS is used when the server offers it (`enable`, not `required`), and the
+connect, read and write timeouts are 10 s each. Each channel also has one
+overall 10 s deadline for its whole send (`CHANNEL_DEADLINE`, default `10s`,
+which the tests shorten): a channel still running at the deadline is `failed`,
+logged with the user id, channel and exception class only, and the other
+channel is unaffected; the send is abandoned, not undone, so a message may
+still arrive after `failed`. `MAIL_PASSWORD`, like every setting in `.env`, also
+reaches Research Evaluation and Updating, which load `.env` whole
+(`env_file`); only User Management reads it.
+
+### Telegram bot
+
+Create a bot with BotFather and set `TELEGRAM_BOT_TOKEN` in `.env`; empty turns
+Telegram off (a channel saved enabled gets `not_configured`). A researcher then
+presses Start on the bot, gets their chat id from a bot such as `@userinfobot`,
+and types it into their Telegram settings (`PUT /auth/me/notifications/telegram`);
+the bot can't message a chat that hasn't pressed Start. `TELEGRAM_API_URL`
+(default `https://api.telegram.org`) exists for the tests, to point User
+Management at a stub; it isn't in `.env.example` or the compose file.
+`POST /auth/me/notifications/test` checks a setup end to end (one per account
+per 60 s).
+
+## Dev mode: triggering a change
+
+With `DEV_MODE=true` for Storage Management and User Management (the root
+`.env` passes it to both; off unless set) and the whole stack running:
+
+1. Sign in as a researcher and track a really retracted paper. Poll it
+   (from the app, or `POST /run-poll?paper_id=` with their token).
+2. Sign in as the admin: `POST /auth/login` with `{"email": "admin",
+   "password": "12345679"}`; use the returned token.
+3. `POST /api/admin/papers/<id>/snapshots` with
+   `{"is_retracted": false, "removed_crossref_update_types": ["retraction"]}`.
+4. Poll the paper again as the researcher: a `retraction` alert appears. To
+   raise it again, `DELETE /api/admin/papers/<id>/history`, poll, change
+   the flag, poll.
+
+`GET /auth/admin/users` lists the accounts to pick from; the other admin
+calls are in CONTRACTS.md, "Admin endpoints (dev mode)".
+`POST /api/admin/papers/<id>/fake-report` (no body) puts a finished report
+on a paper without a poll.
 
 ## A demo user token
 
@@ -293,7 +365,7 @@ uv run pytest tests/updating/test_scenarios.py   # the mock harness on recorded 
 uv run --with fpdf2 --with rich python evals/all.py   # impact evals: real Gemini calls, needs GEMINI_API_KEY (EVALUATION.md, "Evals")
 
 cd storage
-./mvnw test                   # H2, network mocked
+./mvnw test                   # H2, network mocked; also the *IT classes (surefire `includes` in pom.xml)
 
 cd users
 ./mvnw test                   # H2, even with SPRING_DATASOURCE_* set; real HTTP on a random port
@@ -301,3 +373,9 @@ cd users
 cd frontend/csd-frontend-vite
 npm run build && npm run lint
 ```
+
+Storage Management's Postgres-only tests (the chunk tests: `ChunkPostgresIT`,
+`ChunkSearchPostgresIT`) run in Testcontainers on `pgvector/pgvector:pg17`, so
+they need Docker and are skipped without it. `./mvnw test` runs the `*IT`
+classes too (surefire `includes` in `pom.xml`), so they run with the rest when
+Docker is up.

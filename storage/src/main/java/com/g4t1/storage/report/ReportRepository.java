@@ -18,7 +18,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     @Query("""
             update Report r set r.changeSummary = :changeSummary, r.changeSeverity = :changeSeverity,
                 r.impactLevel = :impactLevel, r.evaluation = :evaluation, r.recommendation = :recommendation,
-                r.assessment = :assessment, r.claims = :claims, r.evaluatedAt = :evaluatedAt,
+                r.assessment = :assessment, r.claims = :claims, r.contextChunks = :contextChunks, r.evaluatedAt = :evaluatedAt,
                 r.status = :assessed
             where r.id = :id and r.status = :investigated""")
     int recordEvaluation(@Param("id") long id,
@@ -29,6 +29,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
                          @Param("recommendation") String recommendation,
                          @Param("assessment") String assessment,
                          @Param("claims") String claims,
+                         @Param("contextChunks") String contextChunks,
                          @Param("evaluatedAt") Instant evaluatedAt,
                          @Param("assessed") ReportStatus assessed,
                          @Param("investigated") ReportStatus investigated);

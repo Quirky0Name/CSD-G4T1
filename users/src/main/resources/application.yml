@@ -16,9 +16,34 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  # the SMTP server for outside notifications; with no MAIL_HOST, email isn't sent. 10 s a step, so one
+  # unreachable server can't hold a request. STARTTLS is used when the server offers it
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
 
 users:
   # the same base64 secret every service shares; it signs the tokens they check
   jwt-secret: ${JWT_SECRET}
   # Storage Management, which clears a project's papers and draft when the project is deleted
   storage-url: ${SM_BASE_URL:http://localhost:8081}
+  # the admin account and what only it can do; off unless DEV_MODE=true
+  dev-mode: ${DEV_MODE:false}
+  # the refresh token's cookie is Secure (HTTPS only) when true: true on the deployed server
+  refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:false}
+  # the longest one outside channel may take to send, steps and all; two channels have to fit in Research Evaluation's 30 s
+  channel-deadline: ${CHANNEL_DEADLINE:10s}
+  # the From address of outside notification emails
+  mail-from: ${MAIL_FROM:}
+  # the site's address, for the link to the paper in a notification; no link when empty
+  app-url: ${APP_URL:}
+  # Telegram's bot API; with no bot token, Telegram isn't sent. The URL is only overridden to point tests at a stub
+  telegram-api-url: ${TELEGRAM_API_URL:https://api.telegram.org}
+  telegram-bot-token: ${TELEGRAM_BOT_TOKEN:}

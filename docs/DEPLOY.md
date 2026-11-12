@@ -27,11 +27,14 @@ Learner Lab won't do: it limits IAM roles and stops instances after a few hours.
    |---|---|
    | `/research-assistant/JWT_SECRET` | `openssl rand -base64 32` |
    | `/research-assistant/POSTGRES_PASSWORD` | letters and digits only |
+   | `/research-assistant/REFRESH_COOKIE_SECURE` | `true`, so the refresh token's cookie is sent only over HTTPS |
    | `/research-assistant/ADMIN_PASSWORD_HASH` | `docker run --rm caddy:2.11-alpine caddy hash-password` (for `/adminer`) |
 
    Then any of the API keys and settings in `.env.example` the app should use (`GEMINI_API_KEY`,
    `OPENALEX_API_KEY`, `CROSSREF_MAILTO`,
-   `DEV_TOOLS`, ...). Leave out `WEB_PORT`, `HTTPS_PORT` and `SITE_ADDRESS`: the server sets those.
+   `DEV_TOOLS`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM`,
+   `TELEGRAM_BOT_TOKEN`, `APP_URL`, ...). Outside notifications by email need
+   an SMTP server on port 587: EC2 blocks outbound port 25 by default. Leave out `WEB_PORT`, `HTTPS_PORT` and `SITE_ADDRESS`: the server sets those.
    No value may contain a single quote.
 2. **CloudFront's prefix list.** In the VPC console, Managed prefix lists, find
    `com.amazonaws.global.cloudfront.origin-facing` and copy its ID (`pl-...`).
@@ -58,6 +61,10 @@ The first boot's log is `/var/log/research-assistant-bootstrap.log` on the insta
    deploy role, which can do one thing: run `deploy/update.sh <commit>` on this instance through
    Systems Manager. The server pulls that commit's images and restarts; nothing is built there.
    The workflow waits and fails if the server's update does.
+
+The root stack's Postgres image is `pgvector/pgvector:pg17` (Storage Management's chunks
+migration, V13, needs the `vector` extension). The server's first pull after that change reads the
+existing `postgres:17` volume unchanged.
 
 Runs never overlap: one waits for the other to finish, and GitHub keeps only the newest waiting
 run, so a rollback queued behind a deploy can be replaced by a merge that lands meanwhile. Each
@@ -140,6 +147,13 @@ for it to be healthy, then restarts Updating so its startup poll runs with Stora
 
 It's cheapest to keep the instance stopped except in the weeks it's needed: about US$0.85 a day
 running. New accounts' sign-up credits (Billing, Credits) may cover all of it.
+
+## Dev mode
+
+Leave `DEV_MODE` off (the default) on a server. With it on, anyone who
+knows the admin password (`12345679`, written in the docs) can sign in as
+the admin and read and change every user's paper data and spend Gemini
+calls. There is no rate limit on login (ROADMAP.md).
 
 ## Limits worth knowing
 

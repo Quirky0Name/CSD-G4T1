@@ -5,6 +5,7 @@ import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -12,12 +13,14 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,6 +58,9 @@ class DeleteAccountTest {
 
     @Value("${users.jwt-secret}")
     private String jwtSecret;
+
+    @Autowired
+    private JdbcTemplate jdbc;
 
     private RestTestClient client;
 
@@ -96,6 +102,41 @@ class DeleteAccountTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody().jsonPath("$.projects").isEmpty();
+    }
+
+    // the profile goes by database cascade; the row is read directly since no reply can show it's gone
+    @Test
+    void deletingYourAccountDeletesYourProfile() {
+        Account account = registered(Map.of("occupation", "Clinician"));
+
+        deleteAccount(account.token(), PASSWORD).expectStatus().isNoContent();
+
+        assertThat(profileRows(account.id())).isZero();
+    }
+
+    @Test
+    void anAccountStorageCannotClearKeepsItsProfile() {
+        Account account = registered(Map.of("occupation", "Clinician"));
+        storage.answerWith(502);
+
+        deleteAccount(account.token(), PASSWORD).expectStatus().isEqualTo(502);
+
+        login(account.email()).expectStatus().isOk();
+        client.get().uri("/auth/me/profile")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + account.token())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.occupation").isEqualTo("Clinician");
+    }
+
+    @Test
+    void deletingYourAccountDeletesYourRefreshTokens() {
+        Account account = registered();
+        assertThat(refreshTokenRows(account.id())).isEqualTo(1);
+
+        deleteAccount(account.token(), PASSWORD).expectStatus().isNoContent();
+
+        assertThat(refreshTokenRows(account.id())).isZero();
     }
 
     // not a 401: the token is fine, and the frontend signs out on any 401
@@ -194,14 +235,32 @@ class DeleteAccountTest {
     }
 
     private Account registered() {
+        return registered(null);
+    }
+
+    private Account registered(Map<String, Object> profile) {
         String email = "researcher-" + UUID.randomUUID() + "@example.com";
+        Map<String, Object> request = new HashMap<>(Map.of("email", email, "password", PASSWORD));
+        if (profile != null) {
+            request.put("profile", profile);
+        }
         String body = client.post().uri("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("email", email, "password", PASSWORD))
+                .body(request)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(String.class).returnResult().getResponseBody();
         return new Account(JsonPath.read(body, "$.token"), JsonPath.read(body, "$.user.id"), email);
+    }
+
+    private int profileRows(String userId) {
+        return jdbc.queryForObject("select count(*) from users.user_profiles where user_id = ?", Integer.class,
+                UUID.fromString(userId));
+    }
+
+    private int refreshTokenRows(String userId) {
+        return jdbc.queryForObject("select count(*) from users.refresh_tokens where user_id = ?", Integer.class,
+                UUID.fromString(userId));
     }
 
     private RestTestClient.ResponseSpec login(String email) {

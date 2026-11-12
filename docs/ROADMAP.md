@@ -32,16 +32,45 @@ most needed first within each.
   User Management's side is built.
 - [ ] **Deleting the account in the frontend**: asks for the password,
   calls `DELETE /auth/me`, then signs out. User Management's side is built.
-- [ ] A deleted account's token still works for up to 24 hours on Storage
+- [ ] A deleted account's token still works for up to 1 hour on Storage
   Management, which can't tell the account is gone, so it can add papers
   and drafts nobody owns any more. Shorter tokens, or Storage Management
   asking User Management, would close it.
 - [x] `POST /run-poll` takes the user's JWT (CG-99).
 - [x] Notifications to the paper's owner instead of one hard-coded
   Telegram chat: done in the app (a toast on the frontend's 30 s refresh).
-- [ ] A notification history (the toast has none, and no read state).
-- [ ] Notify about reports assessed while the researcher was signed out
-  (today only reports assessed while a tab is open notify).
+- [ ] **A UI for dev mode.** Not built: the admin works through the API
+  only (SETUP.md, "Dev mode: triggering a change"). It gets its own spec.
+- [ ] **Rate limiting on login.** None, which matters most while dev mode's
+  known admin password exists (DEPLOY.md).
+- [x] Notify about reports assessed while the researcher was signed out:
+  done by email or Telegram, when the researcher turns a channel on
+  (ARCHITECTURE.md, "Outside notifications").
+- [ ] A notification history (the toast has none, and no read state, and
+  outside notifications are not recorded either).
+- [ ] Retrying a failed outside notification, and digests or batching across
+  reports: a failed send is logged and not tried again.
+- [ ] Verifying the account email, or a second email address: email goes to
+  the unverified account email.
+- [ ] Linking Telegram without typing a chat id (a deep link, `getUpdates` or
+  a webhook).
+
+## Chunks and the paper's past
+
+- [ ] **Writing and using profile chunks.** Storage Management stores and
+  searches `profile` chunks, but nothing writes them and impact doesn't
+  search them. Which service embeds a profile, and when, is undecided.
+- [ ] **Draft chunks**: a `draft_id` column and source type, by migration.
+- [ ] **Retrieved chunks in place of whole PDFs.** Step 1 still attaches the
+  current report's PDFs; the past is added beside them.
+- [ ] **A frontend view of a report's `context_chunks`**: open the alert,
+  report, or document PDF at `page`; for a document without `page`, show
+  its `text` whole, with `text.slice(start, end)` marked (like `TextPane`)
+  when the item has `start`/`end`. Nothing shows retrieved chunks to the
+  researcher yet.
+- [ ] **Search across a researcher's papers.** Search is per paper.
+- [ ] **Backfill** of rows stored before V13 (they have no chunks), and
+  embedding snapshots, tracked papers' PDFs and drafts.
 
 ## Frontend and the researcher's view
 

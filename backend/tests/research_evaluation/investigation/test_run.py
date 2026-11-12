@@ -1,6 +1,7 @@
 """Investigation after a nudge, end to end: Research Evaluation against the stub Storage
 Management, with Crossref and Europe PMC faked (conftest.ExternalApis)."""
 
+import logging
 from datetime import UTC, datetime
 from urllib.parse import unquote
 from uuid import UUID
@@ -762,3 +763,102 @@ async def test_a_failed_related_store_fails_the_report(sm, external):
 
     with pytest.raises(ValueError):  # no report finished
         await investigate_one(sm, external, LANCET, changes)
+
+
+# telling the owner about the new alerts (docs/EVALUATION.md, "Investigation")
+
+
+async def test_an_opened_report_posts_its_alerts_to_the_owner(client, sm, um, external):
+    external.crossref[RETRACTION_NOTICE] = "ijaa_notice"
+    paper = await changed_paper(sm, **retraction_and_correction())
+
+    await nudge(client, [paper])
+
+    [report_id] = await report_ids(sm, paper)
+    report = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    [request] = um.requests
+    assert request.method == "POST"
+    assert request.url.path == f"/internal/users/{report['owner_id']}/notifications"
+    assert request.headers["Authorization"].startswith("Bearer ")
+    assert request.extensions["timeout"]["read"] == 30
+    [(user_id, body)] = um.notifications
+    assert str(user_id) == report["owner_id"]
+    alerts = body.pop("alerts")
+    assert body == {
+        "event": "alerts",
+        "paper": {
+            "id": str(paper),
+            "title": "Hydroxychloroquine and azithromycin as a treatment of COVID-19",
+            "doi": PAPER_DOI,
+        },
+        "report_id": report_id,
+    }
+    assert {(alert["change_type"], alert["alert_severity"]) for alert in alerts} == {
+        ("retraction", "high"),
+        ("correction", "medium"),
+    }
+    assert len(alerts) == 2
+    stored = {alert["id"]: alert["description"] for alert in report["alerts"]}
+    assert {alert["id"]: alert["description"] for alert in alerts} == stored
+
+
+@pytest.mark.parametrize(
+    ("failure", "cause"),
+    [
+        (500, "User Management answered 500"),
+        (httpx.ReadTimeout("slow"), "ReadTimeout"),
+        (httpx.ConnectError("down"), "ConnectError"),
+    ],
+    ids=["500", "timeout", "unreachable"],
+)
+async def test_user_management_failing_still_finishes_the_report(
+    client, sm, um, external, caplog, failure, cause
+):
+    external.crossref[RETRACTION_NOTICE] = "ijaa_notice"
+    um.failure = failure
+    paper = await changed_paper(sm, **retraction_and_correction())
+
+    with caplog.at_level(logging.WARNING, logger="research_evaluation.users"):
+        response = await nudge(client, [paper])
+
+    assert response.status_code == 202
+    [report_id] = await report_ids(sm, paper)
+    report = (await sm.client.get(f"/internal/reports/{report_id}")).json()
+    assert report["status"] == "investigated"
+    [record] = caplog.records
+    assert record.getMessage() == (
+        f"notifying user {report['owner_id']} about report {report_id} failed: {cause}"
+    )
+
+
+async def test_a_report_with_no_owner_posts_nothing_and_is_still_finished(
+    client, sm, um, external, caplog
+):
+    external.crossref[RETRACTION_NOTICE] = "ijaa_notice"
+    paper = await changed_paper(sm, **retraction_and_correction())
+    no_owner = {"id": 1, "paper_id": str(paper), "status": "investigating", "alerts": [], "documents": []}
+    sm.transport.faults[("GET", "/internal/reports/1")] = httpx.Response(200, json=no_owner)
+
+    with caplog.at_level(logging.INFO, logger="research_evaluation.investigation.run"):
+        await nudge(client, [paper])
+
+    assert um.requests == []
+    assert "report 1 has no owner" in caplog.text
+    del sm.transport.faults[("GET", "/internal/reports/1")]
+    assert (await read_report(sm, paper, 1))["status"] == "investigated"
+
+
+async def test_storage_management_failing_on_the_notification_reads_still_finishes_the_report(
+    client, sm, um, external, caplog
+):
+    external.crossref[RETRACTION_NOTICE] = "ijaa_notice"
+    paper = await changed_paper(sm, **retraction_and_correction())
+    sm.transport.faults[("GET", "/internal/reports/1")] = 500
+
+    with caplog.at_level(logging.WARNING, logger="research_evaluation.investigation.run"):
+        await nudge(client, [paper])
+
+    assert um.requests == []
+    assert "reading report 1 for its notification failed: Storage Management answered 500" in caplog.text
+    del sm.transport.faults[("GET", "/internal/reports/1")]
+    assert (await read_report(sm, paper, 1))["status"] == "investigated"

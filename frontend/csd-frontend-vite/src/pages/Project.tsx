@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeftIcon, ArrowPathIcon, CalendarIcon, PlusIcon } from '@heroicons/react/20/solid'
-import { deletePaper, errorMessage, runPoll, type PollSummary } from '../api'
+import { deletePaper, errorMessage, listProjects, runPoll, type PollSummary } from '../api'
 import { formatDateTime } from '../format'
 import { useTracking } from '../tracking'
 import { useToast, type ToastTone } from '../components/Toasts'
@@ -19,15 +19,41 @@ function pollSummaryToast(summary: PollSummary): { tone: ToastTone; message: str
   return { tone: failed > 0 || summary.nudge_error ? 'error' : 'success', message: parts.join(' · ') }
 }
 
+// the default project has no row, so this is the only name it has
+const DEFAULT_PROJECT_NAME = 'Default project'
+
 function Project() {
+  const { projectId } = useParams()
   const navigate = useNavigate()
   const { state, refresh } = useTracking()
   const showToast = useToast()
   const [uploadOpen, setUploadOpen] = useState(false)
   const [polling, setPolling] = useState(false)
   const [lastPoll, setLastPoll] = useState<PollSummary | null>(null)
+  // the project's name, or what went wrong finding it
+  const [found, setFound] = useState<{ id: string; name: string | null; error?: string } | null>(null)
 
-  const poll = async (paperId?: string) => {
+  useEffect(() => {
+    if (!projectId) return
+    let active = true
+    listProjects()
+      .then((projects) => {
+        if (!active) return
+        const project = projects.find((p) => p.id === projectId)
+        setFound({ id: projectId, name: project?.name ?? null })
+      })
+      .catch((err: unknown) => {
+        if (active) setFound({ id: projectId, name: null, error: errorMessage(err) })
+      })
+    return () => {
+      active = false
+    }
+  }, [projectId])
+
+  const current = found?.id === projectId ? found : null
+  const name = projectId ? current?.name : DEFAULT_PROJECT_NAME
+
+  const poll = async () => {
     if (polling) return
     if (state.status === 'ready' && state.papers.length === 0) {
       showToast({ tone: 'info', message: 'Nothing to poll. Track a paper first.' })
@@ -35,7 +61,7 @@ function Project() {
     }
     setPolling(true)
     try {
-      const summary = await runPoll(paperId)
+      const summary = await runPoll()
       setLastPoll(summary)
       await refresh()
       showToast(pollSummaryToast(summary))
@@ -56,12 +82,23 @@ function Project() {
     }
   }
 
+  if (projectId && current && !current.name) {
+    return (
+      <main className="px-4 py-10 sm:px-6 lg:px-8">
+        <p className="text-sm/6 text-gray-300">{current.error ?? "This project doesn't exist or isn't yours."}</p>
+        <Link to="/" className="mt-2 inline-block text-sm font-semibold text-indigo-400 hover:text-indigo-300">
+          Back to projects
+        </Link>
+      </main>
+    )
+  }
+
   return (
     <main className="px-4 py-10 sm:px-6 lg:px-8">
       <div className="lg:flex lg:items-center lg:justify-between">
         <div className="min-w-0 flex-1">
           <h2 className="text-2xl/7 font-bold text-white sm:truncate sm:text-3xl sm:tracking-tight">
-            Project
+            {name ?? '\u00a0'}
           </h2>
           {lastPoll && (
             <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
@@ -114,7 +151,7 @@ function Project() {
         </div>
       </div>
 
-      <DraftCard />
+      <DraftCard projectId={projectId} />
 
       {state.status === 'loading' && <p className="mt-10 text-sm text-gray-400">Loading tracked papers…</p>}
       {state.status === 'error' && (
@@ -124,14 +161,13 @@ function Project() {
       )}
       {state.status === 'ready' && (
         <TrackedPaperList
-          papers={state.papers.filter((paper) => paper.project_id === null)}
+          papers={state.papers.filter((paper) => paper.project_id === (projectId ?? null))}
           alerts={state.alerts}
-          onPoll={(paperId) => void poll(paperId)}
           onDelete={(paperId) => void handleDelete(paperId)}
         />
       )}
 
-      <TrackPaperDialog open={uploadOpen} onClose={() => setUploadOpen(false)} />
+      <TrackPaperDialog open={uploadOpen} onClose={() => setUploadOpen(false)} projectId={projectId} />
     </main>
   )
 }

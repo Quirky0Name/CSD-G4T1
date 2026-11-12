@@ -53,4 +53,9 @@ public class User {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    // register's @Email refuses an address with no @, so only AdminAccount can make this one
+    public boolean isAdmin() {
+        return AdminAccount.EMAIL.equals(email);
+    }
 }

@@ -60,3 +60,49 @@ A factual statement in an evaluation's summary, explanation or recommendation, l
 
 **Passage**:
 A quote a claim rests on, with the text it was found in (the tracked paper, the draft, a report document or an alert) and its page, and whether the quote was found there word for word.
+
+### Researchers
+
+**Profile**:
+A researcher's answers to the sign-up questionnaire: occupation, research fields and interests, type of work, and how they like reports written. A researcher has at most one.
+_Avoid_: Preferences (for the whole), user settings, questionnaire (for the saved answers)
+
+**Profile block**:
+The `<document kind="researcher_profile">` block that gives a profile to impact's steps 2 and 3.
+_Avoid_: Profile prompt, user context
+
+### Search over the past
+
+**Chunk**:
+A piece of an alert's, report's, report document's or profile's text, stored with its embedding for search.
+
+**Past timeline**:
+A tracked paper's earlier alerts, reports and report documents, found by vector search, that impact's steps 1 and 2 read beside the current report.
+
+### Notifications
+
+**Outside notification**:
+A message sent to a researcher by email or Telegram when an alert or an assessed report passes that channel's thresholds. The in-app toast is not one.
+_Avoid_: External notif, push notification
+
+**Notification channel**:
+Email or Telegram.
+
+**Notification preferences**:
+A researcher's per-channel on/off, Telegram chat id and thresholds.
+_Avoid_: Preferences (on its own, which is easily taken for the profile)
+
+**Notification threshold**:
+The lowest alert severity, change severity or impact level that sends on one channel. A report sends when either of its levels reaches its threshold.
+_Avoid_: Rule, filter
+
+### Dev mode
+
+**Dev mode**:
+A setting (`DEV_MODE`, off unless set to `true`) that gives the stack an admin account and the admin endpoints, for demos and testing.
+
+**Admin**:
+The account `admin`, which exists only in dev mode. It reads and changes any researcher's paper data and is not a researcher: it has no papers or projects.
+
+**Fake report**:
+A report, with its alerts and documents, copied onto a paper by the admin from one saved example instead of coming from a poll.

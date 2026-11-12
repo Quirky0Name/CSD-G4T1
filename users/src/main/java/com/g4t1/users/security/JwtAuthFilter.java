@@ -22,8 +22,9 @@ import java.util.UUID;
 
 /**
  * Storage Management's token check, the same rules here: a user token's sub is the user's id, and a
- * service token (role=service) is never a researcher. A missing or bad token just leaves the request
- * unauthenticated, and SecurityConfig answers it with a 401.
+ * service token (role=service) is never a researcher. Nor is an admin token (role=admin), which has a
+ * user id for its sub. A missing or bad token just leaves the request unauthenticated, and SecurityConfig
+ * answers it with a 401.
  */
 public class JwtAuthFilter extends OncePerRequestFilter {
 
@@ -60,13 +61,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
         Object principal;
         String role;
-        if ("service".equals(claims.get("role", String.class))) {
+        String claimedRole = claims.get("role", String.class);
+        if ("service".equals(claimedRole)) {
             principal = claims.getSubject();
             role = "ROLE_SERVICE";
         } else {
             // throws IllegalArgumentException for a non-UUID sub, which rejects the token
             principal = UUID.fromString(claims.getSubject());
-            role = "ROLE_USER";
+            role = "admin".equals(claimedRole) ? "ROLE_ADMIN" : "ROLE_USER";
         }
         var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of(new SimpleGrantedAuthority(role)));
         SecurityContextHolder.getContext().setAuthentication(auth);
