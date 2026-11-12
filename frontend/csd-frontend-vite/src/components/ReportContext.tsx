@@ -1,7 +1,7 @@
 // What impact read beside a report (its `context_chunks`, resolved by context/resolve.ts), shown the way
 // the report shows its quotes: a list on the left, the chosen item in a pane on the right.
 // Documents fetched from outside are laid down as paper, like any source; the desk's own records (an
-// alert, an earlier report, the researcher's feedback) keep the desk's look, so they read as ours.
+// alert, an earlier report, the researcher's feedback or profile) keep the desk's look, so they read as ours.
 // Publisher and model text throughout: rendered as text, never as HTML.
 import {
   BellAlertIcon,
@@ -9,11 +9,12 @@ import {
   ClipboardDocumentListIcon,
   DocumentTextIcon,
   QuestionMarkCircleIcon,
+  UserCircleIcon,
 } from '@heroicons/react/20/solid'
 import type { ComponentType, ReactNode, SVGProps } from 'react'
 import { Link } from 'react-router-dom'
 import type { UserDocument, UserReport } from '../api'
-import { entryMeta, entryTitle, MISSING_LABEL, VERDICT_LABEL } from '../context/describe'
+import { entryMeta, entryTitle, MISSING_LABEL, profileAnswers, VERDICT_LABEL } from '../context/describe'
 import { parseJsonText, type ContextEntry } from '../context/resolve'
 import { ALERT_SEVERITY_LABEL, LEVEL_LABEL, LEVEL_STYLES, formatDateTime } from '../format'
 import PdfPane from '../highlight/PdfPane'
@@ -37,6 +38,7 @@ const ICON: Record<ContextEntry['kind'], Icon> = {
   alert: BellAlertIcon,
   report: ClipboardDocumentListIcon,
   feedback: ChatBubbleBottomCenterTextIcon,
+  profile: UserCircleIcon,
   missing: QuestionMarkCircleIcon,
 }
 
@@ -51,8 +53,9 @@ export function ContextList({
   selected: ContextEntry | undefined
   onPick: (entry: ContextEntry) => void
 }) {
-  const past = entries.filter((e) => e.kind !== 'feedback')
+  const past = entries.filter((e) => e.kind !== 'feedback' && e.kind !== 'profile')
   const feedback = entries.filter((e) => e.kind === 'feedback')
+  const profile = entries.filter((e) => e.kind === 'profile')
   return (
     <div className="space-y-5">
       <p className="px-3 text-sm/6 text-gray-400">
@@ -63,6 +66,9 @@ export function ContextList({
       )}
       {feedback.length > 0 && (
         <ContextGroup label="From your feedback" entries={feedback} selected={selected} onPick={onPick} />
+      )}
+      {profile.length > 0 && (
+        <ContextGroup label="From your profile" entries={profile} selected={selected} onPick={onPick} />
       )}
     </div>
   )
@@ -152,6 +158,8 @@ function PaneBody({ entry, seq }: { entry: ContextEntry; seq: number }) {
       return <ReportBody report={entry.report} />
     case 'feedback':
       return <FeedbackBody entry={entry} />
+    case 'profile':
+      return <ProfileBody entry={entry} />
     case 'missing':
       return (
         <DeskBody>
@@ -268,14 +276,14 @@ function FeedbackBody({ entry }: { entry: Extract<ContextEntry, { kind: 'feedbac
         The assessment read what you said about an earlier report while it wrote this one.
       </p>
       <dl className="divide-y divide-white/10 rounded-xl outline-1 -outline-offset-1 outline-white/10">
-        <FeedbackFact label="Paper">{entry.paperTitle ?? 'A paper no longer tracked'}</FeedbackFact>
-        <FeedbackFact label="Your verdict">
+        <Fact label="Paper">{entry.paperTitle ?? 'A paper no longer tracked'}</Fact>
+        <Fact label="Your verdict">
           <span className={`${badge} ${NEUTRAL_BADGE}`}>{VERDICT_LABEL[entry.verdict]}</span>
-        </FeedbackFact>
+        </Fact>
         {entry.date && (
-          <FeedbackFact label="Given">
+          <Fact label="Given">
             <time dateTime={entry.date}>{formatDateTime(entry.date)}</time>
-          </FeedbackFact>
+          </Fact>
         )}
       </dl>
       {entry.report?.change_summary && (
@@ -292,7 +300,31 @@ function FeedbackBody({ entry }: { entry: Extract<ContextEntry, { kind: 'feedbac
   )
 }
 
-function FeedbackFact({ label, children }: { label: string; children: ReactNode }) {
+// The profile the item carried, which is never fetched: only dev mode's fake report sends one
+function ProfileBody({ entry }: { entry: Extract<ContextEntry, { kind: 'profile' }> }) {
+  const answers = profileAnswers(entry.profile)
+  return (
+    <DeskBody>
+      <p className="text-sm/6 text-gray-300">
+        The assessment read these answers from your profile while it wrote this report.
+      </p>
+      {answers.length > 0 ? (
+        <dl className="divide-y divide-white/10 rounded-xl outline-1 -outline-offset-1 outline-white/10">
+          {answers.map((answer) => (
+            <Fact key={answer.label} label={answer.label}>
+              <span className="whitespace-pre-line">{answer.value}</span>
+            </Fact>
+          ))}
+        </dl>
+      ) : (
+        <p className="text-sm/6 text-gray-400">The profile it read had no answers.</p>
+      )}
+    </DeskBody>
+  )
+}
+
+// one label and value of a record on the desk
+function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3.5 py-2.5 text-sm/6">
       <dt className="text-gray-400">{label}</dt>

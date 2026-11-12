@@ -1,5 +1,5 @@
 // What a row and a pane header say about an item impact read beside a report
-import type { FeedbackVerdict, UserDocument } from '../api'
+import type { FeedbackVerdict, Profile, UserDocument } from '../api'
 import { ALERT_SEVERITY_LABEL, CHANGE_TYPE_LABEL, LEVEL_LABEL } from '../format'
 import type { ContextEntry } from './resolve'
 
@@ -32,6 +32,8 @@ export function entryTitle(entry: ContextEntry): string {
       return `Report of ${shortDate(entry.report.created_at)}`
     case 'feedback':
       return entry.paperTitle ? `Your feedback on “${entry.paperTitle}”` : 'Your feedback on an earlier report'
+    case 'profile':
+      return 'Your profile'
     case 'missing':
       return `${MISSING_LABEL[entry.sourceType]} no longer here`
   }
@@ -56,9 +58,29 @@ export function entryMeta(entry: ContextEntry): string[] {
         ]
       case 'feedback':
         return [`You said ${VERDICT_LABEL[entry.verdict].toLowerCase()}`, entry.date ? shortDate(entry.date) : '']
+      case 'profile':
+        return [occupation(entry.profile) ?? '', (entry.profile.research_fields ?? []).join(', ')]
       case 'missing':
         return ['Removed since this report was written']
     }
   })()
   return facts.filter(Boolean)
+}
+
+// what someone wrote for Other, when they did; otherwise the listed occupation
+function occupation(profile: Profile): string | null {
+  return (profile.occupation === 'Other' && profile.occupation_other?.trim()) || profile.occupation
+}
+
+// a profile's answered questions, in the questionnaire's order (GLOSSARY.md, "Profile"); unanswered ones
+// are left out. All of it is the researcher's own text: render it as text
+export function profileAnswers(profile: Profile): { label: string; value: string }[] {
+  const answers = [
+    { label: 'Occupation', value: occupation(profile) ?? '' },
+    { label: 'Research fields', value: (profile.research_fields ?? []).join(', ') },
+    { label: 'Research interests', value: (profile.research_interests ?? []).join(', ') },
+    { label: 'Type of work', value: (profile.work_types ?? []).join(', ') },
+    { label: 'How reports are written', value: profile.response_preferences?.trim() ?? '' },
+  ]
+  return answers.filter((answer) => answer.value.trim() !== '')
 }
