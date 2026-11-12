@@ -215,12 +215,18 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
   - The nudge is sent after the transaction commits, fire-and-forget, and never fails the save or delete. Doc delta.
   - A delete nudges too: Research Evaluation finds no feedback and stores an empty list, which deletes the chunk (I4). Doc delta.
 - **Acceptance criteria:**
-  - [ ] A successful `PUT` sends `POST /embed/feedback {"report_id": <id>}` with a JWT whose `sub` is `svc:storage` and `role` `service` (`FeedbackNudgeTest`).
-  - [ ] A successful `DELETE` sends the same nudge (`FeedbackNudgeTest`).
-  - [ ] With Research Evaluation answering `500` or unreachable, the `PUT` still returns `200` and the `DELETE` `204`, and the change is stored (`FeedbackNudgeTest`).
-  - [ ] A rejected `PUT` or `DELETE` (`400`/`404`/`409`) sends no nudge (`FeedbackNudgeTest`).
-  - [ ] `cd storage && ./mvnw test` passes.
+  - [x] A successful `PUT` sends `POST /embed/feedback {"report_id": <id>}` with a JWT whose `sub` is `svc:storage` and `role` `service` (`FeedbackNudgeTest`).
+  - [x] A successful `DELETE` sends the same nudge (`FeedbackNudgeTest`).
+  - [x] With Research Evaluation answering `500` or unreachable, the `PUT` still returns `200` and the `DELETE` `204`, and the change is stored (`FeedbackNudgeTest`).
+  - [x] A rejected `PUT` or `DELETE` (`400`/`404`/`409`) sends no nudge (`FeedbackNudgeTest`).
+  - [x] `cd storage && ./mvnw test` passes.
 - **Doc deltas:** CONTRACTS.md "Auth": Storage Management's service token and its one use. SETUP.md and DEPLOY.md: `RE_BASE_URL` for Storage Management. Out of scope: backfill of failed embeds (saving again re-embeds).
+  - Added in build: after commit is a `@TransactionalEventListener` on a `FeedbackChanged(reportId)` event published by `ReportService`; the call then runs on Spring's `TaskExecutor`, so the answer never waits for Research Evaluation and a rolled-back change sends nothing; STORAGE.md.
+  - Added in build: the client (`evaluation/ResearchEvaluationClient`) has 5-second connect and read timeouts and logs a failure with the report id and the exception class only; the minter is `security/ServiceTokens` (`iat` and `exp` set, five minutes); CONTRACTS.md "Auth".
+  - Added in build: the service token is signed with HS256 explicitly (`Jwts.SIG.HS256`), since the key's length would otherwise pick HS384/HS512 for a 48+ byte `JWT_SECRET`, which Research Evaluation rejects (`ServiceTokensTest`); CONTRACTS.md "Auth".
+  - Added in build: `storage.re-base-url` defaults to `http://localhost:8000`; in compose storage gets `RE_BASE_URL: http://research-evaluation:8000` with no `depends_on`, since Research Evaluation already depends on storage; SETUP.md, DEPLOY.md.
+  - Added in build: a delete nudges even when the report had no feedback (the `204` case), which stores an empty list again; harmless and keeps the rule simple; CONTRACTS.md.
+  - Spec change: the unreachable case lives in its own `FeedbackNudgeUnreachableTest`, since it needs a different `storage.re-base-url` (a closed port) and so its own Spring context; `ReportServiceRaceTest` passes a no-op event publisher to the new constructor argument.
 
 ### S5: Feedback in impact's prompt (Research Evaluation)
 
