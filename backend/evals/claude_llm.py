@@ -12,7 +12,6 @@ and `run.py --resume` re-runs it. Hitting the usage limit is `ClaudeLimitReached
 doesn't catch, so the run is not saved at all."""
 
 import asyncio
-import base64
 import json
 import os
 import shutil
@@ -25,13 +24,12 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from research_evaluation.impact.llm import (
-    PDF_MIME_TYPE,
     AllModelsFailed,
     Answer,
     ModelFailure,
     Part,
-    Pdf,
     failure_cause,
+    to_blocks,
 )
 
 # never passed to Claude Code, so it can only use the subscription login
@@ -118,23 +116,6 @@ def preflight(command: tuple[str, ...] = ("claude",)) -> None:
         )
 
 
-def content_blocks(parts: list[Part]) -> list[dict[str, Any]]:
-    """The prompt's parts in their order: a str is a text block, a Pdf a base64 document block."""
-    return [
-        {
-            "type": "document",
-            "source": {
-                "type": "base64",
-                "media_type": PDF_MIME_TYPE,
-                "data": base64.b64encode(part.data).decode("ascii"),
-            },
-        }
-        if isinstance(part, Pdf)
-        else {"type": "text", "text": part}
-        for part in parts
-    ]
-
-
 def failed(model: str, cause: str) -> AllModelsFailed:
     return AllModelsFailed([ModelFailure(model, cause)])
 
@@ -192,7 +173,7 @@ class ClaudeLlm:
         self, *, system: str, parts: list[Part], schema: type[T]
     ) -> Answer[T]:
         argv = self.argv(system, schema)
-        message = {"type": "user", "message": {"role": "user", "content": content_blocks(parts)}}
+        message = {"type": "user", "message": {"role": "user", "content": to_blocks(parts)}}
         stdin = (json.dumps(message) + "\n").encode("utf-8")
         cwd = tempfile.mkdtemp(prefix="eval-claude-")
         try:
@@ -316,7 +297,7 @@ class ClaudeApiLlm:
                 model=self.model_name,
                 max_tokens=API_MAX_TOKENS,
                 system=system,
-                messages=[{"role": "user", "content": content_blocks(parts)}],
+                messages=[{"role": "user", "content": to_blocks(parts)}],
                 output_format=schema,
                 output_config={"effort": self.effort},
                 # top-level automatic caching; parse() has no cache_control argument
