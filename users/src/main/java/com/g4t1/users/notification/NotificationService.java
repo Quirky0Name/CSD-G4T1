@@ -14,11 +14,11 @@ import java.util.UUID;
 @Service
 public class NotificationService {
 
-    private final NotificationPreferencesRepository preferences;
+    private final NotificationPreferencesRepository notificationPreferences;
     private final UserRepository users;
 
-    public NotificationService(NotificationPreferencesRepository preferences, UserRepository users) {
-        this.preferences = preferences;
+    public NotificationService(NotificationPreferencesRepository notificationPreferences, UserRepository users) {
+        this.notificationPreferences = notificationPreferences;
         this.users = users;
     }
 
@@ -27,7 +27,7 @@ public class NotificationService {
     public NotificationPreferencesResponse find(UUID userId) {
         User user = users.findById(userId).orElseThrow(AccountGoneException::new);
         // every account has a row, from register or the V6 backfill; only the dev mode admin lacks one, and /auth/me refuses it
-        return NotificationPreferencesResponse.from(preferences.findById(userId).orElseThrow(), user.getEmail());
+        return NotificationPreferencesResponse.from(notificationPreferences.findById(userId).orElseThrow(), user.getEmail());
     }
 
     @Transactional
@@ -38,9 +38,9 @@ public class NotificationService {
         String change = level("min_change_severity", request.minChangeSeverity());
         String impact = level("min_impact_level", request.minImpactLevel());
         // a missing row is a 500 on purpose: see find
-        NotificationPreferences prefs = preferences.findForUpdate(userId).orElseThrow();
+        NotificationPreferences prefs = notificationPreferences.findForUpdate(userId).orElseThrow();
         prefs.replaceEmail(enabled, alert, change, impact);
-        return NotificationPreferencesResponse.from(preferences.save(prefs), user.getEmail());
+        return NotificationPreferencesResponse.from(notificationPreferences.save(prefs), user.getEmail());
     }
 
     @Transactional
@@ -55,9 +55,9 @@ public class NotificationService {
             throw badRequest("chat_id is required to enable Telegram");
         }
         // a missing row is a 500 on purpose: see find
-        NotificationPreferences prefs = preferences.findForUpdate(userId).orElseThrow();
+        NotificationPreferences prefs = notificationPreferences.findForUpdate(userId).orElseThrow();
         prefs.replaceTelegram(enabled, chatId, alert, change, impact);
-        return NotificationPreferencesResponse.from(preferences.save(prefs), user.getEmail());
+        return NotificationPreferencesResponse.from(notificationPreferences.save(prefs), user.getEmail());
     }
 
     private static boolean enabled(Boolean value) {

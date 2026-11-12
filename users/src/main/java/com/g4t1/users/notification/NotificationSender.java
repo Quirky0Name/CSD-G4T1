@@ -36,7 +36,7 @@ public class NotificationSender {
         Optional<Message> messageFor(String minAlertSeverity, String minChangeSeverity, String minImpactLevel);
     }
 
-    private final NotificationPreferencesRepository preferences;
+    private final NotificationPreferencesRepository notificationPreferences;
     private final UserRepository users;
     private final MessageBuilder messages;
     private final EmailChannel email;
@@ -45,11 +45,11 @@ public class NotificationSender {
     private final Duration channelDeadline;
     private final ExecutorService sends = Executors.newVirtualThreadPerTaskExecutor();
 
-    public NotificationSender(NotificationPreferencesRepository preferences, UserRepository users,
+    public NotificationSender(NotificationPreferencesRepository notificationPreferences, UserRepository users,
                               MessageBuilder messages, EmailChannel email, TelegramChannel telegram,
                               TestCooldown testCooldown,
                               @Value("${users.channel-deadline:10s}") Duration channelDeadline) {
-        this.preferences = preferences;
+        this.notificationPreferences = notificationPreferences;
         this.users = users;
         this.messages = messages;
         this.email = email;
@@ -66,14 +66,14 @@ public class NotificationSender {
     public NotificationOutcomes send(UUID userId, NotificationEvent event) {
         EventValidator.check(event);
         User user = users.findById(userId).orElseThrow(() -> noUser(userId));
-        NotificationPreferences prefs = preferences.findById(userId).orElseThrow(() -> noUser(userId));
+        NotificationPreferences prefs = notificationPreferences.findById(userId).orElseThrow(() -> noUser(userId));
         return deliver(user, prefs, (alert, change, impact) -> match(event, alert, change, impact));
     }
 
     // the researcher's own test: every enabled channel, whatever its thresholds; a deleted account is a 401
     public NotificationOutcomes sendTest(UUID userId) {
         User user = users.findById(userId).orElseThrow(AccountGoneException::new);
-        NotificationPreferences prefs = preferences.findById(userId).orElseThrow(() -> noUser(userId));
+        NotificationPreferences prefs = notificationPreferences.findById(userId).orElseThrow(() -> noUser(userId));
         if (!testCooldown.start(userId)) {
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, TestCooldown.TOO_SOON);
         }
