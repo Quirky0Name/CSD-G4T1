@@ -1,0 +1,197 @@
+{
+  "alerts": [
+    {
+      "change_type": "correction",
+      "alert_severity": "low",
+      "description": "The publisher issued a correction to this paper (notice 10.9999/fake.2019.011c). It adds the trial registration number and says that the iron used in the trial was donated by a manufacturer; the notice says the results are unchanged.",
+      "recommendation": "Read the correction to see what was added, and cite the corrected version if you quote the paper's methods or funding.",
+      "notice_doi": "10.9999/fake.2019.011c"
+    }
+  ],
+  "documents": [
+    {
+      "kind": "notice",
+      "doi": "10.9999/fake.2019.011c",
+      "crossref_status": "ok",
+      "crossref_record": {},
+      "update_to_includes_paper": true,
+      "text_status": "ok",
+      "text": "Correction: Dose-response of iron supplementation on fatigue\n\nIn the article as published (doi 10.9999/fake.2019.011), two statements were incomplete. Section 2.1 said the trial was registered before the first participant was enrolled but did not give the registration number, which is FAKE-CTR-2016-0412. The funding statement did not say that the iron sulphate used in the study capsules was donated by Fake Pharma Ltd, which had no role in the design, conduct, analysis or reporting of the trial. Both statements have been added to the corrected version (doi 10.9999/fake.2019.011v1.1). The omissions were pointed out in a letter to the editor (doi 10.9999/fake.2020.044). The results and conclusions of the article are unchanged.",
+      "text_truncated": false,
+      "links": [],
+      "pdf_file": null
+    },
+    {
+      "kind": "new_version",
+      "doi": "10.9999/fake.2019.011v1.1",
+      "crossref_status": "ok",
+      "crossref_record": {},
+      "update_to_includes_paper": null,
+      "text_status": "not_open_access",
+      "text": null,
+      "text_truncated": false,
+      "links": [],
+      "pdf_file": "past-new-version.pdf"
+    },
+    {
+      "kind": "current_version",
+      "doi": "10.9999/fake.2019.011",
+      "crossref_status": "ok",
+      "crossref_record": {},
+      "update_to_includes_paper": null,
+      "text_status": "not_open_access",
+      "text": null,
+      "text_truncated": false,
+      "links": [],
+      "pdf_file": "paper.pdf"
+    },
+    {
+      "kind": "related",
+      "doi": "10.9999/fake.2020.044",
+      "crossref_status": "ok",
+      "crossref_record": {},
+      "update_to_includes_paper": null,
+      "text_status": "not_open_access",
+      "text": null,
+      "text_truncated": false,
+      "links": [],
+      "pdf_file": "past-related.pdf"
+    }
+  ],
+  "evaluation": {
+    "change_summary": "The paper was corrected to add its trial registration number and to disclose that the iron sulphate in the study capsules was donated by Fake Pharma Ltd, which had no role in the trial. No result changed: the corrected version gives the same dose-response slope of 0.45 points per 10 mg (95% CI 0.30 to 0.60). The letter to the editor that led to the correction also questioned that slope, and the authors replied that they had rechecked the model and stood by it.",
+    "change_severity": "low",
+    "impact_level": "medium",
+    "evaluation": "Your draft cites the paper once, in the Discussion (section 4), where it compares your slope of 0.41 with the paper's 0.45 per 10 mg and treats the closeness as support for your design. The correction leaves that number unchanged, so the sentence is still accurate. The impact is medium rather than low because your validity argument rests on agreement with this one estimate, and a published letter now openly questions how it was calculated, while the trial's iron came from a manufacturer that was not disclosed at first.",
+    "recommendation": "Keep the comparison, but cite the corrected version (doi 10.9999/fake.2019.011v1.1) and avoid resting your design's validity on agreement with this one paper. Watch for any further response to the letter's question about Table 3.",
+    "claims": [],
+    "assessment": {
+      "fake": true,
+      "prompt_version": 4,
+      "model": "claude-opus-5-5",
+      "model_version": null,
+      "answered_by": {
+        "change": "claude-opus-5-5",
+        "impact": "claude-opus-5-5",
+        "actions": "claude-opus-5-5"
+      },
+      "placeholder": false,
+      "draft": "read",
+      "pdfs": {
+        "attached": [
+          "stored paper",
+          "new version 10.9999/fake.2019.011v1.1",
+          "current copy",
+          "related 10.9999/fake.2020.044"
+        ],
+        "left_out": []
+      },
+      "change": {
+        "alerts": [
+          {
+            "alert_id": 101,
+            "about_this_paper": "yes",
+            "what_changed": "The publisher corrected the paper to add the trial registration number (FAKE-CTR-2016-0412) to section 2.1 and to state in the funding section that the study iron sulphate was donated by Fake Pharma Ltd. The corrected version's results, including Table 3, are the same as the stored paper's.",
+            "scope": "specific_parts",
+            "affected_parts": [
+              {
+                "part": "Section 2.1 and the funding statement",
+                "findings_affected": "None: the additions are to the reporting, not the results."
+              }
+            ],
+            "severity": "low",
+            "reason": "A correction that completes the registration and funding details without changing any result. The letter that prompted it also questions the slope in Table 3, but the authors stand by it and no correction was made there.",
+            "evidence": [
+              {
+                "source": "10.9999/fake.2019.011c",
+                "quote": "The results and conclusions of the article are unchanged."
+              },
+              {
+                "source": "new version",
+                "quote": "slope: 0.45 points per 10 mg (95% CI 0.30 to 0.60)"
+              },
+              {
+                "source": "related 10.9999/fake.2020.044",
+                "quote": "we could not reconcile the dose-response slope in Table 3"
+              }
+            ]
+          }
+        ],
+        "relations": "One correction, prompted by the letter to the editor; the letter's third question, about the slope, was answered but not corrected.",
+        "severity": "low"
+      },
+      "impact": {
+        "cited": true,
+        "reference_entry": "[7] Park, J., Singh, R. (2019). Dose-response of iron supplementation on fatigue. J. Fake Nutrition.",
+        "uses": [
+          {
+            "section": "4. Discussion",
+            "quote": "slope of 0.41 fatigue points per 10 mg of iron is close to that of Park and Singh [7] (0.45 per 10 mg), which supports the validity of our design",
+            "role": "comparison",
+            "claim_relied_on": "That the paper's dose-response slope of 0.45 fatigue points per 10 mg is close to the draft's own 0.41, and that this agreement supports the draft's design.",
+            "affected": "partly",
+            "reason": "The number is unchanged, but it is now openly questioned in a published letter."
+          }
+        ],
+        "impact_level": "medium"
+      },
+      "actions": {
+        "actions": [
+          {
+            "action": "Cite the corrected version of the paper in place of the original.",
+            "where": "Reference list, entry [7]"
+          },
+          {
+            "action": "Soften the claim that agreement with this paper supports your design, or support it with a second source.",
+            "where": "4. Discussion, at \"which supports the validity of our design\""
+          }
+        ]
+      }
+    }
+  },
+  "feedback": {
+    "verdict": "overstated",
+    "note": "Medium was too strong. The correction only added a registration number and where the iron came from; the slope I compare with did not change, and the authors answered the letter's question about Table 3. I only use the paper as a comparison in my Discussion, not for my methods, so low would have been right."
+  },
+  "profile": {
+    "occupation": "PhD student",
+    "occupation_other": null,
+    "research_fields": [
+      "Medicine"
+    ],
+    "research_interests": [
+      "iron deficiency",
+      "fatigue",
+      "dose-response trials"
+    ],
+    "work_types": [
+      "Clinical"
+    ],
+    "response_preferences": "Keep it short. Tell me first whether a number I quote has changed, then what to fix in my draft."
+  },
+  "context_chunks": [
+    {
+      "source": "document",
+      "index": 1,
+      "page": 2
+    },
+    {
+      "source": "alert",
+      "index": 0
+    },
+    {
+      "source": "document",
+      "index": 0,
+      "start": 306,
+      "end": 499
+    },
+    {
+      "source": "report"
+    },
+    {
+      "source": "document",
+      "index": 3,
+      "page": 1
+    }
+  ]
+}

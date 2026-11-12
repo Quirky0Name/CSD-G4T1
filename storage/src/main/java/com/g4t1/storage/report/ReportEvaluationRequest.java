@@ -17,4 +17,10 @@ public record ReportEvaluationRequest(
         JsonNode claims,
         // the past chunks impact added to the prompt, stored as sent and never looked inside (null: none sent)
         JsonNode contextChunks) {
+
+    // the same evaluation, with other context items
+    public ReportEvaluationRequest withContextChunks(JsonNode items) {
+        return new ReportEvaluationRequest(changeSummary, changeSeverity, impactLevel, evaluation, recommendation,
+                assessment, claims, items);
+    }
 }

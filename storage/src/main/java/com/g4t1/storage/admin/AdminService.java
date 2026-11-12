@@ -8,14 +8,20 @@ import com.g4t1.storage.paper.PaperRepository;
 import com.g4t1.storage.paper.PaperResponse;
 import com.g4t1.storage.paper.PaperService;
 import com.g4t1.storage.report.FakeDocument;
+import com.g4t1.storage.report.ReportEvaluationRequest;
 import com.g4t1.storage.report.ReportService;
 import com.g4t1.storage.report.ReportStatus;
 import com.g4t1.storage.report.UserReportResponse;
 import com.g4t1.storage.snapshot.SnapshotService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -25,6 +31,9 @@ import java.util.UUID;
 @Service
 public class AdminService {
 
+    // how long before an assessed fake report its invented past is dated
+    private static final Duration PAST_AGE = Duration.ofDays(30);
+
     private final PaperService paperService;
     private final PaperRepository papers;
     private final SnapshotService snapshots;
@@ -32,10 +41,11 @@ public class AdminService {
     private final ReportService reports;
     private final FakeReportExample example;
     private final LocalFileStore files;
+    private final JsonMapper json;
 
     public AdminService(PaperService paperService, PaperRepository papers, SnapshotService snapshots,
                         PaperDeletion deletion, ReportService reports, FakeReportExample example,
-                        LocalFileStore files) {
+                        LocalFileStore files, JsonMapper json) {
         this.paperService = paperService;
         this.papers = papers;
         this.snapshots = snapshots;
@@ -43,6 +53,7 @@ public class AdminService {
         this.reports = reports;
         this.example = example;
         this.files = files;
+        this.json = json;
     }
 
     // The example's paper, as a made-up upload: no GROBID or metadata lookup, and no DOI, so Updating's poll
@@ -82,18 +93,70 @@ public class AdminService {
     }
 
     // A copy of the example on any paper; it needs no DOI or snapshot. Its text names the example's paper
-    // whichever paper it goes on, and its alerts point at no snapshot, hence the ids of 0.
+    // whichever paper it goes on, and its alerts point at no snapshot, hence the ids of 0. An assessed one
+    // comes with the example's invented past, stored first and dated 30 days earlier, which its context
+    // items name; both or neither are stored.
+    @Transactional
     public UserReportResponse createFakeReport(UUID paperId, String status) {
         ReportStatus wanted = fakeReportStatus(status);
         FakeReportExample.Content content = example.content();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
-        List<NewAlertRequest> alerts = content.alerts().stream()
+        ReportEvaluationRequest evaluation = content.evaluation();
+        if (wanted == ReportStatus.ASSESSED) {
+            evaluation = evaluation.withContextChunks(storePast(paperId, now.minus(PAST_AGE)));
+        }
+        return reports.storeFake(paperId, fakeAlerts(content.alerts(), now), fakeDocuments(content.documents()),
+                wanted, evaluation);
+    }
+
+    private ArrayNode storePast(UUID paperId, Instant at) {
+        FakeReportExample.PastContent past = example.pastContent();
+        ReportService.StoredFakePast stored = reports.storeFakePast(paperId, fakeAlerts(past.alerts(), at),
+                fakeDocuments(past.documents()), past.evaluation(),
+                past.feedback().verdict(), past.feedback().note(), at);
+        ArrayNode items = json.createArrayNode();
+        for (FakeReportExample.PastItem item : past.contextChunks()) {
+            long id = switch (item.source()) {
+                case ALERT -> stored.alertIds().get(item.index());
+                case DOCUMENT -> stored.documentIds().get(item.index());
+                case REPORT -> stored.reportId();
+            };
+            ObjectNode node = items.addObject()
+                    .put("source_type", item.source().value())
+                    .put("source_id", String.valueOf(id))
+                    .put("page", item.page());
+            if (item.start() != null) {
+                node.put("start", item.start()).put("end", item.end());
+            }
+        }
+        // what a real feedback item carries (docs/CONTRACTS.md, GET /papers/{id}/reports)
+        items.addObject()
+                .put("source_type", "feedback")
+                .put("source_id", String.valueOf(stored.reportId()))
+                .putNull("page")
+                .put("paper_id", paperId.toString())
+                .put("paper_title", papers.findById(paperId).map(Paper::getTitle).orElse(null))
+                .put("source_date", stored.feedbackUpdatedAt().toString())
+                .put("verdict", past.feedback().verdict().value());
+        // the only item carrying its content, since no row holds the invented profile
+        items.addObject()
+                .put("source_type", "profile")
+                .put("source_id", "example")
+                .putNull("page")
+                .set("profile", json.valueToTree(past.profile()));
+        return items;
+    }
+
+    private List<FakeDocument> fakeDocuments(List<FakeReportExample.ExampleDocument> documents) {
+        return documents.stream().map(this::fakeDocument).toList();
+    }
+
+    private static List<NewAlertRequest> fakeAlerts(List<FakeReportExample.ExampleAlert> alerts, Instant at) {
+        return alerts.stream()
                 .map(alert -> new NewAlertRequest(alert.changeType(), "fake:" + UUID.randomUUID(),
                         alert.alertSeverity(), alert.description(), alert.recommendation(), alert.noticeDoi(),
-                        now, 0L, 0L))
+                        at, 0L, 0L))
                 .toList();
-        List<FakeDocument> documents = content.documents().stream().map(this::fakeDocument).toList();
-        return reports.storeFake(paperId, alerts, documents, wanted, content.evaluation());
     }
 
     // the report UI links a PDF only through pdf_source_url, so a public route is what makes the link open

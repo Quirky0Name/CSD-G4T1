@@ -94,6 +94,14 @@ public class ReportDocument {
         this.pdfFetchedAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
     }
 
+    // dev mode's invented past: stored, and its PDF copied, at the given time rather than now
+    void backdate(Instant at) {
+        this.createdAt = at;
+        if (this.pdfFetchedAt != null) {
+            this.pdfFetchedAt = at;
+        }
+    }
+
     // no link gave a real PDF; never tried again
     void recordNoPdf() {
         this.pdfStatus = PdfStatus.NOT_FOUND;

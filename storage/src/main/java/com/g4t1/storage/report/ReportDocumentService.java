@@ -15,6 +15,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HexFormat;
@@ -78,10 +79,12 @@ public class ReportDocumentService {
     /**
      * Stores a fake report's documents, each with its own copy of its PDF, in the caller's transaction.
      * Nothing is downloaded. If that transaction doesn't commit, whatever fails, the files are deleted,
-     * since no row is left pointing at them.
+     * since no row is left pointing at them. Returns the new documents' ids, in the given order. With a
+     * storedAt (the invented past's) the documents are dated then rather than now.
      */
-    void storeFake(long reportId, List<FakeDocument> fakes) {
+    List<Long> storeFake(long reportId, List<FakeDocument> fakes, Instant storedAt) {
         List<String> keys = new ArrayList<>();
+        List<Long> ids = new ArrayList<>();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCompletion(int status) {
@@ -100,8 +103,12 @@ public class ReportDocumentService {
                 keys.add(key);
                 document.recordPdf(key, sha256(fake.pdf()), fake.pdfSourceUrl());
             }
-            documents.saveAndFlush(document);
+            if (storedAt != null) {
+                document.backdate(storedAt);
+            }
+            ids.add(documents.saveAndFlush(document).getId());
         }
+        return ids;
     }
 
     /**

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Alert, UserDocument, UserReport } from '../api'
+import type { Alert, ContextChunk, UserDocument, UserReport } from '../api'
 import { parseJsonText, resolveContext } from './resolve'
 
 const PAPER = 'paper-1'
@@ -107,6 +107,32 @@ describe('resolveContext', () => {
     )
     expect(found).toMatchObject({ kind: 'feedback', report: other, paperId: 'paper-2', verdict: 'overstated' })
     expect(notLoaded).toMatchObject({ kind: 'feedback', report: null, paperId: null })
+  })
+
+  it('keeps a profile item with the profile it carries, and drops one carrying none', () => {
+    const profile = {
+      occupation: 'PhD student',
+      occupation_other: null,
+      research_fields: ['Medicine'],
+      research_interests: ['iron deficiency'],
+      work_types: ['Clinical'],
+      response_preferences: 'Keep it short.',
+    }
+    const entries = resolveContext(
+      [
+        { source_type: 'profile', source_id: 'example', page: null, profile },
+        { source_type: 'profile', source_id: 'example', page: null } as unknown as ContextChunk,
+        { source_type: 'profile', source_id: 'example', page: null, profile: 'PhD student' } as unknown as ContextChunk,
+        { source_type: 'profile', source_id: 'example', page: null, profile: null } as unknown as ContextChunk,
+        { source_type: 'alert', source_id: '42', page: null },
+      ],
+      reports,
+      PAPER,
+    )
+    expect(entries).toEqual([
+      { kind: 'profile', key: '0', profile },
+      expect.objectContaining({ kind: 'alert', key: '4' }),
+    ])
   })
 })
 

@@ -91,7 +91,7 @@ export type UserReport = {
 
 // One chunk impact added to its prompt (docs/CONTRACTS.md, GET /papers/{id}/reports, `context_chunks`).
 // The chunk's text isn't stored: an alert, report or document is found again by its id.
-export type ContextChunk = PastChunk | FeedbackChunk
+export type ContextChunk = PastChunk | FeedbackChunk | ProfileChunk
 
 export type PastChunk = {
   source_type: 'document' | 'alert' | 'report'
@@ -142,7 +142,16 @@ export type FeedbackChunk = {
   verdict: FeedbackVerdict
 }
 
-const CONTEXT_SOURCES = new Set(['document', 'alert', 'report', 'feedback'])
+// The profile the assessment read, carried whole since no row holds it. Only dev mode's fake report
+// sends one, with an invented profile; real impact doesn't
+export type ProfileChunk = {
+  source_type: 'profile'
+  source_id: string
+  page: null
+  profile: Profile
+}
+
+const CONTEXT_SOURCES = new Set(['document', 'alert', 'report', 'feedback', 'profile'])
 
 // What this branch's Storage sends: the same, without the fields the claims and RAG work added
 type Added = 'change_summary' | 'change_severity' | 'impact_level' | 'claims' | 'context_chunks' | 'feedback'

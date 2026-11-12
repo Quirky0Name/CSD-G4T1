@@ -69,11 +69,22 @@ public class Report {
         investigatedAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
     }
 
+    // dev mode's invented past: opened and investigated at the given time, not now
+    void markInvestigatedSince(Instant at) {
+        status = ReportStatus.INVESTIGATED;
+        createdAt = at;
+        investigatedAt = at;
+    }
+
     // replaces any earlier feedback; the note is already trimmed, and null when there is none
     void recordFeedback(FeedbackVerdict verdict, String note) {
+        recordFeedback(verdict, note, Instant.now().truncatedTo(ChronoUnit.MICROS));
+    }
+
+    void recordFeedback(FeedbackVerdict verdict, String note, Instant at) {
         feedbackVerdict = verdict;
         feedbackNote = note;
-        feedbackUpdatedAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
+        feedbackUpdatedAt = at;
     }
 
     void clearFeedback() {

@@ -736,7 +736,7 @@ be in `GET /papers/{id}/alerts` a moment before it's in a report.
 |---|---|
 | `status` | `investigating` (its documents are being fetched, or fetching stopped midway; nothing resumes it yet), `investigated` (fetching finished) or `assessed` (impact wrote its evaluation) |
 | `created_at`, `investigated_at` | when the report was opened, and when fetching finished (null until then) |
-| `context_chunks` | the chunks impact added to the prompt, so a frontend can show them: an array of items in prompt order, as `PUT /internal/reports/{id}/evaluation` stored it, e.g. `{"source_type": "document", "source_id": "7", "page": null, "start": 2800, "end": 6000}`. `source_type` is `document`, `alert`, `report` or `feedback`; `source_id` is the document's, alert's or report's own id (not the report it belongs to); `page` is the PDF page the chunk came from, null when it isn't from a PDF page; `start` and `end` (ints, both or neither) are only on a `document` item with `page` null whose `text` was cut into more than one chunk: the chunk's character range in the document's `text`, `text.slice(start, end)`, and absent otherwise. How to show an item: an `alert` or `report` item is the alert or report with that id in this paper's report list (one chunk is the whole alert or report); a `document` item with `page` opens `GET /documents/{id}/pdf` at `page`; a `document` item without `page` (a notice or other Europe PMC text) is the document with that `id` in any report's `documents` (a document's `id` is unique across reports), its `text` shown whole, or with `start`/`end` `text.slice(start, end)` marked, like the highlighting `TextPane`. `text_truncated` true means the stored text was cut at 60,000 characters and only that part was chunked. The chunk's text is not stored on the report. A PDF page over 8,000 characters is split and gets no `start`/`end`: the frontend opens the page without marking the part. Items of reports assessed before `start`/`end` existed have none; they aren't backfilled. A `feedback` item (I5) is `{"source_type": "feedback", "source_id": "<report id>", "page": null, "paper_id": "<uuid>", "paper_title": "<title or null>", "source_date": "<ISO-8601>", "verdict": "overstated"}`, so a client can show "Shaped by your feedback on `<title>`" and link to that report of that paper. Feedback items come after the past items, and are listed whenever step 1 had them in its prompt (a change severity `none` report lists them too). `[]` when impact found no past; null for a report assessed before V14 or not yet assessed. Returned only here, not by `GET /internal/reports/{id}`, since only a frontend shows it |
+| `context_chunks` | the chunks impact added to the prompt, so a frontend can show them: an array of items in prompt order, as `PUT /internal/reports/{id}/evaluation` stored it, e.g. `{"source_type": "document", "source_id": "7", "page": null, "start": 2800, "end": 6000}`. `source_type` is `document`, `alert`, `report` or `feedback`; `source_id` is the document's, alert's or report's own id (not the report it belongs to); `page` is the PDF page the chunk came from, null when it isn't from a PDF page; `start` and `end` (ints, both or neither) are only on a `document` item with `page` null whose `text` was cut into more than one chunk: the chunk's character range in the document's `text`, `text.slice(start, end)`, and absent otherwise. How to show an item: an `alert` or `report` item is the alert or report with that id in this paper's report list (one chunk is the whole alert or report); a `document` item with `page` opens `GET /documents/{id}/pdf` at `page`; a `document` item without `page` (a notice or other Europe PMC text) is the document with that `id` in any report's `documents` (a document's `id` is unique across reports), its `text` shown whole, or with `start`/`end` `text.slice(start, end)` marked, like the highlighting `TextPane`. `text_truncated` true means the stored text was cut at 60,000 characters and only that part was chunked. The chunk's text is not stored on the report. A PDF page over 8,000 characters is split and gets no `start`/`end`: the frontend opens the page without marking the part. Items of reports assessed before `start`/`end` existed have none; they aren't backfilled. A `feedback` item (I5) is `{"source_type": "feedback", "source_id": "<report id>", "page": null, "paper_id": "<uuid>", "paper_title": "<title or null>", "source_date": "<ISO-8601>", "verdict": "overstated"}`, so a client can show "Shaped by your feedback on `<title>`" and link to that report of that paper. Feedback items come after the past items, and only when impact reached step 2 (a change severity `none` report lists none). `[]` when impact found no past; null for a report assessed before V14 or not yet assessed. A `profile` item is `{"source_type": "profile", "source_id": "example", "page": null, "profile": {...}}`, `profile` being the full profile body in `GET /auth/me/profile`'s shape; it is the only item that carries its content, since there is no row to find it by, and the frontend shows it from its own `profile`, never `GET /auth/me/profile`. Only dev mode's fake report sends one (last, after the feedback item); real impact never does. A `profile` item whose `profile` is not an object is dropped by the frontend. Returned only here, not by `GET /internal/reports/{id}`, since only a frontend shows it |
 | `feedback` | the researcher's verdict and note on this report, `{"verdict": "fair \| overstated \| understated", "note": "..." or null, "updated_at": "..."}`, or `null` when none was saved (see `PUT /papers/{paperId}/reports/{reportId}/feedback`) |
 | `evaluation`, `recommendation`, `evaluated_at` | impact's evaluation of the report's alerts together, what the researcher should do, and when it was written. Null until the report is `assessed`, and also null on an assessed report whose change impact rated `none` (not meaningful) |
 | `change_summary`, `change_severity`, `impact_level` | impact's summary of what changed, how serious the change is for anyone relying on the paper, and how much the researcher's draft is affected (`none`, `low`, `medium` or `high`), as in `GET /internal/papers/{id}/reports/{reportId}`. Null until the report is `assessed`; `impact_level` is also null when `change_severity` is `none` |
@@ -1070,6 +1070,34 @@ documents. The paper needs no DOI and no snapshot.
 `status` is optional: `investigating`, `investigated` or `assessed` (the
 default).
 
+With `status=assessed` (so also with no `status`), the same transaction first
+stores an invented past on the same paper: one earlier report, `assessed`,
+with its own alerts, documents, evaluation (`"claims": []`, `assessment`
+`{"fake": true, ...}`, `context_chunks` null) and the researcher's feedback
+on it, from `past.json`. Each call stores a fresh past report. The two
+reports are stored both or neither. The paper's report list then has the
+fake report first and the past one second. `investigating` and
+`investigated` store the one report only. No `chunks` row is written and
+Research Evaluation is not nudged (`FeedbackChanged` is not published), so a
+later real assessment doesn't retrieve the invented past. The researcher's
+real profile is never read or written.
+
+The past's `detected_at` (alerts), `created_at`, `investigated_at`,
+`evaluated_at`, its documents' `created_at` and `pdf_fetched_at`, and
+`feedback_updated_at` are 30 days before the call, truncated to
+microseconds. Its alerts get `change_key` `fake:<uuid>` and snapshot ids `0`.
+
+The assessed fake report's `context_chunks` lists, in this order: the past
+items (the example's `past.json` `context_chunks`, each placeholder swapped
+for the new row's id), then a `feedback` item for the past report, then a
+`profile` item (see `context_chunks` in `GET /papers/{id}/reports`). The
+`feedback` item's `paper_title` is the paper's stored `title` (null when it
+has none) and its `source_date` is the past's `feedback_updated_at` as
+ISO-8601, the same text as the feedback's `updated_at`; the `profile` item is
+`past.json`'s `profile` as JSON. `AdminService` builds both, so the verdict
+and profile are written once, in `past.json`. The feedback is always on this
+paper's past report; the past can't be customised (no body).
+
 | `status` | `investigated_at` | Evaluation fields |
 |---|---|---|
 | `investigating` | null | null |
@@ -1085,16 +1113,18 @@ a user or service token; `404` `No paper <id>`, or dev mode off.
 
 No token, because a link opened in a new tab can't send one. Serves only
 the example's made-up PDFs, `new-version.pdf`, `current-version.pdf`,
-`paper.pdf` and `draft.pdf`, as `application/pdf`; the report page reads
-all four through it for a fake report's highlights. **`200`** with the file. `404`
-for any other name, or dev mode off. A `..` path under this route is turned
+`paper.pdf`, `draft.pdf`, `past-new-version.pdf` and `past-related.pdf`, as
+`application/pdf`; the report page reads them through it for a fake report's
+highlights and Context tab. **`200`** with the file. `404`
+for any other name (`past.json` included), or dev mode off. A `..` path under this route is turned
 away by Spring's firewall before any controller; a `RequestRejectedHandler`
 scoped to the route gives its `404`.
 
 ### Example files in `storage/src/main/resources/dev/fake-report/`
 
-`report.json`, `new-version.pdf`, `current-version.pdf`, `paper.pdf` and
-`draft.pdf`. All are made up. `paper.pdf` is what a fake paper stores;
+`report.json`, `new-version.pdf`, `current-version.pdf`, `paper.pdf`,
+`draft.pdf`, `past.json`, `past-new-version.pdf` and `past-related.pdf`. All
+are made up. `paper.pdf` is what a fake paper stores;
 `draft.pdf` is the draft the example's claims quote, served but never
 stored as anyone's draft. The claims themselves aren't in `report.json`:
 this branch's Storage doesn't store claims, so the frontend supplies them
@@ -1121,6 +1151,22 @@ for a fake report (`frontend/csd-frontend-vite/src/mocks/`).
 }
 ```
 
+`past.json` is the invented past stored with an `assessed` fake report, read
+by `FakeReportExample.pastContent()`. Its keys: `alerts`, `documents` and
+`evaluation` (as in `report.json`; `evaluation.claims` is `[]`), `feedback`
+(`{"verdict": "overstated", "note": "..."}`, note at most 500 characters),
+`profile` (the invented researcher profile, in `GET /auth/me/profile`'s shape
+and within the profile rules) and `context_chunks`. Its `context_chunks`
+holds only the past items, each a placeholder
+`{"source": "alert" | "document" | "report", "index": <position in past.json's alerts or documents; absent for report>, "page"?, "start"?, "end"?}`;
+an unknown `source` fails to parse. The `feedback` and `profile` items aren't
+in it: they are built from `feedback` and `profile`. An index is the only
+stable name for a row that doesn't exist yet. Every `page` is a page its PDF
+has and every `start`/`end` lies inside the notice's `text`. Its documents are
+one of each kind: `notice` (text only), `new_version` (`past-new-version.pdf`),
+`current_version` (the existing `paper.pdf`) and `related`
+(`past-related.pdf`).
+
 What a call stores, beyond the example's text:
 
 - Each fake alert's `change_key` is `fake:<random uuid>`, so repeat calls
@@ -1129,7 +1175,7 @@ What a call stores, beyond the example's text:
 - `snapshot_id` and `previous_snapshot_id` are `0` (both columns are not
   null, have no foreign key, and are not returned to the frontend).
 - `detected_at`, `created_at`, `investigated_at` and `evaluated_at` are the
-  time of the call.
+  time of the call. (The past report's are 30 days back; see above.)
 - Each document's PDF is stored again per call through `LocalFileStore.save`
   (`pdf_status` `ok`, `file_key`, `sha256`, `pdf_fetched_at`), so
   `GET /internal/documents/{id}/pdf` and `DELETE /admin/papers/{id}/history`
