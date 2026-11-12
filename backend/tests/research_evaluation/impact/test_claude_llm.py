@@ -2,6 +2,7 @@
 answer is read."""
 
 import base64
+import logging
 from types import SimpleNamespace
 
 import anthropic
@@ -9,7 +10,14 @@ import httpx2
 import pytest
 from pydantic import BaseModel
 
-from research_evaluation.impact.llm import ClaudeLlm, FallbackLlm, GeminiLlm, Pdf
+from research_evaluation.impact.llm import (
+    AllModelsFailed,
+    ClaudeLlm,
+    FallbackLlm,
+    GeminiLlm,
+    ModelFailure,
+    Pdf,
+)
 
 
 class Verdict(BaseModel):
@@ -134,3 +142,27 @@ async def test_a_sonnet_failure_falls_back_to_gemini(messages):
 
     assert answer.model == "gemini-flash-latest"
     assert answer.value == Verdict(severity="low", summary="A typo.")
+
+
+async def test_each_sonnet_failure_is_recorded_and_logged_as_claudes_with_no_prompt_text(caplog):
+    llm = FallbackLlm(
+        (
+            ClaudeLlm(fake_client(FailingMessages(overloaded())), "sonnet-a"),
+            ClaudeLlm(fake_client(FailingMessages(timed_out())), "sonnet-b"),
+            ClaudeLlm(fake_client(FakeMessages(None, stop_reason="refusal")), "sonnet-c"),
+        )
+    )
+
+    with (
+        caplog.at_level(logging.WARNING, logger="research_evaluation.impact.llm"),
+        pytest.raises(AllModelsFailed) as raised,
+    ):
+        await llm.generate(system="s", parts=["the secret draft text"], schema=Verdict)
+
+    assert raised.value.failures == [
+        ModelFailure("sonnet-a", "Claude answered 529"),
+        ModelFailure("sonnet-b", "timed out (APITimeoutError)"),
+        ModelFailure("sonnet-c", "the model refused"),
+    ]
+    assert caplog.records[0].getMessage() == "model sonnet-a failed (Claude answered 529)"
+    assert "secret draft" not in caplog.text
