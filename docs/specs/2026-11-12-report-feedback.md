@@ -246,13 +246,20 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
   - `assessment["feedback"]`: `read`, `none` or `failed`; never a note's text in logs or `assessment`. Doc delta.
   - `context_chunks` feedback items per I5, after the past chunks. Doc delta.
 - **Acceptance criteria:**
-  - [ ] `read_history` makes one `feedback` search with the query vector and `limit` 3, and returns feedback chunks apart from the past chunks; a failing feedback search gives feedback status `failed` and leaves the past intact (`test_history.py`).
-  - [ ] Step 2's and step 3's parts contain one `researcher_feedback` block per chunk and `FEEDBACK_RULES`; step 1's never do; with no feedback neither block nor rules appear (`test_prompts.py`).
-  - [ ] A `</document>` inside a note is defused (`test_prompts.py`).
-  - [ ] The step 2 and 3 prompts for the fixed report with no feedback are byte-identical to before apart from `PROMPT_VERSION` (existing pinned-prompt test, updated only for the version).
-  - [ ] `assess` records `assessment["feedback"]` and puts I5 items in `context_chunks` (`test_assess.py`).
-  - [ ] `uv run pytest tests/research_evaluation` and `uv run ruff check` pass.
+  - [x] `read_history` makes one `feedback` search with the query vector and `limit` 3, and returns feedback chunks apart from the past chunks; a failing feedback search gives feedback status `failed` and leaves the past intact (`test_history.py`).
+  - [x] Step 2's and step 3's parts contain one `researcher_feedback` block per chunk and `FEEDBACK_RULES`; step 1's never do; with no feedback neither block nor rules appear (`test_prompts.py`).
+  - [x] A `</document>` inside a note is defused (`test_prompts.py`).
+  - [x] The step 2 and 3 prompts for the fixed report with no feedback are byte-identical to before apart from `PROMPT_VERSION` (existing pinned-prompt test, updated only for the version).
+  - [x] `assess` records `assessment["feedback"]` and puts I5 items in `context_chunks` (`test_assess.py`).
+  - [x] `uv run pytest tests/research_evaluation` and `uv run ruff check` pass.
 - **Doc deltas:** EVALUATION.md "Impact": feedback in steps 2 and 3, `FEEDBACK_RULES`, the status. CONTRACTS.md: `context_chunks` I5 in `GET /papers/{id}/reports`. Out of scope: re-assessing earlier reports; feedback changing ratings.
+  - Added in build: each feedback item is a `PastFeedback` (history.py): the chunk plus the report date and verdict read back from the chunk's content; the verdict is the last verdict line before the note line, so a note can't spoof one, and anything outside the three values is `unknown`; EVALUATION.md.
+  - Added in build: the section is a `RESEARCHER FEEDBACK` part, one `researcher_feedback` block per item then `FEEDBACK_RULES`, its own part right before the task (after the profile section when there is one); EVALUATION.md.
+  - Added in build: a failed query embedding gives both `history` and `feedback` `failed`; a failed feedback search gives `feedback` `failed` and keeps the past, and vice versa; EVALUATION.md.
+  - Added in build: a feedback chunk without `source_date` (its feedback was deleted and the delete nudge failed) is left out, so deleted feedback never reaches a prompt; EVALUATION.md.
+  - Added in build: I5 items are added to `context_chunks` only once step 2 is reached, so a change with severity none (or a step 1 placeholder) lists no feedback; `assessment["feedback"]` still records how reading went; CONTRACTS.md, EVALUATION.md.
+  - Added in build: `ReportInputs` gains `feedback` (inputs.py) and `assess` takes a `feedback` status like `history`; I5 items are a `FeedbackContextChunk` so other items keep exactly their three fields; EVALUATION.md.
+  - Spec change: the prompt tests live in a new `tests/research_evaluation/impact/test_prompts.py`; step 3 had no pinned prompt, so `tests/fixtures/impact/step3_prompt_parts.json` was saved from the code before this change, and both pins compare unchanged; `IMPACT` added to `impact_prompt_support.py`.
 
 ## Human checks
 
