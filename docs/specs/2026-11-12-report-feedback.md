@@ -134,6 +134,7 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
   - Added in build: the note is trimmed with Java `String.strip()` (Unicode whitespace) and its length counted in UTF-16 code units like `response_preferences`; CONTRACTS.md.
   - Added in build: V15 adds `ck_reports_feedback_verdict` (the three values) and `ck_reports_feedback` (verdict and time both null or both set; a note only with a verdict), so a half-written feedback can never be stored; STORAGE.md.
   - Added in build: the owner check runs before the report lookup, so another user's paper is `No paper <id>` and a report of another of the owner's papers is `No report <id>`, as the report list does; CONTRACTS.md.
+  - Added in sweep: the note's length is checked before ownership, so another user's paper with a note over 500 characters is `400`, not `404`; checking the body first is the usual order and reveals nothing (user: "Keep, document it"); CONTRACTS.md.
 
 ### S2: `feedback` chunks replace `profile` chunks (Storage)
 
@@ -161,6 +162,7 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
   - Added in build: an unknown report for `feedback` is `404` `No report <id>`; a non-numeric `source_id` is `400` `source_id must be a decimal id` like the other types; CONTRACTS.md.
   - Added in build: in each match, `paper_id` and `paper_title` come right after `report_id`; the feedback scope joins `papers` on `owner_id`, so a user's feedback chunks go when their papers are deleted; CONTRACTS.md, STORAGE.md.
   - Added in build: `ChunkControllerTest.deletedWithUser` now proves a deleted user's feedback chunks go with their papers while another user's stay.
+  - Added in sweep: the feedback search leaves out chunks whose report has no `feedback_updated_at` (feedback deleted, chunk kept by a failed delete nudge), so they never take one of the `limit` slots (user: "Filter in Storage"; `ChunkSearchPostgresIT.aChunkOfDeletedFeedbackIsLeftOutAndTakesNoSlot`); CONTRACTS.md, STORAGE.md.
 
 ### S3: Feedback chunk and its embed endpoint (Research Evaluation)
 
@@ -201,6 +203,7 @@ A `feedback` item is `{"source_type": "feedback", "source_id": "<report id>", "p
   - Added in build: `POST /embed/feedback` is `503` also when the impact context has no embedder; CONTRACTS.md.
   - Added in build: `Chunk.source_date` is optional, since a feedback chunk can outlive its deleted feedback (a failed delete nudge) and its `feedback_updated_at` is then null; one such chunk must not fail the whole search; EVALUATION.md.
   - Added in build: the stub Storage Management gains `PUT /internal/chunks`, a report `feedback` field, and stub-only `PUT /dev/reports/{id}/feedback` and `GET /dev/chunks/{type}/{id}`, so the feedback path runs against it; no doc (dev aid, documented in its docstrings).
+  - Added in sweep: `store_feedback_chunk` runs one at a time per report (an `asyncio.Lock` per report id, FIFO) and reads the report once it holds the lock, so of two quick saves the later one's chunk is the one stored; correct because Research Evaluation runs one uvicorn worker (user: "Per-report lock"; `test_of_two_quick_saves_the_later_one_is_stored`); EVALUATION.md.
 
 ### S4: Save and delete nudge the embedder (Storage)
 
