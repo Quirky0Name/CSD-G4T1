@@ -80,15 +80,49 @@ export type UserReport = {
   impact_level: AssessmentLevel | null
   // null until assessed, and on reports assessed before claims existed
   claims: Claim[] | null
+  // what impact read beside this report, in prompt order: [] when it found no past, null before
+  // V14 or until assessed
+  context_chunks: ContextChunk[] | null
   alerts: Alert[]
   documents: UserDocument[]
 }
 
-// What this branch's Storage sends: the same, without the fields the claims work added
-export type RawReport = Omit<UserReport, 'change_summary' | 'change_severity' | 'impact_level' | 'claims'> &
-  Partial<Pick<UserReport, 'change_summary' | 'change_severity' | 'impact_level' | 'claims'>>
+// One chunk impact added to its prompt (docs/CONTRACTS.md, GET /papers/{id}/reports, `context_chunks`).
+// The chunk's text isn't stored: an alert, report or document is found again by its id.
+export type ContextChunk = PastChunk | FeedbackChunk
 
-// Fields the server leaves out become null, so nothing downstream checks for undefined
+export type PastChunk = {
+  source_type: 'document' | 'alert' | 'report'
+  // the document's, alert's or report's own id
+  source_id: string
+  // the PDF page it came from; null when it isn't from a PDF page
+  page: number | null
+  // both or neither: a page-less document's range in its `text`, when the text was cut into chunks
+  start?: number
+  end?: number
+}
+
+export type FeedbackVerdict = 'fair' | 'overstated' | 'understated'
+
+export type FeedbackChunk = {
+  source_type: 'feedback'
+  // the report the feedback is on
+  source_id: string
+  page: null
+  paper_id: string | null
+  paper_title: string | null
+  source_date: string | null
+  verdict: FeedbackVerdict
+}
+
+const CONTEXT_SOURCES = new Set(['document', 'alert', 'report', 'feedback'])
+
+// What this branch's Storage sends: the same, without the fields the claims and RAG work added
+type Added = 'change_summary' | 'change_severity' | 'impact_level' | 'claims' | 'context_chunks'
+export type RawReport = Omit<UserReport, Added> & Partial<Pick<UserReport, Added>>
+
+// Fields the server leaves out become null, so nothing downstream checks for undefined. A context
+// item of a source type this client doesn't know is dropped rather than shown wrong.
 export function toUserReport(raw: RawReport): UserReport {
   return {
     ...raw,
@@ -96,6 +130,7 @@ export function toUserReport(raw: RawReport): UserReport {
     change_severity: raw.change_severity ?? null,
     impact_level: raw.impact_level ?? null,
     claims: raw.claims ?? null,
+    context_chunks: raw.context_chunks?.filter((item) => CONTEXT_SOURCES.has(item.source_type)) ?? null,
   }
 }
 
