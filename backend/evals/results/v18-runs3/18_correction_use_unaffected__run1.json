@@ -1,0 +1,538 @@
+{
+  "change_summary": "The correction says the nerve-block group's mean opioid dose in Table 4 (the sensitivity analysis excluding prior opioid users) should read 19 mg, not 12 mg. The stored paper gives 12 mg in its sensitivity analysis section, so that figure is the one corrected. The notice states that the primary outcome in Table 2 and all other results are unchanged, and the stored paper calls this analysis descriptive and not powered for formal comparison. So the change is limited to a secondary, descriptive number and the primary finding stands.",
+  "change_severity": "low",
+  "impact_level": "none",
+  "evaluation": "Your Background and rationale cites [15] for the finding that ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (3.1 versus 5.2), and the stored paper reports those figures. The correction changes the nerve-block group's mean opioid dose from 12 mg to 19 mg and says the primary outcome and all other results are unchanged. So the change does not touch your use of the 24-hour pain result. The impact on your draft is none.",
+  "recommendation": "Your Background and rationale cites [15] for the 24-hour pain result (3.1 versus 5.2), and the correction changes the nerve-block group's mean opioid dose from 12 mg to 19 mg while saying the primary outcome and all other results are unchanged. So the change does not touch your use of the 24-hour pain result. No edit is needed, and you can dismiss this alert.",
+  "assessment": {
+    "prompt_version": 18,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "profile": "none",
+    "history": "none",
+    "feedback": "none",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 181,
+          "about_this_paper": "yes",
+          "what_changed": "The correction changes the mean opioid dose in the nerve-block group in Table 4 (sensitivity analysis excluding prior opioid users) from 12 mg to 19 mg. The primary outcome in Table 2 and all other results are stated to be unchanged.",
+          "scope": "specific_parts",
+          "affected_parts": [
+            {
+              "part": "Table 4 and Section 3.4 sensitivity analysis (mean opioid dose, nerve-block group, excluding prior opioid users)",
+              "findings_affected": "The reported 12 mg opioid dose in the nerve-block group should be 19 mg; the descriptive opioid-consumption result is changed. The primary pain outcome is not affected."
+            }
+          ],
+          "severity": "low",
+          "reason": "The correction changes one number in a secondary, descriptive, unpowered sensitivity analysis, and the notice says the primary outcome and all other results are unchanged.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg."
+            },
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "The primary outcome in Table 2 and all other results are unchanged."
+            },
+            {
+              "source": "stored paper",
+              "quote": "This analysis was descriptive and was not powered for formal comparison."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "low",
+      "claims": [
+        {
+          "text": "The correction says that in Table 4, the sensitivity analysis excluding patients with prior opioid use, the nerve-block group's mean opioid dose was reported as 12 mg and should read 19 mg.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The correction states that the primary outcome in Table 2 and all other results are unchanged.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "The primary outcome in Table 2 and all other results are unchanged."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The stored paper describes the sensitivity analysis as descriptive and not powered for formal comparison.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "This analysis was descriptive and was not powered for formal comparison."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The stored paper reports 12 mg for the nerve-block group in Section 3.4.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "the mean opioid dose in the nerve-block group was 12 mg."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The change is limited to a secondary, descriptive number, so it is low in seriousness and the primary finding stands.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "summary": [
+        {
+          "text": "The correction says the nerve-block group's mean opioid dose in Table 4 (the sensitivity analysis excluding prior opioid users) should read 19 mg, not 12 mg.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The stored paper gives 12 mg in its sensitivity analysis section, so that figure is the one corrected.",
+          "kind": "fact",
+          "claims": [
+            4
+          ]
+        },
+        {
+          "text": "The notice states that the primary outcome in Table 2 and all other results are unchanged, and the stored paper calls this analysis descriptive and not powered for formal comparison.",
+          "kind": "fact",
+          "claims": [
+            2,
+            3
+          ]
+        },
+        {
+          "text": "So the change is limited to a secondary, descriptive number and the primary finding stands.",
+          "kind": "fact",
+          "claims": [
+            5
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[15] Oyelaran, D., Voss, H. (2019). Ultrasound-guided nerve block and pain after knee surgery. J. Fake Anaesthesia. doi:10.9999/fake.2019.018",
+      "uses": [
+        {
+          "section": "2. Background and rationale",
+          "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population.",
+          "role": "key_evidence",
+          "claim_relied_on": "that an ultrasound-guided nerve block lowered pain at rest at 24 hours after knee replacement (mean 3.1 versus 5.2), motivating the draft's primary outcome",
+          "affected": "no",
+          "reason": "The correction changes only the nerve-block group's mean opioid dose in the Table 4 sensitivity analysis; the primary outcome (3.1 versus 5.2) is stated to be unchanged."
+        }
+      ],
+      "impact_level": "none",
+      "claims": [
+        {
+          "text": "The draft cites [15] in its Background and rationale for the finding that ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (3.1 versus 5.2).",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The stored paper reports a mean pain score at 24 hours of 3.1 with the block and 5.2 without.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "The mean pain score at 24 hours was 3.1 with the block and 5.2 without (p < 0.001)."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The correction changes the nerve-block group's mean opioid dose from 12 mg to 19 mg, and says the primary outcome in Table 2 and all other results are unchanged.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg."
+            },
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "The primary outcome in Table 2 and all other results are unchanged."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The change does not touch the draft's use of the 24-hour pain result, since the correction leaves the primary outcome unchanged.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3
+          ],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The impact on the draft is none, since its only use of the paper relies on the unchanged primary outcome.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            4
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "explanation": [
+        {
+          "text": "Your Background and rationale cites [15] for the finding that ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (3.1 versus 5.2), and the stored paper reports those figures.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "The correction changes the nerve-block group's mean opioid dose from 12 mg to 19 mg and says the primary outcome and all other results are unchanged.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "So the change does not touch your use of the 24-hour pain result.",
+          "kind": "fact",
+          "claims": [
+            4
+          ]
+        },
+        {
+          "text": "The impact on your draft is none.",
+          "kind": "fact",
+          "claims": [
+            5
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [],
+      "claims": [
+        {
+          "text": "The draft cites [15] in its Background and rationale for the finding that ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (3.1 versus 5.2).",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The correction changes the nerve-block group's mean opioid dose from 12 mg to 19 mg, and says the primary outcome in Table 2 and all other results are unchanged.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg."
+            },
+            {
+              "source": "10.9999/fake.2019.018c",
+              "quote": "The primary outcome in Table 2 and all other results are unchanged."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The change does not touch the draft's use of the 24-hour pain result, since the correction leaves the primary outcome unchanged.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "Your Background and rationale cites [15] for the 24-hour pain result (3.1 versus 5.2), and the correction changes the nerve-block group's mean opioid dose from 12 mg to 19 mg while saying the primary outcome and all other results are unchanged.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "So the change does not touch your use of the 24-hour pain result.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "No edit is needed, and you can dismiss this alert.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The correction says that in Table 4, the sensitivity analysis excluding patients with prior opioid use, the nerve-block group's mean opioid dose was reported as 12 mg and should read 19 mg.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The correction states that the primary outcome in Table 2 and all other results are unchanged.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The primary outcome in Table 2 and all other results are unchanged.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The stored paper describes the sensitivity analysis as descriptive and not powered for formal comparison.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "This analysis was descriptive and was not powered for formal comparison.",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The stored paper reports 12 mg for the nerve-block group in Section 3.4.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "the mean opioid dose in the nerve-block group was 12 mg.",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The change is limited to a secondary, descriptive number, so it is low in seriousness and the primary finding stands.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft cites [15] in its Background and rationale for the finding that ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (3.1 versus 5.2).",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The stored paper reports a mean pain score at 24 hours of 3.1 with the block and 5.2 without.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "The mean pain score at 24 hours was 3.1 with the block and 5.2 without (p < 0.001).",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The correction changes the nerve-block group's mean opioid dose from 12 mg to 19 mg, and says the primary outcome in Table 2 and all other results are unchanged.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg.",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The primary outcome in Table 2 and all other results are unchanged.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The change does not touch the draft's use of the 24-hour pain result, since the correction leaves the primary outcome unchanged.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The impact on the draft is none, since its only use of the paper relies on the unchanged primary outcome.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The draft cites [15] in its Background and rationale for the finding that ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (3.1 versus 5.2).",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Ultrasound-guided nerve blocks lower pain at 24 hours after knee replacement (Oyelaran et al. [15]: 3.1 versus 5.2), the outcome we test in a new population.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The correction changes the nerve-block group's mean opioid dose from 12 mg to 19 mg, and says the primary outcome in Table 2 and all other results are unchanged.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the mean opioid dose in the nerve-block group was reported as 12 mg and should read 19 mg.",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The primary outcome in Table 2 and all other results are unchanged.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The change does not touch the draft's use of the 24-hour pain result, since the correction leaves the primary outcome unchanged.",
+      "supported": false,
+      "passages": []
+    }
+  ],
+  "context_chunks": []
+}
