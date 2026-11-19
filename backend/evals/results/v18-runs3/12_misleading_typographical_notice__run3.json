@@ -1,0 +1,689 @@
+{
+  "change_summary": "The correction changes the primary outcome in Table 2 to p = 0.21 (was 0.03) and a 95% CI of -1.2 to 5.4 (was 0.2 to 4.0). The notice calls this a minor typographical correction that does not affect the overall conclusions. The stored paper's abstract and Results reported the 2.1-day reduction as significant (p = 0.03), but with the corrected values the primary outcome is no longer statistically significant at 0.05. So the correction changes a key result's numbers and significance, even though it is labelled typographical.",
+  "change_severity": "medium",
+  "impact_level": "medium",
+  "evaluation": "Your Discussion cites Reyes et al. [9] for the statement that drug X significantly reduced monthly migraine days (p = 0.03), as the reason drug X is an appropriate comparator. The original paper reported that result as p = 0.03 with a confidence interval of 0.2 to 4.0, but the correction changes the p-value to 0.21 and the interval to -1.2 to 5.4, which spans zero. This touches your Discussion sentence, because the significance it relies on is no longer there under the corrected numbers. Overall the impact on your draft is medium, since the affected sentence is the evidence for your comparator choice.",
+  "recommendation": "Your Discussion cites Reyes et al. [9] for drug X significantly reducing monthly migraine days (p = 0.03) as the reason it is an appropriate comparator, but the correction changes that p-value to 0.21 and the interval to -1.2 to 5.4, which spans zero. The notice calls this a minor typographical correction, but the result is no longer significant at 0.05, so your sentence is touched. In Section 4 (Discussion), at \"Drug X is an appropriate comparator because...\", remove the claim of significance or hedge it, update the numbers to p = 0.21 and CI -1.2 to 5.4, and cite the correction notice alongside Reyes et al. Then re-check whether drug X is still justified as a comparator without that significant result, and find other support if it isn't.",
+  "assessment": {
+    "prompt_version": 18,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "profile": "none",
+    "history": "none",
+    "feedback": "none",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 121,
+          "about_this_paper": "yes",
+          "what_changed": "The correction changes the primary outcome in Table 2: p = 0.21 instead of 0.03, and the 95% CI to -1.2 to 5.4 instead of 0.2 to 4.0. The notice calls this a minor typographical change that does not affect the conclusions.",
+          "scope": "specific_parts",
+          "affected_parts": [
+            {
+              "part": "Table 2, primary outcome (p-value and confidence interval)",
+              "findings_affected": "The finding that drug X reduced monthly migraine days by 2.1 versus placebo with p = 0.03, also stated in the abstract. With p = 0.21 and a CI spanning zero, it is no longer statistically significant."
+            }
+          ],
+          "severity": "medium",
+          "reason": "Although labelled typographical, the correction changes the primary outcome's p-value and confidence interval so that the result is no longer significant at 0.05, which changes a key result.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "the p-value for the primary outcome should read p = 0.21 rather than p = 0.03"
+            },
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0"
+            },
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "this typographical change does not affect the overall conclusions of the article"
+            },
+            {
+              "source": "stored paper",
+              "quote": "drug X reduced monthly migraine days by 2.1 compared with placebo (p = 0.03)"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "medium",
+      "claims": [
+        {
+          "text": "The correction says Table 2's primary outcome p-value should be 0.21 rather than 0.03, and the confidence interval -1.2 to 5.4 rather than 0.2 to 4.0.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "the p-value for the primary outcome should read p = 0.21 rather than p = 0.03"
+            },
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The notice calls it a minor typographical correction and says the authors consider that it does not affect the overall conclusions.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "This is a minor typographical correction."
+            },
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "this typographical change does not affect the overall conclusions of the article"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The stored paper's abstract reports that drug X reduced monthly migraine days by 2.1 compared with placebo (p = 0.03).",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "drug X reduced monthly migraine days by 2.1 compared with placebo (p = 0.03)"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The stored paper's Results give the primary outcome as a 2.1-day reduction (95% CI 0.2 to 4.0), p = 0.03.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "mean reduction 2.1 days (95% CI 0.2 to 4.0), p = 0.03"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "With the corrected p = 0.21 and a confidence interval of -1.2 to 5.4 that spans zero, the primary outcome is no longer statistically significant at the 0.05 level, unlike the stored paper's significant result.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            3,
+            4
+          ],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The correction changes the primary outcome's numbers and the result's significance, so findings are changed in part, despite the notice's claim of a typographical fix.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            5
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "summary": [
+        {
+          "text": "The correction changes the primary outcome in Table 2 to p = 0.21 (was 0.03) and a 95% CI of -1.2 to 5.4 (was 0.2 to 4.0).",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The notice calls this a minor typographical correction that does not affect the overall conclusions.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "The stored paper's abstract and Results reported the 2.1-day reduction as significant (p = 0.03), but with the corrected values the primary outcome is no longer statistically significant at 0.05.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "text": "So the correction changes a key result's numbers and significance, even though it is labelled typographical.",
+          "kind": "fact",
+          "claims": [
+            6
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[9] Reyes, A., Kowalski, B., Mbeki, S. (2020). Drug X reduces monthly migraine days: a randomised trial. J. Fake Neurology.",
+      "uses": [
+        {
+          "section": "4. Discussion",
+          "quote": "Drug X is an appropriate comparator because it was shown to significantly reduce monthly migraine days (Reyes et al. [9], p = 0.03).",
+          "role": "key_evidence",
+          "claim_relied_on": "that drug X significantly reduced monthly migraine days (p = 0.03), as the reason it is an appropriate comparator",
+          "affected": "yes",
+          "reason": "The draft relies on the significant p = 0.03 result, which the correction changes to p = 0.21 with a confidence interval spanning zero."
+        }
+      ],
+      "impact_level": "medium",
+      "claims": [
+        {
+          "text": "The draft's Discussion cites Reyes et al. [9] for the statement that drug X was shown to significantly reduce monthly migraine days (p = 0.03), as its reason for calling drug X an appropriate comparator.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Drug X is an appropriate comparator because it was shown to significantly reduce monthly migraine days (Reyes et al. [9], p = 0.03)."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The stored paper reports the primary outcome as a 2.1-day reduction in monthly migraine days (95% CI 0.2 to 4.0), p = 0.03.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "mean reduction 2.1 days (95% CI 0.2 to 4.0), p = 0.03"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The correction says the primary outcome p-value should read p = 0.21 rather than p = 0.03.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "the p-value for the primary outcome should read p = 0.21 rather than p = 0.03"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The correction says the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0, which spans zero.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The change touches the draft's use: the draft's significance claim with p = 0.03 rests on the p-value that the correction changes to 0.21, so the result is no longer significant at 0.05.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "from_change": [
+            5
+          ],
+          "from_impact": []
+        },
+        {
+          "text": "The impact on the draft is medium: the affected use is key evidence for the draft's argument and the change's severity is medium.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            5
+          ],
+          "from_change": [
+            6
+          ],
+          "from_impact": []
+        }
+      ],
+      "explanation": [
+        {
+          "text": "Your Discussion cites Reyes et al. [9] for the statement that drug X significantly reduced monthly migraine days (p = 0.03), as the reason drug X is an appropriate comparator.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The original paper reported that result as p = 0.03 with a confidence interval of 0.2 to 4.0, but the correction changes the p-value to 0.21 and the interval to -1.2 to 5.4, which spans zero.",
+          "kind": "fact",
+          "claims": [
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "text": "This touches your Discussion sentence, because the significance it relies on is no longer there under the corrected numbers.",
+          "kind": "fact",
+          "claims": [
+            5
+          ]
+        },
+        {
+          "text": "Overall the impact on your draft is medium, since the affected sentence is the evidence for your comparator choice.",
+          "kind": "fact",
+          "claims": [
+            6
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Remove or hedge the claim that drug X significantly reduced monthly migraine days; update the numbers to p = 0.21 and 95% CI -1.2 to 5.4 and cite the correction notice alongside Reyes et al. [9].",
+          "where": "4. Discussion, sentence starting \"Drug X is an appropriate comparator because it was shown to significantly reduce...\""
+        },
+        {
+          "action": "Re-check whether drug X is still an appropriate comparator without a significant result; if not, replace the justification with other evidence or change the comparator choice.",
+          "where": "4. Discussion, the argument for the comparator choice"
+        }
+      ],
+      "claims": [
+        {
+          "text": "The draft's Discussion cites Reyes et al. [9] for the statement that drug X was shown to significantly reduce monthly migraine days (p = 0.03), as its reason for calling drug X an appropriate comparator.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "Drug X is an appropriate comparator because it was shown to significantly reduce monthly migraine days (Reyes et al. [9], p = 0.03)."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The correction says the primary outcome p-value should read p = 0.21 rather than p = 0.03.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "the p-value for the primary outcome should read p = 0.21 rather than p = 0.03"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The correction says the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0, which spans zero.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The notice calls it a minor typographical correction and says the authors consider that it does not affect the overall conclusions.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "This is a minor typographical correction."
+            },
+            {
+              "source": "10.9999/fake.2020.012c",
+              "quote": "this typographical change does not affect the overall conclusions of the article"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "With the corrected p = 0.21 and a confidence interval spanning zero, the result is no longer significant at 0.05, so the draft's significance claim with p = 0.03 is touched by the correction.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3
+          ],
+          "from_change": [
+            5
+          ],
+          "from_impact": [
+            5
+          ]
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "Your Discussion cites Reyes et al. [9] for drug X significantly reducing monthly migraine days (p = 0.03) as the reason it is an appropriate comparator, but the correction changes that p-value to 0.21 and the interval to -1.2 to 5.4, which spans zero.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The notice calls this a minor typographical correction, but the result is no longer significant at 0.05, so your sentence is touched.",
+          "kind": "fact",
+          "claims": [
+            4,
+            5
+          ]
+        },
+        {
+          "text": "In Section 4 (Discussion), at \"Drug X is an appropriate comparator because...\", remove the claim of significance or hedge it, update the numbers to p = 0.21 and CI -1.2 to 5.4, and cite the correction notice alongside Reyes et al.",
+          "kind": "advice",
+          "claims": []
+        },
+        {
+          "text": "Then re-check whether drug X is still justified as a comparator without that significant result, and find other support if it isn't.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The correction says Table 2's primary outcome p-value should be 0.21 rather than 0.03, and the confidence interval -1.2 to 5.4 rather than 0.2 to 4.0.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the p-value for the primary outcome should read p = 0.21 rather than p = 0.03",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The notice calls it a minor typographical correction and says the authors consider that it does not affect the overall conclusions.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This is a minor typographical correction.",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "this typographical change does not affect the overall conclusions of the article",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The stored paper's abstract reports that drug X reduced monthly migraine days by 2.1 compared with placebo (p = 0.03).",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "drug X reduced monthly migraine days by 2.1 compared with placebo (p = 0.03)",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The stored paper's Results give the primary outcome as a 2.1-day reduction (95% CI 0.2 to 4.0), p = 0.03.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "mean reduction 2.1 days (95% CI 0.2 to 4.0), p = 0.03",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "With the corrected p = 0.21 and a confidence interval of -1.2 to 5.4 that spans zero, the primary outcome is no longer statistically significant at the 0.05 level, unlike the stored paper's significant result.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-5",
+      "kind": "change",
+      "text": "The correction changes the primary outcome's numbers and the result's significance, so findings are changed in part, despite the notice's claim of a typographical fix.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft's Discussion cites Reyes et al. [9] for the statement that drug X was shown to significantly reduce monthly migraine days (p = 0.03), as its reason for calling drug X an appropriate comparator.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Drug X is an appropriate comparator because it was shown to significantly reduce monthly migraine days (Reyes et al. [9], p = 0.03).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The stored paper reports the primary outcome as a 2.1-day reduction in monthly migraine days (95% CI 0.2 to 4.0), p = 0.03.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "mean reduction 2.1 days (95% CI 0.2 to 4.0), p = 0.03",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The correction says the primary outcome p-value should read p = 0.21 rather than p = 0.03.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the p-value for the primary outcome should read p = 0.21 rather than p = 0.03",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The correction says the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0, which spans zero.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The change touches the draft's use: the draft's significance claim with p = 0.03 rests on the p-value that the correction changes to 0.21, so the result is no longer significant at 0.05.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "The impact on the draft is medium: the affected use is key evidence for the draft's argument and the change's severity is medium.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The draft's Discussion cites Reyes et al. [9] for the statement that drug X was shown to significantly reduce monthly migraine days (p = 0.03), as its reason for calling drug X an appropriate comparator.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Drug X is an appropriate comparator because it was shown to significantly reduce monthly migraine days (Reyes et al. [9], p = 0.03).",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The correction says the primary outcome p-value should read p = 0.21 rather than p = 0.03.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the p-value for the primary outcome should read p = 0.21 rather than p = 0.03",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The correction says the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0, which spans zero.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the confidence interval should read -1.2 to 5.4 rather than 0.2 to 4.0",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "The notice calls it a minor typographical correction and says the authors consider that it does not affect the overall conclusions.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This is a minor typographical correction.",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "this typographical change does not affect the overall conclusions of the article",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-4",
+      "kind": "action",
+      "text": "With the corrected p = 0.21 and a confidence interval spanning zero, the result is no longer significant at 0.05, so the draft's significance claim with p = 0.03 is touched by the correction.",
+      "supported": false,
+      "passages": []
+    }
+  ],
+  "context_chunks": []
+}

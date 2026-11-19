@@ -1,0 +1,603 @@
+{
+  "change_summary": "The alert is a retraction flag with no notice, and the current copy's title now begins 'RETRACTED:' while the stored paper's title has no such mark. The current copy still reports the 6% topsoil carbon gain in its abstract, so the retraction applies to the whole paper, not to one part. No notice or reason is available, so the cause of the retraction is unknown.",
+  "change_severity": "high",
+  "impact_level": "high",
+  "evaluation": "Your Methods (2.2) cites [5] as the protocol you follow exactly for sampling cores at 0-15 cm and measuring carbon by dry combustion, and the stored paper does report that dry-combustion measurement on 0-15 cm cores. The current copy of that paper is now titled 'RETRACTED:' and the alert is a retraction flag, but no notice or reason is available. The retraction marking covers the whole paper, including the protocol your Methods rely on, so that use is touched. This matters a great deal for your draft, because your measurement method and its comparability claim rest on this paper.",
+  "recommendation": "The alert is a retraction flag with no notice, and the current copy's title now begins 'RETRACTED:'. No notice or reason for the retraction is given in the material. Your Methods (2.2) cite [5] as the protocol you follow exactly, and the retraction marking covers the whole paper including that protocol, so this use is touched. First confirm the retraction on the journal's or publisher's page, then raise it with your co-authors or supervisor, because your own methods depend on this paper.",
+  "assessment": {
+    "prompt_version": 18,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "profile": "none",
+    "history": "none",
+    "feedback": "none",
+    "pdfs": {
+      "attached": [
+        "stored paper",
+        "current copy"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 191,
+          "about_this_paper": "yes",
+          "what_changed": "OpenAlex flagged the paper as retracted, but no notice exists. The current copy carries a RETRACTED watermark and its title now begins 'RETRACTED:'. The body text is otherwise the same as the stored paper.",
+          "scope": "whole_paper",
+          "affected_parts": [
+            {
+              "part": "Whole paper, including the 6% topsoil carbon gain and the sampling protocol",
+              "findings_affected": "All findings; the current copy is marked retracted with no stated reason"
+            }
+          ],
+          "severity": "high",
+          "reason": "The current copy is watermarked and titled as retracted, which confirms the flag. No notice gives a reason, so the findings cannot be relied on, and the cause (error, misconduct or something else) is unknown.",
+          "evidence": [
+            {
+              "source": "current copy",
+              "quote": "RETRACTED: Soil carbon gains after winter cover cropping"
+            },
+            {
+              "source": "alert 191",
+              "quote": "retraction, no notice"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "claims": [
+        {
+          "text": "The alert is a retraction flag with no notice.",
+          "passages": [
+            {
+              "source": "alert 191",
+              "quote": "retraction, no notice"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The current copy's title is marked 'RETRACTED:'.",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "RETRACTED: Soil carbon gains after winter cover cropping"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The stored paper has the title without any retraction mark.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Soil carbon gains after winter cover cropping"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The current copy's abstract still reports the 6% topsoil carbon gain, the same as the stored paper.",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "Winter cover crops raised topsoil carbon by 6% over three years."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "No notice or reason for the retraction is given in the material.",
+          "passages": [],
+          "absence": true,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The whole paper is marked retracted, so its findings cannot be relied on.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            2,
+            3,
+            5
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "summary": [
+        {
+          "text": "The alert is a retraction flag with no notice, and the current copy's title now begins 'RETRACTED:' while the stored paper's title has no such mark.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The current copy still reports the 6% topsoil carbon gain in its abstract, so the retraction applies to the whole paper, not to one part.",
+          "kind": "fact",
+          "claims": [
+            4,
+            6
+          ]
+        },
+        {
+          "text": "No notice or reason is available, so the cause of the retraction is unknown.",
+          "kind": "fact",
+          "claims": [
+            5
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[5] Haugen, S., Rao, V. (2018). Soil carbon gains after winter cover cropping. J. Fake Agronomy 41: 233-251. doi:10.9999/fake.2018.019",
+      "uses": [
+        {
+          "section": "2. Methods (2.2 Soil sampling and carbon measurement)",
+          "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+          "role": "methods_or_data",
+          "claim_relied_on": "that the sampling and dry-combustion carbon measurement protocol of Haugen and Rao can be followed exactly, so the draft's numbers are comparable with that study",
+          "affected": "yes",
+          "reason": "The whole paper, including its sampling protocol, is marked retracted with no stated reason, so the protocol the draft adopts rests on a retracted paper."
+        }
+      ],
+      "impact_level": "high",
+      "claims": [
+        {
+          "text": "The draft cites [5] in its Methods (2.2) as the protocol it follows exactly for sampling cores at 0-15 cm and measuring carbon by dry combustion.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The stored paper reports measuring soil carbon by dry combustion on cores taken at 0-15 cm using its sampling protocol.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Soil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The current copy of the tracked paper has a title that now begins 'RETRACTED:', and the alert is a retraction flag with no notice.",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "RETRACTED: Soil carbon gains after winter cover cropping"
+            },
+            {
+              "source": "alert 191",
+              "quote": "retraction, no notice"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "No notice or reason for the retraction is given in the material.",
+          "passages": [],
+          "absence": true,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The retraction marking covers the whole paper, including the sampling protocol the draft's Methods follow, so this use is touched.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3
+          ],
+          "from_change": [
+            2,
+            6
+          ],
+          "from_impact": []
+        },
+        {
+          "text": "The impact on the draft is high: the affected use is a methods/protocol use and the change is of high severity.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            5
+          ],
+          "from_change": [
+            6
+          ],
+          "from_impact": []
+        }
+      ],
+      "explanation": [
+        {
+          "text": "Your Methods (2.2) cites [5] as the protocol you follow exactly for sampling cores at 0-15 cm and measuring carbon by dry combustion, and the stored paper does report that dry-combustion measurement on 0-15 cm cores.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "The current copy of that paper is now titled 'RETRACTED:' and the alert is a retraction flag, but no notice or reason is available.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "The retraction marking covers the whole paper, including the protocol your Methods rely on, so that use is touched.",
+          "kind": "fact",
+          "claims": [
+            5
+          ]
+        },
+        {
+          "text": "This matters a great deal for your draft, because your measurement method and its comparability claim rest on this paper.",
+          "kind": "fact",
+          "claims": [
+            6
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Check the journal's or publisher's page for the Haugen and Rao paper to confirm whether it is really retracted, and why, before changing the draft.",
+          "where": "Reference list, entry [5]"
+        },
+        {
+          "action": "If the retraction is confirmed, stop and raise it with your co-authors or supervisor, since your own measurement method depends on this protocol and editing the text won't fix that.",
+          "where": "Methods, 2.2 Soil sampling and carbon measurement: 'We sampled soil cores at 0-15 cm...'"
+        },
+        {
+          "action": "Re-check the comparability claim that rests on following the protocol exactly, and consider citing an independent, non-retracted source for the sampling and dry-combustion method.",
+          "where": "Methods, 2.2: 'following the protocol of Haugen and Rao [5] exactly'"
+        }
+      ],
+      "claims": [
+        {
+          "text": "The alert is a retraction flag with no notice, and the current copy's title now begins 'RETRACTED:'.",
+          "passages": [
+            {
+              "source": "alert 191",
+              "quote": "retraction, no notice"
+            },
+            {
+              "source": "current copy",
+              "quote": "RETRACTED: Soil carbon gains after winter cover cropping"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "No notice or reason for the retraction is given in the material.",
+          "passages": [],
+          "absence": true,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The draft's Methods (2.2) cite [5] as the protocol it follows exactly for sampling cores at 0-15 cm and measuring carbon by dry combustion.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The retraction marking covers the whole paper, including the sampling protocol the draft's Methods follow, so this use is touched.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "The alert is a retraction flag with no notice, and the current copy's title now begins 'RETRACTED:'.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "No notice or reason for the retraction is given in the material.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "Your Methods (2.2) cite [5] as the protocol you follow exactly, and the retraction marking covers the whole paper including that protocol, so this use is touched.",
+          "kind": "fact",
+          "claims": [
+            3,
+            4
+          ]
+        },
+        {
+          "text": "First confirm the retraction on the journal's or publisher's page, then raise it with your co-authors or supervisor, because your own methods depend on this paper.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The alert is a retraction flag with no notice.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 191,
+          "quote": "retraction, no notice",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The current copy's title is marked 'RETRACTED:'.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "RETRACTED: Soil carbon gains after winter cover cropping",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The stored paper has the title without any retraction mark.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Soil carbon gains after winter cover cropping",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The current copy's abstract still reports the 6% topsoil carbon gain, the same as the stored paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Winter cover crops raised topsoil carbon by 6% over three years.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "No notice or reason for the retraction is given in the material.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-5",
+      "kind": "change",
+      "text": "The whole paper is marked retracted, so its findings cannot be relied on.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft cites [5] in its Methods (2.2) as the protocol it follows exactly for sampling cores at 0-15 cm and measuring carbon by dry combustion.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The stored paper reports measuring soil carbon by dry combustion on cores taken at 0-15 cm using its sampling protocol.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Soil carbon was measured by dry combustion on cores taken at 0-15 cm using the sampling protocol in Section 2.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The current copy of the tracked paper has a title that now begins 'RETRACTED:', and the alert is a retraction flag with no notice.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "RETRACTED: Soil carbon gains after winter cover cropping",
+          "page": 1,
+          "verified": "verbatim"
+        },
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 191,
+          "quote": "retraction, no notice",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "No notice or reason for the retraction is given in the material.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The retraction marking covers the whole paper, including the sampling protocol the draft's Methods follow, so this use is touched.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "The impact on the draft is high: the affected use is a methods/protocol use and the change is of high severity.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The alert is a retraction flag with no notice, and the current copy's title now begins 'RETRACTED:'.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 191,
+          "quote": "retraction, no notice",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "RETRACTED: Soil carbon gains after winter cover cropping",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "No notice or reason for the retraction is given in the material.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The draft's Methods (2.2) cite [5] as the protocol it follows exactly for sampling cores at 0-15 cm and measuring carbon by dry combustion.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We sampled soil cores at 0-15 cm and measured carbon by dry combustion, following the protocol of Haugen and Rao [5] exactly.",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "The retraction marking covers the whole paper, including the sampling protocol the draft's Methods follow, so this use is touched.",
+      "supported": false,
+      "passages": []
+    }
+  ],
+  "context_chunks": []
+}

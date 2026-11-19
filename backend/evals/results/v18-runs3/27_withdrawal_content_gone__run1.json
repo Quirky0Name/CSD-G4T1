@@ -1,0 +1,714 @@
+{
+  "change_summary": "The paper has been withdrawn, and its title now begins 'WITHDRAWN:'. The editor was told that the indoor temperature records had been processed with an incorrect sensor calibration, so the reported results cannot be relied on, and the full text was replaced by a statement. This touches the whole paper, including the 2.1 \u00b0C lower peak indoor temperature and the 41% fewer hours above 28 \u00b0C, because they rest on those records.",
+  "change_severity": "high",
+  "impact_level": "high",
+  "evaluation": "Your Section 2.2 cites Okafor et al. [14] for the 2.1 \u00b0C reduction in daily peak indoor temperature that you set as the green-roof cooling effect in your model. The withdrawal says the indoor temperature records had an incorrect sensor calibration, so the results cannot be relied on, which touches that parameter. Your Discussion says the green-roof result scales almost directly with that same 2.1 \u00b0C figure, so it is touched too. The impact on your draft is high, because your central estimate and its conclusion rest on that value.",
+  "recommendation": "The paper has been withdrawn, and the withdrawal says the indoor temperature records had an incorrect sensor calibration, so the results cannot be relied on. Your Section 2.2 sets the model's green-roof cooling effect to the 2.1 \u00b0C taken from it, so that use is touched. Your Discussion says the green-roof result scales almost directly with the same 2.1 \u00b0C figure, so it is touched too. Raise this with your co-authors or supervisor before changing the text, find a reliable replacement value, re-run the model, and then remove or replace citation [14].",
+  "assessment": {
+    "prompt_version": 18,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "profile": "none",
+    "history": "none",
+    "feedback": "none",
+    "pdfs": {
+      "attached": [
+        "stored paper",
+        "current copy"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 271,
+          "about_this_paper": "yes",
+          "what_changed": "The paper's content was replaced by a withdrawal statement: the editor was told the indoor temperature records had been processed with an incorrect sensor calibration, so the reported results cannot be relied on. The title now begins 'WITHDRAWN:'.",
+          "scope": "whole_paper",
+          "affected_parts": [
+            {
+              "part": "Whole paper, including the 2.1 \u00b0C lower peak indoor temperature in green-roofed flats and the 41% fewer hours above 28 \u00b0C",
+              "findings_affected": "All reported results, since they rest on the indoor temperature records processed with the incorrect calibration"
+            }
+          ],
+          "severity": "high",
+          "reason": "A withdrawal that replaces the full text and says the results cannot be relied on is a removal of the content, so the findings cannot be relied on. The notice carries the paper's own DOI, but the current copy and its title show a real change.",
+          "evidence": [
+            {
+              "source": "current copy",
+              "quote": "the indoor temperature records analysed in it had been processed with an incorrect sensor calibration, so the reported results cannot be relied on."
+            },
+            {
+              "source": "current copy",
+              "quote": "its full text and PDF have been replaced by this statement."
+            },
+            {
+              "source": "10.9999/fake.2025.027",
+              "quote": "WITHDRAWN: Extensive green roofs and indoor overheating in top-floor social-housing flats: a paired field study"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "claims": [
+        {
+          "text": "The paper's current title begins with 'WITHDRAWN:'.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2025.027",
+              "quote": "WITHDRAWN: Extensive green roofs and indoor overheating in top-floor social-housing flats: a paired field study"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The editor was informed that the indoor temperature records had been processed with an incorrect sensor calibration, so the reported results cannot be relied on.",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "the indoor temperature records analysed in it had been processed with an incorrect sensor calibration, so the reported results cannot be relied on."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The full text and PDF have been replaced by the withdrawal statement.",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "its full text and PDF have been replaced by this statement."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The stored paper reported that green-roofed flats had a mean daily peak indoor temperature 2.1 \u00b0C lower than control flats, and 41% fewer hours above 28 \u00b0C in living rooms.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "the mean daily peak indoor temperature in green-roofed flats was 2.1 \u00b0C lower than in the paired control flats"
+            },
+            {
+              "source": "stored paper",
+              "quote": "living rooms in green-roofed flats spent 41% fewer hours above 28 \u00b0C than those in control flats"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The whole paper is affected and its findings cannot be relied on, since the withdrawn results rest on the miscalibrated indoor temperature records.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            2,
+            3,
+            4
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "summary": [
+        {
+          "text": "The paper has been withdrawn, and its title now begins 'WITHDRAWN:'.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The editor was told that the indoor temperature records had been processed with an incorrect sensor calibration, so the reported results cannot be relied on, and the full text was replaced by a statement.",
+          "kind": "fact",
+          "claims": [
+            2,
+            3
+          ]
+        },
+        {
+          "text": "This touches the whole paper, including the 2.1 \u00b0C lower peak indoor temperature and the 41% fewer hours above 28 \u00b0C, because they rest on those records.",
+          "kind": "fact",
+          "claims": [
+            4,
+            5
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": true,
+      "reference_entry": "[14] Okafor, N., Lindqvist, E., Marchetti, P. (2025). Extensive green roofs and indoor overheating in top-floor social-housing flats: a paired field study. J. Fake Building Physics, 104127. https://doi.org/10.9999/fake.2025.027",
+      "uses": [
+        {
+          "section": "2.2 Indoor heat model and parameters",
+          "quote": "We set the indoor cooling effect of a green roof in the model to 2.1 \u00b0C, the reduction in daily peak indoor temperature measured during heatwaves in the paired field study of top-floor social-housing flats by Okafor et al. [14].",
+          "role": "methods_or_data",
+          "claim_relied_on": "that the green-roof indoor cooling parameter of 2.1 \u00b0C reduction in daily peak indoor temperature, measured during heatwaves in occupied flats, can be used as the model's key parameter",
+          "affected": "yes",
+          "reason": "The 2.1 \u00b0C value is the paper's headline result, which the withdrawal says cannot be relied on because of incorrect sensor calibration."
+        },
+        {
+          "section": "4. Discussion",
+          "quote": "the green-roof result scales almost directly with the 2.1 \u00b0C reduction in peak indoor temperature that we take from Okafor et al. [14].",
+          "role": "key_evidence",
+          "claim_relied_on": "that the 2.1 \u00b0C reduction in peak indoor temperature is a reliable measured value on which the estimate and the conclusion that green roofs merit inclusion rest",
+          "affected": "yes",
+          "reason": "The whole paper is withdrawn, including the 2.1 \u00b0C figure the draft's conclusions depend on."
+        }
+      ],
+      "impact_level": "high",
+      "claims": [
+        {
+          "text": "The draft's reference list has entry [14], Okafor, Lindqvist, Marchetti (2025), with the tracked paper's title and DOI.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "[14] Okafor, N., Lindqvist, E., Marchetti, P. (2025). Extensive green roofs and indoor overheating in top-floor social-housing flats: a paired field study."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "In Section 2.2 the draft cites Okafor et al. [14] for the 2.1 \u00b0C reduction in daily peak indoor temperature that it sets as the green-roof cooling effect in its model.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We set the indoor cooling effect of a green roof in the model to 2.1 \u00b0C, the reduction in daily peak indoor temperature measured during heatwaves"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The stored paper reports that mean daily peak indoor temperature in green-roofed flats was 2.1 \u00b0C lower than in control flats.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "the mean daily peak indoor temperature in green-roofed flats was 2.1 \u00b0C lower than in the paired control flats"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The withdrawal says the indoor temperature records had been processed with an incorrect sensor calibration, so the reported results cannot be relied on.",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "the indoor temperature records analysed in it had been processed with an incorrect sensor calibration, so the reported results cannot be relied on."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The change touches the Section 2.2 use, since the draft's 2.1 \u00b0C parameter is the result the withdrawal says cannot be relied on.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            2,
+            3,
+            4
+          ],
+          "from_change": [
+            5
+          ],
+          "from_impact": []
+        },
+        {
+          "text": "In the Discussion the draft says its green-roof result scales almost directly with the 2.1 \u00b0C reduction it takes from Okafor et al. [14].",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "the green-roof result scales almost directly with the 2.1 \u00b0C reduction in peak indoor temperature that we take from Okafor et al. [14]."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The change touches the Discussion use, since the draft's result depends on the 2.1 \u00b0C figure that the withdrawal covers.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            3,
+            4,
+            6
+          ],
+          "from_change": [
+            5
+          ],
+          "from_impact": []
+        },
+        {
+          "text": "The impact is high: the withdrawal is high severity and the draft uses the 2.1 \u00b0C value as its key model parameter (methods/data) and as the basis of its conclusion.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            2,
+            5,
+            7
+          ],
+          "from_change": [
+            5
+          ],
+          "from_impact": []
+        }
+      ],
+      "explanation": [
+        {
+          "text": "Your Section 2.2 cites Okafor et al. [14] for the 2.1 \u00b0C reduction in daily peak indoor temperature that you set as the green-roof cooling effect in your model.",
+          "kind": "fact",
+          "claims": [
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The withdrawal says the indoor temperature records had an incorrect sensor calibration, so the results cannot be relied on, which touches that parameter.",
+          "kind": "fact",
+          "claims": [
+            4,
+            5
+          ]
+        },
+        {
+          "text": "Your Discussion says the green-roof result scales almost directly with that same 2.1 \u00b0C figure, so it is touched too.",
+          "kind": "fact",
+          "claims": [
+            6,
+            7
+          ]
+        },
+        {
+          "text": "The impact on your draft is high, because your central estimate and its conclusion rest on that value.",
+          "kind": "fact",
+          "claims": [
+            8
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [
+        {
+          "action": "Stop and raise this with your co-authors or supervisor: the model's green-roof cooling parameter of 2.1 \u00b0C comes from a withdrawn paper, so editing the text won't fix it. Decide on a replacement value from other sources and re-run the model.",
+          "where": "Section 2.2 Indoor heat model and parameters, 'We set the indoor cooling effect of a green roof in the model to 2.1 \u00b0C'"
+        },
+        {
+          "action": "Re-check the estimate and conclusion that rest on the 2.1 \u00b0C figure. Remove or hedge them until they are re-derived with a reliable value.",
+          "where": "Section 4 Discussion, 'the green-roof result scales almost directly with the 2.1 \u00b0C reduction'"
+        },
+        {
+          "action": "Remove or replace citation [14] as evidence. If you keep it, cite it only as withdrawn, with the withdrawal notice.",
+          "where": "Reference list, entry [14] Okafor, N., Lindqvist, E., Marchetti, P. (2025)"
+        }
+      ],
+      "claims": [
+        {
+          "text": "The paper's current title begins with 'WITHDRAWN:'.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2025.027",
+              "quote": "WITHDRAWN: Extensive green roofs and indoor overheating in top-floor social-housing flats: a paired field study"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The withdrawal says the indoor temperature records had been processed with an incorrect sensor calibration, so the reported results cannot be relied on.",
+          "passages": [
+            {
+              "source": "current copy",
+              "quote": "the indoor temperature records analysed in it had been processed with an incorrect sensor calibration, so the reported results cannot be relied on."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "In Section 2.2 the draft cites Okafor et al. [14] for the 2.1 \u00b0C reduction in daily peak indoor temperature that it sets as the green-roof cooling effect in its model.",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "We set the indoor cooling effect of a green roof in the model to 2.1 \u00b0C, the reduction in daily peak indoor temperature measured during heatwaves"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "In the Discussion the draft says its green-roof result scales almost directly with the 2.1 \u00b0C reduction it takes from Okafor et al. [14].",
+          "passages": [
+            {
+              "source": "draft",
+              "quote": "the green-roof result scales almost directly with the 2.1 \u00b0C reduction in peak indoor temperature that we take from Okafor et al. [14]."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The change touches the Section 2.2 use, since the draft's 2.1 \u00b0C parameter is the result the withdrawal says cannot be relied on.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            2,
+            3
+          ],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The change touches the Discussion use, since the draft's result depends on the 2.1 \u00b0C figure that the withdrawal covers.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            2,
+            4
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "The paper has been withdrawn, and the withdrawal says the indoor temperature records had an incorrect sensor calibration, so the results cannot be relied on.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "Your Section 2.2 sets the model's green-roof cooling effect to the 2.1 \u00b0C taken from it, so that use is touched.",
+          "kind": "fact",
+          "claims": [
+            3,
+            5
+          ]
+        },
+        {
+          "text": "Your Discussion says the green-roof result scales almost directly with the same 2.1 \u00b0C figure, so it is touched too.",
+          "kind": "fact",
+          "claims": [
+            4,
+            6
+          ]
+        },
+        {
+          "text": "Raise this with your co-authors or supervisor before changing the text, find a reliable replacement value, re-run the model, and then remove or replace citation [14].",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The paper's current title begins with 'WITHDRAWN:'.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "WITHDRAWN: Extensive green roofs and indoor overheating in top-floor social-housing flats: a paired field study",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The editor was informed that the indoor temperature records had been processed with an incorrect sensor calibration, so the reported results cannot be relied on.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the indoor temperature records analysed in it had been processed with an incorrect sensor calibration, so the reported results cannot be relied on.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The full text and PDF have been replaced by the withdrawal statement.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "its full text and PDF have been replaced by this statement.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The stored paper reported that green-roofed flats had a mean daily peak indoor temperature 2.1 \u00b0C lower than control flats, and 41% fewer hours above 28 \u00b0C in living rooms.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "the mean daily peak indoor temperature in green-roofed flats was 2.1 \u00b0C lower than in the paired control flats",
+          "page": 3,
+          "verified": "verbatim"
+        },
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "living rooms in green-roofed flats spent 41% fewer hours above 28 \u00b0C than those in control flats",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The whole paper is affected and its findings cannot be relied on, since the withdrawn results rest on the miscalibrated indoor temperature records.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft's reference list has entry [14], Okafor, Lindqvist, Marchetti (2025), with the tracked paper's title and DOI.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "[14] Okafor, N., Lindqvist, E., Marchetti, P. (2025). Extensive green roofs and indoor overheating in top-floor social-housing flats: a paired field study.",
+          "page": 4,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "In Section 2.2 the draft cites Okafor et al. [14] for the 2.1 \u00b0C reduction in daily peak indoor temperature that it sets as the green-roof cooling effect in its model.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We set the indoor cooling effect of a green roof in the model to 2.1 \u00b0C, the reduction in daily peak indoor temperature measured during heatwaves",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The stored paper reports that mean daily peak indoor temperature in green-roofed flats was 2.1 \u00b0C lower than in control flats.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "the mean daily peak indoor temperature in green-roofed flats was 2.1 \u00b0C lower than in the paired control flats",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-3",
+      "kind": "impact",
+      "text": "The withdrawal says the indoor temperature records had been processed with an incorrect sensor calibration, so the reported results cannot be relied on.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the indoor temperature records analysed in it had been processed with an incorrect sensor calibration, so the reported results cannot be relied on.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-4",
+      "kind": "impact",
+      "text": "The change touches the Section 2.2 use, since the draft's 2.1 \u00b0C parameter is the result the withdrawal says cannot be relied on.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-5",
+      "kind": "impact",
+      "text": "In the Discussion the draft says its green-roof result scales almost directly with the 2.1 \u00b0C reduction it takes from Okafor et al. [14].",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "the green-roof result scales almost directly with the 2.1 \u00b0C reduction in peak indoor temperature that we take from Okafor et al. [14].",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "impact-6",
+      "kind": "impact",
+      "text": "The change touches the Discussion use, since the draft's result depends on the 2.1 \u00b0C figure that the withdrawal covers.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-7",
+      "kind": "impact",
+      "text": "The impact is high: the withdrawal is high severity and the draft uses the 2.1 \u00b0C value as its key model parameter (methods/data) and as the basis of its conclusion.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The paper's current title begins with 'WITHDRAWN:'.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "WITHDRAWN: Extensive green roofs and indoor overheating in top-floor social-housing flats: a paired field study",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The withdrawal says the indoor temperature records had been processed with an incorrect sensor calibration, so the reported results cannot be relied on.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "the indoor temperature records analysed in it had been processed with an incorrect sensor calibration, so the reported results cannot be relied on.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "In Section 2.2 the draft cites Okafor et al. [14] for the 2.1 \u00b0C reduction in daily peak indoor temperature that it sets as the green-roof cooling effect in its model.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "We set the indoor cooling effect of a green roof in the model to 2.1 \u00b0C, the reduction in daily peak indoor temperature measured during heatwaves",
+          "page": 2,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-3",
+      "kind": "action",
+      "text": "In the Discussion the draft says its green-roof result scales almost directly with the 2.1 \u00b0C reduction it takes from Okafor et al. [14].",
+      "supported": true,
+      "passages": [
+        {
+          "target": "draft",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "the green-roof result scales almost directly with the 2.1 \u00b0C reduction in peak indoor temperature that we take from Okafor et al. [14].",
+          "page": 3,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "action-4",
+      "kind": "action",
+      "text": "The change touches the Section 2.2 use, since the draft's 2.1 \u00b0C parameter is the result the withdrawal says cannot be relied on.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-5",
+      "kind": "action",
+      "text": "The change touches the Discussion use, since the draft's result depends on the 2.1 \u00b0C figure that the withdrawal covers.",
+      "supported": false,
+      "passages": []
+    }
+  ],
+  "context_chunks": []
+}

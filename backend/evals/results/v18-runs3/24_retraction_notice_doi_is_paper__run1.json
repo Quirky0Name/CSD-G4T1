@@ -1,0 +1,215 @@
+{
+  "change_summary": "The alert's notice has the same DOI as the paper itself, and its date (2020-07-01) matches the paper's own July 2020 issue date. The current copy shows no retraction banner and no difference from the stored paper, so no change to the paper is shown.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 18,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "profile": "not_needed",
+    "history": "none",
+    "feedback": "none",
+    "pdfs": {
+      "attached": [
+        "stored paper",
+        "current copy"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 241,
+          "about_this_paper": "no",
+          "what_changed": "Nothing in the content. The alert's notice has the paper's own DOI and is dated 2020-07-01, the paper's issue date. The current copy matches the stored paper and shows no retraction banner.",
+          "scope": "administrative",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "The notice DOI is the paper's own, and its date matches the paper's July 2020 issue date, so it looks like the paper's own record rather than a retraction. The current copy shows no change.",
+          "evidence": [
+            {
+              "source": "alert 241",
+              "quote": "notice 10.9999/fake.2020.024, notice dated 2020-07-01"
+            },
+            {
+              "source": "stored paper",
+              "quote": "Version of record published in the July 2020 issue: Volume 56, Issue 1, 1 July 2020, pages 41\u201358."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "none",
+      "claims": [
+        {
+          "text": "The alert's notice DOI is 10.9999/fake.2020.024.",
+          "passages": [
+            {
+              "source": "alert 241",
+              "quote": "retraction, notice 10.9999/fake.2020.024, notice dated 2020-07-01"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "doi: 10.9999/fake.2020.024"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The notice date 2020-07-01 matches the paper's version-of-record date of 1 July 2020.",
+          "passages": [
+            {
+              "source": "alert 241",
+              "quote": "notice dated 2020-07-01"
+            },
+            {
+              "source": "stored paper",
+              "quote": "Volume 56, Issue 1, 1 July 2020, pages 41\u201358."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The current copy shows no retraction notice or banner, and no content difference from the stored paper.",
+          "passages": [],
+          "absence": true,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "So the alert is not about a change to this paper, and no change is shown.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "summary": [
+        {
+          "text": "The alert's notice has the same DOI as the paper itself, and its date (2020-07-01) matches the paper's own July 2020 issue date.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "text": "The current copy shows no retraction banner and no difference from the stored paper, so no change to the paper is shown.",
+          "kind": "fact",
+          "claims": [
+            4,
+            5
+          ]
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The alert's notice DOI is 10.9999/fake.2020.024.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 241,
+          "quote": "retraction, notice 10.9999/fake.2020.024, notice dated 2020-07-01",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The tracked paper's own DOI is 10.9999/fake.2020.024.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "doi: 10.9999/fake.2020.024",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The notice date 2020-07-01 matches the paper's version-of-record date of 1 July 2020.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "alert",
+          "document_id": null,
+          "alert_id": 241,
+          "quote": "notice dated 2020-07-01",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Volume 56, Issue 1, 1 July 2020, pages 41\u201358.",
+          "page": 4,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The current copy shows no retraction notice or banner, and no content difference from the stored paper.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "So the alert is not about a change to this paper, and no change is shown.",
+      "supported": false,
+      "passages": []
+    }
+  ],
+  "context_chunks": []
+}

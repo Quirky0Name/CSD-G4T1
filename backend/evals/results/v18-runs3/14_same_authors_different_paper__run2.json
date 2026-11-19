@@ -1,0 +1,360 @@
+{
+  "change_summary": "The paper has been retracted, with a notice titled for this paper. The notice says the retraction is because the reported yields could not be reproduced and the raw data were found to have been altered. The paper's abstract reports a 94% recovery from a single ethanol extraction. The retraction covers the whole paper and its findings cannot be relied on, since its yields were irreproducible and its raw data altered.",
+  "change_severity": "high",
+  "impact_level": "none",
+  "evaluation": "The draft's reference list has no entry for the tracked paper, and its text does not cite it. The impact on the draft is none, because the draft does not cite the tracked paper.",
+  "recommendation": "The draft's reference list has no entry for the tracked paper, and its text does not cite it. The impact on the draft is none, because the draft does not cite the tracked paper. No action is needed; you can dismiss this alert.",
+  "assessment": {
+    "prompt_version": 18,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "profile": "none",
+    "history": "none",
+    "feedback": "none",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 141,
+          "about_this_paper": "yes",
+          "what_changed": "The paper was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "A retraction for irreproducible yields and altered raw data means the findings, including the 94% recovery headline result, cannot be relied on.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered."
+            },
+            {
+              "source": "stored paper",
+              "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder."
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "claims": [
+        {
+          "text": "The notice reports that the article was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The notice's title shows it is about the tracked paper.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.014r",
+              "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric"
+            },
+            {
+              "source": "stored paper",
+              "quote": "High-yield ethanol extraction of curcumin from turmeric"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The paper's abstract reports a 94% recovery of curcumin from a single ethanol extraction.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The retraction covers the whole paper and its findings cannot be relied on, since its yields were irreproducible and its raw data altered.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "summary": [
+        {
+          "text": "The paper has been retracted, with a notice titled for this paper.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "The notice says the retraction is because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The paper's abstract reports a 94% recovery from a single ethanol extraction.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "The retraction covers the whole paper and its findings cannot be relied on, since its yields were irreproducible and its raw data altered.",
+          "kind": "fact",
+          "claims": [
+            4
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": false,
+      "reference_entry": null,
+      "uses": [],
+      "impact_level": "none",
+      "claims": [
+        {
+          "text": "The draft's reference list has no entry for the tracked paper.",
+          "passages": [],
+          "absence": true,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The draft's text does not cite the tracked paper.",
+          "passages": [],
+          "absence": true,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The impact on the draft is none, because the draft does not cite the tracked paper.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "explanation": [
+        {
+          "text": "The draft's reference list has no entry for the tracked paper, and its text does not cite it.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "The impact on the draft is none, because the draft does not cite the tracked paper.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [],
+      "claims": [
+        {
+          "text": "The draft's reference list has no entry for the tracked paper.",
+          "passages": [],
+          "absence": true,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The draft's text does not cite the tracked paper.",
+          "passages": [],
+          "absence": true,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The impact on the draft is none, because the draft does not cite the tracked paper.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "The draft's reference list has no entry for the tracked paper, and its text does not cite it.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2
+          ]
+        },
+        {
+          "text": "The impact on the draft is none, because the draft does not cite the tracked paper.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "No action is needed; you can dismiss this alert.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The notice reports that the article was retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted because the reported yields could not be reproduced and the raw data were found to have been altered.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The notice's title shows it is about the tracked paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: High-yield ethanol extraction of curcumin from turmeric",
+          "page": null,
+          "verified": "verbatim"
+        },
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "High-yield ethanol extraction of curcumin from turmeric",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The paper's abstract reports a 94% recovery of curcumin from a single ethanol extraction.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "A single ethanol extraction recovered 94% of the curcumin in turmeric powder.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The retraction covers the whole paper and its findings cannot be relied on, since its yields were irreproducible and its raw data altered.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft's reference list has no entry for the tracked paper.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-1",
+      "kind": "impact",
+      "text": "The draft's text does not cite the tracked paper.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-2",
+      "kind": "impact",
+      "text": "The impact on the draft is none, because the draft does not cite the tracked paper.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The draft's reference list has no entry for the tracked paper.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The draft's text does not cite the tracked paper.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-2",
+      "kind": "action",
+      "text": "The impact on the draft is none, because the draft does not cite the tracked paper.",
+      "supported": false,
+      "passages": []
+    }
+  ],
+  "context_chunks": []
+}

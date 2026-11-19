@@ -1,0 +1,307 @@
+{
+  "change_summary": "The notice retracts 'Green roofs and urban cooling'. It was retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified. The paper's abstract reports that green roofs lowered surface temperature by 4 C in three cities. The retraction is about unreliable data and manipulated images, so the findings can't be relied on.",
+  "change_severity": "high",
+  "impact_level": "none",
+  "evaluation": "The draft does not cite the tracked paper.",
+  "recommendation": "The draft does not cite the tracked paper in its text or reference list. The paper was retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified. No action is needed and this alert can be dismissed. If you add this paper to the draft later, don't cite it as evidence.",
+  "assessment": {
+    "prompt_version": 18,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": "sonnet",
+      "actions": "sonnet"
+    },
+    "placeholder": false,
+    "draft": "read",
+    "profile": "none",
+    "history": "none",
+    "feedback": "none",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": {
+      "attached": [
+        "draft",
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 101,
+          "about_this_paper": "yes",
+          "what_changed": "The paper was retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+          "scope": "whole_paper",
+          "affected_parts": [],
+          "severity": "high",
+          "reason": "A retraction for image manipulation and unverifiable temperature data means the findings, including the 4 C cooling result, can't be relied on.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "This article has been retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified."
+            },
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "Retraction: Green roofs and urban cooling"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "high",
+      "claims": [
+        {
+          "text": "The notice is titled as a retraction of 'Green roofs and urban cooling', the tracked paper's title.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "Retraction: Green roofs and urban cooling"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The paper was retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "This article has been retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The stored paper's abstract reports that green roofs lowered surface temperature by 4 C in three cities, a result that rests on temperature data.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Green roofs lowered surface temperature by 4 C in three cities."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The retraction is about unreliable data and manipulated images, so the findings can't be relied on.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            1,
+            2
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "summary": [
+        {
+          "text": "The notice retracts 'Green roofs and urban cooling'.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "It was retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "The paper's abstract reports that green roofs lowered surface temperature by 4 C in three cities.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "The retraction is about unreliable data and manipulated images, so the findings can't be relied on.",
+          "kind": "fact",
+          "claims": [
+            4
+          ]
+        }
+      ]
+    },
+    "impact": {
+      "cited": false,
+      "reference_entry": null,
+      "uses": [],
+      "impact_level": "none",
+      "claims": [
+        {
+          "text": "The draft does not cite the tracked paper 'Green roofs and urban cooling' (Haddad and Berg, 2018) in its text or reference list.",
+          "passages": [],
+          "absence": true,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "explanation": [
+        {
+          "text": "The draft does not cite the tracked paper.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "actions": [],
+      "claims": [
+        {
+          "text": "The draft does not cite the tracked paper 'Green roofs and urban cooling' (Haddad and Berg, 2018) in its text or reference list.",
+          "passages": [],
+          "absence": true,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The tracked paper was retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2018.010r",
+              "quote": "This article has been retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "recommendation": [
+        {
+          "text": "The draft does not cite the tracked paper in its text or reference list.",
+          "kind": "fact",
+          "claims": [
+            1
+          ]
+        },
+        {
+          "text": "The paper was retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+          "kind": "fact",
+          "claims": [
+            2
+          ]
+        },
+        {
+          "text": "No action is needed and this alert can be dismissed.",
+          "kind": "advice",
+          "claims": []
+        },
+        {
+          "text": "If you add this paper to the draft later, don't cite it as evidence.",
+          "kind": "advice",
+          "claims": []
+        }
+      ]
+    }
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The notice is titled as a retraction of 'Green roofs and urban cooling', the tracked paper's title.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Retraction: Green roofs and urban cooling",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The paper was retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The stored paper's abstract reports that green roofs lowered surface temperature by 4 C in three cities, a result that rests on temperature data.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Green roofs lowered surface temperature by 4 C in three cities.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The retraction is about unreliable data and manipulated images, so the findings can't be relied on.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "impact-0",
+      "kind": "impact",
+      "text": "The draft does not cite the tracked paper 'Green roofs and urban cooling' (Haddad and Berg, 2018) in its text or reference list.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-0",
+      "kind": "action",
+      "text": "The draft does not cite the tracked paper 'Green roofs and urban cooling' (Haddad and Berg, 2018) in its text or reference list.",
+      "supported": false,
+      "passages": []
+    },
+    {
+      "id": "action-1",
+      "kind": "action",
+      "text": "The tracked paper was retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This article has been retracted because of image manipulation in the supplementary figures and because the temperature data could not be verified.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    }
+  ],
+  "context_chunks": []
+}

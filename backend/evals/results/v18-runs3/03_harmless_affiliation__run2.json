@@ -1,0 +1,224 @@
+{
+  "change_summary": "A correction to this paper changes the first author's affiliation from University of Northfield to Northfield Institute of Education. The notice states the correction does not affect the results or conclusions of the article. The change is administrative and has no meaningful effect on what a reader can rely on.",
+  "change_severity": "none",
+  "impact_level": null,
+  "evaluation": null,
+  "recommendation": null,
+  "assessment": {
+    "prompt_version": 18,
+    "model": "sonnet",
+    "model_version": "claude-sonnet-5-5",
+    "answered_by": {
+      "change": "sonnet",
+      "impact": null,
+      "actions": null
+    },
+    "placeholder": false,
+    "draft": "not_needed",
+    "profile": "not_needed",
+    "history": "none",
+    "feedback": "none",
+    "pdfs": {
+      "attached": [
+        "stored paper"
+      ],
+      "left_out": []
+    },
+    "impact_pdfs": null,
+    "change": {
+      "alerts": [
+        {
+          "alert_id": 31,
+          "about_this_paper": "yes",
+          "what_changed": "The correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education. The notice says this does not affect the results or conclusions.",
+          "scope": "administrative",
+          "affected_parts": [],
+          "severity": "none",
+          "reason": "Only an author affiliation is corrected, and the notice states the results and conclusions are unaffected.",
+          "evidence": [
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education."
+            },
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "This does not affect the results or conclusions of the article."
+            },
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "Correction to: School start times and teenage sleep"
+            }
+          ]
+        }
+      ],
+      "relations": null,
+      "severity": "none",
+      "claims": [
+        {
+          "text": "The correction notice is titled as a correction to 'School start times and teenage sleep', the tracked paper.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "Correction to: School start times and teenage sleep"
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The notice states the correction does not affect the results or conclusions of the article.",
+          "passages": [
+            {
+              "source": "10.9999/fake.2021.003c",
+              "quote": "This does not affect the results or conclusions of the article."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The stored paper lists the first author's affiliation as University of Northfield.",
+          "passages": [
+            {
+              "source": "stored paper",
+              "quote": "Garcia, M. (University of Northfield), Okafor, T."
+            }
+          ],
+          "absence": false,
+          "from_claims": [],
+          "from_change": [],
+          "from_impact": []
+        },
+        {
+          "text": "The change is administrative and has no meaningful effect on what a reader can rely on.",
+          "passages": [],
+          "absence": false,
+          "from_claims": [
+            2,
+            3
+          ],
+          "from_change": [],
+          "from_impact": []
+        }
+      ],
+      "summary": [
+        {
+          "text": "A correction to this paper changes the first author's affiliation from University of Northfield to Northfield Institute of Education.",
+          "kind": "fact",
+          "claims": [
+            1,
+            2,
+            4
+          ]
+        },
+        {
+          "text": "The notice states the correction does not affect the results or conclusions of the article.",
+          "kind": "fact",
+          "claims": [
+            3
+          ]
+        },
+        {
+          "text": "The change is administrative and has no meaningful effect on what a reader can rely on.",
+          "kind": "fact",
+          "claims": [
+            5
+          ]
+        }
+      ]
+    },
+    "impact": null,
+    "actions": null
+  },
+  "claims": [
+    {
+      "id": "change-0",
+      "kind": "change",
+      "text": "The correction notice is titled as a correction to 'School start times and teenage sleep', the tracked paper.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "Correction to: School start times and teenage sleep",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-1",
+      "kind": "change",
+      "text": "The correction changes the first author's affiliation from University of Northfield to Northfield Institute of Education.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "The affiliation of the first author was given as University of Northfield. The correct affiliation is Northfield Institute of Education.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-2",
+      "kind": "change",
+      "text": "The notice states the correction does not affect the results or conclusions of the article.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "document",
+          "document_id": 1,
+          "alert_id": null,
+          "quote": "This does not affect the results or conclusions of the article.",
+          "page": null,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-3",
+      "kind": "change",
+      "text": "The stored paper lists the first author's affiliation as University of Northfield.",
+      "supported": true,
+      "passages": [
+        {
+          "target": "paper",
+          "document_id": null,
+          "alert_id": null,
+          "quote": "Garcia, M. (University of Northfield), Okafor, T.",
+          "page": 1,
+          "verified": "verbatim"
+        }
+      ]
+    },
+    {
+      "id": "change-4",
+      "kind": "change",
+      "text": "The change is administrative and has no meaningful effect on what a reader can rely on.",
+      "supported": false,
+      "passages": []
+    }
+  ],
+  "context_chunks": []
+}
